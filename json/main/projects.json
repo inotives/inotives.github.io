@@ -1,0 +1,82 @@
+[
+  {
+    "id": "drazerdex",
+    "path": "/md/projects/drazerdex.md",
+    "img": "/images/main/projects/cover-drazerdex.jpg",
+    "name": "DragonBlaze Dex",
+    "infos": "A wiki website made from scratch using React, Markdown and MaterializeCSS. This is a community website made for the game i am playing.",
+    "status": "COMPLETED",
+    "tags": ["website","js/nodejs","reactjs","materializecss", "jquery", "disqus", "chartjs"],
+    "links": "http://inotives.com/game/dragon-blaze"
+  },
+  {
+    "id": "bitcoin-price-dashboard",
+    "path": "/md/projects/bitcoin-price-dashboard.md",
+    "img": "/images/main/projects/cover-price-dashboard.jpg",
+    "name": "Bitcoin Price Dashboard",
+    "infos": "A simple bitcoin dashboard that display various information from tops bitcoin exchange around the world. This dashboard list their price, volume etc side by side for comparison and update the information on real time. ",
+    "status": "COMPLETED",
+    "tags": ["html","js"],
+    "links": "http://inotives.com/bitcoin/price-dashboard.html"
+  },
+  {
+    "id": "geothrone",
+    "path": "/md/projects/geothrones.md",
+    "img": "/images/main/projects/cover-geothrone.jpg",
+    "name": "Geothrone.com",
+    "infos": "This is a small website with customize template. Coded using mostly PHP and JQuery.",
+    "status": "COMPLETED",
+    "tags": ["website","php","Foundation"],
+    "links": "http://geothrone.com/"
+  },
+  {
+    "id": "freelance-project-bms",
+    "path": "/md/projects/freelance-project-bms.md",
+    "img": "/images/main/projects/cover-freelance-project-bms.jpg",
+    "name": "Building-wide Monitoring System",
+    "infos": "Building-Wide Monitoring System (BMS) is the continuation and scale up of our previous project RMS. The number of sensor nodes for the system has increased from 5 to 100. The test bench had also been upgraded from single room to a whole commercial building. ",
+    "status": "COMPLETED",
+    "tags": ["HTML5", "CSS3", "JS", "WebGL", "NodeJs", "highchart" ],
+    "links": "-"
+  },
+  {
+    "id": "freelance-project-rms",
+    "path": "/md/projects/freelance-project-rms.md",
+    "img": "/images/main/projects/cover-freelance-project-rms.jpg",
+    "name": "Room Monitoring System",
+    "infos": "Room Monitoring System (RMS) is the system that handle collection, storing and displaying the data collected by 5 test sensor nodes provided by NXP sensor.",
+    "status": "COMPLETED",
+    "tags": ["HTML5", "CSS3", "JS", "WebGL", "NodeJs", "highchart" ],
+    "links": "-"
+  },
+  {
+    "id": "freelance-project-ceed",
+    "path": "/md/projects/freelance-project-ceed.md",
+    "img": "/images/main/projects/cover-freelance-project-ceed.jpg",
+    "name": "Campus Energy Efficiency Monitoring (CEED)",
+    "infos": "This is an energy monitoring dashboard prototype created for Energy Research Institute @ NTU (ERI@N). Aim is to create an online system that could access energy usage that was captured from monitoring sensor in large area (such as campus).",
+    "status": "COMPLETED",
+    "tags": ["HTML5", "CSS3","JS", "WebGL", "PHP", "highchart" ],
+    "links": "-"
+  },
+  {
+    "id": "freelance-project-vocomo",
+    "path": "/md/projects/freelance-project-vocomo.md",
+    "img": "/images/main/projects/cover-freelance-project-vocomo.jpg",
+    "name": "Virtual Office Control and Monitoring",
+    "infos": "This project was a simulation prototype that visualized the energy usage in an office. It was to illustrate the idea of a smart office where user could remote control all the appliances in the office from the web.",
+    "status": "COMPLETED",
+    "tags": ["HTML5", "CSS3", "JS", "Flash", "NodeJs", "JQtouch" ],
+    "links": "-"
+  },
+  {
+    "id": "uni-project-aerocraft",
+    "path": "/md/projects/uni-project-aerocraft.md",
+    "img": "/images/main/projects/cover-uni-project-aerocraft.jpg",
+    "name": "Game: AeroCraft",
+    "infos": "This was a university game project for our Game development lab work. It is created mainly using Unity3D. ",
+    "status": "COMPLETED",
+    "tags": ["Unity3D","C#", "PHP", "Facebook-API"],
+    "links": "-"
+  }
+]

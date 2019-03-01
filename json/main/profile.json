@@ -1,0 +1,254 @@
+{
+  "details": {
+      "name": "Toni Lim",
+      "email": ["inotives@gmail.com", "tonilim85@gmail.com"],
+      "image": "/images/main/display_pic.jpg",
+      "jobTitle": "Web Application Developer",
+      "baseIn": "Singapore",
+      "availability": "Freelance Project",
+      "selfDescr": "Web Technology Believers. All the application will be running from the web eventually.",
+      "coreDevLanguage": "Javascript (Node.js / AngularJs / React+Redux ) and Currently focus on frontend develoment with ES6",
+      "skillOverview": {
+          "labels": ["Frontend", "Backend", "Design", "Deployment", "Server Management", "Data Management"],
+          "score": [78, 70, 59, 50, 56, 65]
+      },
+      "preferedEnv": ["linux","git","atom","sublimeText","web"],
+      "selfCatchTerm": "~ TECH NO LIMIT ~",
+      "selfIntro": "",
+      "contactNo": "+65 97559099"
+  },
+  "socialNetworks": [
+    {
+      "name": "Facebook",
+      "logo": "fa fa-facebook",
+      "url": "https://www.facebook.com/inotives"
+    },
+    {
+      "name": "Twitter",
+      "logo": "fa fa-twitter",
+      "url": "https://twitter.com/inotives"
+    },
+    {
+      "name": "Github",
+      "logo": "fa fa-github",
+      "url": "https://github.com/kazuto123"
+    },
+    {
+      "name": "LinkedIn",
+      "logo": "fa fa-linkedin",
+      "url": "https://sg.linkedin.com/in/kazuto123"
+    }
+  ],
+  "skills": [
+      {
+        "type": "Languages",
+        "details": [ "Javascript", "ES6 Javascript", "TypeScript", "Css(Sass & Less)", "Ruby", "Python", "PHP" ]
+      },
+      {
+        "type": "Backend Frameworks",
+        "details": [ "Express", "KoaJs", "Laravel4" ]
+      },
+      {
+        "type": "Frontend Frameworks",
+        "details": [ "ReactJS", "AngularJS", "jQuery", "Backbone", "Ember" ]
+      },
+      {
+        "type": "UI Frameworks",
+        "details": [ "Bootstrap", "Foundations", "MaterialzeCSS", "KenUi", "Onsen", "Ionic", "Cordova", "ReactNative" ]
+      },
+      {
+        "type": "Web Plugins",
+        "details": [ "ThreeJS","socket.io", "D3.js" ]
+      },
+      {
+        "type": "Designs",
+        "details": [ "Photoshop", "Blender", "Autodesk 3DS Max" ]
+      },
+      {
+        "type": "Tools",
+        "details": [ "Git", "Grunt", "Gulp", "Webpack", "RabbitMQ", "Nginx", "LAMP", "Kibana", "Graphana", "Jenkins" ]
+      },
+      {
+        "type": "Paradigms",
+        "details": [ "Agile", "Scrum", "MVC", "MVVM", "TDD", "OOP", "Reactive Programming" ]
+      },
+      {
+        "type": "Storages",
+        "details": [ "MySQL","RethinkDB","MongoDB", "SQLite","Redis","ElasticSearch","Blockchain","Firebase" ]
+      },
+      {
+        "type": "Platforms",
+        "details": [ "Amazon Web Services (AWS)", "Digital Ocean", "Heroku"]
+      },
+      {
+        "type": "Code Repos",
+        "details": [ "Github", "BitBucket", "GitLab"]
+      }
+  ],
+  "qualifications": [
+      {
+          "title": "Degree in Computer Science",
+          "from": "Nanyang Technological University",
+          "countryOrigin": "Singapore",
+          "academicYear": "2010 - 2014"
+      },
+      {
+          "title": "Diploma in Electronic Communication & Computing",
+          "from": "Nanyang Polytechnic",
+          "countryOrigin": "Singapore",
+          "academicYear": "2007 - 2009"
+      }
+  ],
+  "jobExperiences": [
+      {
+        "company": "itBit pte ltd",
+        "period": "2015-Present",
+        "jobTitle": "IT Support Engineer",
+        "responsibilities": [
+          "Supporting all sort of technical issues face by API Users",
+          "Technical analysis on all the issues and problems arise mainly in RESTAPI and FIX-API",
+          "Server management & maintainance",
+          "Hardware & IT Asset Management & Maintainence",
+          "Reviews and test product updates/release and file defects or suggestion for improvements",
+          "Record & maintain API Documentation for REST & FIX API",
+          "Develop tools, samples and api-wrapper in various languages",
+          "Assisting Operation team in performing technical analysis of production issues",
+          "Assisting DevOps Engineer in monitoring the health of all test and production applications",
+          "Diagnosing and reporting application defects to Quality Assurance Engineer"
+        ],
+        "technologies": [
+          "PHP", "Ruby", "Python", "NodeJs", "ReactJs", "Blockchain", "Linux"
+        ]
+      },
+      {
+        "company": "inotives.com",
+        "period": "2011-Present",
+        "jobTitle": "Freelance Full-Stack Developer",
+        "responsibilities": [
+          "Develop both front end and backend of a web system. Design, architecturing, implementation and deployment of the application. Developed using various cutting-edge technology like ReactJs, NodeJs (KoaJS, Express)",
+          "Production deployment and Server Management (Linux-Ubuntu)"
+        ],
+        "technologies": [
+          "NodeJs", "NoSQL", "AngularJs", "ReactJs", "ThreeJs", "Cordova"
+        ]
+      },
+      {
+        "company": "Balanced Consultancy",
+        "period": "2014-2015",
+        "jobTitle": "Senior Software Engineer",
+        "responsibilities": [
+          "Project Management",
+          "System Architecturing and Implementation (ERP, CMS, CRM)",
+          "Customized Business Solution (Web Application such as eCommerse and Inventory System)",
+          "Mobile Application Design and Developments (iOS, Android & Hybrid - Phonegap / Cordova)",
+          "Backend API Design and Implementation for Mobile App",
+          "Server-Side technology research (PHP and NodeJs)",
+          "Database Design and Implementation (MySQL & MongoDB)",
+          "Front-end development using framework like AngularJs"
+        ],
+        "technologies": [
+          "PHP - Laravel 4", "Linux - CentOS", "AngularJS", "Android", "iOS", "Cordova", "Ionic"
+        ]
+      },
+      {
+        "company": "Autodesk Singapore",
+        "period": "Aug 2013 - Dec 2013",
+        "jobTitle": "Learning Experiences Intern",
+        "responsibilities": [
+          "Designed and developed Automation Framework for Creating video content for user help video in new AutoCAD 2014 Releases",
+          "Developed Quality Testing script for DITA-XML files used in user help content in AutoCAD products",
+          "Managing Reports and Documentation of the finding and researches for the projects"
+        ],
+        "technologies": [
+          "Python", "Javascript", "XML", "AutoCAD"
+        ]
+      },
+      {
+        "company": "Energy Research Institute @ NTU",
+        "period": "June 2012 - Aug 2013",
+        "jobTitle": "Web Developer (Freelancing)",
+        "responsibilities": [
+          "Using web technology like HTML5, CSS3, Javascript/JQuery to develop dynamic web applications as well as using server side scripting like python and php with mySQL to create data-driven web services. Used several cutting edge javascript library and framework in creating the web products such as WebGL(ThreeJs) and highstockJS."
+        ],
+        "technologies": [
+          "HTML5", "CSS", "JQuery", "MySQL","PHP", "WebGL"
+        ]
+      },
+      {
+        "company": "Nanyang Polytechnic",
+        "period": "May 2009 - May 2010",
+        "jobTitle": "Development Technologist",
+        "responsibilities": [
+          "Developed various in-house projects for researching the possibility of using technology like Zigbee and Arduino in consumer ready products",
+          "Project Prototyping (Smart Aquarium, In-Door GPS Research), Wireless Charging)",
+          "Assisting in various Final Year Project of Students assigned to the research lab",
+          "Assist in preparing lab materials for conducting lecture and experiments"
+        ],
+        "technologies": [
+          "Arduino", "C/C++", "C#", "Zigbee"
+        ]
+      }
+  ],
+  "sourceOfKnowledge": [
+      {
+          "type": "blogs",
+          "lists": [
+              {
+                "url": "http://dailyjs.com/",
+                "title": "DailyJs",
+                "detail": "Daily updated Javascript blog"
+              },
+              {
+                "url": "http://blog.teamtreehouse.com/",
+                "title": "Treehouse Blog",
+                "detail": "Lots of contents for web dev, web design and tips to get you started"
+              },
+              {
+                "url": "https://scotch.io/",
+                "title": "scotch.io",
+                "detail": "Sites that provided robust tutorial + examples for web development (node, angular, reactjs, etc)"
+              },
+              {
+                "url": "http://www.echojs.com/",
+                "title": "EchoJS",
+                "detail": "A HackerNews-like site dedicated to JavaScript and Front-end News."
+              },
+              {
+                "url": "http://blog.webplatform.org/",
+                "title": "Web Platform",
+                "detail": "An open community of developers building resources for a better web"
+              },
+              {
+                "url": "http://net.tutsplus.com/",
+                "title": "Nettuts+",
+                "detail": "A lot of tips, tutorial, articles about web development"
+              },
+              {
+                "url": "http://css-tricks.com/",
+                "title": "CSS-Tricks",
+                "detail": "Web Design Community"
+              },
+              {
+                "url": "http://www.smashingmagazine.com/",
+                "title": "Smashing Magazine",
+                "detail": "lots of articles for professional web designers and developers"
+              },
+              {
+                "url": "http://tutorialzine.com/",
+                "title": "Tutorialzine",
+                "detail": "Site dedicated to bringing you the coolest web development tutorials and resources"
+              },
+              {
+                "url": "http://tympanus.net/codrops/",
+                "title": "Codrops",
+                "detail": "web design and development blog that publishes articles and tutorials about the latest web trends, techniques and new possibilities"
+              },
+              {
+                "url": "http://carlcheo.com/",
+                "title": "Carlcheo.com",
+                "detail": "All sort of programming and development related article that explain in a layman term. easy to understand and good to read."
+              }
+          ]
+      }
+  ]
+}

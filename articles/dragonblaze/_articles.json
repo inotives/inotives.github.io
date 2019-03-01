@@ -1,0 +1,266 @@
+[
+  {
+    "title": "Transcended Wave Timeline",
+    "type": "INFO",
+    "img": "/articles/dragonblaze/images/transcended-wave-timeline-cover.jpg",
+    "descr": "Timeline for each transcended wave hit KR and days apart",
+    "publish": true,
+    "filename": "transcended-wave-timeline",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "23-MAR-2017"
+    }
+  },
+  {
+    "title": "Trans Draco Summary",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/transcended-draco-summary-cover.jpg",
+    "descr": "This article summerize what i know about trans dracos. ",
+    "publish": true,
+    "filename": "transcended-draco-summary",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "22-MAR-2017"
+    }
+  },
+  {
+    "title": "Inotives Discord Bot",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/inotives-discord-bot-cover.jpg",
+    "descr": "This is a simple discord bots i made that link to inotives site. This article will teach you how to include it into your discord server.",
+    "publish": true,
+    "filename": "inotives-discord-bot",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "21-MAR-2017"
+    }
+  },
+  {
+    "title": "Effective Beginner guide",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/effective-beginner-guide-cover.jpg",
+    "descr": "A guide for new player that just started Dragon Blaze. Get you a good foundation in 7 Days.",
+    "publish": true,
+    "filename": "effective-beginner-guide",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "21-MAR-2017"
+    }
+  },
+  {
+    "title": "DB Weekly Analysis",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/dragon-blaze-weekly-analysis-cover.jpg",
+    "descr": "In here, i will give my opinion on what the current states of the game as well as weekly meta shift in each of the content of the game.",
+    "publish": false,
+    "filename": "dragon-blaze-weekly-analysis",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "24-JAN-2017"
+    }
+  },
+  {
+    "title": "Beginner Reward List",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/beginner-quest-reward-list-cover.jpg",
+    "descr": "List of all the rewards given to new player.",
+    "publish": true,
+    "filename": "beginner-quest-reward-list",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "18-JAN-2017"
+    }
+  },
+  {
+    "title": "COMPARISON: BUFFER",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/comparison-buffer-class-cover.jpg",
+    "descr": "This article will list out all the buffer allies in game and compare them.",
+    "publish": false,
+    "filename": "comparison-buffer-class",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "2-OCT-2016"
+    }
+  },
+  {
+    "title": "Character Guide: Archer",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/char-guide-archer-cover.jpg",
+    "descr": "Skill build, tactics and tips for Archer Character.",
+    "publish": false,
+    "filename": "char-guide-archer",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "9-SEPT-2016"
+    }
+  },
+  {
+    "title": "Character Guide: Warrior",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/char-guide-warrior-cover.jpg",
+    "descr": "Skill build, tactics and tips for Warrior Character.",
+    "publish": false,
+    "filename": "char-guide-warrior",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "9-SEPT-2016"
+    }
+  },
+  {
+    "title": "Character Guide: Rogue",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/char-guide-rogue-cover.jpg",
+    "descr": "Skill build, tactics and tips for Rogue Character.",
+    "publish": false,
+    "filename": "char-guide-rogue",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "9-SEPT-2016"
+    }
+  },
+  {
+    "title": "Character Guide: Mage",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/char-guide-mage-cover.jpg",
+    "descr": "Skill build, tactics and tips for Mage Character.",
+    "publish": false,
+    "filename": "char-guide-mage",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "9-SEPT-2016"
+    }
+  },
+  {
+    "title": "Character Guide: Paladin",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/char-guide-paladin-cover.jpg",
+    "descr": "Skill build, tactics and tips for Paladin Character.",
+    "publish": false,
+    "filename": "char-guide-paladin",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "9-SEPT-2016"
+    }
+  },
+  {
+    "title": "Character Guide: Priest",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/char-guide-priest-cover.jpg",
+    "descr": "Skill build, tactics and tips for Priest Character.",
+    "publish": false,
+    "filename": "char-guide-priest",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "9-SEPT-2016"
+    }
+  },
+  {
+    "title": "Unconvention Raid Set Combination",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/unconvention-raid-set-combination-cover.jpg",
+    "descr": "This article list out some interesting unconvention raid set combination for your reference.",
+    "publish": true,
+    "filename": "unconvention-raid-set-combination",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "30-AUG-2016"
+    }
+  },
+  {
+    "title": "Formation Guide",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/formation-guide-cover.jpg",
+    "descr": "This write-up list out tips and also dos and dont for all new players.",
+    "publish": true,
+    "filename": "formation-guide",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "22-AUG-2016"
+    }
+  },
+  {
+    "title": "Beginner Tips, Dos & Don'ts",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/beginner-tips-do-and-dont-cover.jpg",
+    "descr": "This write-up list out tips and also dos and dont for all new players.",
+    "publish": true,
+    "filename": "beginner-tips-do-and-dont",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "20-AUG-2016"
+    }
+  },
+  {
+    "title": "World Boss: Shariet Guide",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/world-boss-shariet-guide-cover.jpg",
+    "descr": "3rd world boss in in dragon blaze. Insights and tips on how to score in this.",
+    "publish": false,
+    "filename": "world-boss-shariet-guide",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "17-AUG-2016"
+    }
+  },
+  {
+    "title": "World Boss: Hydra Guide",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/world-boss-hydra-guide-cover.jpg",
+    "descr": "Second world boss in in dragon blaze. Insights and tips on how to score in this.",
+    "publish": false,
+    "filename": "world-boss-hydra-guide",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "17-AUG-2016"
+    }
+  },
+  {
+    "title": "World Boss: Lava Golem Guide",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/world-boss-golem-guide-cover.jpg",
+    "descr": "One of the world boss in dragon blaze. Insights and tips on how to score for this WB.",
+    "publish": false,
+    "filename": "world-boss-golem-guide",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "15-AUG-2016"
+    }
+  },
+  {
+    "title": "How to beat Season 3",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/how-to-beat-season-3-cover.jpg",
+    "descr": "Season 3 area are pain in the ass. esspecially last 2 area. Here is the tips and tactic on how you could beat them.",
+    "publish": false,
+    "filename": "how-to-beat-season-3",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "12-AUG-2016"
+    }
+  },
+  {
+    "title": "Effective Beginner guide",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/effective-beginner-guide-cover.jpg",
+    "descr": "A guide for new player that just started Dragon Blaze. Get you a good foundation in 7 Days.",
+    "publish": false,
+    "filename": "effective-beginner-guide-v1",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "05-DEC-2016"
+    }
+  },
+  {
+    "title": "Beginner Focus Area",
+    "type": "GUIDE",
+    "img": "/articles/dragonblaze/images/beginner-focus-area-cover.jpg",
+    "descr": "Where should new player focus on? This article shall give your some insight. ",
+    "publish": false,
+    "filename": "beginner-focus-area",
+    "author": "Kazu",
+    "meta": {
+      "pdate": "12-AUG-2016"
+    }
+  }
+]
