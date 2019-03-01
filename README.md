@@ -1,2 +1,0 @@
-# Github Pages for Inotives
-
