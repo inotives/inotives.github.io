@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Wallet Balances</title>
+    <title>ITBIT</title>
 	<meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
@@ -12,6 +12,7 @@
     <link rel="stylesheet" type="text/css" href="css/normalize.css" />
     <!-- Font-Awesome -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
 
     <!-- FREEBOARD -->
     <link href="css/freeboard.min.css" rel="stylesheet" />
@@ -27,7 +28,7 @@
                   freeboard.initialize(true, function(){
                     $('#main-header').hide();
                   });
-                  $.getJSON('monitor_balance_01.json', function(data){
+                  $.getJSON('exchange_itbit.json', function(data){
                     freeboard.loadDashboard(data, function() { freeboard.setEditing(false); });
                   });
               });
