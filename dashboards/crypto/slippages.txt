@@ -1,0 +1,46 @@
+possible slippages calculation:
+
+Slippages is a term that describes what happens when a market order is filled at a different price from the intended price.
+Numerically, slippage refers to the difference between the expected price of a trade and the actual price at which the trade is executed.
+So,
+
+Slippages = expected price - executed price
+
+lets assume:
+expected price = midpoint price and
+executed price = order_vwap
+so the formula:
+
+Slippage = midpoint - executed price
+
+
+
+
+
+
+CODE:
+
+var data = datasources["itbit-orderbook-btcusd"]["asks"]
+var expected_order_size = 100000
+var total_order_size = 0
+var order_size = 0
+
+var p_init = parseFloat(data[0][0])
+var p_final = 0
+
+for (var i=0; i<data.length; i++){
+    order_size = parseFloat(data[i][0]) * parseFloat(data[i][1])
+    total_order_size += order_size
+
+    if (total_order_size >= expected_order_size)
+    {
+        p_final = data[i][0]
+        break;
+    }
+}
+
+var slippages = (Math.abs(p_final - p_init) / p_init) * 10000
+
+//return ((asum+bsum) * price).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')
+
+return slippages.toFixed(8)
