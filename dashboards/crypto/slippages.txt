@@ -44,3 +44,38 @@ var slippages = (Math.abs(p_final - p_init) / p_init) * 10000
 //return ((asum+bsum) * price).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')
 
 return slippages.toFixed(8)
+
+
+
+order slippages calculation sql
+--------------------------------
+with executed_order as (
+select oe.order_id, oe.market_id,
+--	oe.quantity , oe.price
+	count(oe.id) as exec_count,
+	sum(oe.quantity) as total_executed_qty,
+	max(oe.price) as max_exec_price,
+	min(oe.price) as min_exec_price,
+	(sum(oe.quantity*oe.price)/sum(oe.quantity ) ) as order_vwap
+from exchange.order_executions oe
+where oe.execution_date between '2021-08-01' and '2021-08-11'
+group by 1,2
+)
+
+select oo.id, oo.is_buy, m.ticker,
+	exo.max_exec_price, exo.min_exec_price, exo.order_vwap,
+	exo.exec_count, exo.total_executed_qty,
+	(case
+		when oo.is_buy then abs(1 - (exo.order_vwap / exo.min_exec_price))*10000
+	    else abs ( 1-(exo.order_vwap / exo.max_exec_price) )*10000
+	    end
+	) as slippage_bps,
+	(case
+		when oo.is_buy then (abs(exo.order_vwap - exo.min_exec_price) / exo.min_exec_price)*10000
+	    else (abs(exo.order_vwap - exo.max_exec_price) / exo.max_exec_price)*10000
+	    end
+	) as slippage_bps_v2
+from exchange.orders oo
+join executed_order exo on exo.order_id = oo.id
+join exchange.markets m on oo.market_id = m.id
+where oo."type" = 'Market'
