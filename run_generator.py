@@ -1,53 +1,94 @@
 import os
 import markdown2
-from jinja2 import Environment, FileSystemLoader
+import jinja2
 
-# Paths
+# Define constants for directories
+DOCS_DIR = 'docs'
 TEMPLATE_DIR = 'templates'
-CONTENT_DIR = 'content'
-OUTPUT_DIR = 'docs'  # GitHub Pages default directory
+ASSETS_DIR = os.path.join(DOCS_DIR, 'assets')
 
-# Set up Jinja2 environment
-env = Environment(loader=FileSystemLoader(TEMPLATE_DIR))
+# Ensure the template directory exists
+if not os.path.isdir(TEMPLATE_DIR):
+    raise Exception(f"Template directory '{TEMPLATE_DIR}' does not exist.")
 
-def render_page(content_path, title):
-    # Read Markdown content
-    with open(content_path, 'r') as f:
-        content_md = f.read()
+# Create a Jinja2 environment
+env = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR))
 
-    # Convert Markdown to HTML
-    content_html = markdown2.markdown(content_md)
+def load_template(template_name):
+    """Load a Jinja2 template."""
+    try:
+        template = env.get_template(template_name)
+        return template
+    except jinja2.exceptions.TemplateNotFound:
+        raise Exception(f"Template '{template_name}' not found in '{TEMPLATE_DIR}'.")
 
-    # Get the base template
-    template = env.get_template('base.html')
+def render_template(template, **kwargs):
+    """Render a template with the given context."""
+    return template.render(**kwargs)
 
-    # Render the template with the content
-    html_output = template.render(title=title, content=content_html)
-
-    return html_output
-
-def save_output(html_output, output_path):
+def save_rendered_content(content, output_path):
+    """Save the rendered content to a file."""
     with open(output_path, 'w') as f:
-        f.write(html_output)
+        f.write(content)
+
+def convert_markdown_to_html(markdown_path):
+    """Convert Markdown content to HTML."""
+    with open(markdown_path, 'r') as f:
+        markdown_content = f.read()
+    return markdown2.markdown(markdown_content)
+
+def generate_index():
+    """Generate the index page."""
+    print("Generating index page...")
+    template = load_template('index.html')
+    content = render_template(template, title="Welcome to My Site", content="This is the home page.")
+    save_rendered_content(content, os.path.join(DOCS_DIR, 'index.html'))
+
+def generate_portfolio():
+    """Generate the portfolio page."""
+    print("Generating portfolio page...")
+    template = load_template('portfolio.html')
+    projects = ["Project A", "Project B", "Project C"]  # Example projects list
+    content = render_template(template, title="My Portfolio", projects=projects)
+    save_rendered_content(content, os.path.join(DOCS_DIR, 'portfolio.html'))
+
+def generate_blog_index():
+    """Generate the blog index page."""
+    print("Generating blog index page...")
+    template = load_template('blog.html')
+    posts = []
+
+    for filename in os.listdir('posts'):
+        if filename.endswith('.md'):
+            title = filename.replace('.md', '')
+            url = f"/blog/{filename.replace('.md', '.html')}"
+            posts.append({'title': title, 'url': url})
+
+    content = render_template(template, title="Blog", posts=posts)
+    save_rendered_content(content, os.path.join(DOCS_DIR, 'blog.html'))
+
+def generate_blog_posts():
+    """Generate HTML files for each blog post."""
+    print("Generating blog posts...")
+    blog_dir = os.path.join(DOCS_DIR, 'blog')
+    os.makedirs(blog_dir, exist_ok=True)
+    template = load_template('post.html')
+
+    for filename in os.listdir('posts'):
+        if filename.endswith('.md'):
+            post_title = filename.replace('.md', '')
+            html_content = convert_markdown_to_html(os.path.join('posts', filename))
+            content = render_template(template, title=post_title, content=html_content)
+            post_output_path = os.path.join(blog_dir, filename.replace('.md', '.html'))
+            save_rendered_content(content, post_output_path)
 
 def generate_site():
-    # Ensure the output directory exists
-    if not os.path.exists(OUTPUT_DIR):
-        os.makedirs(OUTPUT_DIR)
-
-    # Process each Markdown file in the content directory
-    for filename in os.listdir(CONTENT_DIR):
-        if filename.endswith('.md'):
-            content_path = os.path.join(CONTENT_DIR, filename)
-            output_path = os.path.join(OUTPUT_DIR, filename.replace('.md', '.html'))
-
-            # Use the filename (without extension) as the title
-            title = filename.replace('.md', '').capitalize()
-
-            # Render and save the HTML output
-            html_output = render_page(content_path, title)
-            save_output(html_output, output_path)
+    """Generate the entire static site."""
+    generate_index()
+    generate_portfolio()
+    generate_blog_index()
+    generate_blog_posts()
+    print("Site generation complete.")
 
 if __name__ == "__main__":
     generate_site()
-    print("Site generated successfully.")
