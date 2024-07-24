@@ -1,0 +1,35 @@
+# OS generated files #
+######################
+.DS_Store?
+ehthumbs.db
+Icon?
+Thumbs.db
+*.DS_Store
+
+# Logs and databases #
+######################
+*.log
+*.sql
+*.sqlite
+
+# Byte-compiled / optimized / DLL files
+######################
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Airflow Excludes e.q. Logs
+logs/
+
+
+# custom exclude folders
+learnings/
