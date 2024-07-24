@@ -5,7 +5,7 @@ from jinja2 import Environment, FileSystemLoader
 # Paths
 TEMPLATE_DIR = 'templates'
 CONTENT_DIR = 'content'
-OUTPUT_DIR = 'output_sites'  # GitHub Pages default directory
+OUTPUT_DIR = 'docs'  # GitHub Pages default directory
 
 # Set up Jinja2 environment
 env = Environment(loader=FileSystemLoader(TEMPLATE_DIR))
