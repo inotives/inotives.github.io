@@ -40,8 +40,26 @@ def convert_markdown_to_html(markdown_path):
 def generate_index():
     """Generate the index page."""
     print("Generating index page...")
+
     template = load_template('index.html')
-    content = render_template(template, title="Welcome to My Site", content="This is the home page.")
+
+    html_content = """
+    This is my github page for the purpose of displaying projects and dashboard create using some static page tools. 
+    Created using tools like FreeboardJs, ChartJS and D3JS. The data display by the dashboard was either using API data from public endpoint or pre-process data from my own data collectors node. 
+    """
+
+    project_list = [
+        {'name': 'Live Wallet Monitoring', 'link': '/dashboards/crypto/monitor_balance_01.html', 'descr': 'Monitor live balances and latest transaction of an address. updated every 1 min.'},
+        {'name': 'Stablecoins Dashboard', 'link': '/dashboards/crypto/stablecoin.html', 'descr': 'live metrics like total supply, total trade vol, onchain transfers for various stablecoins.'},
+        {'name': 'Live Paxg Trading Metrics', 'link': '/dashboards/crypto/paxg.html', 'descr': 'PAXG trading metrics like volume, latest price, price-spreads, etc from various exchanges that trade PAXG.'},
+        {'name': 'itBit Exchange Trading Metrics', 'link': '/dashboards/crypto/exchange_itbit.html', 'descr': 'ItBit Exchanges trading metrics from various intruments like BTCUSD, ETHUSD, PAXGUSD, etc..'},
+        {'name': 'Live pricing (altcoin)', 'link': '/dashboards/crypto/price-dashboard-alt.html', 'descr': 'Live dashboard of pricing and volumes of altcoins from different exchanges.'},
+        {'name': 'Live pricing (eth)', 'link': '/dashboards/crypto/price-dashboard-eth.html', 'descr': 'Live dashboard of pricing and volumes of eth from different exchanges.'},
+        {'name': 'Live pricing itbit', 'link': '/dashboards/crypto/price-dashboard-itbit.html', 'descr': 'Live dashboard of pricing and volumes of coins in itbit exchanges.'}
+
+    ]
+
+    content = render_template(template, title="Welcome to inoTives Profile", content=html_content, proj_list=project_list)
     save_rendered_content(content, os.path.join(DOCS_DIR, 'index.html'))
 
 def generate_portfolio():
