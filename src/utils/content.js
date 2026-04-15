@@ -14,7 +14,9 @@ const pageFiles = import.meta.glob('/content/pages/*.md', {
 // Full parsing happens at build time in generate-content-index.js
 function stripFrontmatter(raw) {
   const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/)
-  return match ? match[2] : raw
+  if (!match) return raw
+  // Strip leading h1 that duplicates the frontmatter title
+  return match[2].replace(/^\s*#\s+.+\r?\n+/, '')
 }
 
 export function getAllPosts() {
