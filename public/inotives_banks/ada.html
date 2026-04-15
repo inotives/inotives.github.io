@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ada Account</title>
+    
+    <style>
+        html, body {
+            height: 100%;       /* Ensures html and body fill the full viewport */
+            margin: 0;          /* Remove default browser margins */
+            padding: 0;         /* Remove default browser padding */
+            font-family: sans-serif; /* Basic font fallback */
+            
+            /* --- CORE CENTERING STYLES --- */
+            display: flex;          /* Enable Flexbox on the body */
+            justify-content: center; /* Horizontally center content */
+            align-items: center;    /* Vertically center content */
+            /* --------------------------- */
+
+            overflow: hidden; /* Prevent outer scrollbars if content is centered and overflows */
+        }
+
+        .container {
+            /* Custom fixed width and height for your iframe's container */
+            width: 390px;   
+            height: 640px;  
+            
+            position: relative; /* Essential for absolute positioning of the iframe inside */
+            
+            /* The 'margin: 50px auto;' is no longer needed for centering with Flexbox on body */
+            /* You can remove it, or keep it if you specifically want that 50px top/bottom margin */
+            /* If you want it truly centered with no extra margins, remove this line: */
+            /* margin: 50px auto; */
+            
+            border: 1px solid #ccc; /* Optional: See the container's boundaries */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Optional: Add some depth */
+            overflow: hidden; /* Ensures iframe content doesn't spill out of container */
+        }
+
+        .container iframe {
+            position: absolute; /* Positions iframe precisely within container */
+            top: 0;             /* Aligned to the top */
+            left: 0;            /* Aligned to the left */
+            width: 100%;        /* Iframe fills 100% width of its parent container */
+            height: 100%;       /* Iframe fills 100% height of its parent container */
+            border: 0;          /* Remove default iframe border */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRpCl2h2sHWHoEAKo22LNJt63TJq3Fuk48yuS3h2O66qyIcDKuXKE6C6XZQcHdzaVs-ha9aUZ0rsQlx/pubhtml?gid=996780808&amp;single=true&amp;widget=false&amp;headers=false&amp;chrome=false" frameborder="0"></iframe>
+    </div>
+</body>
+</html>

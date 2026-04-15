@@ -1,0 +1,72 @@
+{
+  "posts": [
+    {
+      "slug": "2026-04-15-hello-world",
+      "filename": "2026-04-15-hello-world.md",
+      "category": "post",
+      "title": "Hello World",
+      "date": "2026-04-15",
+      "tags": [
+        "meta",
+        "first-post"
+      ],
+      "summary": "First post on the rebuilt site. Testing markdown rendering.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-04-12-obsidian-as-cms",
+      "filename": "2026-04-12-obsidian-as-cms.md",
+      "category": "post",
+      "title": "Using Obsidian as a CMS",
+      "date": "2026-04-12",
+      "tags": [
+        "obsidian",
+        "workflow",
+        "meta"
+      ],
+      "summary": "Why I chose Obsidian for writing blog content and how the workflow works.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-04-10-crypto-dashboard-setup",
+      "filename": "2026-04-10-crypto-dashboard-setup.md",
+      "category": "post",
+      "title": "Setting Up a Crypto Dashboard",
+      "date": "2026-04-10",
+      "tags": [
+        "crypto",
+        "dashboard",
+        "tutorial"
+      ],
+      "summary": "How to set up a real-time crypto dashboard using public exchange APIs.",
+      "featured_image": null,
+      "draft": false
+    }
+  ],
+  "pages": [
+    {
+      "slug": "about",
+      "filename": "about.md",
+      "category": "page",
+      "title": "About",
+      "date": null,
+      "tags": [],
+      "summary": "",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "portfolio",
+      "filename": "portfolio.md",
+      "category": "page",
+      "title": "Portfolio",
+      "date": null,
+      "tags": [],
+      "summary": "",
+      "featured_image": null,
+      "draft": false
+    }
+  ]
+}
