@@ -1,27 +1,78 @@
 # inotives.github.io
 
-This is a static blogging sites created using Python, Jinja2 and Markdown2.
-It generate the static sites by using markdown file in the content folder.
-Limit the use of database.
+Personal portfolio and blog site built with React, Vite, and Tailwind CSS. Content is authored in Markdown via Obsidian and deployed as a static site on GitHub Pages.
 
-## How to run locally
-- After cloning the project, cd into the root folder and create a virtual environment
+## Tech Stack
+
+- **Frontend:** React 18, Vite, Tailwind CSS
+- **Content:** Markdown with YAML frontmatter, rendered via react-markdown
+- **Authoring:** Obsidian (open `content/` as a vault)
+- **Hosting:** GitHub Pages (static files in `docs/`)
+- **CI:** GitHub Actions auto-builds on push to master
+
+## Project Structure
+
 ```
-python3 -m venv venv
+├── content/              # Obsidian vault — all markdown content
+│   ├── posts/            # Blog posts (.md)
+│   ├── pages/            # Static pages (about, portfolio)
+│   └── assets/images/    # Images referenced in markdown
+├── src/                  # React application source
+│   ├── components/       # Reusable UI components
+│   ├── pages/            # Route-level page components
+│   ├── hooks/            # Custom React hooks
+│   ├── utils/            # Content loading utilities
+│   └── data/             # Dashboard metadata
+├── public/               # Static files served as-is
+│   ├── dashboards/       # Legacy freeboard.js crypto dashboards
+│   └── inotives_banks/   # Banking dashboards (unlisted)
+├── scripts/              # Build-time scripts
+│   └── generate-content-index.js
+├── docs/                 # Build output (GitHub Pages root)
+└── project-docs/         # Project specs and execution plan
 ```
 
-- Next you need to install all the required packages in the requirements.txt
-```
-pip install -r requirements.txt
+## Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start dev server with hot reload
+npm run dev
+
+# Build for production (outputs to docs/)
+npm run build
 ```
 
-- After all the require packages is installed, you can run the generator by using
-```
-python run_generator.py
-```
-This will run the static site generator and produce all the html file in the docs folder
+## Content Authoring
 
-- On your local machine, you can run the static server using Flask. The watcher will monitor all changes to .py, .md, and .html files and will re-run the generator script (generate_site.py) whenever any of these files are modified. To run the local flask server, do:
-```
-python run_server.py
-```
+1. Open `content/` folder in Obsidian
+2. Create or edit `.md` files with frontmatter:
+   ```yaml
+   ---
+   title: "Post Title"
+   date: 2026-04-15
+   tags: [crypto, tutorial]
+   summary: "Brief description"
+   ---
+   ```
+3. Push to master — GitHub Actions builds and deploys automatically
+
+## Deployment
+
+Pushing to `master` triggers a GitHub Actions workflow that:
+1. Runs `npm run build` (generates content index + Vite build)
+2. Commits the updated `docs/` folder
+3. GitHub Pages serves from `docs/`
+
+No manual build step needed — just push your content.
+
+## Features
+
+- Blog with search, tag filtering, and infinite scroll
+- Markdown rendering with syntax highlighting and GFM support
+- About and Portfolio pages driven by markdown
+- Legacy crypto dashboards embedded via iframe
+- Responsive design with mobile navigation
+- 404 catch-all page
