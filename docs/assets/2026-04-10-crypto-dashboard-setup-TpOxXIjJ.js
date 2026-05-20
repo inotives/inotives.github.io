@@ -2,7 +2,7 @@ var e=`---
 title: "Setting Up a Crypto Dashboard"
 date: 2026-04-10
 tags: [crypto, dashboard, tutorial]
-summary: "How to set up a real-time crypto dashboard using public exchange APIs."
+summary: "A walkthrough on setting up a real-time crypto dashboard using public exchange APIs."
 ---
 
 # Setting Up a Crypto Dashboard

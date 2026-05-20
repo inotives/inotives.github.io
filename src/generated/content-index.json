@@ -4,13 +4,14 @@
       "slug": "2026-04-15-hello-world",
       "filename": "2026-04-15-hello-world.md",
       "category": "post",
-      "title": "Hello World",
+      "title": "How to Create and Publish a Blog Post",
       "date": "2026-04-15",
       "tags": [
         "meta",
-        "first-post"
+        "workflow",
+        "tutorial"
       ],
-      "summary": "First post on the rebuilt site. Testing markdown rendering.",
+      "summary": "A guide on creating posts with Obsidian, the content format, and how the CI pipeline auto-deploys your changes.",
       "featured_image": null,
       "draft": false
     },
@@ -40,7 +41,7 @@
         "dashboard",
         "tutorial"
       ],
-      "summary": "How to set up a real-time crypto dashboard using public exchange APIs.",
+      "summary": "A walkthrough on setting up a real-time crypto dashboard using public exchange APIs.",
       "featured_image": null,
       "draft": false
     }
