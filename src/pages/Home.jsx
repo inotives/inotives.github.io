@@ -6,64 +6,73 @@ export default function Home() {
   const recentPosts = getAllPosts().slice(0, 3)
 
   return (
-    <div className="space-y-16">
-      {/* Hero */}
-      <section className="text-center py-20">
-        <h1 className="text-5xl font-bold text-white mb-4">inoTives</h1>
-        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-          Crypto dashboards, projects, and notes — all in one place.
+    <div className="page-stack">
+      <section className="hero-manual">
+        <p className="label">FIG_000 / market manual</p>
+        <h1 className="page-title">inoTives</h1>
+        <p className="dek">
+          Crypto dashboards, build notes, and project records in one technical
+          workspace.
         </p>
+        <div className="ascii-rule" />
       </section>
 
-      {/* Quick links */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section className="record-grid">
         <Link
           to="/dashboards"
-          className="group p-6 rounded-lg border border-gray-800 hover:border-gray-600 transition-colors"
+          className="record"
         >
-          <h2 className="text-lg font-semibold text-white mb-2 group-hover:text-blue-400">
-            Dashboards
-          </h2>
-          <p className="text-sm text-gray-400">
+          <div className="record-meta">
+            <span>01</span>
+            <span>Live systems</span>
+          </div>
+          <h2 className="record-title">Dashboards</h2>
+          <p className="record-copy">
             Live crypto monitoring and exchange metrics.
           </p>
         </Link>
 
         <Link
           to="/blog"
-          className="group p-6 rounded-lg border border-gray-800 hover:border-gray-600 transition-colors"
+          className="record"
         >
-          <h2 className="text-lg font-semibold text-white mb-2 group-hover:text-blue-400">
-            Blog
-          </h2>
-          <p className="text-sm text-gray-400">
+          <div className="record-meta">
+            <span>02</span>
+            <span>Notes</span>
+          </div>
+          <h2 className="record-title">Blog</h2>
+          <p className="record-copy">
             Notes, tutorials, and write-ups.
           </p>
         </Link>
 
         <Link
           to="/portfolio"
-          className="group p-6 rounded-lg border border-gray-800 hover:border-gray-600 transition-colors"
+          className="record"
         >
-          <h2 className="text-lg font-semibold text-white mb-2 group-hover:text-blue-400">
-            Portfolio
-          </h2>
-          <p className="text-sm text-gray-400">
+          <div className="record-meta">
+            <span>03</span>
+            <span>Build log</span>
+          </div>
+          <h2 className="record-title">Portfolio</h2>
+          <p className="record-copy">
             Projects and things I've built.
           </p>
         </Link>
       </section>
 
-      {/* Recent posts */}
       {recentPosts.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">Recent Posts</h2>
-            <Link to="/blog" className="text-sm text-gray-400 hover:text-white transition-colors">
-              View all &rarr;
+        <section className="manual-section">
+          <div className="flex items-end justify-between gap-4 mb-6">
+            <div>
+              <p className="label">Latest entries</p>
+              <h2 className="section-title">Recent Notes</h2>
+            </div>
+            <Link to="/blog" className="button-link">
+              View all
             </Link>
           </div>
-          <div className="space-y-4">
+          <div className="record-list">
             {recentPosts.map((post) => (
               <PostCard key={post.slug} post={post} />
             ))}
