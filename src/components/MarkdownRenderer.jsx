@@ -6,7 +6,7 @@ export default function MarkdownRenderer({ content }) {
   if (!content) return null
 
   return (
-    <div className="prose prose-invert prose-gray max-w-none">
+    <div className="manual-prose">
       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
         {content}
       </ReactMarkdown>

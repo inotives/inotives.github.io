@@ -66,54 +66,56 @@ export default function Blog() {
   }
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-white mb-6">Blog</h1>
+    <div className="page-stack">
+      <section className="manual-section">
+        <p className="label">Index / notes</p>
+        <h1 className="page-title">Blog</h1>
+        <p className="section-copy">
+          Notes, tutorials, and operating records from the inoTives workspace.
+        </p>
+      </section>
 
-      {/* Search */}
-      <input
-        type="text"
-        placeholder="Search posts..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full px-4 py-2 mb-4 rounded-lg bg-gray-900 border border-gray-800 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-gray-600 text-sm"
-      />
+      <section>
+        <div className="toolbar">
+          <input
+            type="text"
+            placeholder="Search posts..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="input"
+          />
 
-      {/* Tag filter */}
-      {allTags.length > 0 && (
-        <div className="flex gap-2 flex-wrap mb-8">
-          {allTags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => handleTagClick(tag)}
-              className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                tag === activeTag
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
+          {allTags.length > 0 && (
+            <div className="tag-row">
+              {allTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => handleTagClick(tag)}
+                  className={`tag ${tag === activeTag ? 'tag-active' : ''}`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Post list */}
-      {filtered.length === 0 ? (
-        <p className="text-gray-400">No posts found.</p>
-      ) : (
-        <div className="space-y-4">
-          {shown.map((post) => (
-            <PostCard key={post.slug} post={post} />
-          ))}
-        </div>
-      )}
+        {filtered.length === 0 ? (
+          <p className="empty-state">No posts found.</p>
+        ) : (
+          <div className="record-list">
+            {shown.map((post) => (
+              <PostCard key={post.slug} post={post} />
+            ))}
+          </div>
+        )}
 
-      {/* Infinite scroll trigger */}
-      {hasMore && (
-        <div ref={loaderRef} className="py-8 text-center text-sm text-gray-500">
-          Loading more...
-        </div>
-      )}
+        {hasMore && (
+          <div ref={loaderRef} className="empty-state py-8 text-center">
+            Loading more...
+          </div>
+        )}
+      </section>
     </div>
   )
 }

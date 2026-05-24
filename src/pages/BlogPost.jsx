@@ -14,14 +14,14 @@ export default function BlogPost() {
   const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null
 
   if (loading) {
-    return <p className="text-gray-400">Loading...</p>
+    return <p className="empty-state">Loading...</p>
   }
 
   if (!post) {
     return (
       <div>
-        <h1 className="text-3xl font-bold text-white mb-4">Post not found</h1>
-        <Link to="/blog" className="text-blue-400 hover:underline">
+        <h1 className="section-title">Post not found</h1>
+        <Link to="/blog" className="back-link">
           &larr; Back to blog
         </Link>
       </div>
@@ -30,20 +30,19 @@ export default function BlogPost() {
 
   return (
     <article>
-      <Link to="/blog" className="text-sm text-gray-400 hover:text-white mb-6 inline-block">
+      <Link to="/blog" className="back-link">
         &larr; Back to blog
       </Link>
-      <header className="mb-8">
-        <h1 className="text-4xl font-bold text-white mb-3">{post.title}</h1>
-        <div className="flex items-center gap-4 text-sm text-gray-400">
+
+      <header className="article-header">
+        <p className="label">Entry / notes</p>
+        <h1 className="article-title">{post.title}</h1>
+        <div className="record-meta">
           {post.date && <time>{post.date}</time>}
           {post.tags.length > 0 && (
-            <div className="flex gap-2">
+            <div className="tag-row">
               {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="px-2 py-0.5 rounded-full bg-gray-800 text-gray-300 text-xs"
-                >
+                <span key={tag} className="tag">
                   {tag}
                 </span>
               ))}
@@ -54,29 +53,28 @@ export default function BlogPost() {
 
       <MarkdownRenderer content={post.content} />
 
-      {/* Prev / Next navigation */}
-      <nav className="mt-12 pt-8 border-t border-gray-800 flex justify-between gap-4">
-        <div className="flex-1">
+      <nav className="article-nav">
+        <div>
           {prevPost && (
             <Link
               to={`/blog/${prevPost.slug}`}
-              className="group block"
+              className="article-nav-link"
             >
-              <span className="text-xs text-gray-500 uppercase tracking-wide">Previous</span>
-              <p className="text-sm text-gray-300 group-hover:text-white transition-colors">
+              <span>Previous</span>
+              <p>
                 &larr; {prevPost.title}
               </p>
             </Link>
           )}
         </div>
-        <div className="flex-1 text-right">
+        <div>
           {nextPost && (
             <Link
               to={`/blog/${nextPost.slug}`}
-              className="group block"
+              className="article-nav-link"
             >
-              <span className="text-xs text-gray-500 uppercase tracking-wide">Next</span>
-              <p className="text-sm text-gray-300 group-hover:text-white transition-colors">
+              <span>Next</span>
+              <p>
                 {nextPost.title} &rarr;
               </p>
             </Link>
