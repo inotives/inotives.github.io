@@ -3,6 +3,35 @@ import { usePost } from '../hooks/useMarkdown'
 import { getAllPosts } from '../utils/content'
 import MarkdownRenderer from '../components/MarkdownRenderer'
 
+function slugifyHeading(value) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[`"'’]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+function getTableOfContents(content) {
+  if (!content) return []
+
+  const headings = []
+  const headingPattern = /^(#{2,3})\s+(.+)$/gm
+  let match
+
+  while ((match = headingPattern.exec(content)) !== null) {
+    const text = match[2].replace(/[#`*_[\]()]/g, '').trim()
+    if (!text) continue
+    headings.push({
+      id: slugifyHeading(text),
+      level: match[1].length,
+      text,
+    })
+  }
+
+  return headings
+}
+
 export default function Note() {
   const { slug } = useParams()
   const { post, loading } = usePost(slug)
@@ -12,6 +41,7 @@ export default function Note() {
   const currentIndex = allPosts.findIndex((p) => p.slug === slug)
   const prevPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null
   const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null
+  const tableOfContents = getTableOfContents(post?.content)
 
   if (loading) {
     return <p className="empty-state">Loading...</p>
@@ -51,7 +81,26 @@ export default function Note() {
         </div>
       </header>
 
-      <MarkdownRenderer content={post.content} />
+      <div className="article-layout">
+        <MarkdownRenderer content={post.content} />
+
+        {tableOfContents.length > 0 && (
+          <aside className="article-toc" aria-labelledby="article-toc-title">
+            <h2 id="article-toc-title">On This Page</h2>
+            <nav aria-label="On this page">
+              {tableOfContents.map((heading) => (
+                <a
+                  key={`${heading.id}-${heading.text}`}
+                  className={heading.level === 3 ? 'article-toc-link is-nested' : 'article-toc-link'}
+                  href={`#${heading.id}`}
+                >
+                  {heading.text}
+                </a>
+              ))}
+            </nav>
+          </aside>
+        )}
+      </div>
 
       <nav className="article-nav">
         <div>

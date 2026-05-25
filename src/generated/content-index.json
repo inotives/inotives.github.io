@@ -1,6 +1,127 @@
 {
   "posts": [
     {
+      "slug": "2026-05-20-codegraph-for-agentic-codebase-work",
+      "filename": "2026-05-20-codegraph-for-agentic-codebase-work.md",
+      "category": "post",
+      "title": "CodeGraph for Agentic Codebase Work",
+      "date": "2026-05-20",
+      "tags": [
+        "codegraph",
+        "ai-agents",
+        "mcp",
+        "workflow",
+        "developer-tools"
+      ],
+      "summary": "How CodeGraph fits into an AI-assisted development workflow: fast structural code context, MCP-native querying, and where it complements rather than replaces mixed-content knowledge graphs.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-20-evaluating-mattpocock-skills",
+      "filename": "2026-05-20-evaluating-mattpocock-skills.md",
+      "category": "post",
+      "title": "Evaluating mattpocock/skills for Data Engineering and Analysis Workflows",
+      "date": "2026-05-20",
+      "tags": [
+        "skills",
+        "ai-agents",
+        "workflow",
+        "data-engineering",
+        "data-analysis",
+        "developer-tools"
+      ],
+      "summary": "A practical evaluation of the mattpocock/skills ecosystem — how its composable agent skills apply to data engineering and analysis workflows, what works, what doesn't, and where it fits.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-20-graphify-for-agentic-knowledge-work",
+      "filename": "2026-05-20-graphify-for-agentic-knowledge-work.md",
+      "category": "post",
+      "title": "Graphify for Agentic Knowledge Work",
+      "date": "2026-05-20",
+      "tags": [
+        "graphify",
+        "ai-agents",
+        "knowledge-graph",
+        "mcp",
+        "workflow",
+        "developer-tools"
+      ],
+      "summary": "Evaluating Graphify as a tool for AI-assisted development: how its mixed-content knowledge graph compares with structural code tools, what it excels at, its rough edges, and where it fits in an agentic workflow.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-19-rtk-token-killer-for-agentic-workflows",
+      "filename": "2026-05-19-rtk-token-killer-for-agentic-workflows.md",
+      "category": "post",
+      "title": "RTK: The Token Killer for Agentic Workflows",
+      "date": "2026-05-19",
+      "tags": [
+        "rtk",
+        "token-optimization",
+        "cli",
+        "ai-agents",
+        "workflow",
+        "developer-tools"
+      ],
+      "summary": "Evaluating RTK — a CLI proxy that reduces LLM token consumption by 60-90% on common dev commands. Single Rust binary, zero dependencies, hooks into 13 AI coding tools.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-15-pre-market-summary-pipeline",
+      "filename": "2026-05-15-pre-market-summary-pipeline.md",
+      "category": "post",
+      "title": "How the Pre-Market Summary Pipeline Works",
+      "date": "2026-05-15",
+      "tags": [
+        "trading",
+        "automation",
+        "pipeline",
+        "market-prediction"
+      ],
+      "summary": "The full workflow, skills, metrics, and reasoning behind the daily pre-market opening-price prediction and intraday forecast system.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-15-stock-market-close-summary-detailed-steps",
+      "filename": "2026-05-15-stock-market-close-summary-detailed-steps.md",
+      "category": "post",
+      "title": "Stock Market Close Summary: Detailed Steps",
+      "date": "2026-05-15",
+      "tags": [
+        "trading",
+        "automation",
+        "analysis",
+        "market-close"
+      ],
+      "summary": "The full 11-section post-close analysis workflow for a single equity ticker — entry conditions, sub-agent dispatch, technical metrics, options derivatives, and entity bump.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-02-what-are-agent-harnesses",
+      "filename": "2026-05-02-what-are-agent-harnesses.md",
+      "category": "post",
+      "title": "What Are Agent Harnesses?",
+      "date": "2026-05-02",
+      "tags": [
+        "agent-harness",
+        "ai-agents",
+        "multi-agent",
+        "skills",
+        "workflow",
+        "developer-tools"
+      ],
+      "summary": "A survey of the agent-harness landscape: what defines a harness, why the abstraction matters, and the top open-source harnesses worth knowing.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-04-15-hello-world",
       "filename": "2026-04-15-hello-world.md",
       "category": "post",
@@ -51,5 +172,87 @@
       "featured_image": null,
       "draft": false
     }
-  ]
+  ],
+  "reports": {
+    "stockPreOpen": [
+      {
+        "id": "stock-pre-open-2026-05-22",
+        "name": "Stock Market Pre-Opening Price Estimation",
+        "filename": "2026-05-22-pre-market-summary.html",
+        "url": "/reports/stocks/researches/2026-05-22-pre-market-summary.html",
+        "date": "2026-05-22",
+        "tags": [
+          "Stocks",
+          "Pre-open",
+          "Agent research"
+        ],
+        "description": "Pre-market stock research report generated by my stock analysis agents before the market opens, focused on opening price estimation signals and market setup."
+      },
+      {
+        "id": "stock-pre-open-2026-05-21",
+        "name": "Stock Market Pre-Opening Price Estimation",
+        "filename": "2026-05-21-pre-market-summary.html",
+        "url": "/reports/stocks/researches/2026-05-21-pre-market-summary.html",
+        "date": "2026-05-21",
+        "tags": [
+          "Stocks",
+          "Pre-open",
+          "Agent research"
+        ],
+        "description": "Pre-market stock research report generated by my stock analysis agents before the market opens, focused on opening price estimation signals and market setup."
+      },
+      {
+        "id": "stock-pre-open-2026-05-20",
+        "name": "Stock Market Pre-Opening Price Estimation",
+        "filename": "2026-05-20-pre-market-summary.html",
+        "url": "/reports/stocks/researches/2026-05-20-pre-market-summary.html",
+        "date": "2026-05-20",
+        "tags": [
+          "Stocks",
+          "Pre-open",
+          "Agent research"
+        ],
+        "description": "Pre-market stock research report generated by my stock analysis agents before the market opens, focused on opening price estimation signals and market setup."
+      },
+      {
+        "id": "stock-pre-open-2026-05-19",
+        "name": "Stock Market Pre-Opening Price Estimation",
+        "filename": "2026-05-19-pre-market-summary.html",
+        "url": "/reports/stocks/researches/2026-05-19-pre-market-summary.html",
+        "date": "2026-05-19",
+        "tags": [
+          "Stocks",
+          "Pre-open",
+          "Agent research"
+        ],
+        "description": "Pre-market stock research report generated by my stock analysis agents before the market opens, focused on opening price estimation signals and market setup."
+      },
+      {
+        "id": "stock-pre-open-2026-05-18",
+        "name": "Stock Market Pre-Opening Price Estimation",
+        "filename": "2026-05-18-pre-market-summary.html",
+        "url": "/reports/stocks/researches/2026-05-18-pre-market-summary.html",
+        "date": "2026-05-18",
+        "tags": [
+          "Stocks",
+          "Pre-open",
+          "Agent research"
+        ],
+        "description": "Pre-market stock research report generated by my stock analysis agents before the market opens, focused on opening price estimation signals and market setup."
+      },
+      {
+        "id": "stock-pre-open-2026-05-15",
+        "name": "Stock Market Pre-Opening Price Estimation",
+        "filename": "2026-05-15-pre-market-summary.html",
+        "url": "/reports/stocks/researches/2026-05-15-pre-market-summary.html",
+        "date": "2026-05-15",
+        "tags": [
+          "Stocks",
+          "Pre-open",
+          "Agent research"
+        ],
+        "description": "Pre-market stock research report generated by my stock analysis agents before the market opens, focused on opening price estimation signals and market setup."
+      }
+    ]
+  }
 }
