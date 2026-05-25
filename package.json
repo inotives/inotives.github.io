@@ -7,6 +7,7 @@
     "dev": "node scripts/generate-content-index.js && vite",
     "prebuild": "node scripts/generate-content-index.js",
     "build": "vite build",
+    "postbuild": "node scripts/copy-spa-fallback.js",
     "content": "node scripts/generate-content-index.js",
     "lint": "eslint .",
     "preview": "vite preview"

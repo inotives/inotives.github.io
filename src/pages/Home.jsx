@@ -8,39 +8,41 @@ export default function Home() {
   return (
     <div className="page-stack">
       <section className="hero-manual">
-        <p className="label">FIG_000 / market manual</p>
+        <p className="label">Data · AI (Harnesses | Skills | Workflows) · Crypto-Currencies · Stocks · Fintech </p>
         <h1 className="page-title">inoTives</h1>
         <p className="dek">
-          Crypto dashboards, build notes, and project records in one technical
-          workspace.
+          My personal sites that host and store my own understanding to 
+          Data systems, AI harnesses, skills, and workflows for crypto-currency,
+          fintech, and traditional stock market research, monitoring, and
+          automation.
         </p>
         <div className="ascii-rule" />
       </section>
 
       <section className="record-grid">
         <Link
-          to="/dashboards"
+          to="/projects"
           className="record"
         >
           <div className="record-meta">
             <span>01</span>
-            <span>Live systems</span>
+            <span>Project index</span>
           </div>
-          <h2 className="record-title">Dashboards</h2>
+          <h2 className="record-title">Projects</h2>
           <p className="record-copy">
-            Live crypto monitoring and exchange metrics.
+            Project records, experiments, and build notes.
           </p>
         </Link>
 
         <Link
-          to="/blog"
+          to="/notes"
           className="record"
         >
           <div className="record-meta">
             <span>02</span>
             <span>Notes</span>
           </div>
-          <h2 className="record-title">Blog</h2>
+          <h2 className="record-title">Notes</h2>
           <p className="record-copy">
             Notes, tutorials, and write-ups.
           </p>
@@ -68,7 +70,7 @@ export default function Home() {
               <p className="label">Latest entries</p>
               <h2 className="section-title">Recent Notes</h2>
             </div>
-            <Link to="/blog" className="button-link">
+            <Link to="/notes" className="button-link">
               View all
             </Link>
           </div>

@@ -5,7 +5,7 @@ import PostCard from '../components/PostCard'
 
 const PAGE_SIZE = 10
 
-export default function Blog() {
+export default function Notes() {
   const posts = getAllPosts()
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTag = searchParams.get('tag')
@@ -69,7 +69,7 @@ export default function Blog() {
     <div className="page-stack">
       <section className="manual-section">
         <p className="label">Index / notes</p>
-        <h1 className="page-title">Blog</h1>
+        <h1 className="page-title">Notes</h1>
         <p className="section-copy">
           Notes, tutorials, and operating records from the inoTives workspace.
         </p>
@@ -79,7 +79,7 @@ export default function Blog() {
         <div className="toolbar">
           <input
             type="text"
-            placeholder="Search posts..."
+            placeholder="Search notes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input"
@@ -101,7 +101,7 @@ export default function Blog() {
         </div>
 
         {filtered.length === 0 ? (
-          <p className="empty-state">No posts found.</p>
+          <p className="empty-state">No notes found.</p>
         ) : (
           <div className="record-list">
             {shown.map((post) => (

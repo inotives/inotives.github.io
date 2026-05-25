@@ -4,44 +4,15 @@
       "slug": "2026-04-15-hello-world",
       "filename": "2026-04-15-hello-world.md",
       "category": "post",
-      "title": "How to Create and Publish a Blog Post",
+      "title": "How to Use Obsidian and Markdown as CMS for GitHub Pages",
       "date": "2026-04-15",
       "tags": [
         "meta",
         "workflow",
-        "tutorial"
-      ],
-      "summary": "A guide on creating posts with Obsidian, the content format, and how the CI pipeline auto-deploys your changes.",
-      "featured_image": null,
-      "draft": false
-    },
-    {
-      "slug": "2026-04-12-obsidian-as-cms",
-      "filename": "2026-04-12-obsidian-as-cms.md",
-      "category": "post",
-      "title": "Using Obsidian as a CMS",
-      "date": "2026-04-12",
-      "tags": [
         "obsidian",
-        "workflow",
-        "meta"
-      ],
-      "summary": "Why I chose Obsidian for writing blog content and how the workflow works.",
-      "featured_image": null,
-      "draft": false
-    },
-    {
-      "slug": "2026-04-10-crypto-dashboard-setup",
-      "filename": "2026-04-10-crypto-dashboard-setup.md",
-      "category": "post",
-      "title": "Setting Up a Crypto Dashboard",
-      "date": "2026-04-10",
-      "tags": [
-        "crypto",
-        "dashboard",
         "tutorial"
       ],
-      "summary": "A walkthrough on setting up a real-time crypto dashboard using public exchange APIs.",
+      "summary": "The writing workflow, content format, and publishing steps for adding notes to the inoTives site.",
       "featured_image": null,
       "draft": false
     }
@@ -63,6 +34,17 @@
       "filename": "portfolio.md",
       "category": "page",
       "title": "Portfolio",
+      "date": null,
+      "tags": [],
+      "summary": "",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "resume",
+      "filename": "resume.md",
+      "category": "page",
+      "title": "Resume",
       "date": null,
       "tags": [],
       "summary": "",

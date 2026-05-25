@@ -1,4 +1,4 @@
----
+var e=`---
 title: "About"
 ---
 
@@ -42,3 +42,4 @@ I use AI tools daily to speed up SQL and Python development, debugging, research
 This site is built with React and Vite, deployed as a static site on GitHub Pages. I use it as a public notebook for technical write-ups, personal research, project records, and AI/data workflow experiments.
 
 The source code is available on [GitHub](https://github.com/inotives/inotives.github.io).
+`;export{e as default};

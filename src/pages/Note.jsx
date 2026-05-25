@@ -3,7 +3,7 @@ import { usePost } from '../hooks/useMarkdown'
 import { getAllPosts } from '../utils/content'
 import MarkdownRenderer from '../components/MarkdownRenderer'
 
-export default function BlogPost() {
+export default function Note() {
   const { slug } = useParams()
   const { post, loading } = usePost(slug)
 
@@ -21,8 +21,8 @@ export default function BlogPost() {
     return (
       <div>
         <h1 className="section-title">Post not found</h1>
-        <Link to="/blog" className="back-link">
-          &larr; Back to blog
+        <Link to="/notes" className="back-link">
+          &larr; Back to notes
         </Link>
       </div>
     )
@@ -30,8 +30,8 @@ export default function BlogPost() {
 
   return (
     <article>
-      <Link to="/blog" className="back-link">
-        &larr; Back to blog
+      <Link to="/notes" className="back-link">
+        &larr; Back to notes
       </Link>
 
       <header className="article-header">
@@ -57,7 +57,7 @@ export default function BlogPost() {
         <div>
           {prevPost && (
             <Link
-              to={`/blog/${prevPost.slug}`}
+              to={`/notes/${prevPost.slug}`}
               className="article-nav-link"
             >
               <span>Previous</span>
@@ -70,7 +70,7 @@ export default function BlogPost() {
         <div>
           {nextPost && (
             <Link
-              to={`/blog/${nextPost.slug}`}
+              to={`/notes/${nextPost.slug}`}
               className="article-nav-link"
             >
               <span>Next</span>

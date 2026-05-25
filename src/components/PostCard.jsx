@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 export default function PostCard({ post }) {
   return (
     <Link
-      to={`/blog/${post.slug}`}
+      to={`/notes/${post.slug}`}
       className="record"
     >
       <div className="record-meta">
