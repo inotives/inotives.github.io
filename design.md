@@ -11,7 +11,7 @@ This site uses a dark technical field-manual aesthetic: dense, readable, direct,
 - Make status, progress, dates, and metadata visible with small mono labels.
 - Prefer square edges, hard rules, and simple blocks over soft rounded surfaces.
 - Let one strong accent color carry interaction and state.
-- Keep the interface compact enough for repeated use, especially dashboards and blog indexes.
+- Keep the interface compact enough for repeated use, especially projects, notes, and resume content.
 
 ## Visual Language
 
@@ -21,7 +21,7 @@ For inoTives, adapt that into a "market manual" theme:
 
 - Background: dark neutral gray, not pure black and not saturated slate.
 - Surfaces: slightly lighter dark gray panels for records, forms, and framed tools.
-- Accent: soft blueprint blue for links, active nav, progress, labels, and primary actions.
+- Accent: neon cyan (`#1fefd7`) for links, active nav, labels, headings, focus states, and primary actions.
 - Ink: near-white text with cool muted gray metadata.
 - Texture: subtle radial-dot or grid background, low contrast.
 - Edges: 0-4px radius for controls and panels; avoid pill buttons and soft cards.
@@ -33,9 +33,9 @@ Suggested CSS variables:
 
 ```css
 :root {
-  --font-display: "VT323", ui-monospace, "JetBrains Mono", monospace;
-  --font-body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
-  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --font-display: "VT323", "Source Code Pro", ui-monospace, monospace;
+  --font-body: "Open Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
 
   --bg: #0f1115;
   --surface: #171b22;
@@ -46,9 +46,10 @@ Suggested CSS variables:
   --ink-muted: #94a3b8;
   --rule: rgba(248, 250, 252, 0.16);
   --paper-rule: rgba(248, 250, 252, 0.07);
-  --accent: #8ea2ff;
-  --accent-hover: #b7c3ff;
-  --accent-soft: rgba(142, 162, 255, 0.14);
+  --accent: #1fefd7;
+  --accent-hover: #7ffbef;
+  --accent-soft: rgba(31, 239, 215, 0.14);
+  --title-accent: var(--accent);
   --warning: #f6c453;
 }
 ```
@@ -59,7 +60,7 @@ Tailwind equivalents should be centralized through theme variables or reusable c
 
 - Page titles: uppercase display mono, large, tight line-height, accent color.
 - Section titles: uppercase display mono, accent color, with a mono subtitle below.
-- Body copy: serif, 17-19px, relaxed line height.
+- Body copy: Open Sans, 16-18px, relaxed line height.
 - Metadata: mono, uppercase, 11-13px, increased letter spacing.
 - Code, dates, tags, dashboard labels: mono with tabular numerals.
 
@@ -107,25 +108,26 @@ Use cards only for repeated objects such as posts, projects, or dashboard entrie
 - tags/status line
 - hover changes border/background, not scale or shadow
 
-### Blog Posts
+### Notes
 
-Blog pages should read like reference entries:
+Notes pages should read like reference entries:
 
 - date and category above title
 - clear title and deck
-- prose with serif body text
+- prose with readable sans body text
 - code blocks on dark muted surface
 - headings in display mono
 - callouts as bordered notes, not colored cards
 
-### Dashboards
+### Projects
 
-Dashboards can keep a technical console tone while matching the manual theme:
+Project entries should look like build records:
 
-- Use dense tables and status rows.
-- Show source, update cadence, asset pair, and health state as mono metadata.
-- Use accent for active/healthy signals and warning amber for degraded signals.
-- Keep embedded dashboard frames rectangular and rule-bound.
+- project code or repo slug label
+- project title
+- role/stack/status metadata
+- concise outcome or purpose
+- link row or clickable record for repo, write-up, demo, or artifact
 
 ### Portfolio
 
@@ -136,6 +138,16 @@ Portfolio items should look like build records:
 - role/stack/status metadata
 - concise outcome
 - link row for demo, repo, write-up, or dashboard
+
+### Resume
+
+Resume content is markdown-backed and exposed at `/resume`, but not shown in the main navbar. It should remain professional and exportable:
+
+- Use clear personal information and professional summary sections at the top.
+- Prefer action-led bullets with concrete outcomes and metrics.
+- Keep headings readable; h4 role titles must be larger than body text.
+- Add separators between h2 sections for scanability.
+- The `Export PDF` button uses browser print; print styles hide navigation, footer, and button chrome.
 
 ## Interaction
 
@@ -156,7 +168,7 @@ Portfolio items should look like build records:
 
 Use direct, concrete labels:
 
-- "Dashboards" instead of "Explore dashboards"
+- "Projects" instead of "Explore projects"
 - "Recent Notes" instead of "Latest from the blog"
 - "Build Log" instead of "Portfolio"
 - "Status" instead of "Current Progress" when referring to live systems
@@ -165,16 +177,24 @@ Copy should be plain and specific. Avoid promotional language, oversized hero cl
 
 ## Implementation Path
 
-1. Add global design tokens in `src/index.css`.
-2. Convert `Layout` and `Navbar` from rounded Tailwind defaults to the dark manual shell.
-3. Update `Home` to use a document-style hero, three catalog rows or panels, and recent posts as records.
-4. Update `PostCard`, `Blog`, `Portfolio`, and `Dashboards` to use shared record styles.
-5. Tune markdown typography last, after the shell and record components are stable.
+1. Maintain global design tokens in `src/index.css`.
+2. Keep `Layout` and `Navbar` aligned to the dark manual shell.
+3. Use record styles for `Home`, `Projects`, notes listings, and repeated content.
+4. Keep markdown pages (`About`, `Portfolio`, `Resume`) readable and export-friendly.
+5. Tune generated `docs/` output with `npm run build` before publishing.
+
+## Runtime and CI
+
+- Target Node.js 24 LTS for local development and CI.
+- Keep `.nvmrc` as the single source of truth for the Node major version.
+- `package.json` should declare compatible `engines` for Node and npm.
+- GitHub Actions should use `actions/setup-node` with `node-version-file: .nvmrc`.
+- `npm run build` generates `docs/`; `postbuild` copies `docs/index.html` to `docs/404.html` for GitHub Pages SPA fallback.
 
 ## Do Not Do
 
 - Do not copy the reference site's exact branding or curriculum-specific language.
 - Do not introduce large gradient hero sections.
 - Do not use pill-shaped nav/buttons as the primary pattern.
-- Do not make the whole site a one-color blue/slate theme; keep it dark neutral gray with blue accents.
+- Do not make the whole site a one-color blue/slate theme; keep it dark neutral gray with neon cyan accents.
 - Do not bury useful metadata inside hover states.
