@@ -8,11 +8,11 @@
     "npm": ">=11"
   },
   "scripts": {
-    "dev": "node scripts/generate-content-index.js && vite",
-    "prebuild": "node scripts/generate-content-index.js",
+    "dev": "node scripts/sync-static-reports.js && node scripts/generate-content-index.js && vite",
+    "prebuild": "node scripts/sync-static-reports.js && node scripts/generate-content-index.js",
     "build": "vite build",
     "postbuild": "node scripts/copy-spa-fallback.js",
-    "content": "node scripts/generate-content-index.js",
+    "content": "node scripts/sync-static-reports.js && node scripts/generate-content-index.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },

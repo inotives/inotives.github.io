@@ -2,7 +2,7 @@
 
 Reference: https://aiengineeringfromscratch.com/
 
-This site uses a dark technical field-manual aesthetic: dense, readable, direct, and built around documents, dashboards, notes, and project artifacts. The target feeling is not a startup landing page. It should feel like a working notebook, lab manual, and crypto operations console sharing one visual system.
+This site uses a dark technical field-manual aesthetic: dense, readable, direct, and built around documents, notes, project artifacts, research reports, and portfolio records. The target feeling is not a startup landing page. It should feel like a working notebook, lab manual, market research archive, and crypto/data operations console sharing one visual system.
 
 ## Design Principles
 
@@ -11,7 +11,7 @@ This site uses a dark technical field-manual aesthetic: dense, readable, direct,
 - Make status, progress, dates, and metadata visible with small mono labels.
 - Prefer square edges, hard rules, and simple blocks over soft rounded surfaces.
 - Let one strong accent color carry interaction and state.
-- Keep the interface compact enough for repeated use, especially projects, notes, and resume content.
+- Keep the interface compact enough for repeated use, especially projects, notes, research reports, and resume content.
 
 ## Visual Language
 
@@ -69,7 +69,7 @@ Avoid heavy `font-bold` as the default signal. Use hierarchy, spacing, labels, a
 ## Layout
 
 - Global max width: `1200px` for indexes and dashboard lists.
-- Reading max width: `720px-820px` for blog/article content.
+- Reading max width: `720px-820px` for notes/article content.
 - Header: sticky or fixed, translucent dark-gray background, thin bottom rule.
 - Main spacing: generous section padding on desktop, compact on mobile.
 - Section structure:
@@ -118,6 +118,15 @@ Notes pages should read like reference entries:
 - code blocks on dark muted surface
 - headings in display mono
 - callouts as bordered notes, not colored cards
+- note detail pages can include an "On This Page" index generated from `h2` and `h3` headings
+- the table of contents should be sticky beside long articles on desktop and stack above content on mobile
+- note content is markdown-backed from `content/posts` and indexed during `npm run build`
+
+Current note categories include:
+
+- site workflow and Markdown/Obsidian CMS notes
+- market research pipeline methodology
+- AI-agent and developer-tool notes such as CodeGraph, graphify, agent harnesses, and skills evaluation
 
 ### Projects
 
@@ -128,6 +137,64 @@ Project entries should look like build records:
 - role/stack/status metadata
 - concise outcome or purpose
 - link row or clickable record for repo, write-up, demo, or artifact
+
+The Projects page is split into sections:
+
+- **Public Repos**: GitHub repositories and open build artifacts.
+- **Research Reports**: generated market research projects and report collections.
+
+Public repo records should keep external GitHub links. Research-report records can link to internal project detail pages when there are multiple generated artifacts or methodology notes behind the project.
+
+### Research Reports
+
+Research report pages should feel like a live archive, not a static article. The current stock pre-open project lives at:
+
+```text
+/projects/research-stocks-pro-open-price
+```
+
+There is also a corrected spelling alias:
+
+```text
+/projects/research-stocks-pre-open-price
+```
+
+The page should include:
+
+- a concise explanation of the agentic research workflow
+- methodology links to related Notes articles
+- a GitHub-contribution-style activity map for available report dates
+- a fuzzy search input for filtering generated reports by date, title, tag, or description
+- a dated record list where each report links to its generated HTML artifact
+
+Research Reports are broader than pre-market stock reports. The section copy should allow for:
+
+- stock market pre-open and post-close research
+- crypto market analysis
+- macroeconomic overview
+- FX/currency pricing
+- gold and commodities analysis
+- other cross-asset signals used for monitoring, analysis, and decision support
+
+Report HTML files should be treated as static source artifacts under:
+
+```text
+public/reports/stocks/researches/
+```
+
+They are published to:
+
+```text
+docs/reports/stocks/researches/
+```
+
+Filenames for stock pre-open reports currently follow:
+
+```text
+YYYY-MM-DD-pre-market-summary.html
+```
+
+`scripts/generate-content-index.js` scans `public/reports/stocks/researches` and writes report metadata into `src/generated/content-index.json`. `scripts/sync-static-reports.js` exists to preserve reports that were previously placed under `docs/reports` by syncing them into `public/reports` before the Vite build clears and regenerates `docs/`.
 
 ### Portfolio
 
@@ -181,7 +248,8 @@ Copy should be plain and specific. Avoid promotional language, oversized hero cl
 2. Keep `Layout` and `Navbar` aligned to the dark manual shell.
 3. Use record styles for `Home`, `Projects`, notes listings, and repeated content.
 4. Keep markdown pages (`About`, `Portfolio`, `Resume`) readable and export-friendly.
-5. Tune generated `docs/` output with `npm run build` before publishing.
+5. Keep static report artifacts in `public/reports` so Vite publishes them into `docs/reports`.
+6. Tune generated `docs/` output with `npm run build` before publishing.
 
 ## Runtime and CI
 
@@ -189,7 +257,9 @@ Copy should be plain and specific. Avoid promotional language, oversized hero cl
 - Keep `.nvmrc` as the single source of truth for the Node major version.
 - `package.json` should declare compatible `engines` for Node and npm.
 - GitHub Actions should use `actions/setup-node` with `node-version-file: .nvmrc`.
-- `npm run build` generates `docs/`; `postbuild` copies `docs/index.html` to `docs/404.html` for GitHub Pages SPA fallback.
+- `npm run build` first syncs static reports, then generates the content index, then builds `docs/`.
+- `postbuild` copies `docs/index.html` to `docs/404.html` for GitHub Pages SPA fallback.
+- The generated content index contains markdown posts/pages and dynamically discovered stock pre-open reports.
 
 ## Do Not Do
 

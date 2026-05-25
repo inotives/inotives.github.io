@@ -27,6 +27,10 @@ export function getAllPages() {
   return contentIndex.pages
 }
 
+export function getStockPreOpenReports() {
+  return contentIndex.reports?.stockPreOpen || []
+}
+
 export function getPostMeta(slug) {
   return contentIndex.posts.find((p) => p.slug === slug) || null
 }

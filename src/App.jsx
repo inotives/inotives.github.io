@@ -6,6 +6,7 @@ import Note from './pages/Note'
 import Portfolio from './pages/Portfolio'
 import About from './pages/About'
 import Projects from './pages/Projects'
+import StockPreOpenProject from './pages/StockPreOpenProject'
 import Resume from './pages/Resume'
 import NotFound from './pages/NotFound'
 
@@ -19,6 +20,14 @@ function App() {
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/about" element={<About />} />
         <Route path="/projects" element={<Projects />} />
+        <Route
+          path="/projects/research-stocks-pro-open-price"
+          element={<StockPreOpenProject />}
+        />
+        <Route
+          path="/projects/research-stocks-pre-open-price"
+          element={<StockPreOpenProject />}
+        />
         <Route path="/resume" element={<Resume />} />
         <Route path="*" element={<NotFound />} />
       </Route>
