@@ -54,6 +54,24 @@
       "draft": false
     },
     {
+      "slug": "2026-05-19-rtk-token-killer-for-agentic-workflows",
+      "filename": "2026-05-19-rtk-token-killer-for-agentic-workflows.md",
+      "category": "post",
+      "title": "RTK: The Token Killer for Agentic Workflows",
+      "date": "2026-05-19",
+      "tags": [
+        "rtk",
+        "token-optimization",
+        "cli",
+        "ai-agents",
+        "workflow",
+        "developer-tools"
+      ],
+      "summary": "Evaluating RTK — a CLI proxy that reduces LLM token consumption by 60-90% on common dev commands. Single Rust binary, zero dependencies, hooks into 13 AI coding tools.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-05-15-pre-market-summary-pipeline",
       "filename": "2026-05-15-pre-market-summary-pipeline.md",
       "category": "post",
