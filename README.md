@@ -1,6 +1,6 @@
 # inotives.github.io
 
-Personal portfolio and blog site built with React, Vite, and Tailwind CSS. Content is authored in Markdown via Obsidian and deployed as a static site on GitHub Pages.
+Personal portfolio and notes site built with React, Vite, and Tailwind CSS. Content is authored in Markdown via Obsidian and deployed as a static site on GitHub Pages.
 
 ## Tech Stack
 
@@ -14,7 +14,7 @@ Personal portfolio and blog site built with React, Vite, and Tailwind CSS. Conte
 
 ```
 ├── content/              # Obsidian vault — all markdown content
-│   ├── posts/            # Blog posts (.md)
+│   ├── posts/            # Notes (.md)
 │   ├── pages/            # Static pages (about, portfolio)
 │   └── assets/images/    # Images referenced in markdown
 ├── src/                  # React application source
@@ -70,7 +70,7 @@ No manual build step needed — just push your content.
 
 ## Features
 
-- Blog with search, tag filtering, and infinite scroll
+- Notes with search, tag filtering, and infinite scroll
 - Markdown rendering with syntax highlighting and GFM support
 - About and Portfolio pages driven by markdown
 - Legacy crypto dashboards embedded via iframe

@@ -1,4 +1,4 @@
----
+var e=`---
 title: "Portfolio"
 ---
 
@@ -54,3 +54,4 @@ This site itself is a small project: a React SPA with Markdown-based content aut
 ## More
 
 More project records will be added as I clean up older experiments and publish new notes.
+`;export{e as default};

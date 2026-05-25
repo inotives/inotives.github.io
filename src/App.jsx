@@ -1,12 +1,12 @@
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
-import Blog from './pages/Blog'
-import BlogPost from './pages/BlogPost'
+import Notes from './pages/Notes'
+import Note from './pages/Note'
 import Portfolio from './pages/Portfolio'
 import About from './pages/About'
-import Dashboards from './pages/Dashboards'
-import DashboardView from './pages/DashboardView'
+import Projects from './pages/Projects'
+import Resume from './pages/Resume'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -14,12 +14,12 @@ function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/blog/:slug" element={<BlogPost />} />
+        <Route path="/notes" element={<Notes />} />
+        <Route path="/notes/:slug" element={<Note />} />
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/about" element={<About />} />
-        <Route path="/dashboards" element={<Dashboards />} />
-        <Route path="/dashboards/:id" element={<DashboardView />} />
+        <Route path="/projects" element={<Projects />} />
+        <Route path="/resume" element={<Resume />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
