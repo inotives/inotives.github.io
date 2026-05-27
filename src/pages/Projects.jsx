@@ -20,6 +20,14 @@ export default function Projects() {
         'A local-first, LLM-agnostic AI agent harness written in Rust. It runs multiple agents with personas, skills, tools, task scheduling, MCP integrations, CLI and Discord channels, and SQLite-backed conversation and task persistence.',
     },
     {
+      id: 'agent-scheduler',
+      name: 'agent-scheduler',
+      url: 'https://github.com/inotives/agent-scheduler',
+      tags: ['Python', 'AI agents', 'scheduler', 'orchestration'],
+      description:
+        'A Python-based scheduler for agentic workflows. It coordinates queued agent jobs, tracks execution state, and gives AI agents a more structured way to run recurring or deferred work.',
+    },
+    {
       id: 'openvaia',
       name: 'OpenVAIA',
       url: 'https://github.com/inotives/openvaia',
