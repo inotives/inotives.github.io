@@ -7,6 +7,7 @@ import Portfolio from './pages/Portfolio'
 import About from './pages/About'
 import Projects from './pages/Projects'
 import StockPreOpenProject from './pages/StockPreOpenProject'
+import StockWeeklyReportsProject from './pages/StockWeeklyReportsProject'
 import Resume from './pages/Resume'
 import NotFound from './pages/NotFound'
 
@@ -27,6 +28,10 @@ function App() {
         <Route
           path="/projects/research-stocks-pre-open-price"
           element={<StockPreOpenProject />}
+        />
+        <Route
+          path="/projects/research-stocks-weekly-summary"
+          element={<StockWeeklyReportsProject />}
         />
         <Route path="/resume" element={<Resume />} />
         <Route path="*" element={<NotFound />} />

@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wk22 2026 - Tracked Stocks Weekly Summary</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f172a; --bg-card: #1e293b; --bg-hover: #334155;
+  --border: #334155; --text: #f1f5f9; --text-muted: #94a3b8;
+  --green: #22c55e; --red: #ef4444; --accent: #6366f1;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.5;
+  min-height: 100vh;
+}
+header {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(15,23,42,.85); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border); padding: 1rem 1.5rem;
+}
+.header-inner {
+  max-width: 1400px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+header h1 { font-size: 1.25rem; font-weight: 700; }
+header .sub { color: var(--text-muted); font-size: .875rem; }
+.controls { display: flex; gap: .5rem; align-items: center; }
+.search-input {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); padding: .375rem .75rem; font-size: .875rem; width: 200px;
+}
+.search-input:focus { outline: none; border-color: var(--accent); }
+.filter-btn {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text-muted); padding: .375rem .75rem; font-size: .75rem; cursor: pointer; transition: .15s;
+}
+.filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.filter-btn:hover { background: var(--bg-hover); }
+.container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+.summary-bar {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem; margin-bottom: 1.5rem;
+}
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 1rem; text-align: center;
+}
+.stat-card .label { font-size: .75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+.stat-card .value { font-size: 1.5rem; font-weight: 700; margin-top: .25rem; }
+.stat-card .value.green { color: var(--green); }
+.stat-card .value.red { color: var(--red); }
+.stat-card .sub { font-size: .75rem; color: var(--text-muted); margin-top: .125rem; }
+.chart-row { margin-bottom: 1.5rem; }
+.chart-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem;
+}
+.chart-card h2 { font-size: .875rem; font-weight: 600; margin-bottom: .75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+.chart-wrap { position: relative; width: 100%; max-height: 400px; }
+.grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 1rem;
+}
+.card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+  overflow: hidden; transition: border-color .15s;
+}
+.card:hover { border-color: var(--accent); }
+.card-header {
+  padding: .875rem 1rem; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.card-header .ticker {
+  font-size: 1.125rem; font-weight: 700;
+}
+.card-header .change { font-size: .875rem; font-weight: 600; }
+.card-body { padding: 1rem; }
+.stat-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .25rem 0; font-size: .875rem;
+}
+.stat-row .label { color: var(--text-muted); }
+.grade-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2rem; height: 2rem; border-radius: 9999px; font-size: .75rem; font-weight: 700;
+}
+.grade-A, .grade-A- { background: #14532d; color: #4ade80; }
+.grade-B, .grade-B-, .grade-B-\\+ { background: #422006; color: #facc15; }
+.grade-C, .grade-C-, .grade-C\\+ { background: #451a03; color: #fb923c; }
+.grade-D, .grade-D\\+, .grade-D- { background: #450a0a; color: #f87171; }
+.grade-F { background: #450a0a; color: #ef4444; }
+.mini-chart { margin-top: .75rem; height: 60px; }
+.weekly-dates { font-size: .75rem; color: var(--text-muted); margin-bottom: 1rem; }
+.card-notes { font-size: .8125rem; color: var(--text-muted); margin-top: .75rem; line-height: 1.6; }
+.missing-badge {
+  display: inline-flex; align-items: center; gap: .25rem;
+  background: #1e293b; border: 1px dashed #475569; border-radius: 6px;
+  padding: .25rem .5rem; font-size: .75rem; color: var(--text-muted);
+}
+@media (max-width: 640px) {
+  .grid { grid-template-columns: 1fr; }
+  .summary-bar { grid-template-columns: repeat(2, 1fr); }
+  header h1 { font-size: 1rem; }
+  .search-input { width: 140px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+<div class="header-inner">
+  <div>
+    <h1>Wk22 2026 &mdash; Tracked Stocks</h1>
+    <div class="sub">May 26 &ndash; May 29, 2026 (holiday-shortened, Mon May 25 Memorial Day)</div>
+  </div>
+  <div class="controls">
+    <input class="search-input" id="search" type="text" placeholder="Filter ticker..." oninput="filterCards(this.value)">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+    <button class="filter-btn" data-filter="green" onclick="setFilter('green')">Green</button>
+    <button class="filter-btn" data-filter="red" onclick="setFilter('red')">Red</button>
+  </div>
+</div>
+</header>
+
+<div class="container">
+
+<div class="summary-bar" id="summary-bar"></div>
+
+<div class="chart-row">
+  <div class="chart-card">
+    <h2>Weekly Return (%)</h2>
+    <div class="chart-wrap"><canvas id="returnsChart"></canvas></div>
+  </div>
+</div>
+
+<div class="chart-row" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+  <div class="chart-card">
+    <h2>Price Level &mdash; Open vs Close</h2>
+    <div class="chart-wrap"><canvas id="priceLevelChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h2>Grade Distribution</h2>
+    <div class="chart-wrap"><canvas id="gradeChart"></canvas></div>
+  </div>
+</div>
+
+<div class="grid" id="card-grid"></div>
+
+<div class="chart-row" style="margin-top:1.5rem">
+  <div class="chart-card">
+    <h2>Upcoming &mdash; Week of Jun 1-5, 2026</h2>
+    <div id="upcoming-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:.75rem;margin-top:.75rem"></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const stocks = [
+  {
+    ticker: "AAPL", name: "Apple Inc.", open: 309.40, close: 312.06, change: "+0.86%", grade: "A-",
+    direction: 3, notes: "New ATH $315 intraday Fri. WWDC Jun 8-12 next catalyst. RSI overbought 9 sessions.",
+    daily: ["$308.33", "$310.85", "$312.51", "$312.06"],
+    dailyLabels: ["May 26", "May 27", "May 28", "May 29"]
+  },
+  {
+    ticker: "AMD", name: "Advanced Micro Devices", open: 484.71, close: 516.10, change: "+6.48%", grade: "D+",
+    direction: 1, notes: "Bearish bias was critical failure. Avg close err $14.34. SOX +5.53% Tue lifted semis. ATH $527.20.",
+    daily: ["$503.89", "$495.54", "$518.09", "$516.10"],
+    dailyLabels: ["May 26", "May 27", "May 28", "May 29"]
+  },
+  {
+    ticker: "AMZN", name: "Amazon.com Inc.", open: 267.94, close: 270.64, change: "+1.01%", grade: "B-",
+    direction: 1, notes: "Open cones 4/4 but close bands 1/4. OPEX Fri pin dragged -1.23%. Insider selling + Berkshire exit overhang.",
+    daily: ["$265.29", "$271.85", "$274.00", "$270.64"],
+    dailyLabels: ["May 26", "May 27", "May 28", "May 29"]
+  },
+  {
+    ticker: "CRWV", name: "CoreWeave Inc.", open: 108.24, close: 109.53, change: "+1.19%", grade: "C+",
+    direction: 1, notes: "High-beta neocloud. $127M+ insider selling capped rallies. NBIS +18% Fri lifted sector. $4.2B debt overhang.",
+    daily: ["$105.89", "$104.27", "$106.86", "$109.53"],
+    dailyLabels: ["May 26", "May 27", "May 28", "May 29"]
+  },
+  {
+    ticker: "GOOG", name: "Alphabet Inc.", open: 381.00, close: 376.43, change: "-1.20%", grade: "B",
+    direction: -1, notes: "Fri collapse -2.51% on 2.4x vol, worst Mag7. Ex-div Jun 8. MSFT captured cloud AI bid (+3.68%).",
+    daily: ["$384.84", "$384.83", "$386.12", "$376.43"],
+    dailyLabels: ["May 26", "May 27", "May 28", "May 29"]
+  },
+  {
+    ticker: "INTC", name: "Intel Corp.", open: 122.10, close: 118.25, change: "-3.15%", grade: "B",
+    direction: -1, notes: "4/4 close bands contained. Range-bound correctly identified. Fri low $117.68 approached bear trigger. COMPUTEX keynote Jun 2.",
+    daily: ["$123.52", "$121.77", "$120.89", "$118.25"],
+    dailyLabels: ["May 26", "May 27", "May 28", "May 29"]
+  },
+  {
+    ticker: "META", name: "Meta Platforms Inc.", open: 608.89, close: 632.51, change: "+3.88%", grade: "C+",
+    direction: 1, notes: "AI subscription tier Meta One $7.99/mo catalyst Wed +$22.26 close miss. 7-week losing streak broken.",
+    daily: ["$612.34", "$635.26", "$635.29", "$632.51"],
+    dailyLabels: ["May 26", "May 27", "May 28", "May 29"]
+  },
+  {
+    ticker: "MU", name: "Micron Technology", open: 820.50, close: 971.00, change: "+18.34%", grade: "B-",
+    direction: 1, notes: "ATH $981 Fri. UBS PT $535->$1,625 Tue black swan. Susquehanna $600->$1,750 Fri. HBM sold out through 2027. +8.38% wk.",
+    daily: ["$895.88", "$928.41", "$923.52", "$971.00"],
+    dailyLabels: ["May 26", "May 27", "May 28", "May 29"]
+  },
+  {
+    ticker: "NIO", name: "NIO Inc.", open: 5.33, close: 5.60, change: "+5.07%", grade: "C-",
+    direction: 1, notes: "ES9 launch + Yao Ming CXO Wed +9.32%. Faded -3.48% Thu. Still below SMA50 ($6.06). May deliveries key.",
+    daily: ["$5.26", "$5.75", "$5.55", "$5.60"],
+    dailyLabels: ["May 26", "May 27", "May 28", "May 29"]
+  },
+  {
+    ticker: "NVDA", name: "NVIDIA Corp.", open: 216.58, close: 211.14, change: "-2.51%", grade: "A-",
+    direction: -1, notes: "Worst semi peer on record market day. Open cones 4/4, close bands 4/4. China smuggling probe. Jensen keynote Jun 2.",
+    daily: ["$214.86", "$212.60", "$214.25", "$211.14"],
+    dailyLabels: ["May 26", "May 27", "May 28", "May 29"]
+  },
+  {
+    ticker: "ORCL", name: "Oracle Corp.", open: 193.30, close: 225.78, change: "+16.81%", grade: "C-",
+    direction: 1, notes: "JPM initiation $210 PT Thu +6.67%. DELL AI halo Fri +10.84%. $200 reclaimed. Q4 earnings Jun 10. IV 100th pctl.",
+    daily: ["$193.06", "$190.96", "$203.70", "$225.78"],
+    dailyLabels: ["May 26", "May 27", "May 28", "May 29"]
+  },
+  {
+    ticker: "TSLA", name: "Tesla Inc.", open: 430.02, close: 435.79, change: "+1.34%", grade: "B+",
+    direction: 1, notes: "Directional calls 4/4 perfect. 6-day streak snapped Fri. SpaceX IPO roadshow Jun 4. $440 bull trigger fired intraday Wed.",
+    daily: ["$433.59", "$440.36", "$442.10", "$435.79"],
+    dailyLabels: ["May 26", "May 27", "May 28", "May 29"]
+  },
+  {
+    ticker: "TSM", name: "TSMC", open: 413.12, close: 418.45, change: "+1.29%", grade: "D+",
+    direction: 1, notes: "ATH $430.55 Wed. Close bands 1/4. May 28 complete miss (predicted gap-down). GS Conviction Buy NT$2,600. Q2 earnings Jul 16.",
+    daily: ["$412.32", "$422.73", "$424.86", "$418.45"],
+    dailyLabels: ["May 26", "May 27", "May 28", "May 29"]
+  }
+];
+
+const noData = [
+  { ticker: "CRM", name: "Salesforce Inc." },
+  { ticker: "DELL", name: "Dell Technologies" },
+  { ticker: "SNOW", name: "Snowflake Inc." }
+];
+
+function gradeClass(g) {
+  const m = g.replace("+", "\\+");
+  for (const [prefix, cls] of [["A","grade-A"], ["B","grade-B"], ["C","grade-C"], ["D","grade-D"], ["F","grade-F"]]) {
+    if (g.startsWith(prefix)) return cls;
+  }
+  return "grade-F";
+}
+
+function renderSummaryBar() {
+  const total = stocks.length;
+  const green = stocks.filter(s => s.direction > 0).length;
+  const red = stocks.filter(s => s.direction < 0).length;
+  const flat = total - green - red;
+  const avgReturn = stocks.reduce((a, s) => {
+    const n = parseFloat(s.change);
+    return a + n;
+  }, 0) / total;
+  const best = stocks.reduce((a, s) => Math.max(a, parseFloat(s.change)), -Infinity);
+  const worst = stocks.reduce((a, s) => Math.min(a, parseFloat(s.change)), Infinity);
+  const bestT = stocks.find(s => parseFloat(s.change) === best)?.ticker || "";
+  const worstT = stocks.find(s => parseFloat(s.change) === worst)?.ticker || "";
+  document.getElementById("summary-bar").innerHTML = `
+    <div class="stat-card"><div class="label">Tracked</div><div class="value">${total}</div></div>
+    <div class="stat-card"><div class="label">Green</div><div class="value green">${green}</div></div>
+    <div class="stat-card"><div class="label">Red</div><div class="value red">${red}</div></div>
+    <div class="stat-card"><div class="label">Flat</div><div class="value">${flat}</div></div>
+    <div class="stat-card"><div class="label">Avg Return</div><div class="value ${avgReturn >= 0 ? 'green' : 'red'}">${avgReturn >= 0 ? '+' : ''}${avgReturn.toFixed(2)}%</div></div>
+    <div class="stat-card"><div class="label">Best</div><div class="value green">+${best.toFixed(2)}%</div><div class="sub">${bestT}</div></div>
+    <div class="stat-card"><div class="label">Worst</div><div class="value red">${worst.toFixed(2)}%</div><div class="sub">${worstT}</div></div>
+  `;
+}
+
+function renderCards(filter) {
+  const grid = document.getElementById("card-grid");
+  let html = "";
+  const filtered = filter === "all" ? stocks : stocks.filter(s => filter === "green" ? s.direction > 0 : s.direction < 0);
+  for (const s of filtered) {
+    const isGreen = s.direction > 0;
+    const chgClass = isGreen ? "green" : "red";
+    html += `<div class="card" data-ticker="${s.ticker.toLowerCase()}">
+      <div class="card-header">
+        <div class="ticker">${s.ticker} <span style="font-weight:400;font-size:.8125rem;color:var(--text-muted)">${s.name}</span></div>
+        <div class="change ${chgClass}">${s.change}</div>
+      </div>
+      <div class="card-body">
+        <div class="weekly-dates">May 26 &ndash; May 29</div>
+        <div class="stat-row"><span class="label">Open</span><span>$${s.open.toFixed(2)}</span></div>
+        <div class="stat-row"><span class="label">Close</span><span>$${s.close.toFixed(2)}</span></div>
+        <div class="stat-row"><span class="label">Net Chg</span><span class="${chgClass}">${(s.close - s.open) >= 0 ? '+' : ''}$${(s.close - s.open).toFixed(2)}</span></div>
+        <div class="stat-row" style="border-top:1px solid var(--border);padding-top:.5rem;margin-top:.25rem">
+          <span class="label">Grade</span>
+          <span class="grade-badge ${gradeClass(s.grade)}">${s.grade}</span>
+        </div>
+        <div class="mini-chart"><canvas id="mini-${s.ticker}"></canvas></div>
+        <div class="card-notes">${s.notes}</div>
+      </div>
+    </div>`;
+  }
+  if (filter === "all") {
+    html += `<div class="card" style="border-style:dashed;opacity:.7">
+      <div class="card-header">
+        <div class="ticker" style="font-size:.875rem">No Weekly Summary Data</div>
+      </div>
+      <div class="card-body">
+        ${noData.map(d => `<div class="stat-row"><span class="label">${d.ticker}</span><span style="color:var(--text-muted)">${d.name}</span></div>`).join("")}
+        <div class="card-notes" style="margin-top:.5rem">These tracked stocks do not have wk22 weekly summary files in the knowledge base.</div>
+      </div>
+    </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function renderCharts() {
+  const sorted = [...stocks].sort((a, b) => parseFloat(a.change) - parseFloat(b.change));
+  const tickers = sorted.map(s => s.ticker);
+  const returns = sorted.map(s => parseFloat(s.change));
+
+  const retChart = new Chart(document.getElementById("returnsChart"), {
+    type: "bar",
+    data: {
+      labels: tickers,
+      datasets: [{
+        label: "Weekly Return %",
+        data: returns,
+        backgroundColor: returns.map(v => v >= 0 ? "rgba(34,197,94,.7)" : "rgba(239,68,68,.7)"),
+        borderColor: returns.map(v => v >= 0 ? "#22c55e" : "#ef4444"),
+        borderWidth: 1,
+        borderRadius: 4,
+        hoverBackgroundColor: returns.map(v => v >= 0 ? "rgba(34,197,94,.95)" : "rgba(239,68,68,.95)")
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      onHover: (e, el) => e.native.target.style.cursor = el.length ? "pointer" : "default",
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#1e293b",
+          titleColor: "#f1f5f9",
+          bodyColor: "#22c55e",
+          borderColor: "#334155",
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 6,
+          callbacks: {
+            label: ctx => `${ctx.parsed.y >= 0 ? "+" : ""}${ctx.parsed.y.toFixed(2)}%`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#94a3b8", font: { size: 11 } },
+          grid: { color: "rgba(51,65,85,.5)" }
+        },
+        y: {
+          ticks: { color: "#94a3b8", callback: v => v + "%" },
+          grid: { color: "rgba(51,65,85,.5)" },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  const priceCtx = document.getElementById("priceLevelChart");
+  let priceTooltipEl = document.getElementById("price-tooltip");
+  if (!priceTooltipEl) {
+    priceTooltipEl = document.createElement("div");
+    priceTooltipEl.id = "price-tooltip";
+    priceTooltipEl.style.cssText = "position:fixed;display:none;background:#1e293b;border:1px solid #334155;border-radius:6px;padding:8px 12px;font-size:.8125rem;pointer-events:none;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.4)";
+    document.body.appendChild(priceTooltipEl);
+  }
+  new Chart(priceCtx, {
+    type: "bar",
+    data: {
+      labels: stocks.map(s => s.ticker),
+      datasets: [
+        {
+          label: "Open",
+          data: stocks.map(s => s.open),
+          backgroundColor: "rgba(99,102,241,.6)",
+          borderRadius: 4,
+          hoverBackgroundColor: "rgba(99,102,241,.9)"
+        },
+        {
+          label: "Close",
+          data: stocks.map(s => s.close),
+          backgroundColor: "rgba(34,197,94,.6)",
+          borderRadius: 4,
+          hoverBackgroundColor: "rgba(34,197,94,.9)"
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      onHover: (e, el) => e.native.target.style.cursor = el.length ? "pointer" : "default",
+      plugins: {
+        legend: {
+          labels: { color: "#94a3b8", font: { size: 11 } }
+        },
+        tooltip: {
+          enabled: true,
+          backgroundColor: "#1e293b",
+          titleColor: "#f1f5f9",
+          bodyColor: "#94a3b8",
+          borderColor: "#334155",
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 6,
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y.toFixed(2)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#94a3b8", font: { size: 10 } },
+          grid: { color: "rgba(51,65,85,.5)" }
+        },
+        y: {
+          ticks: { color: "#94a3b8", callback: v => "$" + v.toFixed(0) },
+          grid: { color: "rgba(51,65,85,.5)" }
+        }
+      }
+    }
+  });
+
+  const gradeCount = {};
+  for (const s of stocks) {
+    const base = s.grade[0];
+    gradeCount[base] = (gradeCount[base] || 0) + 1;
+  }
+
+  new Chart(document.getElementById("gradeChart"), {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(gradeCount).sort(),
+      datasets: [{
+        data: Object.keys(gradeCount).sort().map(k => gradeCount[k]),
+        backgroundColor: ["#4ade80","#facc15","#fb923c","#f87171","#ef4444"],
+        borderWidth: 0,
+        hoverOffset: 12
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "right",
+          labels: { color: "#94a3b8", font: { size: 12 }, padding: 12 }
+        },
+        tooltip: {
+          backgroundColor: "#1e293b",
+          titleColor: "#f1f5f9",
+          bodyColor: "#94a3b8",
+          borderColor: "#334155",
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 6,
+          callbacks: {
+            label: ctx => `${ctx.label}: ${ctx.parsed} stock${ctx.parsed !== 1 ? "s" : ""}`
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderUpcoming() {
+  const events = [
+    { day: "Mon Jun 1", items: [
+      { ticker: "ECON", event: "ISM Manufacturing PMI (May) — 10:00am ET" },
+      { ticker: "ECON", event: "Construction Spending (Apr)" },
+      { ticker: "ECON", event: "Auto Sales (May)" },
+    ]},
+    { day: "Tue Jun 2", items: [
+      { ticker: "NVDA", event: "Computex Taipei — Jensen Huang keynote (dominant catalyst)" },
+      { ticker: "TSM", event: "Computex Taipei — C.C. Wei / technology updates" },
+      { ticker: "INTC", event: "Computex Taipei — CEO Lip-Bu Tan keynote; foundry narrative" },
+      { ticker: "AMZN", event: "BofA Global TMT Conference — potential AWS/AI catalyst" },
+      { ticker: "META", event: "BofA Global TMT Conference" },
+      { ticker: "ECON", event: "JOLTS Job Openings (Apr) — 10:00am ET" },
+    ]},
+    { day: "Wed Jun 3", items: [
+      { ticker: "CRWV", event: "BofA Global TMT Conference — presenting" },
+      { ticker: "ECON", event: "ADP Employment (May) — 8:15am ET" },
+      { ticker: "ECON", event: "ISM Services PMI (May) — 10:00am ET" },
+      { ticker: "ECON", event: "Fed Beige Book — 2:00pm ET" },
+      { ticker: "ECON", event: "Bank of Canada rate decision" },
+    ]},
+    { day: "Thu Jun 4", items: [
+      { ticker: "SPCX", event: "SpaceX IPO roadshow begins — $1.8T valuation target, ticker SPCX" },
+      { ticker: "TSLA", event: "SpaceX IPO roadshow begins — TSLA correlation catalyst" },
+      { ticker: "NVDA", event: "Ex-dividend (-$0.25)" },
+      { ticker: "AAPL", event: "Ex-dividend (-$0.26)" },
+      { ticker: "META", event: "Ex-dividend (-$0.525)" },
+      { ticker: "ECON", event: "Initial Jobless Claims — 8:30am ET" },
+    ]},
+    { day: "Fri Jun 5", items: [
+      { ticker: "ECON", event: "Employment Report (May) — payrolls, unemployment rate, wages" },
+      { ticker: "TSLA", event: "May delivery data expected" },
+    ]},
+    { day: "Mon Jun 8", items: [
+      { ticker: "AAPL", event: "WWDC Jun 8-12 — dominant catalyst" },
+      { ticker: "GOOG", event: "Ex-dividend (-$0.88)" },
+    ]},
+    { day: "Tue Jun 9", items: [
+      { ticker: "ORCL", event: "Q4 FY26 earnings (after close) — IV at 100th percentile" },
+      { ticker: "TSM", event: "Board meeting — capex, dividend, Arizona updates" },
+    ]},
+    { day: "Wed Jun 10", items: [
+      { ticker: "ECON", event: "CPI (May) — 8:30am ET. Prior: +3.8% YoY headline" },
+      { ticker: "ECON", event: "Real Earnings (May)" },
+    ]},
+    { day: "Thu Jun 11", items: [
+      { ticker: "SPCX", event: "SpaceX IPO pricing — expected after market close" },
+      { ticker: "TSM", event: "Ex-dividend (-$0.95)" },
+      { ticker: "ECON", event: "PPI (May) — 8:30am ET" },
+      { ticker: "ECON", event: "World Cup 2026 begins (Jun 11 - Jul 19)" },
+    ]},
+    { day: "Fri Jun 12", items: [
+      { ticker: "SPCX", event: "SpaceX IPO market debut on Nasdaq — largest IPO in history" },
+    ]},
+    { day: "Jun 16-17", items: [
+      { ticker: "FOMC", event: "FOMC Meeting — rate decision, SEP dots, Powell press conference" },
+      { ticker: "ECON", event: "Fed Funds rate decision — 2:00pm ET Jun 17" },
+    ]},
+    { day: "Late Jun", items: [
+      { ticker: "ECON", event: "G7 Summit (~Jun 15-17)" },
+      { ticker: "ECON", event: "U.S. Open Golf — Jun 18-21" },
+      { ticker: "ECON", event: "Juneteenth — market early close Jun 18, closed Jun 19" },
+      { ticker: "MU", event: "FQ3 earnings ~Jun 24 — HBM demand validation" },
+      { ticker: "ECON", event: "GDP (Q1 T) — Jun 25" },
+      { ticker: "ECON", event: "PCE (May) / Personal Income — Jun 25" },
+      { ticker: "TSM", event: "Q2 earnings Jul 16" },
+    ]},
+  ];
+  const grid = document.getElementById("upcoming-grid");
+  let html = "";
+  for (const day of events) {
+    html += `<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.75rem">
+      <div style="font-size:.75rem;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">${day.day}</div>
+      ${day.items.map(i => `<div style="display:flex;gap:.5rem;padding:.2rem 0;font-size:.8125rem;align-items:baseline">
+        <span style="font-weight:600;color:var(--text);white-space:nowrap;min-width:3.5rem">${i.ticker}</span>
+        <span style="color:var(--text-muted)">${i.event}</span>
+      </div>`).join("")}
+    </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function renderMiniCharts() {
+  for (const s of stocks) {
+    const canvas = document.getElementById("mini-" + s.ticker);
+    if (!canvas) continue;
+    const ctx = canvas.getContext("2d");
+    const prices = s.daily.map((v, i) => {
+      const match = v.match(/[\d.]+/);
+      return match ? parseFloat(match[0]) : 0;
+    });
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const range = maxPrice - minPrice || 1;
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: s.dailyLabels,
+        datasets: [{
+          data: prices,
+          borderColor: s.direction > 0 ? "#22c55e" : "#ef4444",
+          backgroundColor: "transparent",
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: .3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        onHover: (e, el) => e.native.target.style.cursor = el.length ? "pointer" : "default",
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            backgroundColor: "#1e293b",
+            titleColor: "#f1f5f9",
+            bodyColor: s.direction > 0 ? "#22c55e" : "#ef4444",
+            borderColor: "#334155",
+            borderWidth: 1,
+            padding: 8,
+            cornerRadius: 6,
+            displayColors: false,
+            callbacks: {
+              title: items => items[0].label,
+              label: ctx => {
+                const idx = ctx.dataIndex;
+                const op = parseFloat(s.daily[idx].replace("$", ""));
+                const chg = (op - prices[0]).toFixed(2);
+                return `$${op.toFixed(2)}  (${chg >= 0 ? "+" : ""}$${chg})`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { display: false },
+          y: { display: false, min: minPrice - range * 0.15, max: maxPrice + range * 0.15 }
+        }
+      }
+    });
+  }
+}
+
+function filterCards(v) {
+  const q = v.toLowerCase();
+  document.querySelectorAll(".card").forEach(el => {
+    const t = el.dataset.ticker || "";
+    el.style.display = t.includes(q) ? "" : "none";
+  });
+}
+
+let currentFilter = "all";
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.toggle("active", b.dataset.filter === f));
+  renderCards(f);
+  setTimeout(renderMiniCharts, 100);
+}
+
+renderSummaryBar();
+renderCards("all");
+renderCharts();
+renderMiniCharts();
+renderUpcoming();
+</script>
+
+</body>
+</html>

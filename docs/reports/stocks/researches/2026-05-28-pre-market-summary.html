@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pre-Open Predictions — 2026-05-28</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --text-muted: #8b949e;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --blue: #58a6ff;
+    --orange: #d1863b;
+    --purple: #bc8cff;
+    --cyan: #39d2c0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+  .header { max-width: 1400px; margin: 0 auto 24px; }
+  .header h1 { font-size: 24px; font-weight: 600; }
+  .header .subtitle { color: var(--text-muted); font-size: 14px; margin-top: 4px; display: flex; justify-content: space-between; align-items: center; }
+  .header .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .badge-bull { background: rgba(63,185,80,0.15); color: var(--green); }
+  .badge-bear { background: rgba(248,81,73,0.15); color: var(--red); }
+  .badge-range { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .badge-mixed { background: rgba(88,166,255,0.15); color: var(--blue); }
+  .dashboard { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .card-ticker { font-size: 18px; font-weight: 700; text-decoration: none; color: var(--text); }
+  .card-ticker:hover { color: var(--blue); }
+  .card-close { font-size: 14px; color: var(--text-muted); }
+  .card-bias { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+  .card-section { margin-bottom: 12px; }
+  .card-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 4px; }
+  .predicted-open { font-size: 22px; font-weight: 700; }
+  .predicted-range { font-size: 12px; color: var(--text-muted); }
+  .predicted-close { font-size: 14px; }
+  .card-section.path { font-size: 13px; line-height: 1.5; }
+  .card-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 12px; }
+  .card-stats dt { color: var(--text-muted); }
+  .card-stats dd { font-weight: 600; }
+  .card-stats .confidence-H { color: var(--green); }
+  .card-stats .confidence-M { color: var(--yellow); }
+  .card-stats .confidence-L { color: var(--orange); }
+  .card-risk { font-size: 12px; color: var(--red); padding: 6px 8px; background: rgba(248,81,73,0.08); border-radius: 6px; margin-top: auto; }
+  .card-footer { font-size: 11px; color: var(--text-muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; }
+  .macro-bar { max-width: 1400px; margin: 0 auto 20px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .macro-bar h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px; }
+  .macro-grid { display: flex; flex-wrap: wrap; gap: 16px; }
+  .macro-item { display: flex; flex-direction: column; gap: 2px; }
+  .macro-item .label { font-size: 11px; color: var(--text-muted); }
+  .macro-item .value { font-size: 14px; font-weight: 600; }
+  .macro-item .change { font-size: 12px; }
+  .positive { color: var(--green); }
+  .negative { color: var(--red); }
+  .neutral { color: var(--yellow); }
+  .summary-bar { max-width: 1400px; margin: 0 auto 12px; display: flex; flex-wrap: wrap; gap: 12px; }
+  .summary-stat { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; display: flex; flex-direction: column; align-items: center; min-width: 100px; }
+  .summary-stat .num { font-size: 24px; font-weight: 700; }
+  .summary-stat .label { font-size: 11px; color: var(--text-muted); }
+  .disclaimer { max-width: 1400px; margin: 24px auto 0; font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Pre-Open Predictions — 2026-05-28</h1>
+  <div class="subtitle">
+    <span>Generated 2026-05-28 07:00 ET · Anchor date: 2026-05-27 · US Cash session opens 09:30 ET</span>
+    <span class="badge badge-mixed">PRE-MARKET</span>
+  </div>
+</div>
+
+<div class="macro-bar">
+  <h3>Overnight Macro Tape</h3>
+  <div class="macro-grid">
+    <div class="macro-item"><span class="label">S&amp;P 500 Futures</span><span class="value">~7,520</span><span class="change negative">-0.15%</span></div>
+    <div class="macro-item"><span class="label">Nasdaq Futures</span><span class="value">~26,620</span><span class="change negative">-0.15%</span></div>
+    <div class="macro-item"><span class="label">VIX</span><span class="value">16.72</span><span class="change negative">+2.64%</span></div>
+    <div class="macro-item"><span class="label">DXY</span><span class="value">99.43</span><span class="change positive">+0.21%</span></div>
+    <div class="macro-item"><span class="label">10Y UST</span><span class="value">4.53%</span><span class="change negative">+4bp</span></div>
+    <div class="macro-item"><span class="label">Brent Crude</span><span class="value">$93-97</span><span class="change positive">+2.8%</span></div>
+    <div class="macro-item"><span class="label">Gold</span><span class="value">$4,380</span><span class="change neutral">flat</span></div>
+    <div class="macro-item"><span class="label">Key Risk</span><span class="value" style="color:var(--orange);">PCE 08:30</span><span class="change">Core PCE +2.8% YoY est.</span></div>
+  </div>
+</div>
+
+<div class="summary-bar">
+  <div class="summary-stat"><span class="num" style="color:var(--yellow);">4</span><span class="label">Bullish Bias</span></div>
+  <div class="summary-stat"><span class="num" style="color:var(--red);">4</span><span class="label">Bearish Bias</span></div>
+  <div class="summary-stat"><span class="num" style="color:var(--blue);">6</span><span class="label">Range-bound</span></div>
+  <div class="summary-stat"><span class="num">14</span><span class="label">Total Tickers</span></div>
+  <div class="summary-stat"><span class="num" style="color:var(--yellow);">14</span><span class="label">Confidence M or L</span></div>
+</div>
+
+<div class="dashboard">
+
+<!-- AAPL -->
+<div class="card">
+  <div class="card-header">
+    <div><a href="../../2_knowledges/researches/predictions/aapl/2026-05-28.md" class="card-ticker">AAPL</a><span class="card-close"> $310.85</span></div>
+    <span class="card-bias badge-range">RANGE-BOUND</span>
+  </div>
+  <div class="card-section"><span class="predicted-open">$311</span> <span class="predicted-range">cone $310-$312</span></div>
+  <div class="card-section path">Flat-to-green open, low-volume consolidation $308-$312 on pre-WWDC positioning. PCE risk 08:30. Close ~$310.</div>
+  <div class="card-section">
+    <dl class="card-stats">
+      <dt>Close</dt><dd>$310.00 ± $2</dd>
+      <dt>Confidence</dt><dd><span class="confidence-M">MEDIUM</span></dd>
+      <dt>Gap-up / Flat / Down</dt><dd>30% / 50% / 20%</dd>
+      <dt>Range (H-L)</dt><dd>$3.50</dd>
+    </dl>
+  </div>
+  <div class="card-risk">Risk: PCE MoM > 0.3% triggers tech rotation out of overbought names</div>
+  <div class="card-footer"><span>Bull: $313.50 | Bear: $295</span><span>BofA PT $380 · WWDC Jun 8-12</span></div>
+</div>
+
+<!-- AMD -->
+<div class="card">
+  <div class="card-header">
+    <div><a href="../../2_knowledges/researches/predictions/amd/2026-05-28.md" class="card-ticker">AMD</a><span class="card-close"> $495.54</span></div>
+    <span class="card-bias badge-bear">BEARISH</span>
+  </div>
+  <div class="card-section"><span class="predicted-open">$493</span> <span class="predicted-range">cone $490-$496</span></div>
+  <div class="card-section path">Open weak on AH slip ($492), test $487 S1 support, bounce to $497 fails on low RVOL. Close ~$492.</div>
+  <div class="card-section">
+    <dl class="card-stats">
+      <dt>Close</dt><dd>$492.00 ± $4</dd>
+      <dt>Confidence</dt><dd><span class="confidence-M">MEDIUM</span></dd>
+      <dt>Gap-up / Flat / Down</dt><dd>20% / 40% / 40%</dd>
+      <dt>Range (H-L)</dt><dd>$10-12</dd>
+    </dl>
+  </div>
+  <div class="card-risk">Risk: PCE < 0.2% sparks relief rally reversing prior day's distribution</div>
+  <div class="card-footer"><span>Bull: $505 | Bear: $480</span><span>RSI 77 · Daiwa downgrade · COMPUTEX Jun 3-5</span></div>
+</div>
+
+<!-- AMZN -->
+<div class="card">
+  <div class="card-header">
+    <div><a href="../../2_knowledges/researches/predictions/amzn/2026-05-28.md" class="card-ticker">AMZN</a><span class="card-close"> $271.85</span></div>
+    <span class="card-bias badge-range">RANGE-BOUND</span>
+  </div>
+  <div class="card-section"><span class="predicted-open">$272</span> <span class="predicted-range">cone $271-$273</span></div>
+  <div class="card-section path">Flat open after +2.47% day, consolidation $270-$273, $272.50 test. Close ~$271.</div>
+  <div class="card-section">
+    <dl class="card-stats">
+      <dt>Close</dt><dd>$271.00 ± $2</dd>
+      <dt>Confidence</dt><dd><span class="confidence-M">MEDIUM</span></dd>
+      <dt>Gap-up / Flat / Down</dt><dd>30% / 50% / 20%</dd>
+      <dt>Range (H-L)</dt><dd>$4</dd>
+    </dl>
+  </div>
+  <div class="card-risk">Risk: PCE hot print reversing rate-driven bounce below $268.50</div>
+  <div class="card-footer"><span>Bull: $274.99 | Bear: $268.50</span><span>Consensus PT $312 · Reclaimed 10/20-EMA</span></div>
+</div>
+
+<!-- CRCL -->
+<div class="card">
+  <div class="card-header">
+    <div><a href="../../2_knowledges/researches/predictions/crcl/2026-05-28.md" class="card-ticker">CRCL</a><span class="card-close"> $102.64</span></div>
+    <span class="card-bias badge-bear">BEARISH</span>
+  </div>
+  <div class="card-section"><span class="predicted-open">$103</span> <span class="predicted-range">cone $102-$104</span></div>
+  <div class="card-section path">Open weak near $103, drift toward $100 test intraday. Gamma from May 29 $100 calls may hold. Close ~$101.50.</div>
+  <div class="card-section">
+    <dl class="card-stats">
+      <dt>Close</dt><dd>$101.50 ± $2</dd>
+      <dt>Confidence</dt><dd><span class="confidence-M">MEDIUM</span></dd>
+      <dt>Gap-up / Flat / Down</dt><dd>25% / 35% / 40%</dd>
+      <dt>Range (H-L)</dt><dd>$4</dd>
+    </dl>
+  </div>
+  <div class="card-risk">Risk: Reclaim above $105 (EMA cluster) invalidates bearish thesis</div>
+  <div class="card-footer"><span>Bull: $105 | Bear: $100</span><span>Insider selling $72.6M · Post-earnings -22%</span></div>
+</div>
+
+<!-- CRWV -->
+<div class="card">
+  <div class="card-header">
+    <div><a href="../../2_knowledges/researches/predictions/crwv/2026-05-28.md" class="card-ticker">CRWV</a><span class="card-close"> $104.27</span></div>
+    <span class="card-bias badge-range">RANGE-BOUND</span>
+  </div>
+  <div class="card-section"><span class="predicted-open">$105</span> <span class="predicted-range">cone $104-$106</span></div>
+  <div class="card-section path">Gap-up on AH bounce ($105), stall at $106 R1. ADX 15 trendlessness dominates. Close ~$104.50.</div>
+  <div class="card-section">
+    <dl class="card-stats">
+      <dt>Close</dt><dd>$104.50 ± $2</dd>
+      <dt>Confidence</dt><dd><span class="confidence-L">LOW</span></dd>
+      <dt>Gap-up / Flat / Down</dt><dd>35% / 40% / 25%</dd>
+      <dt>Range (H-L)</dt><dd>$3</dd>
+    </dl>
+  </div>
+  <div class="card-risk">Risk: Break above $106 triggers squeeze to $110</div>
+  <div class="card-footer"><span>Bull: $106 | Bear: $99.60</span><span>$7.86B insider sales · Short 13-20%</span></div>
+</div>
+
+<!-- GOOG -->
+<div class="card">
+  <div class="card-header">
+    <div><a href="../../2_knowledges/researches/predictions/goog/2026-05-28.md" class="card-ticker">GOOG</a><span class="card-close"> $384.83</span></div>
+    <span class="card-bias badge-range">RANGE-BOUND</span>
+  </div>
+  <div class="card-section"><span class="predicted-open">$384.50</span> <span class="predicted-range">cone $383-$386</span></div>
+  <div class="card-section path">Flat open, continuation of $380-$390 consolidation, drift toward $382-$385 on low volume. Close ~$384.</div>
+  <div class="card-section">
+    <dl class="card-stats">
+      <dt>Close</dt><dd>$384.00 ± $2</dd>
+      <dt>Confidence</dt><dd><span class="confidence-M">MEDIUM</span></dd>
+      <dt>Gap-up / Flat / Down</dt><dd>20% / 60% / 20%</dd>
+      <dt>Range (H-L)</dt><dd>$3-4</dd>
+    </dl>
+  </div>
+  <div class="card-risk">Risk: EU antitrust fine escalation breaking below $378</div>
+  <div class="card-footer"><span>Bull: $392 | Bear: $378</span><span>Consensus PT $427 · Q1 Cloud +63%</span></div>
+</div>
+
+<!-- INTC -->
+<div class="card">
+  <div class="card-header">
+    <div><a href="../../2_knowledges/researches/predictions/intc/2026-05-28.md" class="card-ticker">INTC</a><span class="card-close"> $121.77</span></div>
+    <span class="card-bias badge-range">RANGE-BOUND</span>
+  </div>
+  <div class="card-section"><span class="predicted-open">$121.50</span> <span class="predicted-range">cone $120-$123</span></div>
+  <div class="card-section path">Slightly weak on Northland downgrade, $119-$120 support. Dip-buying ahead of COMPUTEX Jun 2. Close ~$121.</div>
+  <div class="card-section">
+    <dl class="card-stats">
+      <dt>Close</dt><dd>$121.00 ± $2</dd>
+      <dt>Confidence</dt><dd><span class="confidence-M">MEDIUM</span></dd>
+      <dt>Gap-up / Flat / Down</dt><dd>20% / 50% / 30%</dd>
+      <dt>Range (H-L)</dt><dd>$4-5</dd>
+    </dl>
+  </div>
+  <div class="card-risk">Risk: Broader semi selloff on PCE breaking $117</div>
+  <div class="card-footer"><span>Bull: $125.62 | Bear: $113</span><span>COMPUTEX Jun 2 · Apple deal optionality</span></div>
+</div>
+
+<!-- META -->
+<div class="card">
+  <div class="card-header">
+    <div><a href="../../2_knowledges/researches/predictions/meta/2026-05-28.md" class="card-ticker">META</a><span class="card-close"> $635.26</span></div>
+    <span class="card-bias badge-range">RANGE-BOUND</span>
+  </div>
+  <div class="card-section"><span class="predicted-open">$635</span> <span class="predicted-range">cone $633-$637</span></div>
+  <div class="card-section path">Flat-to-green after +3.74% AI-subscription day. $630 dip-buy support. $650 resistance holds. Close ~$634.</div>
+  <div class="card-section">
+    <dl class="card-stats">
+      <dt>Close</dt><dd>$634.00 ± $3</dd>
+      <dt>Confidence</dt><dd><span class="confidence-M">MEDIUM</span></dd>
+      <dt>Gap-up / Flat / Down</dt><dd>25% / 55% / 20%</dd>
+      <dt>Range (H-L)</dt><dd>$7</dd>
+    </dl>
+  </div>
+  <div class="card-risk">Risk: Profit-taking erasing yesterday's surge below $620</div>
+  <div class="card-footer"><span>Bull: $650 | Bear: $600</span><span>AI subs $7.99/mo · Consensus PT $826</span></div>
+</div>
+
+<!-- MU -->
+<div class="card">
+  <div class="card-header">
+    <div><a href="../../2_knowledges/researches/predictions/mu/2026-05-28.md" class="card-ticker">MU</a><span class="card-close"> $928.41</span></div>
+    <span class="card-bias badge-bear">BEARISH</span>
+  </div>
+  <div class="card-section"><span class="predicted-open">$930</span> <span class="predicted-range">cone $920-$940</span></div>
+  <div class="card-section path">Extreme vol, gamma squeeze active ($1,000 calls 53K traded). RSI 74.7, 38% above 20d SMA. OpEx Fri flip risk. Close ~$925.</div>
+  <div class="card-section">
+    <dl class="card-stats">
+      <dt>Close</dt><dd>$925.00 ± $10</dd>
+      <dt>Confidence</dt><dd><span class="confidence-L">LOW</span></dd>
+      <dt>Gap-up / Flat / Down</dt><dd>30% / 30% / 40%</dd>
+      <dt>Range (H-L)</dt><dd>$45-60</dd>
+    </dl>
+  </div>
+  <div class="card-risk">Risk: Gamma squeeze continuation above $1,000 (wide tail risk both directions)</div>
+  <div class="card-footer"><span>Bull: $956 (ATH) | Bear: $888</span><span>UBS PT $1,625 · May 29 OpEx climax</span></div>
+</div>
+
+<!-- NIO -->
+<div class="card">
+  <div class="card-header">
+    <div><a href="../../2_knowledges/researches/predictions/nio/2026-05-28.md" class="card-ticker">NIO</a><span class="card-close"> $5.75</span></div>
+    <span class="card-bias badge-range">RANGE-BOUND</span>
+  </div>
+  <div class="card-section"><span class="predicted-open">$5.78</span> <span class="predicted-range">cone $5.70-$5.85</span></div>
+  <div class="card-section path">Flat-to-green after +9.32% catalyst day. ES9 deliveries begin today — first validation. $6 resistance holds. Close ~$5.75.</div>
+  <div class="card-section">
+    <dl class="card-stats">
+      <dt>Close</dt><dd>$5.75 ± $0.15</dd>
+      <dt>Confidence</dt><dd><span class="confidence-L">LOW</span></dd>
+      <dt>Gap-up / Flat / Down</dt><dd>30% / 40% / 30%</dd>
+      <dt>Range (H-L)</dt><dd>$0.30</dd>
+    </dl>
+  </div>
+  <div class="card-risk">Risk: 40% fade probability — news-driven surge unwinds below $5.45</div>
+  <div class="card-footer"><span>Bull: $6.00 | Bear: $5.20</span><span>ES9 delivery day · Yao Ming CXO</span></div>
+</div>
+
+<!-- NVDA -->
+<div class="card">
+  <div class="card-header">
+    <div><a href="../../2_knowledges/researches/predictions/nvda/2026-05-28.md" class="card-ticker">NVDA</a><span class="card-close"> $212.60</span></div>
+    <span class="card-bias badge-range">RANGE-BOUND</span>
+  </div>
+  <div class="card-section"><span class="predicted-open">$212.50</span> <span class="predicted-range">cone $211-$214</span></div>
+  <div class="card-section path">Flat-to-weak open, post-earnings digestion continues. $208.78 responsive-buyer zone. Reclaim $214.59 shifts momentum. Close ~$212.</div>
+  <div class="card-section">
+    <dl class="card-stats">
+      <dt>Close</dt><dd>$212.00 ± $2</dd>
+      <dt>Confidence</dt><dd><span class="confidence-M">MEDIUM</span></dd>
+      <dt>Gap-up / Flat / Down</dt><dd>20% / 45% / 35%</dd>
+      <dt>Range (H-L)</dt><dd>$4-5</dd>
+    </dl>
+  </div>
+  <div class="card-risk">Risk: PCE-driven semi selloff breaking $208, opening $200</div>
+  <div class="card-footer"><span>Bull: $220 | Bear: $200</span><span>$119B buyback · Consensus PT $305</span></div>
+</div>
+
+<!-- ORCL -->
+<div class="card">
+  <div class="card-header">
+    <div><a href="../../2_knowledges/researches/predictions/orcl/2026-05-28.md" class="card-ticker">ORCL</a><span class="card-close"> $190.96</span></div>
+    <span class="card-bias badge-bull">BULLISH</span>
+  </div>
+  <div class="card-section"><span class="predicted-open">$192</span> <span class="predicted-range">cone $191-$193</span></div>
+  <div class="card-section path">Green open on AH bounce (+0.54%). Lowest vol in 10 sessions, pre-earnings compression. Drift toward $193-$195. Close ~$192.</div>
+  <div class="card-section">
+    <dl class="card-stats">
+      <dt>Close</dt><dd>$192.00 ± $1.50</dd>
+      <dt>Confidence</dt><dd><span class="confidence-M">MEDIUM</span></dd>
+      <dt>Gap-up / Flat / Down</dt><dd>35% / 45% / 20%</dd>
+      <dt>Range (H-L)</dt><dd>$2.50</dd>
+    </dl>
+  </div>
+  <div class="card-risk">Risk: PCE data breaking $185 before Jun 9-10 earnings</div>
+  <div class="card-footer"><span>Bull: $195 | Bear: $185</span><span>Earnings Jun 9-10 · Wedbush PT $275</span></div>
+</div>
+
+<!-- TSLA -->
+<div class="card">
+  <div class="card-header">
+    <div><a href="../../2_knowledges/researches/predictions/tsla/2026-05-28.md" class="card-ticker">TSLA</a><span class="card-close"> $440.36</span></div>
+    <span class="card-bias badge-range">RANGE-BOUND</span>
+  </div>
+  <div class="card-section"><span class="predicted-open">$440</span> <span class="predicted-range">cone $438-$442</span></div>
+  <div class="card-section path">Flat-to-weak after 5th green day pause. AH slip to $438. $435 support. Stacked EMAs structural floor. Close ~$440.</div>
+  <div class="card-section">
+    <dl class="card-stats">
+      <dt>Close</dt><dd>$440.00 ± $3</dd>
+      <dt>Confidence</dt><dd><span class="confidence-M">MEDIUM</span></dd>
+      <dt>Gap-up / Flat / Down</dt><dd>25% / 45% / 30%</dd>
+      <dt>Range (H-L)</dt><dd>$6-7</dd>
+    </dl>
+  </div>
+  <div class="card-risk">Risk: SpaceX IPO Jun 4 rotation caps upside below $435</div>
+  <div class="card-footer"><span>Bull: $445.60 | Bear: $435</span><span>IV rank 19% · FSD China · EU sales +46.5%</span></div>
+</div>
+
+<!-- TSM -->
+<div class="card">
+  <div class="card-header">
+    <div><a href="../../2_knowledges/researches/predictions/tsm/2026-05-28.md" class="card-ticker">TSM</a><span class="card-close"> $422.73</span></div>
+    <span class="card-bias badge-bear">BEARISH</span>
+  </div>
+  <div class="card-section"><span class="predicted-open">$416</span> <span class="predicted-range">cone $414-$418</span></div>
+  <div class="card-section path">Gap-down after ATH rejection ($430.55 → $422.73) + AH -1.73%. ATH fade signals exhaustion. Consolidate $410-$420. Close ~$415.</div>
+  <div class="card-section">
+    <dl class="card-stats">
+      <dt>Close</dt><dd>$415.00 ± $3</dd>
+      <dt>Confidence</dt><dd><span class="confidence-M">MEDIUM</span></dd>
+      <dt>Gap-up / Flat / Down</dt><dd>15% / 35% / 50%</dd>
+      <dt>Range (H-L)</dt><dd>$6-8</dd>
+    </dl>
+  </div>
+  <div class="card-risk">Risk: NVDA $150B pledge + 3nm hike create dip-buying floor</div>
+  <div class="card-footer"><span>Bull: $430 (ATH) | Bear: $400</span><span>3nm +15% hike · Consensus PT $467</span></div>
+</div>
+
+</div>
+
+<div class="disclaimer">
+  Forward-looking pre-open predictions generated 2026-05-28 07:00 ET, not investment advice.<br>
+  Anchored to daily briefs from 2026-05-27. Backtest hooks pending fill at EOD 2026-05-28.<br>
+  14 tickers · 1 consolidated report · wiki: 2_knowledges/researches/predictions/{ticker}/2026-05-28.md
+</div>
+
+</body>
+</html>

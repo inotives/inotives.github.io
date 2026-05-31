@@ -1,6 +1,106 @@
 {
   "posts": [
     {
+      "slug": "2026-05-31-grafana-in-agentic-workflows",
+      "filename": "2026-05-31-grafana-in-agentic-workflows.md",
+      "category": "post",
+      "title": "Grafana in Agentic Workflows: Observability, Dashboards via MCP, and Common Patterns",
+      "date": "2026-05-31",
+      "tags": [
+        "grafana",
+        "observability",
+        "agentic-workflows",
+        "mcp",
+        "ai-agents",
+        "dashboards",
+        "monitoring",
+        "data-engineering"
+      ],
+      "summary": "Why Grafana is the observability layer for production agents. How to set up Grafana MCP, create dashboards with Codex, and common data-agentic workflow patterns for monitoring, cost tracking, and incident response.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-26-postgres-in-agentic-workflows",
+      "filename": "2026-05-26-postgres-in-agentic-workflows.md",
+      "category": "post",
+      "title": "Postgres Is the Engine of Agentic Workflows",
+      "date": "2026-05-26",
+      "tags": [
+        "postgres",
+        "agentic-workflows",
+        "pgvector",
+        "pgmq",
+        "pg_cron",
+        "ai-agents",
+        "mcp",
+        "infrastructure",
+        "data-engineering"
+      ],
+      "summary": "Why a single Postgres instance with the right extensions replaces Redis, RabbitMQ, Pinecone, and Celery in agentic workflows. How pgvector, pgmq, pg_cron, and other extensions cover state, memory, queue, scheduling, and search.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-25-playwright-cli-for-data-work",
+      "filename": "2026-05-25-playwright-cli-for-data-work.md",
+      "category": "post",
+      "title": "playwright-cli for Data Work: Why CLI Beats MCP and Built-in Tools",
+      "date": "2026-05-25",
+      "tags": [
+        "playwright",
+        "browser-automation",
+        "cli",
+        "mcp",
+        "web-fetch",
+        "web-search",
+        "data-extraction",
+        "developer-tools",
+        "ai-agents"
+      ],
+      "summary": "How playwright-cli fits into daily data extraction workflows, why it replaces web-fetch and web-search for JS-rendered content, why CLI is preferable to MCP for token efficiency, and how to set it up in Codex and opencode with a reusable skill.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-24-bumblebee-supply-chain-scanner",
+      "filename": "2026-05-24-bumblebee-supply-chain-scanner.md",
+      "category": "post",
+      "title": "Bumblebee — Supply-Chain Security Scanning in Daily Coding Workflows",
+      "date": "2026-05-24",
+      "tags": [
+        "bumblebee",
+        "supply-chain",
+        "security",
+        "dev-tools",
+        "workflow",
+        "perplexity-ai"
+      ],
+      "summary": "How Perplexity AI's Bumblebee fits into a daily coding routine: scanning lockfiles against known compromised packages, pre-commit hooks, cron jobs, and keeping the threat surface visible without getting in the way.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-24-cicd-agentic-ai-workflows",
+      "filename": "2026-05-24-cicd-agentic-ai-workflows.md",
+      "category": "post",
+      "title": "CI/CD in Agentic AI Workflows — How Pipelines Change When AI Agents Write Code",
+      "date": "2026-05-24",
+      "tags": [
+        "ci-cd",
+        "github-actions",
+        "agentic-ai",
+        "devops",
+        "code-agents",
+        "mcp",
+        "production",
+        "workflows"
+      ],
+      "summary": "How CI/CD pipelines evolve when AI agents are generating PRs, what the standard enterprise patterns look like, and how to scale from a few agent PRs per day to 100+.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-05-23-context-degradation-in-coding-sessions",
       "filename": "2026-05-23-context-degradation-in-coding-sessions.md",
       "category": "post",
@@ -122,6 +222,69 @@
       "draft": false
     },
     {
+      "slug": "2026-05-13-prompt-optimizer-and-llm-tokens",
+      "filename": "2026-05-13-prompt-optimizer-and-llm-tokens.md",
+      "category": "post",
+      "title": "Prompt Engineering: Tokenization, Structure, and Prompt-Optimizer Integration",
+      "date": "2026-05-13",
+      "tags": [
+        "llm",
+        "tokens",
+        "prompt-engineering",
+        "prompt-optimization",
+        "mcp",
+        "data-workflows",
+        "ai-agents"
+      ],
+      "summary": "How LLMs translate prompts into tokens and use them to predict responses. How to structure effective prompts. How prompt-optimizer works and how it integrates into data workflows via MCP and API.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-12-agent-knowledge-plugin",
+      "filename": "2026-05-12-agent-knowledge-plugin.md",
+      "category": "post",
+      "title": "Building agent-knowledge: A Persistent Memory System for AI Agents",
+      "date": "2026-05-12",
+      "tags": [
+        "agent-knowledge",
+        "karpathy-wiki",
+        "ai-agents",
+        "persistent-memory",
+        "claude-code",
+        "codex",
+        "opencode",
+        "obsidian",
+        "github",
+        "markdown",
+        "knowledge-management"
+      ],
+      "summary": "How I built agent-knowledge — a CLI + session hooks system inspired by Andrej Karpathy's LLM Wiki pattern. Agent-agnostic, works across Claude Code, Codex, and OpenCode, stores everything as plain markdown compatible with Obsidian, and uses GitHub private repos for sync instead of Obsidian Sync subscription.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-10-opencode-alongside-claude-code",
+      "filename": "2026-05-10-opencode-alongside-claude-code.md",
+      "category": "post",
+      "title": "OpenCode Alongside Claude Code: Two Agents, One Workflow",
+      "date": "2026-05-10",
+      "tags": [
+        "opencode",
+        "claude-code",
+        "ai-agents",
+        "coding-agents",
+        "zen",
+        "big-pickle",
+        "codex",
+        "agent-agnostic",
+        "developer-tools"
+      ],
+      "summary": "How I use Claude Code for work and OpenCode for personal projects — the agent-agnostic model switching, free Zen models for research and organizing, and why this dual-agent setup works better than committing to one.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-05-02-what-are-agent-harnesses",
       "filename": "2026-05-02-what-are-agent-harnesses.md",
       "category": "post",
@@ -193,6 +356,32 @@
   ],
   "reports": {
     "stockPreOpen": [
+      {
+        "id": "stock-pre-open-2026-05-29",
+        "name": "Stock Market Pre-Opening Price Estimation",
+        "filename": "2026-05-29-pre-market-summary.html",
+        "url": "/reports/stocks/researches/2026-05-29-pre-market-summary.html",
+        "date": "2026-05-29",
+        "tags": [
+          "Stocks",
+          "Pre-open",
+          "Agent research"
+        ],
+        "description": "Pre-market stock research report generated by my stock analysis agents before the market opens, focused on opening price estimation signals and market setup."
+      },
+      {
+        "id": "stock-pre-open-2026-05-28",
+        "name": "Stock Market Pre-Opening Price Estimation",
+        "filename": "2026-05-28-pre-market-summary.html",
+        "url": "/reports/stocks/researches/2026-05-28-pre-market-summary.html",
+        "date": "2026-05-28",
+        "tags": [
+          "Stocks",
+          "Pre-open",
+          "Agent research"
+        ],
+        "description": "Pre-market stock research report generated by my stock analysis agents before the market opens, focused on opening price estimation signals and market setup."
+      },
       {
         "id": "stock-pre-open-2026-05-27",
         "name": "Stock Market Pre-Opening Price Estimation",
@@ -296,6 +485,21 @@
           "Agent research"
         ],
         "description": "Pre-market stock research report generated by my stock analysis agents before the market opens, focused on opening price estimation signals and market setup."
+      }
+    ],
+    "stockWeekly": [
+      {
+        "id": "stock-weekly-2026-W22",
+        "name": "Weekly Stock Market Summary",
+        "filename": "2026-W22-weekly_summary.html",
+        "url": "/reports/stocks/weekly/2026-W22-weekly_summary.html",
+        "date": "2026-W22",
+        "tags": [
+          "Stocks",
+          "Weekly",
+          "Agent research"
+        ],
+        "description": "Weekly stock market research summary generated from agent analysis of broad market context, sector movement, notable names, and next-week watchpoints."
       }
     ]
   }

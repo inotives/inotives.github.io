@@ -864,6 +864,110 @@ a.contribution-cell.has-report:hover {
   transform: translateY(0);
 }
 
+/* Notes layout — search on top, sidebar on right */
+.notes-search {
+  margin-bottom: 24px;
+}
+
+.notes-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 32px;
+}
+
+.notes-main {
+  min-width: 0;
+}
+
+.notes-count {
+  margin: 0 0 12px;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.notes-count .tag-static {
+  cursor: default;
+  margin-left: 4px;
+}
+
+.notes-sidebar {
+  position: sticky;
+  top: 88px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 14px;
+}
+
+.notes-sidebar-title {
+  margin: 0 0 10px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.notes-tag-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.notes-tag-list .tag {
+  min-height: 28px;
+  font-size: 0.66rem;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+}
+
+.page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.page-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.page-btn-active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.page-dots {
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+}
+
 @media (max-width: 768px) {
   .site-header-inner {
     height: 56px;
@@ -901,8 +1005,20 @@ a.contribution-cell.has-report:hover {
   .record-grid,
   .record-grid-two,
   .article-layout,
-  .article-nav {
+  .article-nav,
+  .notes-layout {
     grid-template-columns: 1fr;
+  }
+
+  .notes-sidebar {
+    position: static;
+    order: -1;
+  }
+
+  .notes-tag-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
   .article-toc {

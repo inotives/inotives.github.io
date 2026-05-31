@@ -5,6 +5,7 @@ import matter from 'gray-matter'
 const CONTENT_DIR = path.resolve('content')
 const OUTPUT_FILE = path.resolve('src/generated/content-index.json')
 const STOCK_RESEARCH_DIR = path.resolve('public/reports/stocks/researches')
+const STOCK_WEEKLY_DIR = path.resolve('public/reports/stocks/weekly')
 
 function scanMarkdownDir(dir, category) {
   const fullPath = path.join(CONTENT_DIR, dir)
@@ -66,8 +67,31 @@ function scanStockResearchReports() {
     .sort((a, b) => b.date.localeCompare(a.date))
 }
 
+function scanStockWeeklyReports() {
+  if (!fs.existsSync(STOCK_WEEKLY_DIR)) return []
+
+  return fs
+    .readdirSync(STOCK_WEEKLY_DIR)
+    .filter((filename) => /^\d{4}-W\d{2}-weekly_summary\.html$/.test(filename))
+    .map((filename) => {
+      const week = filename.slice(0, 8)
+      return {
+        id: `stock-weekly-${week}`,
+        name: 'Weekly Stock Market Summary',
+        filename,
+        url: `/reports/stocks/weekly/${filename}`,
+        date: week,
+        tags: ['Stocks', 'Weekly', 'Agent research'],
+        description:
+          'Weekly stock market research summary generated from agent analysis of broad market context, sector movement, notable names, and next-week watchpoints.',
+      }
+    })
+    .sort((a, b) => b.date.localeCompare(a.date))
+}
+
 const reports = {
   stockPreOpen: scanStockResearchReports(),
+  stockWeekly: scanStockWeeklyReports(),
 }
 
 const index = { posts, pages, reports }
@@ -76,5 +100,5 @@ fs.mkdirSync(path.dirname(OUTPUT_FILE), { recursive: true })
 fs.writeFileSync(OUTPUT_FILE, JSON.stringify(index, null, 2))
 
 console.log(
-  `Content index generated: ${posts.length} posts, ${pages.length} pages, ${reports.stockPreOpen.length} reports → ${OUTPUT_FILE}`
+  `Content index generated: ${posts.length} posts, ${pages.length} pages, ${reports.stockPreOpen.length} pre-open reports, ${reports.stockWeekly.length} weekly reports → ${OUTPUT_FILE}`
 )

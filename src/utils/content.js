@@ -31,6 +31,10 @@ export function getStockPreOpenReports() {
   return contentIndex.reports?.stockPreOpen || []
 }
 
+export function getStockWeeklyReports() {
+  return contentIndex.reports?.stockWeekly || []
+}
+
 export function getPostMeta(slug) {
   return contentIndex.posts.find((p) => p.slug === slug) || null
 }
