@@ -4,7 +4,8 @@ import matter from 'gray-matter'
 
 const CONTENT_DIR = path.resolve('content')
 const OUTPUT_FILE = path.resolve('src/generated/content-index.json')
-const STOCK_RESEARCH_DIR = path.resolve('public/reports/stocks/researches')
+const ADHOC_RESEARCH_DIR = path.resolve('public/reports/researches')
+const STOCK_DAILY_DIR = path.resolve('public/reports/stocks/daily')
 const STOCK_WEEKLY_DIR = path.resolve('public/reports/stocks/weekly')
 
 function scanMarkdownDir(dir, category) {
@@ -45,11 +46,62 @@ const posts = scanMarkdownDir('posts', 'post').sort(
 
 const pages = scanMarkdownDir('pages', 'page')
 
-function scanStockResearchReports() {
-  if (!fs.existsSync(STOCK_RESEARCH_DIR)) return []
+function titleFromFilename(filename) {
+  return filename
+    .replace(/\.html$/, '')
+    .replace(/^\d{4}-\d{2}-\d{2}-/, '')
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
+function extractHtmlTitle(filePath, fallback) {
+  const raw = fs.readFileSync(filePath, 'utf-8')
+  const match = raw.match(/<title>\s*([^<]+?)\s*<\/title>/i)
+  return match ? match[1].trim() : fallback
+}
+
+function listHtmlFiles(dir) {
+  if (!fs.existsSync(dir)) return []
+
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(dir, entry.name)
+    if (entry.isDirectory()) return listHtmlFiles(entryPath)
+    if (entry.isFile() && entry.name.endsWith('.html')) return [entryPath]
+    return []
+  })
+}
+
+function scanAdhocResearchReports() {
+  return listHtmlFiles(ADHOC_RESEARCH_DIR)
+    .map((filePath) => {
+      const filename = path.relative(ADHOC_RESEARCH_DIR, filePath)
+      const normalizedFilename = filename.split(path.sep).join('/')
+      const basename = path.basename(filename)
+      const dateMatch = basename.match(/^(\d{4}-\d{2}-\d{2})/)
+      const date = dateMatch ? dateMatch[1] : null
+      const fallbackTitle = titleFromFilename(basename)
+
+      return {
+        id: `adhoc-research-${normalizedFilename.replace(/[^a-z0-9]+/gi, '-')}`,
+        name: extractHtmlTitle(filePath, fallbackTitle),
+        filename: normalizedFilename,
+        url: `/reports/researches/${normalizedFilename}`,
+        date,
+        tags: ['Adhoc', 'Research', 'Agent research'],
+        description:
+          'Adhoc generated research report produced outside the scheduled stock daily and weekly report streams.',
+      }
+    })
+    .sort((a, b) => (b.date || b.filename).localeCompare(a.date || a.filename))
+}
+
+function scanStockDailyReports() {
+  if (!fs.existsSync(STOCK_DAILY_DIR)) return []
 
   return fs
-    .readdirSync(STOCK_RESEARCH_DIR)
+    .readdirSync(STOCK_DAILY_DIR)
     .filter((filename) => /^\d{4}-\d{2}-\d{2}-pre-market-summary\.html$/.test(filename))
     .map((filename) => {
       const date = filename.slice(0, 10)
@@ -57,7 +109,7 @@ function scanStockResearchReports() {
         id: `stock-pre-open-${date}`,
         name: 'Stock Market Pre-Opening Price Estimation',
         filename,
-        url: `/reports/stocks/researches/${filename}`,
+        url: `/reports/stocks/daily/${filename}`,
         date,
         tags: ['Stocks', 'Pre-open', 'Agent research'],
         description:
@@ -90,7 +142,8 @@ function scanStockWeeklyReports() {
 }
 
 const reports = {
-  stockPreOpen: scanStockResearchReports(),
+  adhocResearch: scanAdhocResearchReports(),
+  stockPreOpen: scanStockDailyReports(),
   stockWeekly: scanStockWeeklyReports(),
 }
 
@@ -100,5 +153,5 @@ fs.mkdirSync(path.dirname(OUTPUT_FILE), { recursive: true })
 fs.writeFileSync(OUTPUT_FILE, JSON.stringify(index, null, 2))
 
 console.log(
-  `Content index generated: ${posts.length} posts, ${pages.length} pages, ${reports.stockPreOpen.length} pre-open reports, ${reports.stockWeekly.length} weekly reports → ${OUTPUT_FILE}`
+  `Content index generated: ${posts.length} posts, ${pages.length} pages, ${reports.adhocResearch.length} adhoc reports, ${reports.stockPreOpen.length} pre-open reports, ${reports.stockWeekly.length} weekly reports → ${OUTPUT_FILE}`
 )

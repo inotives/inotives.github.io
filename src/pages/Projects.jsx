@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom'
-import { getStockPreOpenReports, getStockWeeklyReports } from '../utils/content'
+import {
+  getAdhocResearchReports,
+  getStockPreOpenReports,
+  getStockWeeklyReports,
+} from '../utils/content'
 
 export default function Projects() {
   const publicRepos = [
@@ -53,6 +57,7 @@ export default function Projects() {
     },
   ]
 
+  const adhocReports = getAdhocResearchReports()
   const researchReports = getStockPreOpenReports()
   const weeklyReports = getStockWeeklyReports()
 
@@ -142,6 +147,24 @@ export default function Projects() {
             </p>
             <div className="tag-row mt-4">
               {['Stocks', 'Weekly', 'Agent research'].map((tag) => (
+                <span key={tag} className="tag">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </Link>
+          <Link to="/projects/researches-adhoc" className="record">
+            <div className="record-meta">
+              <span>{adhocReports.length} reports</span>
+              <span>Adhoc / Research / Agent research</span>
+            </div>
+            <h3 className="record-title">Adhoc Researches</h3>
+            <p className="record-copy">
+              A general archive of generated research HTML reports that are not
+              part of the scheduled stock pre-open or weekly summary streams.
+            </p>
+            <div className="tag-row mt-4">
+              {['Adhoc', 'Research', 'Agent research'].map((tag) => (
                 <span key={tag} className="tag">
                   {tag}
                 </span>

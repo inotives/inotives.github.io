@@ -1,47 +1,6 @@
 {
   "posts": [
     {
-      "slug": "2026-05-31-grafana-in-agentic-workflows",
-      "filename": "2026-05-31-grafana-in-agentic-workflows.md",
-      "category": "post",
-      "title": "Grafana in Agentic Workflows: Observability, Dashboards via MCP, and Common Patterns",
-      "date": "2026-05-31",
-      "tags": [
-        "grafana",
-        "observability",
-        "agentic-workflows",
-        "mcp",
-        "ai-agents",
-        "dashboards",
-        "monitoring",
-        "data-engineering"
-      ],
-      "summary": "Why Grafana is the observability layer for production agents. How to set up Grafana MCP, create dashboards with Codex, and common data-agentic workflow patterns for monitoring, cost tracking, and incident response.",
-      "featured_image": null,
-      "draft": false
-    },
-    {
-      "slug": "2026-05-26-postgres-in-agentic-workflows",
-      "filename": "2026-05-26-postgres-in-agentic-workflows.md",
-      "category": "post",
-      "title": "Postgres Is the Engine of Agentic Workflows",
-      "date": "2026-05-26",
-      "tags": [
-        "postgres",
-        "agentic-workflows",
-        "pgvector",
-        "pgmq",
-        "pg_cron",
-        "ai-agents",
-        "mcp",
-        "infrastructure",
-        "data-engineering"
-      ],
-      "summary": "Why a single Postgres instance with the right extensions replaces Redis, RabbitMQ, Pinecone, and Celery in agentic workflows. How pgvector, pgmq, pg_cron, and other extensions cover state, memory, queue, scheduling, and search.",
-      "featured_image": null,
-      "draft": false
-    },
-    {
       "slug": "2026-05-25-playwright-cli-for-data-work",
       "filename": "2026-05-25-playwright-cli-for-data-work.md",
       "category": "post",
@@ -115,6 +74,47 @@
         "session-management"
       ],
       "summary": "Concrete signs of context degradation during AI coding sessions, the tools and strategies we use to detect and mitigate it, and how session structure matters more than model choice past a certain point.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-22-grafana-in-agentic-workflows",
+      "filename": "2026-05-22-grafana-in-agentic-workflows.md",
+      "category": "post",
+      "title": "Grafana in Agentic Workflows: Observability, Dashboards via MCP, and Common Patterns",
+      "date": "2026-05-22",
+      "tags": [
+        "grafana",
+        "observability",
+        "agentic-workflows",
+        "mcp",
+        "ai-agents",
+        "dashboards",
+        "monitoring",
+        "data-engineering"
+      ],
+      "summary": "Why Grafana is the observability layer for production agents. How to set up Grafana MCP, create dashboards with Codex, and common data-agentic workflow patterns for monitoring, cost tracking, and incident response.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-21-postgres-in-agentic-workflows",
+      "filename": "2026-05-21-postgres-in-agentic-workflows.md",
+      "category": "post",
+      "title": "Postgres Is the Engine of Agentic Workflows",
+      "date": "2026-05-21",
+      "tags": [
+        "postgres",
+        "agentic-workflows",
+        "pgvector",
+        "pgmq",
+        "pg_cron",
+        "ai-agents",
+        "mcp",
+        "infrastructure",
+        "data-engineering"
+      ],
+      "summary": "Why a single Postgres instance with the right extensions replaces Redis, RabbitMQ, Pinecone, and Celery in agentic workflows. How pgvector, pgmq, pg_cron, and other extensions cover state, memory, queue, scheduling, and search.",
       "featured_image": null,
       "draft": false
     },
@@ -355,12 +355,27 @@
     }
   ],
   "reports": {
+    "adhocResearch": [
+      {
+        "id": "adhoc-research-2026-06-01-orcl-q4-earnings-pricing-analysis-html",
+        "name": "ORCL Q4 FY2026 Earnings Pricing Analysis | Generated June 1, 2026",
+        "filename": "2026-06-01-orcl-q4-earnings-pricing-analysis.html",
+        "url": "/reports/researches/2026-06-01-orcl-q4-earnings-pricing-analysis.html",
+        "date": "2026-06-01",
+        "tags": [
+          "Adhoc",
+          "Research",
+          "Agent research"
+        ],
+        "description": "Adhoc generated research report produced outside the scheduled stock daily and weekly report streams."
+      }
+    ],
     "stockPreOpen": [
       {
         "id": "stock-pre-open-2026-05-29",
         "name": "Stock Market Pre-Opening Price Estimation",
         "filename": "2026-05-29-pre-market-summary.html",
-        "url": "/reports/stocks/researches/2026-05-29-pre-market-summary.html",
+        "url": "/reports/stocks/daily/2026-05-29-pre-market-summary.html",
         "date": "2026-05-29",
         "tags": [
           "Stocks",
@@ -373,7 +388,7 @@
         "id": "stock-pre-open-2026-05-28",
         "name": "Stock Market Pre-Opening Price Estimation",
         "filename": "2026-05-28-pre-market-summary.html",
-        "url": "/reports/stocks/researches/2026-05-28-pre-market-summary.html",
+        "url": "/reports/stocks/daily/2026-05-28-pre-market-summary.html",
         "date": "2026-05-28",
         "tags": [
           "Stocks",
@@ -386,7 +401,7 @@
         "id": "stock-pre-open-2026-05-27",
         "name": "Stock Market Pre-Opening Price Estimation",
         "filename": "2026-05-27-pre-market-summary.html",
-        "url": "/reports/stocks/researches/2026-05-27-pre-market-summary.html",
+        "url": "/reports/stocks/daily/2026-05-27-pre-market-summary.html",
         "date": "2026-05-27",
         "tags": [
           "Stocks",
@@ -399,7 +414,7 @@
         "id": "stock-pre-open-2026-05-26",
         "name": "Stock Market Pre-Opening Price Estimation",
         "filename": "2026-05-26-pre-market-summary.html",
-        "url": "/reports/stocks/researches/2026-05-26-pre-market-summary.html",
+        "url": "/reports/stocks/daily/2026-05-26-pre-market-summary.html",
         "date": "2026-05-26",
         "tags": [
           "Stocks",
@@ -412,7 +427,7 @@
         "id": "stock-pre-open-2026-05-22",
         "name": "Stock Market Pre-Opening Price Estimation",
         "filename": "2026-05-22-pre-market-summary.html",
-        "url": "/reports/stocks/researches/2026-05-22-pre-market-summary.html",
+        "url": "/reports/stocks/daily/2026-05-22-pre-market-summary.html",
         "date": "2026-05-22",
         "tags": [
           "Stocks",
@@ -425,7 +440,7 @@
         "id": "stock-pre-open-2026-05-21",
         "name": "Stock Market Pre-Opening Price Estimation",
         "filename": "2026-05-21-pre-market-summary.html",
-        "url": "/reports/stocks/researches/2026-05-21-pre-market-summary.html",
+        "url": "/reports/stocks/daily/2026-05-21-pre-market-summary.html",
         "date": "2026-05-21",
         "tags": [
           "Stocks",
@@ -438,7 +453,7 @@
         "id": "stock-pre-open-2026-05-20",
         "name": "Stock Market Pre-Opening Price Estimation",
         "filename": "2026-05-20-pre-market-summary.html",
-        "url": "/reports/stocks/researches/2026-05-20-pre-market-summary.html",
+        "url": "/reports/stocks/daily/2026-05-20-pre-market-summary.html",
         "date": "2026-05-20",
         "tags": [
           "Stocks",
@@ -451,7 +466,7 @@
         "id": "stock-pre-open-2026-05-19",
         "name": "Stock Market Pre-Opening Price Estimation",
         "filename": "2026-05-19-pre-market-summary.html",
-        "url": "/reports/stocks/researches/2026-05-19-pre-market-summary.html",
+        "url": "/reports/stocks/daily/2026-05-19-pre-market-summary.html",
         "date": "2026-05-19",
         "tags": [
           "Stocks",
@@ -464,7 +479,7 @@
         "id": "stock-pre-open-2026-05-18",
         "name": "Stock Market Pre-Opening Price Estimation",
         "filename": "2026-05-18-pre-market-summary.html",
-        "url": "/reports/stocks/researches/2026-05-18-pre-market-summary.html",
+        "url": "/reports/stocks/daily/2026-05-18-pre-market-summary.html",
         "date": "2026-05-18",
         "tags": [
           "Stocks",
@@ -477,7 +492,7 @@
         "id": "stock-pre-open-2026-05-15",
         "name": "Stock Market Pre-Opening Price Estimation",
         "filename": "2026-05-15-pre-market-summary.html",
-        "url": "/reports/stocks/researches/2026-05-15-pre-market-summary.html",
+        "url": "/reports/stocks/daily/2026-05-15-pre-market-summary.html",
         "date": "2026-05-15",
         "tags": [
           "Stocks",

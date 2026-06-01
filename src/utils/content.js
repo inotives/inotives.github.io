@@ -27,6 +27,10 @@ export function getAllPages() {
   return contentIndex.pages
 }
 
+export function getAdhocResearchReports() {
+  return contentIndex.reports?.adhocResearch || []
+}
+
 export function getStockPreOpenReports() {
   return contentIndex.reports?.stockPreOpen || []
 }

@@ -179,13 +179,13 @@ Research Reports are broader than pre-market stock reports. The section copy sho
 Report HTML files should be treated as static source artifacts under:
 
 ```text
-public/reports/stocks/researches/
+public/reports/stocks/daily/
 ```
 
 They are published to:
 
 ```text
-docs/reports/stocks/researches/
+docs/reports/stocks/daily/
 ```
 
 Filenames for stock pre-open reports currently follow:
@@ -194,7 +194,7 @@ Filenames for stock pre-open reports currently follow:
 YYYY-MM-DD-pre-market-summary.html
 ```
 
-`scripts/generate-content-index.js` scans `public/reports/stocks/researches` and writes report metadata into `src/generated/content-index.json`. `scripts/sync-static-reports.js` exists to preserve reports that were previously placed under `docs/reports` by syncing them into `public/reports` before the Vite build clears and regenerates `docs/`.
+`scripts/generate-content-index.js` scans `public/reports/stocks/daily` and writes report metadata into `src/generated/content-index.json`. `scripts/sync-static-reports.js` exists to preserve reports that were previously placed under `docs/reports` by syncing them into `public/reports` before the Vite build clears and regenerates `docs/`.
 
 ### Portfolio
 

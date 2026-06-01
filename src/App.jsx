@@ -6,6 +6,7 @@ import Note from './pages/Note'
 import Portfolio from './pages/Portfolio'
 import About from './pages/About'
 import Projects from './pages/Projects'
+import AdhocResearchesProject from './pages/AdhocResearchesProject'
 import StockPreOpenProject from './pages/StockPreOpenProject'
 import StockWeeklyReportsProject from './pages/StockWeeklyReportsProject'
 import Resume from './pages/Resume'
@@ -21,6 +22,10 @@ function App() {
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/about" element={<About />} />
         <Route path="/projects" element={<Projects />} />
+        <Route
+          path="/projects/researches-adhoc"
+          element={<AdhocResearchesProject />}
+        />
         <Route
           path="/projects/research-stocks-pro-open-price"
           element={<StockPreOpenProject />}

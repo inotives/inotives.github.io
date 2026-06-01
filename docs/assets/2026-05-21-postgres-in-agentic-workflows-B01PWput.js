@@ -1,6 +1,6 @@
 var e=`---
 title: "Postgres Is the Engine of Agentic Workflows"
-date: 2026-05-26
+date: 2026-05-21
 tags: [postgres, agentic-workflows, pgvector, pgmq, pg_cron, ai-agents, mcp, infrastructure, data-engineering]
 summary: "Why a single Postgres instance with the right extensions replaces Redis, RabbitMQ, Pinecone, and Celery in agentic workflows. How pgvector, pgmq, pg_cron, and other extensions cover state, memory, queue, scheduling, and search."
 ---

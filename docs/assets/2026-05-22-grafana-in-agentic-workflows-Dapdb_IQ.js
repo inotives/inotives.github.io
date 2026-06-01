@@ -1,6 +1,6 @@
 var e=`---
 title: "Grafana in Agentic Workflows: Observability, Dashboards via MCP, and Common Patterns"
-date: 2026-05-31
+date: 2026-05-22
 tags: [grafana, observability, agentic-workflows, mcp, ai-agents, dashboards, monitoring, data-engineering]
 summary: "Why Grafana is the observability layer for production agents. How to set up Grafana MCP, create dashboards with Codex, and common data-agentic workflow patterns for monitoring, cost tracking, and incident response."
 ---

@@ -100,7 +100,7 @@ App routes
 Then normal shell tools handled literal file details, such as listing report files under:
 
 \`\`\`text
-docs/reports/stocks/researches
+docs/reports/stocks/daily
 \`\`\`
 
 This is the practical split:

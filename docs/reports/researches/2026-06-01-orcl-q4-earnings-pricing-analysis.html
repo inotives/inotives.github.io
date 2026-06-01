@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORCL Q4 FY2026 Earnings Pricing Analysis | Generated June 1, 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --popover: #18181b;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --destructive: #7f1d1d;
+  --destructive-foreground: #fafafa;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #d4d4d8;
+  --radius: 0.5rem;
+  --positive: #22c55e;
+  --positive-bg: #052e16;
+  --negative: #ef4444;
+  --negative-bg: #450a0a;
+  --neutral: #eab308;
+  --neutral-bg: #422006;
+  --info: #3b82f6;
+  --info-bg: #172554;
+}
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  line-height: 1.6;
+  font-size: 0.9375rem;
+}
+h1 {
+  color: var(--foreground);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 4px 0;
+}
+h2 {
+  color: var(--foreground);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 32px 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+h3 {
+  color: var(--foreground);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin: 24px 0 8px 0;
+}
+h4 {
+  color: var(--foreground);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 16px 0 8px 0;
+}
+.subtitle {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  margin-bottom: 24px;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 16px 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.card h2 {
+  border-bottom: none;
+  margin-top: 0;
+  padding-bottom: 0;
+}
+.card h3 {
+  margin-top: 0;
+}
+.card h4 {
+  margin-top: 12px;
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.stat {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+.stat-header {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin-top: 4px;
+}
+.positive { color: var(--positive); }
+.negative { color: var(--negative); }
+.neutral  { color: var(--neutral); }
+.info     { color: var(--info); }
+.verdict {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--info);
+  padding: 16px 20px;
+  margin: 20px 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.verdict-yes {
+  border-left-color: var(--positive);
+  background: linear-gradient(to right, var(--positive-bg), var(--card));
+}
+.verdict-no {
+  border-left-color: var(--negative);
+  background: linear-gradient(to right, var(--negative-bg), var(--card));
+}
+.verdict-caution {
+  border-left-color: var(--neutral);
+  background: linear-gradient(to right, var(--neutral-bg), var(--card));
+}
+.tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.tag-green  { background: var(--positive-bg); color: var(--positive); border: 1px solid rgba(34,197,94,0.3); }
+.tag-red    { background: var(--negative-bg); color: var(--negative); border: 1px solid rgba(239,68,68,0.3); }
+.tag-yellow { background: var(--neutral-bg); color: var(--neutral); border: 1px solid rgba(234,179,8,0.3); }
+.tag-blue   { background: var(--info-bg); color: var(--info); border: 1px solid rgba(59,130,246,0.3); }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 0.875rem;
+}
+thead {
+  border-bottom: 2px solid var(--border);
+}
+th {
+  padding: 10px 12px;
+  text-align: right;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: transparent;
+}
+td {
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+td:first-child, th:first-child {
+  text-align: left;
+}
+tbody tr:hover {
+  background: var(--accent);
+}
+tr.active {
+  background: var(--info-bg);
+}
+tr.active td {
+  border-bottom-color: var(--info);
+}
+.summary-row {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+.summary-row > div {
+  flex: 1;
+  min-width: 120px;
+}
+pre, code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.8125rem;
+}
+code {
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--foreground);
+}
+pre {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+a {
+  color: var(--info);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+.footnote {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  margin-top: 32px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 24px 0;
+}
+blockquote {
+  border-left: 3px solid var(--border);
+  margin: 16px 0;
+  padding: 8px 16px;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+.card ul, .card ol {
+  margin: 8px 0;
+  padding-left: 20px;
+  color: var(--foreground);
+}
+.card li {
+  margin: 4px 0;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 16px 0;
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+.chart-container {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 16px 0;
+  position: relative;
+}
+.chart-container canvas {
+  width: 100% !important;
+  max-height: 400px;
+}
+.kpi {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  padding: 4px 12px;
+  border-radius: var(--radius);
+  background: var(--secondary);
+}
+.alert {
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin: 16px 0;
+  font-size: 0.875rem;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.alert-info {
+  background: var(--info-bg);
+  border-color: rgba(59,130,246,0.3);
+}
+.alert-warning {
+  background: var(--neutral-bg);
+  border-color: rgba(234,179,8,0.3);
+}
+.alert-error {
+  background: var(--negative-bg);
+  border-color: rgba(239,68,68,0.3);
+}
+.alert-icon { font-size: 1rem; flex-shrink: 0; }
+@media (max-width: 640px) {
+  body { padding: 16px 12px; }
+  table { font-size: 0.75rem; }
+  th, td { padding: 6px 8px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  h1 { font-size: 1.375rem; }
+  .chart-container { padding: 12px; }
+}
+</style>
+</head>
+<body>
+
+<h1>ORCL Q4 FY2026 Earnings Pricing Analysis</h1>
+<div class="subtitle">Pre-earnings analysis of Oracle Corp (ORCL) pricing estimation ahead of Q4 FY2026 report on Jun 9, covering analyst sentiment, technical levels, options market expectations, and bull/bear cases | Generated June 1, 2026</div>
+
+<div class="card">
+  <h2>Context</h2>
+  <p>Oracle Corporation (ORCL) reports Q4 FY2026 earnings around Jun 9-10 2026 after market close. The stock has been highly volatile over the past year — hitting an all-time high of <span class="positive">$345.72</span> in Sep 2025, crashing <span class="negative">61%</span> to <span class="negative">$134.57</span> in Apr 2026, then rallying <span class="positive">68%</span> back to <span class="positive">$225.78</span> by May 29. This analysis synthesizes 13 financial data sources to establish the pre-earnings pricing landscape, analyst expectations, technical levels, and the key catalysts that will drive the post-earnings move.</p>
+  <p>The central tension: ORCL has massive AI cloud momentum (<span class="positive">$553B backlog</span>, <span class="positive">84% OCI growth</span>) but terrifying leverage (<span class="negative">$96B debt</span>, negative FCF from <span class="negative">$8.5B/quarter capex</span>). The stock has beaten EPS estimates <span class="positive">4 quarters straight</span>, yet Q3's <span class="positive">15.5% beat</span> was met with a <span class="negative">-1.4% selloff</span> — suggesting the market demands "blowout" results, not just beats.</p>
+</div>
+
+<div class="card">
+  <h2>Key Metrics</h2>
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-header">Current Price</div>
+      <div class="stat-value positive">$225.78</div>
+      <div class="stat-label">May 29, 2026</div>
+    </div>
+    <div class="stat">
+      <div class="stat-header">52W High</div>
+      <div class="stat-value positive">$345.72</div>
+      <div class="stat-label">Sep 10, 2025</div>
+    </div>
+    <div class="stat">
+      <div class="stat-header">52W Low</div>
+      <div class="stat-value negative">$134.57</div>
+      <div class="stat-label">Apr 10, 2026</div>
+    </div>
+    <div class="stat">
+      <div class="stat-header">Consensus PT</div>
+      <div class="stat-value neutral">$259-264</div>
+      <div class="stat-label">Moderate Buy, 41 analysts</div>
+    </div>
+    <div class="stat">
+      <div class="stat-header">Implied Move</div>
+      <div class="stat-value neutral">~15.72%</div>
+      <div class="stat-label">Earnings Vol: 5.7/10</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Earnings Date & Consensus Estimates</h3>
+  <p>ORCL Q4 FY2026 is estimated for <strong>Jun 9-10</strong> after market close (Optionslam projected window Jun 8-13; conference call expected Jun 8 at 4pm ET).</p>
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-header">EPS Consensus</div>
+      <div class="stat-value">$1.88-$1.96</div>
+      <div class="stat-label">Company guided $1.96-2.00</div>
+    </div>
+    <div class="stat">
+      <div class="stat-header">Revenue</div>
+      <div class="stat-value">~$19.1B-$19.48B</div>
+      <div class="stat-label">Q3 was $17.19B (+21.7% YoY)</div>
+    </div>
+    <div class="stat">
+      <div class="stat-header">Prev Q3 Beat</div>
+      <div class="stat-value positive">+15.48%</div>
+      <div class="stat-label">EPS $1.79 vs $1.55 est.</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Analyst Sentiment & Price Targets</h3>
+  <p>41 analysts tracked, consensus <span class="tag tag-blue">Moderate Buy</span>. Average PT <strong>$259-264</strong>. Range exceptionally wide at <span class="negative">$135</span> (RBC Capital) to <span class="positive">$400</span> (Guggenheim) — a <strong>2.96x spread</strong> reflecting deep disagreement on AI monetization trajectory.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Firm</th>
+        <th>Rating</th>
+        <th>PT</th>
+        <th>Note</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Wedbush (Ives)</td>
+        <td>Outperform</td>
+        <td class="positive">$275</td>
+        <td>"Stock could double monetizing AI"</td>
+      </tr>
+      <tr>
+        <td>Guggenheim</td>
+        <td>Buy</td>
+        <td class="positive">$400</td>
+        <td>Street high</td>
+      </tr>
+      <tr>
+        <td>Oppenheimer</td>
+        <td>Outperform</td>
+        <td class="neutral">$235</td>
+        <td>Positive on cloud</td>
+      </tr>
+      <tr>
+        <td>JP Morgan (Murphy)</td>
+        <td>Overweight</td>
+        <td class="neutral">$210</td>
+        <td>Upgraded Mar 11</td>
+      </tr>
+      <tr>
+        <td>RBC Capital</td>
+        <td>Underperform</td>
+        <td class="negative">$160</td>
+        <td>Street low; debt/capex concerns</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="alert alert-info">
+    <span class="alert-icon">&#8505;</span>
+    <span>Top-performing analysts (Murphy/JP Morgan at 100% success over 2y, Panigrahi/Mizuho at 91.7% over 1y) lean bullish with avg returns of <strong>+35%</strong>.</span>
+  </div>
+</div>
+
+<div class="chart-container">
+  <canvas id="ptChart"></canvas>
+</div>
+
+<div class="card">
+  <h3>Price Action & Technical Levels</h3>
+  <div class="summary-row">
+    <div><span class="tag tag-red">52w Low: $134.57</span></div>
+    <div><span class="tag tag-green">52w High: $345.72</span></div>
+    <div><span class="tag tag-green">Current: $225.78</span></div>
+  </div>
+  <div class="summary-row">
+    <div><span class="tag tag-green">Short-term: bullish</span></div>
+    <div><span class="tag tag-yellow">Medium-term: neutral-bullish</span></div>
+    <div><span class="tag tag-red">Long-term: bearish</span></div>
+  </div>
+  <h4>Key Levels</h4>
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-header">Support</div>
+      <div class="stat-value negative">$196</div>
+      <div class="stat-label">S1</div>
+    </div>
+    <div class="stat">
+      <div class="stat-header">Support</div>
+      <div class="stat-value negative">$188</div>
+      <div class="stat-label">Breakout level</div>
+    </div>
+    <div class="stat">
+      <div class="stat-header">Support</div>
+      <div class="stat-value negative">$178</div>
+      <div class="stat-label">200-day MA</div>
+    </div>
+    <div class="stat">
+      <div class="stat-header">Resistance</div>
+      <div class="stat-value positive">$235-240</div>
+      <div class="stat-label">Near-term</div>
+    </div>
+    <div class="stat">
+      <div class="stat-header">Resistance</div>
+      <div class="stat-value positive">$260-275</div>
+      <div class="stat-label">Consensus PT</div>
+    </div>
+    <div class="stat">
+      <div class="stat-header">Resistance</div>
+      <div class="stat-value positive">$328-345</div>
+      <div class="stat-label">ATH zone</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Options Market Expectations</h3>
+  <div class="summary-row">
+    <div><span class="tag tag-yellow">Earnings Vol: 5.7/10</span></div>
+    <div><span class="tag tag-yellow">Implied Move: ~15.72%</span></div>
+    <div><span class="tag tag-green">Upside: ~$260</span></div>
+    <div><span class="tag tag-red">Downside: ~$190</span></div>
+  </div>
+  <p>Historical reactions inconsistent: Q3 beat <span class="positive">+15.5%</span> <span class="tag tag-red">-1.4% selloff</span>; Q2 beat <span class="positive">+50.7%</span> <span class="tag tag-green">stock rose</span>; Q1 beat <span class="positive">+8.9%</span> <span class="tag tag-green">+36% rally</span>.</p>
+</div>
+
+<div class="chart-container">
+  <canvas id="orclJourneyChart"></canvas>
+</div>
+
+<div class="card">
+  <h3>Entry Zones</h3>
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-header">Ideal Entry</div>
+      <div class="stat-value" style="font-size: 1.2em; color: var(--positive);">$188-196</div>
+      <div class="stat-label">Support zone</div>
+    </div>
+    <div class="stat">
+      <div class="stat-header">Target</div>
+      <div class="stat-value" style="font-size: 1.2em; color: var(--info);">$260+</div>
+      <div class="stat-label">Consensus PT upside</div>
+    </div>
+    <div class="stat">
+      <div class="stat-header">Stop Loss</div>
+      <div class="stat-value negative" style="font-size: 1.2em;">$178</div>
+      <div class="stat-label">200-day MA</div>
+    </div>
+  </div>
+</div>
+
+<h2>Bull vs Bear</h2>
+<div class="grid-2">
+  <div class="card">
+    <h3 style="color: var(--positive);">Bull Case ($260+)</h3>
+    <ul>
+      <li><strong>AI infrastructure dominance</strong>: OCI revenue <span class="positive">+84% YoY</span> to $4.88B; AI infra alone <span class="positive">+243% YoY</span>; gross margins on AI at 32% (above 30% guidance)</li>
+      <li><strong>Unprecedented backlog</strong>: <span class="positive">$553B</span> total RPO (+438% YoY) including $300B 5-year OpenAI deal. Forward visibility rare in tech</li>
+      <li><strong>Beat pattern</strong>: 4 consecutive beats avg <span class="positive">19.7%</span> surprise; company guided $1.96-2.00 vs consensus $1.88 — low bar for headline beat</li>
+      <li><strong>Catalyst pipeline</strong>: TikTok US 15% stake, DoD classified AI contract, $16B Michigan data center financing, Nvidia Veru CPU deployment</li>
+      <li><strong>Wedbush/Ives thesis</strong>: "Tremendously bigger company in 2-4 years... stock could double"</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3 style="color: var(--negative);">Bear Case ($170-185)</h3>
+    <ul>
+      <li><strong>Leverage crisis</strong>: Debt/equity <span class="negative">3.66-4.6x</span>, long-term debt ~$96B, working capital <span class="negative">-$15B</span>, negative FCF on $8.5B quarterly capex. ROE &gt;60% driven by financial engineering</li>
+      <li><strong>"AI round trip" risk</strong>: Cloud spend circulating between AI partners (OpenAI trains on OCI + pays Oracle + Oracle buys OpenAI compute) — real end-demand unclear</li>
+      <li><strong>Q3 reaction warning</strong>: <span class="positive">15.5%</span> EPS beat but stock fell <span class="negative">1.4%</span>. Market wants blowouts, not beats</li>
+      <li><strong>Technical damage</strong>: Still <span class="negative">35%</span> below ATH. Failed double-bottom breakout could send price back to $170-185</li>
+      <li><strong>Macro</strong>: High rates pressure high-beta tech; oil at $104+; "AI capex bubble" narrative growing</li>
+      <li><strong>Institutional caution</strong>: PNC cut holdings <span class="negative">3.2%</span>; short interest <span class="negative">+86% YoY</span></li>
+    </ul>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Key Earnings Battlegrounds</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>Consensus</th>
+        <th>Sensitivity</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>EPS</td>
+        <td>$1.88</td>
+        <td>Beat &lt;$0.08 = selloff; &gt;$0.10 + raise = rally</td>
+      </tr>
+      <tr>
+        <td>Revenue</td>
+        <td>~$19.1B</td>
+        <td>Cloud growth &gt;22% YoY needed</td>
+      </tr>
+      <tr>
+        <td>OCI Revenue</td>
+        <td>~$5.2B</td>
+        <td>&gt;80% sustains bull case; &lt;70% triggers sell</td>
+      </tr>
+      <tr>
+        <td>Backlog</td>
+        <td>$553B</td>
+        <td>Growth rate matters more than absolute</td>
+      </tr>
+      <tr>
+        <td>Capex</td>
+        <td>FY27 est $12-15B</td>
+        <td>Efficiency proof needed</td>
+      </tr>
+      <tr class="active">
+        <td>FCF</td>
+        <td>Negative ~$6B/qtr</td>
+        <td>Path to positive by FY27 critical</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>Anti-Patterns</h2>
+
+<div class="verdict verdict-caution">
+  <strong>Assuming beats always rally:</strong> Q3 FY2026 was a 15.5% EPS beat with revenue beat, yet the stock dropped 1.4%. The market appears to be pricing in multiple compression regardless of quarterly outperformance. Do not assume a beat = buy signal.
+</div>
+
+<div class="verdict verdict-caution">
+  <strong>Overweighting the $345 ATH:</strong> The Sep 2025 high was a post-Q1 euphoria spike (+36% in one day) that was not sustained. Using it as a primary resistance level overweights a single outlier event. The $260-275 consensus PT range is a more actionable ceiling.
+</div>
+
+<div class="verdict verdict-caution">
+  <strong>Ignoring the quiet period:</strong> As Jun 9 approaches, the pre-earnings quiet period suppresses new analyst ratings and corporate announcements. The May 29 +11% surge could fade into the print without fresh catalysts.
+</div>
+
+<div class="footnote">
+  <p><strong>Sources:</strong> Original research draft with 13 cited sources (<code>drafts/archived/2_researches/2026-06-01-orcl-q4-earnings-pricing-analysis.md</code>), methodology, confidence calibration, and open questions.</p>
+  <p>Generated by Agent Memory | June 1, 2026</p>
+</div>
+
+<script>
+new Chart(document.getElementById('ptChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Wedbush', 'Guggenheim', 'Oppenheimer', 'JP Morgan', 'RBC Capital'],
+    datasets: [{
+      label: 'Price Target',
+      data: [275, 400, 235, 210, 160],
+      backgroundColor: ['#22c55e', '#22c55e', '#eab308', '#eab308', '#ef4444'],
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: { labels: { color: '#a1a1aa' } },
+      title: { display: true, text: 'Analyst Price Targets', color: '#fafafa', font: { weight: '600' } }
+    },
+    scales: {
+      x: { ticks: { color: '#a1a1aa' }, grid: { color: '#27272a' } },
+      y: { ticks: { color: '#a1a1aa' }, grid: { color: '#27272a' } }
+    }
+  }
+});
+
+new Chart(document.getElementById('orclJourneyChart'), {
+  type: 'line',
+  data: {
+    labels: ['Sep 2025\n(ATH)', 'Oct', 'Nov', 'Dec', 'Jan 2026', 'Feb', 'Mar', 'Apr 2026\n(Low)', 'May 2026\n(Now)'],
+    datasets: [{
+      label: 'ORCL Price',
+      data: [345.72, 320, 280, 240, 210, 190, 160, 134.57, 225.78],
+      borderColor: '#3b82f6',
+      backgroundColor: 'rgba(59,130,246,0.08)',
+      fill: true,
+      tension: 0.3,
+      pointRadius: 4,
+      pointBackgroundColor: ['#22c55e', '#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6', '#ef4444', '#22c55e'],
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: { labels: { color: '#a1a1aa' } },
+      title: { display: true, text: 'ORCL Price Journey (Sep 2025 - May 2026)', color: '#fafafa', font: { weight: '600' } }
+    },
+    scales: {
+      x: { ticks: { color: '#a1a1aa' }, grid: { color: '#27272a' } },
+      y: { ticks: { color: '#a1a1aa' }, grid: { color: '#27272a' } }
+    }
+  }
+});
+</script>
+
+</body>
+</html>
