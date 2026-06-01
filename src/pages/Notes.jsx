@@ -11,6 +11,7 @@ export default function Notes() {
   const activeTag = searchParams.get('tag')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [tagsOpen, setTagsOpen] = useState(Boolean(activeTag))
 
   const allTags = [...new Set(posts.flatMap((p) => p.tags))].sort()
 
@@ -127,6 +128,38 @@ export default function Notes() {
           className="input notes-search"
         />
 
+        {allTags.length > 0 && (
+          <div className="notes-filter-panel">
+            <button
+              type="button"
+              className="notes-filter-toggle"
+              aria-expanded={tagsOpen}
+              aria-controls="notes-tags"
+              onClick={() => setTagsOpen((open) => !open)}
+            >
+              <span>Tags</span>
+              <span className="notes-filter-meta">
+                {activeTag ? activeTag : `${allTags.length} available`}
+              </span>
+              <span className="notes-filter-icon">{tagsOpen ? '-' : '+'}</span>
+            </button>
+
+            {tagsOpen && (
+              <div id="notes-tags" className="notes-tag-list">
+                {allTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => handleTagClick(tag)}
+                    className={`tag ${tag === activeTag ? 'tag-active' : ''}`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="notes-layout">
           <div className="notes-main">
             {filtered.length === 0 ? (
@@ -146,23 +179,6 @@ export default function Notes() {
               </>
             )}
           </div>
-
-          {allTags.length > 0 && (
-            <aside className="notes-sidebar">
-              <h3 className="notes-sidebar-title">Tags</h3>
-              <div className="notes-tag-list">
-                {allTags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => handleTagClick(tag)}
-                    className={`tag ${tag === activeTag ? 'tag-active' : ''}`}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </aside>
-          )}
         </div>
       </section>
     </div>

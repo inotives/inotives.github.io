@@ -864,16 +864,65 @@ a.contribution-cell.has-report:hover {
   transform: translateY(0);
 }
 
-/* Notes layout — search on top, sidebar on right */
+/* Notes layout */
 .notes-search {
+  margin-bottom: 12px;
+}
+
+.notes-filter-panel {
+  border: 1px solid var(--rule);
+  background: var(--surface);
   margin-bottom: 24px;
 }
 
-.notes-layout {
+.notes-filter-toggle {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 32px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 12px 14px;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.notes-filter-toggle:hover {
+  color: var(--accent);
+}
+
+.notes-filter-meta {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink-muted);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notes-filter-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--rule);
+  color: var(--accent);
+  line-height: 1;
+}
+
+.notes-layout {
+  display: block;
 }
 
 .notes-main {
@@ -894,29 +943,13 @@ a.contribution-cell.has-report:hover {
   margin-left: 4px;
 }
 
-.notes-sidebar {
-  position: sticky;
-  top: 88px;
-  border: 1px solid var(--rule);
-  background: var(--surface);
-  padding: 14px;
-}
-
-.notes-sidebar-title {
-  margin: 0 0 10px;
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
 .notes-tag-list {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--rule);
+  padding: 12px 14px 14px;
 }
 
 .notes-tag-list .tag {
@@ -1005,20 +1038,8 @@ a.contribution-cell.has-report:hover {
   .record-grid,
   .record-grid-two,
   .article-layout,
-  .article-nav,
-  .notes-layout {
+  .article-nav {
     grid-template-columns: 1fr;
-  }
-
-  .notes-sidebar {
-    position: static;
-    order: -1;
-  }
-
-  .notes-tag-list {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 6px;
   }
 
   .article-toc {

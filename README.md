@@ -25,8 +25,7 @@ Personal portfolio, blog, and research reports site. Built with React 18 + Vite 
 │   ├── utils/                # Content loading utilities
 │   └── generated/            # content-index.json (auto-generated)
 ├── public/                   # Static files served as-is
-│   ├── dashboards/           # Legacy freeboard.js crypto dashboards
-│   ├── inotives_banks/       # Banking dashboards (unlisted)
+│   ├── inotives_banks/       # Banking assets (unlisted)
 │   └── reports/              # Research reports (synced from docs/)
 │       ├── stocks/daily      # Daily pre-open stock reports
 │       ├── stocks/weekly     # Weekly stock market summaries
@@ -87,7 +86,6 @@ No manual build step needed for content-only changes.
 - Markdown rendering with syntax highlighting and GFM
 - Research reports hub (stock daily, weekly, adhoc)
 - Static HTML reports served directly from the file tree
-- Legacy crypto/ banking dashboards
 - Responsive design with mobile nav
 - 404 catch-all page
 
