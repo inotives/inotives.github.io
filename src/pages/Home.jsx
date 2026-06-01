@@ -3,7 +3,7 @@ import { getAllPosts } from '../utils/content'
 import PostCard from '../components/PostCard'
 
 export default function Home() {
-  const recentPosts = getAllPosts().slice(0, 3)
+  const recentPosts = getAllPosts().slice(0, 5)
 
   return (
     <div className="page-stack">

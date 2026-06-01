@@ -11,37 +11,41 @@ import StockPreOpenProject from './pages/StockPreOpenProject'
 import StockWeeklyReportsProject from './pages/StockWeeklyReportsProject'
 import Resume from './pages/Resume'
 import NotFound from './pages/NotFound'
+import Analytics from './components/Analytics'
 
 function App() {
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/notes" element={<Notes />} />
-        <Route path="/notes/:slug" element={<Note />} />
-        <Route path="/portfolio" element={<Portfolio />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/projects" element={<Projects />} />
-        <Route
-          path="/projects/researches-adhoc"
-          element={<AdhocResearchesProject />}
-        />
-        <Route
-          path="/projects/research-stocks-pro-open-price"
-          element={<StockPreOpenProject />}
-        />
-        <Route
-          path="/projects/research-stocks-pre-open-price"
-          element={<StockPreOpenProject />}
-        />
-        <Route
-          path="/projects/research-stocks-weekly-summary"
-          element={<StockWeeklyReportsProject />}
-        />
-        <Route path="/resume" element={<Resume />} />
-        <Route path="*" element={<NotFound />} />
-      </Route>
-    </Routes>
+    <>
+      <Analytics />
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/notes" element={<Notes />} />
+          <Route path="/notes/:slug" element={<Note />} />
+          <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route
+            path="/projects/researches-adhoc"
+            element={<AdhocResearchesProject />}
+          />
+          <Route
+            path="/projects/research-stocks-pro-open-price"
+            element={<StockPreOpenProject />}
+          />
+          <Route
+            path="/projects/research-stocks-pre-open-price"
+            element={<StockPreOpenProject />}
+          />
+          <Route
+            path="/projects/research-stocks-weekly-summary"
+            element={<StockWeeklyReportsProject />}
+          />
+          <Route path="/resume" element={<Resume />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </>
   )
 }
 
