@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpaceX IPO Impact on Tracked Equities | Generated 2026-06-01</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* =====================================================
+   Agent Memory - shadcn Dark HTML Report Theme
+   Source: md_to_html skill
+   ===================================================== */
+:root {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --popover: #18181b;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --destructive: #7f1d1d;
+  --destructive-foreground: #fafafa;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #d4d4d8;
+  --radius: 0.5rem;
+  --positive: #22c55e;
+  --positive-bg: #052e16;
+  --negative: #ef4444;
+  --negative-bg: #450a0a;
+  --neutral: #eab308;
+  --neutral-bg: #422006;
+  --info: #3b82f6;
+  --info-bg: #172554;
+}
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  line-height: 1.6;
+  font-size: 0.9375rem;
+}
+h1 {
+  color: var(--foreground);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 4px 0;
+}
+h2 {
+  color: var(--foreground);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 32px 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+h3 {
+  color: var(--foreground);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin: 24px 0 8px 0;
+}
+.subtitle {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  margin-bottom: 24px;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 16px 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.card h2 { border-bottom: none; margin-top: 0; padding-bottom: 0; }
+.card h3 { margin-top: 0; }
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.stat {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+.stat-header {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin-top: 4px;
+}
+.positive { color: var(--positive); }
+.negative { color: var(--negative); }
+.neutral  { color: var(--neutral); }
+.info     { color: var(--info); }
+.verdict {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--info);
+  padding: 16px 20px;
+  margin: 20px 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.verdict-yes { border-left-color: var(--positive); background: linear-gradient(to right, var(--positive-bg), var(--card)); }
+.verdict-no { border-left-color: var(--negative); background: linear-gradient(to right, var(--negative-bg), var(--card)); }
+.verdict-caution { border-left-color: var(--neutral); background: linear-gradient(to right, var(--neutral-bg), var(--card)); }
+.tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.tag-green  { background: var(--positive-bg); color: var(--positive); border: 1px solid rgba(34,197,94,0.3); }
+.tag-red    { background: var(--negative-bg); color: var(--negative); border: 1px solid rgba(239,68,68,0.3); }
+.tag-yellow { background: var(--neutral-bg); color: var(--neutral); border: 1px solid rgba(234,179,8,0.3); }
+.tag-blue   { background: var(--info-bg); color: var(--info); border: 1px solid rgba(59,130,246,0.3); }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 0.875rem;
+}
+thead { border-bottom: 2px solid var(--border); }
+th {
+  padding: 10px 12px;
+  text-align: right;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: transparent;
+  position: sticky;
+  top: 0;
+}
+td {
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+td:first-child, th:first-child { text-align: left; }
+tbody tr:hover { background: var(--accent); }
+tr.active { background: var(--info-bg); }
+tr.active td { border-bottom-color: var(--info); }
+.summary-row {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+.summary-row > div { flex: 1; min-width: 120px; }
+pre, code { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; font-size: 0.8125rem; }
+code {
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--foreground);
+}
+pre {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+pre code { background: none; border: none; padding: 0; }
+a { color: var(--info); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.footnote {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  margin-top: 32px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+blockquote {
+  border-left: 3px solid var(--border);
+  margin: 16px 0;
+  padding: 8px 16px;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+.card ul, .card ol { margin: 8px 0; padding-left: 20px; color: var(--foreground); }
+.card li { margin: 4px 0; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 16px 0; }
+.chart-container {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 16px 0;
+  position: relative;
+}
+.chart-container canvas { width: 100% !important; max-height: 400px; }
+.kpi {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  padding: 4px 12px;
+  border-radius: var(--radius);
+  background: var(--secondary);
+}
+.alert {
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin: 16px 0;
+  font-size: 0.875rem;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.alert-info { background: var(--info-bg); border-color: rgba(59,130,246,0.3); }
+.alert-warning { background: var(--neutral-bg); border-color: rgba(234,179,8,0.3); }
+.alert-error { background: var(--negative-bg); border-color: rgba(239,68,68,0.3); }
+.alert-icon { font-size: 1rem; flex-shrink: 0; }
+@media (max-width: 640px) {
+  body { padding: 16px 12px; }
+  table { font-size: 0.75rem; }
+  th, td { padding: 6px 8px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  h1 { font-size: 1.375rem; }
+  .chart-container { padding: 12px; }
+}
+</style>
+</head>
+<body>
+
+<h1>SpaceX IPO Impact on Tracked Equities</h1>
+<div class="subtitle">Research Report | Generated 2026-06-01 | Methodology: Web Search (8 Reuters, Goldman Sachs, Deutsche Bank)</div>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-header">IPO Valuation</div>
+    <div class="stat-value info">$1.75-2.0T</div>
+    <div class="stat-label">Largest ever</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">Raise Amount</div>
+    <div class="stat-value info">Up to $80B</div>
+    <div class="stat-label">Record IPO size</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">Pricing Date</div>
+    <div class="stat-value">Jun 11</div>
+    <div class="stat-label">Roadshow Jun 4</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">Q1 Revenue</div>
+    <div class="stat-value positive">$4.5-5B</div>
+    <div class="stat-label">Starlink $3.26B profitable</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">Q1 Net Loss</div>
+    <div class="stat-value negative">$-4.28B</div>
+    <div class="stat-label">8x YoY; xAI money-losing</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">Q1 AI Capex</div>
+    <div class="stat-value info">$7.72B</div>
+    <div class="stat-label">76% of total capex on chips</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Research Question</h2>
+  <p>How does SpaceX's upcoming IPO (roadshow June 4, 2026; projected pricing June 11; est. $1.75T valuation, up to $80B raise) affect the tracked stocks currently being tracked — AMD, AMZN, DELL, GOOG, META, MU, NVDA, ORCL, PLTR, TSLA, TSM — in terms of pricing pressure, sector rotation, competitive dynamics, and timing?</p>
+</div>
+
+<h2>TL;DR — Key Takeaways</h2>
+<div class="grid-2">
+  <div class="card">
+    <h3><span class="tag tag-green">Direct Beneficiaries</span></h3>
+    <p><strong>NVDA, AMD, TSM</strong> — SpaceX/xAI spent $7.72B on AI chips/capex in Q1 alone. This secular AI-buildout trend accelerates with public-market capital access.</p>
+  </div>
+  <div class="card">
+    <h3><span class="tag tag-yellow">Index Sell-Down Risk</span></h3>
+    <p>Every $1 of SpaceX market cap entering the S&P 500 or NDX requires proportional trimming. For mega-caps (GOOG, META, AMZN, NVDA), ~0.1% of position. Mechanical headwind but small.</p>
+  </div>
+  <div class="card">
+    <h3><span class="tag tag-blue">Musk-Correlated</span></h3>
+    <p>TSLA may see halo/sympathy trading. Dual-class structure (85.1% Musk voting power) may deter ESG funds. Retail treats "Musk stocks" as a basket.</p>
+  </div>
+  <div class="card">
+    <h3><span class="tag tag-red">Liquidity Event Risk</span></h3>
+    <p>$50-80B of investor capital absorbed by IPO. Short-term rotation out of existing tech names — similar to Aramco 2019, which depressed EM flows for a quarter.</p>
+  </div>
+</div>
+
+<h2>Findings</h2>
+
+<h3>1. SpaceX IPO Timeline &amp; Key Facts</h3>
+
+<div class="grid-2">
+  <div>
+    <table>
+      <thead>
+        <tr><th>Milestone</th><th>Date / Detail</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>S-1 filing</td><td>May 20, 2026 (confidential)</td></tr>
+        <tr><td>Valuation target</td><td>~$1.75-2.0 trillion</td></tr>
+        <tr><td>Raise amount</td><td>Up to $80 billion</td></tr>
+        <tr><td>Roadshow</td><td>June 4, 2026</td></tr>
+        <tr><td>Projected pricing</td><td>June 11, 2026</td></tr>
+        <tr><td>Exchange</td><td>Nasdaq</td></tr>
+        <tr><td>Musk voting power</td><td>85.1% (Class B shares)</td></tr>
+        <tr><td>Lock-up (Musk)</td><td>366 days</td></tr>
+        <tr><td>Starship test</td><td>May 22 — "lukewarm success"</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <div class="card">
+      <h3>Three Businesses in One</h3>
+      <div class="chart-container" style="max-width: 350px; margin: 0 auto;">
+        <canvas id="businessMix"></canvas>
+      </div>
+      <p style="margin-top: 8px; font-size: 0.85rem;">SpaceX is three businesses: <span class="tag tag-green">Starlink</span> (profitable, $3.26B quarterly rev), <span class="tag tag-blue">Launch/Starship</span> (rev declining 28%), and <span class="tag tag-red">xAI</span> (money-losing, $2.47B quarterly loss, 76% of capex). The IPO narrative: Starlink cash funds Starship; Starship cuts launch costs; lower costs enable orbital data centers for AI.</p>
+    </div>
+  </div>
+</div>
+
+<h3>2. Index Rebalancing: The Mechanical Headwind</h3>
+
+<div class="card">
+  <p>Goldman Sachs (John Flood, May 22): "Investors are increasingly focused on the impact of potential large IPOs in the pipeline. Ahead of each of the four largest IPOs during the past few decades, US equity mutual funds increased their cash balances."</p>
+  <p>Deutsche Bank (May 27): "Even the largest expected IPO amounts equal a little over 0.1% of the current S&P 500 market cap."</p>
+  <p>The new Nasdaq 100 fast-track rules (March 2026) could accelerate SpaceX's inclusion in benchmarks, forcing passive funds to mechanically sell existing positions.</p>
+
+  <h3>Implications for Tracked Tickers</h3>
+  <table>
+    <thead>
+      <tr><th>Bucket</th><th>Tickers</th><th>Impact</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Mega-cap</td><td>GOOG, META, AMZN, NVDA</td><td class="neutral">~0.1-0.3% trim; NDX fast-track relevant</td></tr>
+      <tr><td>Large-cap</td><td>ORCL, PLTR, TSLA, TSM</td><td class="neutral">Mechanical sell-down if included</td></tr>
+      <tr><td>Mid/small-cap</td><td>DELL, MU</td><td class="neutral">No direct index rebalancing effect</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>3. AI Capex Flow: The Bull Case for Chip Stocks</h3>
+
+<div class="card">
+  <p>SpaceX's AI division (xAI) spent <strong>$7.72B on capex in Q1 2026</strong>, primarily on chips. The IPO gives SpaceX public-market capital to sustain and potentially accelerate this spend.</p>
+  <table>
+    <thead>
+      <tr><th>Ticker</th><th>Connection to SpaceX AI Spend</th><th>Direction</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>NVDA</td><td>Primary GPU supplier for xAI training clusters. $15B+ annual AI chip demand.</td><td class="positive">Positive</td></tr>
+      <tr><td>AMD</td><td>Secondary GPU supplier. MI300X/MI400 gaining share in inference.</td><td class="positive">Positive</td></tr>
+      <tr><td>TSM</td><td>Manufactures all NVDA/AMD chips. Adds to 3nm/5nm fab utilization.</td><td class="positive">Positive (indirect)</td></tr>
+      <tr><td>MU</td><td>HBM memory for AI accelerators. Data center demand tightens HBM.</td><td class="positive">Positive (indirect)</td></tr>
+      <tr><td>INTC</td><td>Not a current xAI supplier; Gaudi not competitive at scale.</td><td class="neutral">Neutral</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>4. Competitive Dynamics: Cloud &amp; AI Platform</h3>
+
+<div class="grid-2">
+  <div class="card">
+    <h3 style="color: var(--negative);">Competitive Headwind</h3>
+    <ul>
+      <li><strong>GOOG:</strong> Direct AI competitor (Gemini vs Grok). Distinct moat (TPU, YouTube, Search).</li>
+      <li><strong>META:</strong> AI model competitor (Llama vs Grok). $80B war chest vs Meta's $60-80B/year capex. Marginal impact.</li>
+      <li><strong>AMZN:</strong> Project Kuiper competes with Starlink. AWS competes with xAI cloud ambitions.</li>
+      <li><strong>ORCL:</strong> Could be net customer or competitor depending on strategy.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3 style="color: var(--positive);">Neutral / Mixed</h3>
+    <ul>
+      <li><strong>PLTR:</strong> Defense/space software. Potential partner or competitor in govt AI.</li>
+      <li><strong>CRM, SNOW:</strong> AI application-layer. More compute helps; xAI end-user products could compete.</li>
+    </ul>
+  </div>
+</div>
+
+<h3>5. Musk Correlation &amp; TSLA</h3>
+
+<div class="card">
+  <p>TSLA is the only tracked ticker directly Musk-correlated. Historical patterns: positive IPO sentiment for one Musk venture lifts others (retail treats "Musk stocks" as a basket). A weak SpaceX debut could dent confidence in Musk's broader empire. Some ESG funds may reduce combined Musk exposure.</p>
+  <div class="alert alert-warning">
+    <span class="alert-icon">&#9888;</span>
+    <span>Danish pension fund AkademikerPension has excluded SpaceX citing governance and valuation. If other European institutions follow, it creates a ceiling on passive inflows.</span>
+  </div>
+</div>
+
+<h3>6. Lock-Up &amp; Staggered Resale</h3>
+
+<div class="card">
+  <p>SpaceX's staggered lock-up structure: 20% unlocks after Q2 earnings, 10% conditional on stock trading 30% above IPO price, then 7% blocks at five points between 70-135 days, followed by 28% after subsequent earnings, remainder at 180 days.</p>
+  <p><strong>Impact on tracked tickers:</strong> Indirect. Does not mechanically affect tracked tickers unless SpaceX holders sell existing stocks (TSLA, etc.) to raise cash for SpaceX purchases during lock-up.</p>
+</div>
+
+<h3>7. Space ETF Inflows &amp; Sector Rotation</h3>
+
+<div class="card">
+  <p>Space-themed ETFs attracted $1.3B in the last month, pushing total AUM to $3.3B. Seven ETFs now exist; more launching. At $3.3B total AUM, the rotation is negligible relative to the $50T+ US equity market.</p>
+</div>
+
+<h3>8. Infrastructure Stocks (Not Tracked) — Price Impact</h3>
+
+<div class="card">
+  <p>Space, satellite, and data center infrastructure names not in the tracked portfolio that face measurable price impact:</p>
+  <table>
+    <thead>
+      <tr><th>Ticker</th><th>Sector</th><th>Connection to SpaceX</th><th>Direction</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>ASTS</td><td>Satellite-to-phone</td><td>Direct Starlink competitor. IPO funds Starlink expansion, pressuring ASTS time-to-market advantage.</td><td class="negative">Negative</td></tr>
+      <tr><td>BA</td><td>Space &amp; defense</td><td>Launch competitor (SLS, Starliner). Starship cost gap widens. BA defense contracts provide insulation.</td><td class="negative">Negative</td></tr>
+      <tr><td>DLR</td><td>Data center REIT</td><td>Orbital data center ambition poses long-term disruption threat. IPO accelerates timeline.</td><td class="neutral">Negative (narrative)</td></tr>
+      <tr><td>EQIX</td><td>Data center REIT</td><td>Same as DLR. Interconnection moat harder to displace but sentiment drag.</td><td class="neutral">Mildly negative</td></tr>
+      <tr><td>HXL</td><td>Aerospace materials</td><td>Supplies both SpaceX and legacy launch. Neutral-to-negative if Starship displaces competitors.</td><td class="neutral">Mixed</td></tr>
+      <tr><td>IRDM</td><td>Satellite comms</td><td>LEO constellation competes with Starlink. Differentiated cross-link architecture.</td><td class="negative">Negative</td></tr>
+      <tr><td>LMT</td><td>Space &amp; defense</td><td>Space systems overlap. IPO strengthens SpaceX govt contract bidding. Diversified backlog.</td><td class="neutral">Mildly negative</td></tr>
+      <tr><td>NOC</td><td>Space &amp; defense</td><td>Launch competitor. Starship raises heavy launch bar. Defense/cyber provides insulation.</td><td class="neutral">Mildly negative</td></tr>
+      <tr><td>RTX</td><td>Space/defense</td><td>Supplier to all launch providers. Benefits from increased space activity broadly.</td><td class="positive">Neutral-to-positive</td></tr>
+      <tr><td>SES</td><td>Satellite broadband</td><td>Direct Starlink competitor in enterprise/govt. MEO orbit provides partial differentiation.</td><td class="negative">Negative</td></tr>
+      <tr><td>VSAT</td><td>Satellite broadband</td><td>Fixed satellite competitor to Starlink. Defense/govt tilt provides some protection.</td><td class="negative">Negative</td></tr>
+    </tbody>
+  </table>
+  <p class="neutral"><strong>Summary:</strong> Most space/satellite infrastructure stocks face net-negative pressure — the IPO creates a better-funded, more aggressive competitor. Exception: component suppliers (RTX, HXL) that sell to all launch providers.</p>
+</div>
+
+<h3>9. Pricing Predictions by Ticker</h3>
+
+<table>
+  <thead>
+    <tr><th>Ticker</th><th>Pre-IPO (May 29)</th><th>IPO-Week Cone</th><th>30-Day Post-IPO</th><th>Primary Driver</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>AMD</td><td>~$522</td><td>$515-535</td><td>$520-550</td><td>AI chip demand; Computex catalyst</td></tr>
+    <tr><td>AMZN</td><td>~$273</td><td>$268-278</td><td>$265-275</td><td>Kuiper vs Starlink; index sell-down</td></tr>
+    <tr><td>DELL</td><td>~$440</td><td>$420-460</td><td>$430-470</td><td>AI server demand for SpaceX infra</td></tr>
+    <tr><td>GOOG</td><td>~$386</td><td>$378-395</td><td>$375-395</td><td>AI competitor to xAI; index headwind</td></tr>
+    <tr><td>META</td><td>~$633</td><td>$620-645</td><td>$615-645</td><td>AI model competitor; sell-down risk</td></tr>
+    <tr><td>MU</td><td>~$950</td><td>$930-970</td><td>$940-990</td><td>HBM beneficiary; SK Hynix ATH context</td></tr>
+    <tr class="active"><td>NVDA</td><td>~$214</td><td>$208-222</td><td>$210-230</td><td style="color: var(--positive);">Largest beneficiary; primary GPU supplier</td></tr>
+    <tr><td>ORCL</td><td>~$204.50</td><td>$198-212</td><td>$195-215</td><td>Cloud host optionality for xAI</td></tr>
+    <tr><td>PLTR</td><td>~$114</td><td>$108-120</td><td>$105-120</td><td>Defense/space software partner/competitor</td></tr>
+    <tr><td>TSLA</td><td>~$439.50</td><td>$425-460</td><td>$420-460</td><td>Musk correlation basket trading</td></tr>
+    <tr><td>TSM</td><td>~$424</td><td>$415-435</td><td>$410-440</td><td>Manufactures all SpaceX AI chips</td></tr>
+  </tbody>
+</table>
+
+<div class="card">
+  <p><strong>Pricing methodology:</strong> Cones estimated using (a) average stock beta to SPX, (b) estimated index-rebalancing weight (0.1% of SPX cap per Deutsche Bank), (c) sector-specific SpaceX exposure. Wider cones for volatile names (NVDA, TSLA, AMD). 30-day post-IPO assumes the IPO prices at high end and trades flat-to-up in first week, followed by secondary-offer overhang as passive funds rebalance.</p>
+</div>
+
+<h3>10. Aggregated Portfolio Impact</h3>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-header">Positive (Beneficiaries)</div>
+    <div class="stat-value positive" style="font-size: 1.1em;">NVDA, AMD, TSM</div>
+    <div class="stat-label">Chip demand + MU (HBM), DELL (servers)</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">Competitive Headwind</div>
+    <div class="stat-value negative" style="font-size: 1.1em;">GOOG, META, AMZN</div>
+    <div class="stat-label">+ ORCL — AI models, cloud overlap</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">Musk-Correlated</div>
+    <div class="stat-value neutral" style="font-size: 1.1em;">TSLA</div>
+    <div class="stat-label">Halo vs concentration limits</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">Defense/Space Angle</div>
+    <div class="stat-value" style="font-size: 1.1em; color: var(--info);">PLTR</div>
+    <div class="stat-label">Vague; doesn't directly compete</div>
+  </div>
+</div>
+
+<div class="verdict verdict-yes">
+  <strong>Most Actionable Insight:</strong> NVDA is the clearest beneficiary of any ticker tracked. Every dollar of SpaceX AI capex ($7.72B in Q1) flows through NVDA GPUs. The IPO sustains and potentially accelerates this flow. AMD is the secondary play (xAI uses MI400 for inference). TSLA is the riskiest connection (Musk basket correlation cuts both ways).
+</div>
+
+<h2>Confidence &amp; Limitations</h2>
+
+<div class="grid-3">
+  <div class="card">
+    <h3 style="color: var(--positive);">High Confidence</h3>
+    <ul>
+      <li>IPO timeline, valuation range</li>
+      <li>Starship test outcomes</li>
+      <li>Index-fund rebalancing mechanics</li>
+      <li>Goldman/DB notes directly cited</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3 style="color: var(--neutral);">Medium Confidence</h3>
+    <ul>
+      <li>Pricing cones (volatility/beta estimates)</li>
+      <li>Competitive dynamics (xAI vs GOOG/META/AMZN)</li>
+      <li>Multi-dimensional and complex</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3 style="color: var(--negative);">Low Confidence</h3>
+    <ul>
+      <li>Lock-up resale impact on tracked tickers</li>
+      <li>SpaceX S&P 500 entry timing</li>
+      <li>Requires GAAP profitability (distant)</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Open Questions</h2>
+
+<div class="card">
+  <ol>
+    <li>Will SPACs or blank-check vehicles emerge to give retail exposure before the IPO?</li>
+    <li>How will NY vs California pension fund opposition to dual-class governance affect institutional demand?</li>
+    <li>What is the exact weight SpaceX would have in NDX and SPX upon inclusion? (Depends on float-adjusted market cap.)</li>
+    <li>Does Musk plan to sell TSLA shares to fund IPO participation?</li>
+    <li>How does the Blue Origin New Glenn explosion (May 29) affect SpaceX's competitive positioning? (Removes Bezos as near-term threat.)</li>
+  </ol>
+</div>
+
+<h2>Sources</h2>
+
+<div class="card">
+  <ol>
+    <li><a href="https://www.reuters.com/legal/government/us-funds-set-aside-cash-spacex-openai-prepare-go-public-analysts-say-2026-05-27/">Reuters — "US funds set aside cash as SpaceX and OpenAI prepare to go public"</a> (May 27, 2026)</li>
+    <li><a href="https://www.reuters.com/legal/transactional/spacex-ipo-bets-2-trillion-musks-ambitious-rockets-to-ai-vision-2026-05-21/">Reuters — "SpaceX IPO bets $2 trillion on Musk's ambitious rockets-to-AI vision"</a> (May 21, 2026)</li>
+    <li><a href="https://www.reuters.com/legal/legalindustry/meta-spacex-how-dual-class-shares-keep-founders-control-2026-05-22/">Reuters — "From Meta to SpaceX: how dual-class shares keep founders in control"</a> (May 22, 2026)</li>
+    <li><a href="https://www.reuters.com/legal/government/spacex-allow-early-share-resale-before-usual-sixmonth-lock-up-2026-05-22/">Reuters — "SpaceX to allow early share resale before usual six-month lock-up"</a> (May 22, 2026)</li>
+    <li><a href="https://www.reuters.com/business/aerospace-defense/spacexs-starship-test-strengthens-ipo-case-though-hurdles-remain-2026-05-27/">Reuters — "SpaceX's Starship test strengthens IPO case, though hurdles remain"</a> (May 27, 2026)</li>
+    <li><a href="https://www.reuters.com/legal/transactional/danish-pension-fund-excludes-spacex-citing-governance-valuation-2026-05-29/">Reuters — "Danish pension fund excludes SpaceX citing governance and valuation"</a> (May 29, 2026)</li>
+    <li><a href="https://www.reuters.com/legal/transactional/space-etfs-booming-anticipation-spacex-ipo-2026-05-22/">Reuters — "Space ETFs booming in anticipation of SpaceX IPO"</a> (May 22, 2026)</li>
+    <li><a href="https://www.reuters.com/legal/legalindustry/us-space-stocks-rise-spacex-ipo-hype-2026-05-27/">Reuters — "US space stocks rise on SpaceX IPO hype"</a> (May 27, 2026)</li>
+    <li><a href="https://www.reuters.com/legal/transactional/spacexs-road-landmark-ipo-filing-2026-05-21/">Reuters — "SpaceX's road to landmark IPO filing"</a> (May 21, 2026)</li>
+  </ol>
+</div>
+
+<div class="footnote">Data: Reuters, Goldman Sachs, Deutsche Bank | Generated by Agent Memory | Not financial advice.</div>
+
+<script>
+new Chart(document.getElementById('businessMix'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Starlink (Profitable)', 'Launch/Starship (Declining)', 'xAI (Money-Losing)'],
+    datasets: [{
+      data: [45, 15, 40],
+      backgroundColor: ['#22c55e', '#3b82f6', '#ef4444'],
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { color: '#a1a1aa', padding: 14, font: { size: 11 } }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(ctx) {
+            var labels = {
+              'Starlink (Profitable)': 'Starlink profitable, $3.26B quarterly revenue',
+              'Launch/Starship (Declining)': 'Falcon 9/Heavy revenue declining 28%',
+              'xAI (Money-Losing)': 'xAI $2.47B quarterly loss, 76% of capex'
+            };
+            return labels[ctx.label] || ctx.label;
+          }
+        }
+      }
+    }
+  }
+});
+</script>
+
+</body>
+</html>

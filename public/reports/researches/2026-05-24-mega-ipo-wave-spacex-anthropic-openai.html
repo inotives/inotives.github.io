@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mega-IPO Wave 2026 — SpaceX, Anthropic, OpenAI</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #09090b;
+    --bg-card: #18181b;
+    --bg-card-hover: #27272a;
+    --border: #27272a;
+    --text: #fafafa;
+    --text-muted: #a1a1aa;
+    --text-dim: #71717a;
+    --accent: #6366f1;
+    --accent-glow: rgba(99,102,241,0.15);
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+    --cyan: #06b6d4;
+    --radius: 8px;
+    --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+
+  /* header */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 40px 0 32px;
+    margin-bottom: 48px;
+  }
+  header .meta { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
+  header .meta span {
+    font-size: 13px; color: var(--text-dim);
+    background: var(--bg-card); padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--border);
+  }
+  h1 {
+    font-size: 32px; font-weight: 700; letter-spacing: -0.02em;
+    line-height: 1.2; margin-bottom: 8px;
+  }
+  .subtitle { color: var(--text-muted); font-size: 15px; max-width: 720px; }
+
+  /* sections */
+  section { margin-bottom: 48px; }
+  h2 {
+    font-size: 22px; font-weight: 600; letter-spacing: -0.01em;
+    margin-bottom: 20px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2 .num {
+    font-size: 13px; font-weight: 500; color: var(--accent);
+    background: var(--accent-glow); padding: 2px 9px; border-radius: 999px;
+  }
+  h3 {
+    font-size: 17px; font-weight: 600; margin-bottom: 10px;
+    color: var(--text);
+  }
+  p { margin-bottom: 16px; color: var(--text-muted); }
+
+  /* cards */
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .stat-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .stat-card .label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .stat-card .value { font-size: 24px; font-weight: 700; }
+  .stat-card .sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  /* tags */
+  .tag { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 4px; margin: 0 2px 4px 0; }
+  .tag-spacex { background: rgba(99,102,241,0.15); color: #818cf8; }
+  .tag-anthropic { background: rgba(245,158,11,0.15); color: #fbbf24; }
+  .tag-openai { background: rgba(6,182,212,0.15); color: #22d3ee; }
+  .tag-ipo { background: rgba(34,197,94,0.15); color: #4ade80; }
+
+  /* list */
+  ul, ol { padding-left: 20px; margin-bottom: 16px; }
+  li { margin-bottom: 8px; color: var(--text-muted); }
+  li strong { color: var(--text); }
+
+  /* tables */
+  .table-wrap { overflow-x: auto; margin-bottom: 20px; }
+  table {
+    width: 100%; border-collapse: collapse; font-size: 14px;
+    background: var(--bg-card); border-radius: var(--radius); overflow: hidden;
+  }
+  thead { background: var(--bg-card-hover); }
+  th { padding: 10px 14px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { font-weight: 500; color: var(--text); }
+
+  /* charts */
+  .chart-wrap {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+  }
+  .chart-wrap h3 { margin-bottom: 16px; font-size: 14px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* blockquote */
+  blockquote {
+    border-left: 3px solid var(--accent); padding: 12px 20px;
+    margin: 16px 0; background: var(--accent-glow); border-radius: 0 var(--radius) var(--radius) 0;
+    color: var(--text-muted); font-style: italic;
+  }
+
+  /* confidence */
+  .conf-bar { height: 6px; border-radius: 99px; background: var(--bg-card-hover); margin: 8px 0 16px; overflow: hidden; }
+  .conf-bar .fill { height: 100%; border-radius: 99px; }
+  .conf-high .fill { width: 85%; background: var(--green); }
+  .conf-med .fill { width: 55%; background: var(--amber); }
+  .conf-low .fill { width: 30%; background: var(--red); }
+
+  /* sources */
+  .source-list { list-style: none; padding: 0; }
+  .source-list li {
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .source-list li:last-child { border-bottom: none; }
+  .source-list a { color: var(--accent); text-decoration: none; }
+  .source-list a:hover { text-decoration: underline; }
+  .source-list .num { color: var(--text-dim); margin-right: 8px; }
+
+  /* footer */
+  footer {
+    border-top: 1px solid var(--border); padding: 24px 0 48px;
+    font-size: 13px; color: var(--text-dim);
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 0 16px; }
+    h1 { font-size: 24px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Mega-IPO Wave 2026</h1>
+  <div class="subtitle">SpaceX, Anthropic, and OpenAI — Market Impact Analysis. Can Wall Street absorb $175–257B in new equity supply within months?</div>
+  <div class="meta">
+    <span>Generated 2026-05-24</span>
+    <span>19 sources</span>
+    <span>Medium confidence</span>
+    <span>Research</span>
+  </div>
+  <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
+    <span class="tag tag-spacex">spacex</span>
+    <span class="tag tag-anthropic">anthropic</span>
+    <span class="tag tag-openai">openai</span>
+    <span class="tag tag-ipo">ipo</span>
+    <span class="tag tag-ipo">equity-markets</span>
+    <span class="tag tag-ipo">liquidity</span>
+  </div>
+</header>
+
+<section>
+  <h2><span class="num">TL;DR</span> Executive Summary</h2>
+  <div class="card">
+    <ul>
+      <li><strong>SpaceX IPO imminent (June 2026):</strong> $1.5–2T valuation, $50–75B raise — would be 3× larger than any IPO in history. S-1 filed May 20. Ticker: SPCX. 30% retail allocation.</li>
+      <li><strong>Anthropic IPO (Q4 2026 or early 2027):</strong> $380B valuation (Series G), ~$60B+ raise target. $19B+ ARR. No S-1 yet.</li>
+      <li><strong>OpenAI IPO (Q4 2026):</strong> $852B valuation, targeting $1T. Confidential filing imminent with Goldman/Morgan Stanley.</li>
+      <li><strong>Combined ~$175–257B</strong> would exceed the entire dot-com IPO wave (1995–2000) and represent half of all US IPOs since WWII (inflation-adjusted).</li>
+      <li><strong>Wall Street can absorb</strong> the capital — but not painlessly. Passive/index fund inclusion means mechanical selling pressure on existing large-cap tech.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">1</span> SpaceX — The Largest IPO in History</h2>
+  <div class="card-grid">
+    <div class="stat-card"><div class="label">Valuation Target</div><div class="value">$1.5–2T</div><div class="sub">Private secondary ~$275B</div></div>
+    <div class="stat-card"><div class="label">Raise</div><div class="value">$50–75B</div><div class="sub">3× Saudi Aramco record</div></div>
+    <div class="stat-card"><div class="label">Timeline</div><div class="value">June 2026</div><div class="sub">Roadshow Jun 8, pricing Jun 11–18</div></div>
+    <div class="stat-card"><div class="label">Ticker</div><div class="value">SPCX</div><div class="sub">Nasdaq</div></div>
+    <div class="stat-card"><div class="label">Revenue</div><div class="value">~$20B</div><div class="sub">Starlink ~60% ($12B)</div></div>
+    <div class="stat-card"><div class="label">Retail Allocation</div><div class="value">30%</div><div class="sub">3× typical — record high</div></div>
+  </div>
+
+  <div class="card">
+    <h3>Sum-of-the-Parts Valuation (FutureSearch)</h3>
+    <p>Median fair value across segments: <strong>$1.25T</strong></p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Segment</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Starlink Consumer</td><td>$380B</td></tr>
+          <tr><td>xAI / Grok</td><td>$258B</td></tr>
+          <tr><td>Starship</td><td>$170B</td></tr>
+          <tr><td>Enterprise / Maritime / Aviation</td><td>$147B</td></tr>
+          <tr><td>Gov / Defense</td><td>$123B</td></tr>
+          <tr><td>Falcon</td><td>$100B</td></tr>
+          <tr><td>Direct-to-Cell</td><td>$75B</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:13px;color:var(--text-dim);">Underwriters: Morgan Stanley (left-lead), Goldman Sachs, JPMorgan, BofA, Citi. Merged with xAI in Feb 2026.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">2</span> Anthropic — The Safety-Focused AI Pure Play</h2>
+  <div class="card-grid">
+    <div class="stat-card"><div class="label">Valuation</div><div class="value">$380B</div><div class="sub">Series G (Feb 2026), doubled from $183B</div></div>
+    <div class="stat-card"><div class="label">Revenue</div><div class="value">$19B+ ARR</div><div class="sub">Tracking toward $30B+ by EOY</div></div>
+    <div class="stat-card"><div class="label">IPO Target</div><div class="value">Q4 2026</div><div class="sub">Press speculation; prediction mkts favor 2027</div></div>
+    <div class="stat-card"><div class="label">Key Backers</div><div class="value">Google ~14%</div><div class="sub">Amazon $8B+ commitment</div></div>
+    <div class="stat-card"><div class="label">Revenue Forecast</div><div class="value">$55B (2027)</div><div class="sub">$148B (2029) per internal projections</div></div>
+    <div class="stat-card"><div class="label">ARR Multiple</div><div class="value">~20×</div><div class="sub">vs OpenAI ~25×</div></div>
+  </div>
+  <p>No S-1 filed yet. Wilson Sonsini engaged as legal counsel. Goldman, JPMorgan, Morgan Stanley in discussions. Pre-IPO secondary at ~$1,447/share on Hiive.</p>
+</section>
+
+<section>
+  <h2><span class="num">3</span> OpenAI — The Largest AI Company Going Public</h2>
+  <div class="card-grid">
+    <div class="stat-card"><div class="label">Valuation</div><div class="value">$852B</div><div class="sub">Targeting $1T at IPO</div></div>
+    <div class="stat-card"><div class="label">Revenue</div><div class="value">$34B+ ARR</div><div class="sub">ChatGPT consumer + API enterprise</div></div>
+    <div class="stat-card"><div class="label">Confidential Filing</div><div class="value">Imminent</div><div class="sub">Goldman / Morgan Stanley leading</div></div>
+    <div class="stat-card"><div class="label">Legal Overhang</div><div class="value">Cleared</div><div class="sub">Musk lawsuit dismissed</div></div>
+    <div class="stat-card"><div class="label">Structure</div><div class="value">Public Benefit Corp</div><div class="sub">Converted from capped-profit</div></div>
+    <div class="stat-card"><div class="label">Key Advantage</div><div class="value">First-mover</div><div class="sub">GPT-5.5 powering Codex & agentic systems</div></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">4</span> Historical Mega-IPO Comparison</h2>
+  <div class="chart-wrap">
+    <h3>Largest IPOs by Proceeds (USD Billions)</h3>
+    <canvas id="ipoChart" height="300"></canvas>
+  </div>
+  <div class="chart-wrap">
+    <h3>The Trio vs Historical Benchmarks</h3>
+    <canvas id="trioChart" height="250"></canvas>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Rank</th><th>Company</th><th>Year</th><th>Proceeds</th></tr></thead>
+      <tbody>
+        <tr><td>—</td><td style="font-weight:600;color:var(--accent);">SpaceX <span style="font-size:11px;color:var(--text-dim);">(proj.)</span></td><td>2026</td><td style="color:var(--text);font-weight:600;">$50–75B</td></tr>
+        <tr><td>1</td><td>Saudi Aramco</td><td>2019</td><td>$25.6B</td></tr>
+        <tr><td>2</td><td>Alibaba</td><td>2014</td><td>$21.8B</td></tr>
+        <tr><td>3</td><td>SoftBank</td><td>2018</td><td>$21.3B</td></tr>
+        <tr><td>4</td><td>NTT Mobile</td><td>1998</td><td>$18.1B</td></tr>
+        <tr><td>5</td><td>Visa</td><td>2008</td><td>$17.9B</td></tr>
+        <tr><td>6</td><td>AIA Group</td><td>2010</td><td>$17.8B</td></tr>
+        <tr><td>7</td><td>Enel</td><td>1999</td><td>$16.5B</td></tr>
+        <tr><td>8</td><td>Meta (Facebook)</td><td>2012</td><td>$16B</td></tr>
+        <tr><td>9</td><td>General Motors</td><td>2010</td><td>$15.8B</td></tr>
+        <tr><td>10</td><td>ICBC</td><td>2006</td><td>$14B</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Post-IPO Performance Patterns</h3>
+    <p>Mega-IPOs tend to underperform in the first 6–12 months. Hype-driven pricing means insiders sell at the top of ranges; retail and institutional buyers often face initial losses.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Company</th><th>Year</th><th>Raise</th><th>IPO Val.</th><th>Performance</th></tr></thead>
+        <tbody>
+          <tr><td>Facebook</td><td>2012</td><td>$16B</td><td>$104B</td><td style="color:var(--red);">−50% in 4 months, recovered 2+ yrs</td></tr>
+          <tr><td>Alibaba</td><td>2014</td><td>$21.8B</td><td>$231B</td><td style="color:var(--green);">+38% day 1, then −40% from peak</td></tr>
+          <tr><td>Uber</td><td>2019</td><td>$8.1B</td><td>$82B</td><td style="color:var(--red);">−30%+ in first year</td></tr>
+          <tr><td>Visa</td><td>2008</td><td>$17.9B</td><td>—</td><td style="color:var(--green);">+30% in first year despite crisis</td></tr>
+          <tr><td>General Motors</td><td>2010</td><td>$15.8B</td><td>—</td><td style="color:var(--red);">−15% in first year</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">5</span> Wall Street Absorption Capacity</h2>
+  <div class="card-grid">
+    <div class="stat-card"><div class="label">Global PE Dry Powder</div><div class="value">$2.6T</div><div class="sub">But PE not primary buyer of IPOs</div></div>
+    <div class="stat-card"><div class="label">Berkshire Cash</div><div class="value">$397B</div><div class="sub">Record, but Buffett is net seller</div></div>
+    <div class="stat-card"><div class="label">Money Market Funds</div><div class="value">$6T+</div><div class="sub">Mostly retail savings, not IPO-targeted</div></div>
+    <div class="stat-card"><div class="label">S&P 500 Market Cap</div><div class="value">$52T</div><div class="sub">Large enough in absolute terms</div></div>
+  </div>
+  <div class="card">
+    <h3>The Real Absorption Mechanism</h3>
+    <p><strong>Passive/index funds will be forced buyers</strong> once these names join major indices. Recent index rule changes mean inclusion will happen faster than historical precedent. To buy these new stocks, passive funds must sell their existing holdings proportionally — mostly the same large-cap tech (AAPL, MSFT, NVDA, GOOGL, AMZN, META). <strong>Result:</strong> mechanical selling pressure on the Mag 7.</p>
+    <blockquote>"The implied equity supply in a few months creates a math problem. Most of it will come from existing holdings." — Paul Kedrosky</blockquote>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">6</span> Impact on Tech Stocks</h2>
+  <div class="card-grid">
+    <div class="stat-card" style="border-left:3px solid var(--green);"><div class="label">Optimistic Scenario</div><div class="value" style="font-size:14px;color:var(--text-muted);">IPOs validate AI thesis, attract new capital, lift all boats</div></div>
+    <div class="stat-card" style="border-left:3px solid var(--red);"><div class="label">Pessimistic Scenario</div><div class="value" style="font-size:14px;color:var(--text-muted);">Absorb available capital, squeeze out other IPOs, Mag 7 selloff</div></div>
+  </div>
+  <div class="card">
+    <h3>Sector Impact</h3>
+    <ul>
+      <li><strong>Hyperscaler cloud (AMZN, MSFT, GOOGL):</strong> Directly impacted — passive funds sell to fund index inclusion. Anthropic/OpenAI going public removes private AI bet exclusivity.</li>
+      <li><strong>Semiconductors (NVDA, AMD, MU):</strong> Less direct. IPOs need NVIDIA GPUs so demand strengthens. But passive rebalancing affects them too.</li>
+      <li><strong>Other AI startups (Mistral, Cohere, Databricks, Scale AI):</strong> May face 12–24 month IPO delays as the big three absorb all attention and capital.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">7</span> Retail Allocation — Unprecedented</h2>
+  <div class="card">
+    <p>SpaceX's <strong>30% retail allocation</strong> (3× the typical 10%) creates a unique dynamic:</p>
+    <ul>
+      <li>More retail participation than any previous mega-IPO</li>
+      <li>Higher retail volatility post-listing — retail tends to flip shares faster</li>
+      <li>Potential for meme-stock-style price action in early days</li>
+      <li>Higher risk of post-listing selling pressure when the expected "pop" doesn't materialize</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Confidence &amp; Limitations</h2>
+  <div class="card">
+    <div><strong>SpaceX S-1, valuation, timing</strong> <span style="color:var(--green);font-size:12px;">HIGH</span></div>
+    <div class="conf-bar conf-high"><div class="fill"></div></div>
+    <div><strong>Anthropic Series G, revenue run-rate</strong> <span style="color:var(--green);font-size:12px;">HIGH</span></div>
+    <div class="conf-bar conf-high"><div class="fill"></div></div>
+    <div><strong>OpenAI valuation, restructuring status</strong> <span style="color:var(--green);font-size:12px;">HIGH</span></div>
+    <div class="conf-bar conf-high"><div class="fill"></div></div>
+    <div><strong>IPO timing Anthropic/OpenAI</strong> <span style="color:var(--amber);font-size:12px;">MEDIUM</span></div>
+    <div class="conf-bar conf-med"><div class="fill"></div></div>
+    <div><strong>Magnitude of tech stock crowding out</strong> <span style="color:var(--red);font-size:12px;">LOW</span></div>
+    <div class="conf-bar conf-low"><div class="fill"></div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Open Questions</h2>
+  <div class="card">
+    <ul>
+      <li>Will SpaceX price at $1.75T or settle lower? Gap between pre-IPO secondary ($275B) and target ($1.75T) is enormous.</li>
+      <li>Will OpenAI's confidential filing actually happen? If delayed, it shifts the whole timeline.</li>
+      <li>How quickly will index inclusion happen? Rule changes are in place but exact timing is unknown.</li>
+      <li>Will Google/Amazon face antitrust review if they participate as anchor investors in Anthropic's IPO?</li>
+      <li>If SpaceX drops post-IPO (like most mega-IPOs), does that cool sentiment for Anthropic/OpenAI later in the year?</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Sources</h2>
+  <div class="card">
+    <ol class="source-list" style="list-style:none;padding:0;">
+      <li><span class="num">1.</span>Stake — <a href="https://hellostake.com/au/blog/trending/how-to-invest-in-spacex-stock">SpaceX IPO Guide</a>, May 20, 2026</li>
+      <li><span class="num">2.</span>TechStackIPO — <a href="https://www.techstackipo.com/ipo/spacex">SpaceX S-1 Confirmed</a>, May 23, 2026</li>
+      <li><span class="num">3.</span>FutureSearch — <a href="https://futuresearch.ai/spacex-ipo-valuation">A $1.75 Trillion IPO Would Be Overpaying 30% for SpaceX</a>, Apr 1, 2026</li>
+      <li><span class="num">4.</span>Zawya/Reuters — <a href="https://www.zawya.com/en/capital-markets/equities/from-saudi-aramco-to-alibaba-worlds-biggest-ipos-r35psryn">From Saudi Aramco to Alibaba: World's Biggest IPOs</a>, May 21, 2026</li>
+      <li><span class="num">5.</span>Yahoo Finance / Motley Fool — <a href="https://finance.yahoo.com/markets/stocks/articles/spacex-ipo-heres-5-000-081500164.html">SpaceX IPO: What a $5,000 Investment Could Look Like</a>, Apr 22, 2026</li>
+      <li><span class="num">6.</span>TechStackIPO — <a href="https://www.techstackipo.com/ipo/anthropic">Anthropic IPO 2026</a>, May 12, 2026</li>
+      <li><span class="num">7.</span>BearBull.io — <a href="https://www.bearbull.io/blog/Deep-Dive/Anthropic-IPO-2026">Anthropic IPO Date 2026</a>, May 10, 2026</li>
+      <li><span class="num">8.</span>FutureSearch — <a href="https://futuresearch.ai/anthropic-openai-ipo-dates-valuations">Anthropic and OpenAI IPO timelines</a>, Mar 31, 2026</li>
+      <li><span class="num">9.</span>ZestLab — <a href="https://zestlab.io/en/trends/anthropic-ipo-filing-2026">Anthropic IPO 2026: $380B Valuation</a>, Mar 27, 2026</li>
+      <li><span class="num">10.</span>Technerdo — <a href="https://www.technerdo.com/blog/openai-trillion-dollar-ipo-2026">OpenAI's $1 Trillion IPO</a>, Apr 23, 2026</li>
+      <li><span class="num">11.</span>AI Weekly — <a href="https://aiweekly.co/alerts/openai-files-confidential-ipo-with-goldman-morgan-stanley">OpenAI Files Confidential IPO</a>, May 20, 2026</li>
+      <li><span class="num">12.</span>Euronews — <a href="https://www.euronews.com/business/2026/05/21/ahead-of-the-spacex-ipo-a-look-at-the-biggest-stock-market-debuts-ever">Biggest stock market debuts</a>, May 21, 2026</li>
+      <li><span class="num">13.</span>CapTrader — <a href="https://www.captrader.com/en/blog/the-biggest-boersengaenge-ipos-in-history">Largest IPOs in history</a></li>
+      <li><span class="num">14.</span>PitchBook — <a href="https://pitchbook.com/news/reports/q1-2026-pitchbook-analyst-note-mega-ipos-could-threaten-2026-ipo-class">Mega IPOs Could Threaten 2026 IPO Class</a>, Apr 9, 2026</li>
+      <li><span class="num">15.</span>Paul Kedrosky — <a href="https://paulkedrosky.com/the-coming-mega-ipo-flow-funding-problem-of-2026">The Coming Mega-IPO Flow & Funding Problem</a>, May 5, 2026</li>
+      <li><span class="num">16.</span>Morningstar — <a href="https://www.morningstar.com/markets/mega-ipos-that-could-make-waves-through-us-stock-market">Mega IPOs That Could Make Waves</a>, Mar 23, 2026</li>
+      <li><span class="num">17.</span>Moonfare — <a href="https://www.moonfare.com/glossary/dry-powder-in-private-equity">Dry powder in private equity</a></li>
+      <li><span class="num">18.</span>Global Finance Magazine — <a href="https://gfmag.com/news/berkshire-hathaway-2026-succession-strategy">Berkshire Hathaway $397B cash pile</a>, May 21, 2026</li>
+      <li><span class="num">19.</span>Yahoo Finance — <a href="https://finance.yahoo.com/markets/stocks/articles/mega-ipos-could-shut-rest-183715995.html">Mega IPOs that could shut out the rest of VC</a>, Mar 19, 2026</li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  Generated 2026-05-24 by general-agent. Confidence: medium. 19 sources cited. Educational research, not investment advice.
+</footer>
+
+</div>
+
+<script>
+Chart.defaults.color = '#a1a1aa';
+Chart.defaults.borderColor = '#27272a';
+
+new Chart(document.getElementById('ipoChart'), {
+  type: 'bar',
+  data: {
+    labels: ['SpaceX (proj.)','Saudi Aramco','Alibaba','SoftBank','Visa','AIA Group','Enel','Facebook','GM','ICBC'],
+    datasets: [{
+      label: 'Proceeds (USD B)',
+      data: [62.5, 25.6, 21.8, 21.3, 17.9, 17.8, 16.5, 16, 15.8, 14],
+      backgroundColor: [
+        'rgba(99,102,241,0.8)', 'rgba(239,68,68,0.7)', 'rgba(59,130,246,0.7)',
+        'rgba(6,182,212,0.7)', 'rgba(34,197,94,0.7)', 'rgba(245,158,11,0.7)',
+        'rgba(168,85,247,0.7)', 'rgba(236,72,153,0.7)', 'rgba(148,163,184,0.7)',
+        'rgba(251,191,36,0.7)'
+      ],
+      borderColor: [
+        'rgb(99,102,241)', 'rgb(239,68,68)', 'rgb(59,130,246)',
+        'rgb(6,182,212)', 'rgb(34,197,94)', 'rgb(245,158,11)',
+        'rgb(168,85,247)', 'rgb(236,72,153)', 'rgb(148,163,184)',
+        'rgb(251,191,36)'
+      ],
+      borderWidth: 1,
+      borderRadius: 4,
+      barPercentage: 0.6,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#18181b',
+        titleColor: '#fafafa',
+        bodyColor: '#a1a1aa',
+        borderColor: '#27272a',
+        borderWidth: 1,
+        padding: 12,
+        cornerRadius: 6,
+        callbacks: {
+          label: ctx => '$' + ctx.raw + 'B'
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: { color: 'rgba(39,39,42,0.5)' },
+        ticks: { callback: v => '$' + v + 'B' }
+      },
+      x: {
+        grid: { display: false },
+        ticks: { maxRotation: 45 }
+      }
+    }
+  }
+});
+
+new Chart(document.getElementById('trioChart'), {
+  type: 'bar',
+  data: {
+    labels: ['SpaceX Alone','Anthropic','OpenAI','Trio Total','Dot-Com IPO Wave\n(1995-2000)'],
+    datasets: [{
+      label: 'Proceeds (USD B)',
+      data: [62.5, 60, 85, 207.5, 180],
+      backgroundColor: [
+        'rgba(99,102,241,0.8)',
+        'rgba(245,158,11,0.8)',
+        'rgba(6,182,212,0.8)',
+        'rgba(239,68,68,0.8)',
+        'rgba(148,163,184,0.5)'
+      ],
+      borderColor: [
+        'rgb(99,102,241)', 'rgb(245,158,11)', 'rgb(6,182,212)',
+        'rgb(239,68,68)', 'rgb(148,163,184)'
+      ],
+      borderWidth: 1,
+      borderRadius: 4,
+      barPercentage: 0.5,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#18181b',
+        titleColor: '#fafafa',
+        bodyColor: '#a1a1aa',
+        borderColor: '#27272a',
+        borderWidth: 1,
+        padding: 12,
+        cornerRadius: 6,
+        callbacks: {
+          label: ctx => '$' + ctx.raw + 'B'
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: { color: 'rgba(39,39,42,0.5)' },
+        ticks: { callback: v => '$' + v + 'B' }
+      },
+      x: {
+        grid: { display: false }
+      }
+    }
+  }
+});
+</script>
+
+</body>
+</html>

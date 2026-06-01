@@ -1,6 +1,47 @@
 {
   "posts": [
     {
+      "slug": "2026-06-01-provider-mesh-agent-delegation",
+      "filename": "2026-06-01-provider-mesh-agent-delegation.md",
+      "category": "post",
+      "title": "The Provider Mesh: Why AI Agents Are Becoming a Network of Specialists",
+      "date": "2026-06-01",
+      "tags": [
+        "ai-agents",
+        "architecture",
+        "inference-costs",
+        "mcp",
+        "a2a",
+        "agent-mesh",
+        "enterprise-ai",
+        "ollama",
+        "open-source",
+        "cost-optimization"
+      ],
+      "summary": "The one-model-for-everything era is ending. Inference costs, vendor platforms, and open protocols are converging on a provider mesh architecture — where generalist models orchestrate domain-specialist agents from Salesforce, Snowflake, Datadog, and beyond.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-28-ai-work-intensification-layoffs",
+      "filename": "2026-05-28-ai-work-intensification-layoffs.md",
+      "category": "post",
+      "title": "AI Isn't Cutting Work — It's Intensifying It. The Layoff Data Proves Both.",
+      "date": "2026-05-28",
+      "tags": [
+        "ai-layoffs",
+        "work-intensification",
+        "hbr-research",
+        "enterprise-ai",
+        "labor-economics",
+        "ai-washing",
+        "future-of-work"
+      ],
+      "summary": "Three HBR studies show AI expands rather than reduces workloads. May 2026 saw 28,000+ tech layoffs. These aren't contradictions — they're the same structural shift: fewer workers doing more, harder work.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-05-25-playwright-cli-for-data-work",
       "filename": "2026-05-25-playwright-cli-for-data-work.md",
       "category": "post",
@@ -264,6 +305,26 @@
       "draft": false
     },
     {
+      "slug": "2026-05-12-airllm-deep-research",
+      "filename": "2026-05-12-airllm-deep-research.md",
+      "category": "post",
+      "title": "AirLLM: Running 70B Models on a 4GB GPU (But Pack a Lunch)",
+      "date": "2026-05-12",
+      "tags": [
+        "airllm",
+        "llm-inference",
+        "local-llm",
+        "ollama",
+        "llama-cpp",
+        "apple-silicon",
+        "open-source",
+        "gpu"
+      ],
+      "summary": "AirLLM streams model layers from disk to fit 70B+ LLMs on tiny GPUs. The mechanism is clever. The speed is ~0.7 tok/s. Here's how it works, when it makes sense, and when to reach for Ollama instead.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-05-10-opencode-alongside-claude-code",
       "filename": "2026-05-10-opencode-alongside-claude-code.md",
       "category": "post",
@@ -281,6 +342,25 @@
         "developer-tools"
       ],
       "summary": "How I use Claude Code for work and OpenCode for personal projects — the agent-agnostic model switching, free Zen models for research and organizing, and why this dual-agent setup works better than committing to one.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-06-agent-operator-learning-path",
+      "filename": "2026-05-06-agent-operator-learning-path.md",
+      "category": "post",
+      "title": "So You Want to Be an Agentic Engineer: Role, Learning Path, and Market in 2026",
+      "date": "2026-05-06",
+      "tags": [
+        "agentic-engineering",
+        "learning-path",
+        "career",
+        "ai-engineer",
+        "agent-operator",
+        "job-market",
+        "agent-orchestrator"
+      ],
+      "summary": "Karpathy declared vibe coding obsolete. A new role is crystallizing — part engineer, part orchestrator, part production operator. Here's what it is, what it pays, and how to get there in 8 tiers.",
       "featured_image": null,
       "draft": false
     },
@@ -357,11 +437,63 @@
   "reports": {
     "adhocResearch": [
       {
+        "id": "adhoc-research-2026-06-01-aapl-wwdc-price-impact-html",
+        "name": "AAPL Price Impact Analysis &mdash; WWDC 2026 | June 1, 2026",
+        "filename": "2026-06-01-aapl-wwdc-price-impact.html",
+        "url": "/reports/researches/2026-06-01-aapl-wwdc-price-impact.html",
+        "date": "2026-06-01",
+        "tags": [
+          "Adhoc",
+          "Research",
+          "Agent research"
+        ],
+        "description": "Adhoc generated research report produced outside the scheduled stock daily and weekly report streams."
+      },
+      {
+        "id": "adhoc-research-2026-06-01-ai-energy-thesis-html",
+        "name": "AI Energy Demand — Stock Thesis & Technical Analysis",
+        "filename": "2026-06-01-ai-energy-thesis.html",
+        "url": "/reports/researches/2026-06-01-ai-energy-thesis.html",
+        "date": "2026-06-01",
+        "tags": [
+          "Adhoc",
+          "Research",
+          "Agent research"
+        ],
+        "description": "Adhoc generated research report produced outside the scheduled stock daily and weekly report streams."
+      },
+      {
         "id": "adhoc-research-2026-06-01-orcl-q4-earnings-pricing-analysis-html",
         "name": "ORCL Q4 FY2026 Earnings Pricing Analysis | Generated June 1, 2026",
         "filename": "2026-06-01-orcl-q4-earnings-pricing-analysis.html",
         "url": "/reports/researches/2026-06-01-orcl-q4-earnings-pricing-analysis.html",
         "date": "2026-06-01",
+        "tags": [
+          "Adhoc",
+          "Research",
+          "Agent research"
+        ],
+        "description": "Adhoc generated research report produced outside the scheduled stock daily and weekly report streams."
+      },
+      {
+        "id": "adhoc-research-2026-05-29-spacex-ipo-impact-on-tracked-equities-html",
+        "name": "SpaceX IPO Impact on Tracked Equities | Generated 2026-06-01",
+        "filename": "2026-05-29-spacex-ipo-impact-on-tracked-equities.html",
+        "url": "/reports/researches/2026-05-29-spacex-ipo-impact-on-tracked-equities.html",
+        "date": "2026-05-29",
+        "tags": [
+          "Adhoc",
+          "Research",
+          "Agent research"
+        ],
+        "description": "Adhoc generated research report produced outside the scheduled stock daily and weekly report streams."
+      },
+      {
+        "id": "adhoc-research-2026-05-24-mega-ipo-wave-spacex-anthropic-openai-html",
+        "name": "Mega-IPO Wave 2026 — SpaceX, Anthropic, OpenAI",
+        "filename": "2026-05-24-mega-ipo-wave-spacex-anthropic-openai.html",
+        "url": "/reports/researches/2026-05-24-mega-ipo-wave-spacex-anthropic-openai.html",
+        "date": "2026-05-24",
         "tags": [
           "Adhoc",
           "Research",

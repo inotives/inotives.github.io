@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AAPL Price Impact Analysis &mdash; WWDC 2026 | June 1, 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* =====================================================
+   Agent Memory — shadcn Dark HTML Report Theme
+   Source: md_to_html skill
+   Design: shadcn/ui (zinc palette) + Tailwind utilities
+   Charting: Chart.js (CDN)
+   Usage: Copy this <style> block into <head>
+   ===================================================== */
+
+/* --- Design Tokens (shadcn zinc palette) --- */
+:root {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --popover: #18181b;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --destructive: #7f1d1d;
+  --destructive-foreground: #fafafa;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #d4d4d8;
+  --radius: 0.5rem;
+
+  /* Semantic colors */
+  --positive: #22c55e;
+  --positive-bg: #052e16;
+  --negative: #ef4444;
+  --negative-bg: #450a0a;
+  --neutral: #eab308;
+  --neutral-bg: #422006;
+  --info: #3b82f6;
+  --info-bg: #172554;
+}
+
+/* --- Base --- */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  line-height: 1.6;
+  font-size: 0.9375rem;
+}
+
+/* --- Typography (shadcn style) --- */
+h1 {
+  color: var(--foreground);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 4px 0;
+}
+
+h2 {
+  color: var(--foreground);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 32px 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+h3 {
+  color: var(--foreground);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin: 24px 0 8px 0;
+}
+
+.subtitle {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  margin-bottom: 24px;
+}
+
+/* --- Cards (shadcn) --- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 16px 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.card h2 {
+  border-bottom: none;
+  margin-top: 0;
+  padding-bottom: 0;
+}
+
+.card h3 {
+  margin-top: 0;
+}
+
+/* --- Stat Grid --- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.stat {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-header {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin-top: 4px;
+}
+
+/* --- Semantic value colors --- */
+.positive { color: var(--positive); }
+.negative { color: var(--negative); }
+.neutral  { color: var(--neutral); }
+.info     { color: var(--info); }
+
+/* --- Verdict boxes (shadcn-inspired) --- */
+.verdict {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--info);
+  padding: 16px 20px;
+  margin: 20px 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.verdict-yes {
+  border-left-color: var(--positive);
+  background: linear-gradient(to right, var(--positive-bg), var(--card));
+}
+
+.verdict-no {
+  border-left-color: var(--negative);
+  background: linear-gradient(to right, var(--negative-bg), var(--card));
+}
+
+.verdict-caution {
+  border-left-color: var(--neutral);
+  background: linear-gradient(to right, var(--neutral-bg), var(--card));
+}
+
+/* --- Tags --- */
+.tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.tag-green  { background: var(--positive-bg); color: var(--positive); border: 1px solid rgba(34,197,94,0.3); }
+.tag-red    { background: var(--negative-bg); color: var(--negative); border: 1px solid rgba(239,68,68,0.3); }
+.tag-yellow { background: var(--neutral-bg); color: var(--neutral); border: 1px solid rgba(234,179,8,0.3); }
+.tag-blue   { background: var(--info-bg); color: var(--info); border: 1px solid rgba(59,130,246,0.3); }
+
+/* --- Tables (shadcn) --- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 0.875rem;
+}
+
+thead {
+  border-bottom: 2px solid var(--border);
+}
+
+th {
+  padding: 10px 12px;
+  text-align: right;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: transparent;
+  position: sticky;
+  top: 0;
+}
+
+td {
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+
+td:first-child, th:first-child {
+  text-align: left;
+}
+
+tbody tr:hover {
+  background: var(--accent);
+}
+
+/* Active/highlight row */
+tr.active {
+  background: var(--info-bg);
+}
+tr.active td {
+  border-bottom-color: var(--info);
+}
+
+/* --- Summary row (inside cards) --- */
+.summary-row {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.summary-row > div {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* --- Code blocks --- */
+pre, code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.8125rem;
+}
+
+code {
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--foreground);
+}
+
+pre {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* --- Links --- */
+a {
+  color: var(--info);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* --- Footnotes --- */
+.footnote {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  margin-top: 32px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+/* --- Divider --- */
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 24px 0;
+}
+
+/* --- Blockquote (use verdicts instead when possible) --- */
+blockquote {
+  border-left: 3px solid var(--border);
+  margin: 16px 0;
+  padding: 8px 16px;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+/* --- Lists inside cards --- */
+.card ul, .card ol {
+  margin: 8px 0;
+  padding-left: 20px;
+  color: var(--foreground);
+}
+
+.card li {
+  margin: 4px 0;
+}
+
+/* --- Two-column grid --- */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+/* --- Three-column grid --- */
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+/* --- Chart container --- */
+.chart-container {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 16px 0;
+  position: relative;
+}
+
+.chart-container canvas {
+  width: 100% !important;
+  max-height: 400px;
+}
+
+/* --- KPI badge (inline stat display) --- */
+.kpi {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  padding: 4px 12px;
+  border-radius: var(--radius);
+  background: var(--secondary);
+}
+
+/* --- Alert banner --- */
+.alert {
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin: 16px 0;
+  font-size: 0.875rem;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.alert-info {
+  background: var(--info-bg);
+  border-color: rgba(59,130,246,0.3);
+}
+
+.alert-warning {
+  background: var(--neutral-bg);
+  border-color: rgba(234,179,8,0.3);
+}
+
+.alert-error {
+  background: var(--negative-bg);
+  border-color: rgba(239,68,68,0.3);
+}
+
+.alert-icon { font-size: 1rem; flex-shrink: 0; }
+
+/* --- Responsive --- */
+@media (max-width: 640px) {
+  body { padding: 16px 12px; }
+  table { font-size: 0.75rem; }
+  th, td { padding: 6px 8px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  h1 { font-size: 1.375rem; }
+  .chart-container { padding: 12px; }
+}
+
+</style>
+</head>
+<body>
+
+<h1>AAPL Price Impact Analysis &mdash; WWDC 2026</h1>
+<p class="subtitle">Research conducted June 1, 2026 | Forward-looking to WWDC week (June 8-12, 2026)</p>
+
+<!-- Stat Grid -->
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-header">Current Price</div>
+    <div class="stat-value positive">$308-309</div>
+    <div class="stat-label">+18% YTD</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">RSI (14)</div>
+    <div class="stat-value neutral">72-78</div>
+    <div class="stat-label">Overbought</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">Key Support</div>
+    <div class="stat-value">$288</div>
+    <div class="stat-label">Channel breakout retest</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">Key Resistance</div>
+    <div class="stat-value positive">$314</div>
+    <div class="stat-label">Then $320, $339</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">June Guidance</div>
+    <div class="stat-value positive">+14-17%</div>
+    <div class="stat-label">Sales growth (above consensus)</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">iOS Market Share</div>
+    <div class="stat-value positive">22%</div>
+    <div class="stat-label">Record high (IDC 2026)</div>
+  </div>
+</div>
+
+<!-- Verdict -->
+<div class="verdict verdict-yes">
+  <strong>Estimate: Mildly positive (+1-3%) WWDC outcome.</strong><br>
+  Apple&rsquo;s AI narrative is behind but iPhone momentum is undeniable. Technical breakout and institutional flows favor upside, but overbought conditions cap near-term gains. A decisive break above $314 opens path to $339; a failed AI narrative could retest $288 support.
+</div>
+
+<h2>Bull Case vs Bear Case</h2>
+<div class="grid-2">
+  <div class="card" style="border-left: 3px solid var(--positive);">
+    <h3 style="color: var(--positive);">Bull Case</h3>
+    <ul>
+      <li>iPhone 17 record demand, 22% market share</li>
+      <li>June guidance +14-17% beat expectations <span class="tag tag-green">Strong</span></li>
+      <li>Channel breakout, open air to $339</li>
+      <li>India manufacturing diversifies supply chain</li>
+      <li>LLM Siri could re-rate AI narrative</li>
+    </ul>
+  </div>
+  <div class="card" style="border-left: 3px solid var(--negative);">
+    <h3 style="color: var(--negative);">Bear Case</h3>
+    <ul>
+      <li>RSI 72-78 overbought, due for pullback <span class="tag tag-yellow">Caution</span></li>
+      <li>Apple behind in AI vs DeepSeek/Gemini</li>
+      <li>TSMC chip supply constrained by AI demand</li>
+      <li>Mega IPO wave (SpaceX, OpenAI) could drain liquidity</li>
+      <li>iPhone 18 delay/downgrade signals soft pipeline</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Price Level Ladder</h2>
+<div class="card">
+  <div style="display:flex; align-items:center; gap:4px; margin:4px 0;">
+    <div style="width:80px; font-size:0.75rem; color:var(--muted-foreground); text-align:right; padding-right:8px;">$339</div>
+    <div style="flex:1; height:28px; background:var(--positive-bg); border-radius:4px; display:flex; align-items:center; padding-left:12px; border:1px solid rgba(34,197,94,0.3);">
+      <span style="font-size:0.75rem; color:var(--positive); font-weight:600;">Bull target (measured move)</span>
+    </div>
+  </div>
+  <div style="display:flex; align-items:center; gap:4px; margin:4px 0;">
+    <div style="width:80px; font-size:0.75rem; color:var(--muted-foreground); text-align:right; padding-right:8px;">$320</div>
+    <div style="flex:1; height:28px; background:var(--positive-bg); border-radius:4px; display:flex; align-items:center; padding-left:12px; border:1px solid rgba(34,197,94,0.3);">
+      <span style="font-size:0.75rem; color:var(--foreground);">Secondary resistance</span>
+    </div>
+  </div>
+  <div style="display:flex; align-items:center; gap:4px; margin:4px 0;">
+    <div style="width:80px; font-size:0.75rem; color:var(--muted-foreground); text-align:right; padding-right:8px;">$314</div>
+    <div style="flex:1; height:28px; background:var(--neutral-bg); border-radius:4px; display:flex; align-items:center; padding-left:12px; border:1px solid rgba(234,179,8,0.3);">
+      <span style="font-size:0.75rem; color:var(--neutral); font-weight:600;">Near-term pivot resistance</span>
+    </div>
+  </div>
+  <div style="display:flex; align-items:center; gap:4px; margin:4px 0;">
+    <div style="width:80px; font-size:0.75rem; color:var(--muted-foreground); text-align:right; padding-right:8px;">$308-309</div>
+    <div style="flex:1; height:32px; background:var(--info-bg); border-radius:4px; display:flex; align-items:center; padding-left:12px; border:2px solid var(--info);">
+      <span style="font-size:0.8125rem; color:var(--info); font-weight:700;">Current price</span>
+    </div>
+  </div>
+  <div style="display:flex; align-items:center; gap:4px; margin:4px 0;">
+    <div style="width:80px; font-size:0.75rem; color:var(--muted-foreground); text-align:right; padding-right:8px;">$288</div>
+    <div style="flex:1; height:28px; background:var(--negative-bg); border-radius:4px; display:flex; align-items:center; padding-left:12px; border:1px solid rgba(239,68,68,0.3);">
+      <span style="font-size:0.75rem; color:var(--negative); font-weight:600;">Key support (breakout retest)</span>
+    </div>
+  </div>
+  <div style="display:flex; align-items:center; gap:4px; margin:4px 0;">
+    <div style="width:80px; font-size:0.75rem; color:var(--muted-foreground); text-align:right; padding-right:8px;">$275</div>
+    <div style="flex:1; height:28px; background:var(--negative-bg); border-radius:4px; display:flex; align-items:center; padding-left:12px; border:1px solid rgba(239,68,68,0.3);">
+      <span style="font-size:0.75rem; color:var(--foreground);">Weekly support</span>
+    </div>
+  </div>
+  <div style="display:flex; align-items:center; gap:4px; margin:4px 0;">
+    <div style="width:80px; font-size:0.75rem; color:var(--muted-foreground); text-align:right; padding-right:8px;">$266</div>
+    <div style="flex:1; height:28px; background:var(--negative-bg); border-radius:4px; display:flex; align-items:center; padding-left:12px; border:1px solid rgba(239,68,68,0.3);">
+      <span style="font-size:0.75rem; color:var(--foreground);">50-day MA deep support</span>
+    </div>
+  </div>
+  <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+    <span class="kpi">Golden Cross: 50MA $278 > 200MA $259 <span class="tag tag-green" style="margin-left:4px;">Bullish</span></span>
+    <span class="kpi">RSI(14): 72-78 <span class="tag tag-yellow" style="margin-left:4px;">Overbought</span></span>
+    <span class="kpi">Upward prob: ~75% <span class="tag tag-green" style="margin-left:4px;">Strong</span></span>
+    <span class="kpi">Near-term range: $308.75 - $320.33</span>
+  </div>
+</div>
+
+<h2>Fundamentals</h2>
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-header">Q2 Revenue</div>
+    <div class="stat-value positive">$111.2B</div>
+    <div class="stat-label">iPhone ~$57B, ahead of estimates [4][5]</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">June Guidance</div>
+    <div class="stat-value positive">+14-17%</div>
+    <div class="stat-label">Sales growth vs consensus [5]</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">iOS Share 2026</div>
+    <div class="stat-value positive">22%</div>
+    <div class="stat-label">Record high, market declining 13.9% [8]</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">1H26 Production</div>
+    <div class="stat-value positive">90-92M</div>
+    <div class="stat-label">Units, +18-20% YoY [9]</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">India Manufacturing</div>
+    <div class="stat-value positive">28%</div>
+    <div class="stat-label">Of global iPhones by 2026 [9]</div>
+  </div>
+  <div class="stat">
+    <div class="stat-header">iPhone 18</div>
+    <div class="stat-value neutral">Delayed</div>
+    <div class="stat-label">Standard to spring 2027; Pro/Ultra fall 2026 [4]</div>
+  </div>
+</div>
+
+<div class="chart-container">
+  <canvas id="prodChart"></canvas>
+</div>
+
+<h2>WWDC 2026 — AI Is the Swing Factor</h2>
+<div class="card">
+  <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+    <span class="tag tag-blue">iOS 20</span>
+    <span class="tag tag-blue">LLM Siri</span>
+    <span class="tag tag-blue">3rd-party AI models</span>
+    <span class="tag tag-blue">M6 Macs</span>
+  </div>
+  <p><strong>June 8-12, 2026</strong> — The most high-stakes WWDC in years. Apple is perceived as behind in AI. <strong>LLM Siri overhaul</strong> is the single most watched announcement — a competitive on-device+cloud hybrid demo could re-rate the stock. Third-party model integration (Gemini, OpenAI, potentially DeepSeek) signals a platform shift. <span class="tag tag-yellow">Historical avg: +0.5-1%</span></p>
+  <p style="color:var(--muted-foreground); font-size:0.8125rem;">Competitive landscape: DeepSeek V4, Google Gemini, OpenAI IPO, Meta Llama gaining traction [6][7]. Apple on-device strategy differentiates but risks underwhelming.</p>
+</div>
+
+<h2>Macro & Liquidity</h2>
+<div class="grid-3">
+  <div class="card" style="text-align:center;">
+    <div class="stat-header">Fed Rate</div>
+    <div class="stat-value" style="font-size:1.2rem;">Jun 10</div>
+    <div class="stat-label">Mid-WWDC. Expected unchanged. <span class="tag tag-yellow">Binary risk</span></div>
+  </div>
+  <div class="card" style="text-align:center;">
+    <div class="stat-header">IPO Wave</div>
+    <div class="stat-value" style="font-size:1.2rem;">SpaceX, OpenAI, Anthropic</div>
+    <div class="stat-label">Largest capital-formation event ever. Liquidity overhang for mega-cap tech [8]</div>
+  </div>
+  <div class="card" style="text-align:center;">
+    <div class="stat-header">Smartphone Market</div>
+    <div class="stat-value negative" style="font-size:1.2rem;">-13.9%</div>
+    <div class="stat-label">Record decline, but Apple gaining share <span class="tag tag-green">Divergence</span></div>
+  </div>
+</div>
+
+<h2>Analyst Consensus</h2>
+<div class="chart-container">
+  <canvas id="analystChart"></canvas>
+</div>
+<p style="color:var(--muted-foreground); font-size:0.8125rem;">Mean target: ~$297 (stale — below current price). Range: $205-$350. Recent: 3 upgrades, 1 downgrade [1].</p>
+
+<h2>Confidence & Open Questions</h2>
+<div class="card">
+  <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+    <span class="tag tag-green">High: Technicals, iPhone demand, WWDC dates</span>
+    <span class="tag tag-yellow">Medium: AI reception, Fed impact</span>
+    <span class="tag tag-red">Low: Price magnitude (+/-5% tail risk)</span>
+  </div>
+  <p><strong>Open:</strong> DeepSeek partnership geo risk? iPhone 18 delay sentiment drag? IPO pipeline allocation shift? Supply chain tightening?</p>
+</div>
+<h2 id="sources">Sources</h2>
+<ol type="1">
+<li>StocksAnalyzer Blog — AAPL Golden Cross and technical analysis,
+April 2026.
+<a href="https://www.stocksanalyzer.app/blog/apple-stock-analysis-2026">stocksanalyzer.app</a></li>
+<li>TradersUnion — AAPL weekly technical report, May 25, 2026.
+<a href="https://tradersunion.com/news/financial-news/show/2128327-apple-gains-3-01percent-this-week/">tradersunion.com</a></li>
+<li>StockTraders Daily / Quantitative Research Desk — AAPL trend
+analysis, May 28, 2026.
+<a href="https://news.stocktradersdaily.com/news_release/81/Technical_Reactions_to_AAPL_Trends_in_Macro_Strategies_052826074401_1780011841.html">stocktradersdaily.com</a></li>
+<li>MacRumors — iPhone 18 delay and iPhone 17 demand reports, May 2026.
+<a href="https://www.macrumors.com/2026/05/06/this-is-why-apple-is-delaying-the-iphone-18/">macrumors.com</a></li>
+<li>AppleMagazine — iPhone 17 demand exposes supply chain limits, May
+2026. <a href="https://applemagazine.com/iphone-17-demand-supply-chain-01/">applemagazine.com</a></li>
+<li>Web search compilation — WWDC 2026 dates and expected announcements
+(multiple sources), accessed June 1, 2026.</li>
+<li>Web search compilation — AI competitive landscape (DeepSeek V4,
+Google Gemini, Apple Intelligence positioning), accessed June 1,
+2026.</li>
+<li>IDC Blog — Smartphone market forecast 2026: record 13.9% decline,
+May 2026.
+<a href="https://www.idc.com/resource-center/blog/worldwide-smartphone-market-to-decline-13-9-in-2026-as-memory-crisis-and-us-iran-war-constrain-growth/">idc.com</a></li>
+<li>Isaiah Research — iPhone production forecast 2026, February-March
+2026. <a href="https://www.isaiahresearch.com/Insight/Detail/112">isaiahresearch.com</a></li>
+</ol>
+
+
+<script>
+const theme = {
+  bg: getComputedStyle(document.body).getPropertyValue('--card').trim(),
+  fg: getComputedStyle(document.body).getPropertyValue('--foreground').trim(),
+  muted: getComputedStyle(document.body).getPropertyValue('--muted-foreground').trim(),
+  border: getComputedStyle(document.body).getPropertyValue('--border').trim(),
+  pos: getComputedStyle(document.body).getPropertyValue('--positive').trim(),
+  neg: getComputedStyle(document.body).getPropertyValue('--negative').trim(),
+  info: getComputedStyle(document.body).getPropertyValue('--info').trim(),
+  neutral: getComputedStyle(document.body).getPropertyValue('--neutral').trim(),
+};
+
+new Chart(document.getElementById('prodChart'), {
+  type: 'bar',
+  data: {
+    labels: ['1H26 iPhone Production', 'YoY Growth'],
+    datasets: [{
+      label: 'Units (M)',
+      data: [91, null],
+      backgroundColor: theme.info,
+      borderRadius: 4,
+    }, {
+      label: 'YoY Growth %',
+      data: [null, 19],
+      backgroundColor: theme.pos,
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { labels: { color: theme.muted, font: { size: 11 } } },
+      title: { display: true, text: '1H26 iPhone Production: ~91M units (+19% YoY)', color: theme.fg, font: { size: 13 } }
+    },
+    scales: {
+      x: { ticks: { color: theme.muted }, grid: { color: theme.border } },
+      y: { beginAtZero: true, ticks: { color: theme.muted }, grid: { color: theme.border } }
+    }
+  }
+});
+
+new Chart(document.getElementById('analystChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Buy (31)', 'Hold (14)', 'Sell (2)'],
+    datasets: [{
+      data: [31, 14, 2],
+      backgroundColor: [theme.pos, theme.neutral, theme.neg],
+      borderColor: theme.bg,
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom', labels: { color: theme.muted, font: { size: 11 }, padding: 16 } },
+      title: { display: true, text: 'Analyst Ratings (47 analysts)', color: theme.fg, font: { size: 13 } }
+    }
+  }
+});
+</script>
+</body>
+</html>

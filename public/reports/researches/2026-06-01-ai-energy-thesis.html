@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Energy Demand — Stock Thesis & Technical Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: 'hsl(var(--border))',
+                        input: 'hsl(var(--input))',
+                        ring: 'hsl(var(--ring))',
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+                        secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+                        destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+                        muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+                        accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+                        card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+                    },
+                    borderRadius: {
+                        lg: 'var(--radius)', md: 'calc(var(--radius) - 2px)', sm: 'calc(var(--radius) - 4px)',
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        :root {
+            --background: 0 0% 100%; --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%; --card-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%; --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%; --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%; --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%; --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%; --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%; --input: 214.3 31.8% 91.4%;
+            --ring: 222.2 84% 4.9%; --radius: 0.5rem;
+        }
+        .dark {
+            --background: 222.2 84% 4.9%; --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%; --card-foreground: 210 40% 98%;
+            --primary: 210 40% 98%; --primary-foreground: 222.2 47.4% 11.2%;
+            --secondary: 217.2 32.6% 17.5%; --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%; --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%; --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%; --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%; --input: 217.2 32.6% 17.5%;
+            --ring: 212.7 26.8% 83.9%;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .chart-container { position: relative; height: 300px; width: 100%; }
+        .stat-value { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body class="bg-background text-foreground min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+
+        <!-- ============================================================ -->
+        <!-- HEADER                                                       -->
+        <!-- ============================================================ -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-2 text-foreground">
+                AI Energy Demand
+            </h1>
+            <p class="text-lg text-muted-foreground">
+                Public Companies, Stock Prices, and Investment Thesis
+            </p>
+            <p class="text-sm text-muted-foreground mt-1">
+                Analysis Date: 2026-05-29 | Updated: 2026-06-01
+            </p>
+            <div class="flex items-center justify-center gap-3 mt-4 flex-wrap">
+                <span class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold bg-muted text-muted-foreground">
+                    DC Power Demand: +160% by 2030
+                </span>
+                <span class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold bg-muted text-muted-foreground">
+                    Hyperscaler Capex: $482B (+78% YoY)
+                </span>
+                <span class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold bg-yellow-500/10 text-yellow-500 border-yellow-500/30">
+                    PJM Capacity +833%
+                </span>
+                <span class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold bg-muted text-muted-foreground">
+                    $1.4T Infrastructure Needed
+                </span>
+            </div>
+            <div class="flex items-center justify-center gap-2 mt-3 flex-wrap text-xs text-muted-foreground">
+                <span>CEG</span><span class="text-muted-foreground/40">|</span>
+                <span>VST</span><span class="text-muted-foreground/40">|</span>
+                <span>NEE</span><span class="text-muted-foreground/40">|</span>
+                <span>GEV</span><span class="text-muted-foreground/40">|</span>
+                <span>BE</span><span class="text-muted-foreground/40">|</span>
+                <span>PWR</span><span class="text-muted-foreground/40">|</span>
+                <span>ETN</span><span class="text-muted-foreground/40">|</span>
+                <span>DUK</span><span class="text-muted-foreground/40">|</span>
+                <span>ETR</span><span class="text-muted-foreground/40">|</span>
+                <span>AEP</span><span class="text-muted-foreground/40">|</span>
+                <span>WEC</span>
+            </div>
+        </header>
+
+        <!-- ============================================================ -->
+        <!-- MACRO THESIS BANNER                                          -->
+        <!-- ============================================================ -->
+        <div class="rounded-lg border bg-card shadow-sm p-6 mb-8">
+            <div class="flex items-start gap-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                    <span class="text-blue-400 text-lg font-bold">M</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg mb-1">Macro Thesis</h3>
+                    <p class="text-sm text-muted-foreground leading-relaxed">
+                        US electricity demand is growing for the first sustained period in 20+ years. Data centers drive ~50% of all incremental US electricity demand growth (Goldman Sachs). Global data center power demand projected to rise ~160% by 2030; US demand may nearly triple. PJM capacity market prices surged <span class="text-yellow-500 font-medium">833%</span> in the 2025-2026 auction.
+                    </p>
+                    <p class="text-sm text-muted-foreground mt-2 leading-relaxed">
+                        Hyperscaler capex (Alphabet, Amazon, Meta, Microsoft, Oracle): <span class="text-blue-400 font-medium">$482B</span> trailing (+78% YoY), projected to exceed <span class="text-blue-400 font-medium">$700B</span> by end of 2026. The binding constraint on AI buildout is no longer chips — it is <strong class="text-foreground">power</strong>. New power plants take 5-10 years to permit and build; grid interconnection queues stretch beyond 10 years.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- KEY METRICS ROW                                              -->
+        <!-- ============================================================ -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="rounded-lg border bg-card shadow-sm p-4 text-center">
+                <p class="text-xs text-muted-foreground uppercase tracking-wide mb-1">Hyperscaler Capex</p>
+                <p class="text-2xl font-bold text-blue-400 stat-value">$482B</p>
+                <p class="text-xs text-muted-foreground">+78% YoY</p>
+            </div>
+            <div class="rounded-lg border bg-card shadow-sm p-4 text-center">
+                <p class="text-xs text-muted-foreground uppercase tracking-wide mb-1">Global DC Demand Growth</p>
+                <p class="text-2xl font-bold text-blue-400 stat-value">160%</p>
+                <p class="text-xs text-muted-foreground">by 2030</p>
+            </div>
+            <div class="rounded-lg border bg-card shadow-sm p-4 text-center">
+                <p class="text-xs text-muted-foreground uppercase tracking-wide mb-1">PJM Capacity Auction</p>
+                <p class="text-2xl font-bold text-yellow-500 stat-value">833%</p>
+                <p class="text-xs text-muted-foreground">2025-2026 surge</p>
+            </div>
+            <div class="rounded-lg border bg-card shadow-sm p-4 text-center">
+                <p class="text-xs text-muted-foreground uppercase tracking-wide mb-1">Infrastructure Need</p>
+                <p class="text-2xl font-bold text-blue-400 stat-value">$1.4T</p>
+                <p class="text-xs text-muted-foreground">through 2030</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- CHARTS ROW 1: RSI + YTD                                     -->
+        <!-- ============================================================ -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- RSI Bar Chart -->
+            <div class="rounded-lg border bg-card shadow-sm p-4">
+                <h3 class="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">RSI (14) Comparison</h3>
+                <div class="chart-container">
+                    <canvas id="rsiChart"></canvas>
+                </div>
+                <div class="flex justify-center gap-4 mt-2 text-xs text-muted-foreground">
+                    <span class="flex items-center gap-1"><span class="w-3 h-0.5 bg-red-500 inline-block"></span> Oversold (&le;30)</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-0.5 bg-green-500 inline-block"></span> Overbought (&ge;70)</span>
+                </div>
+            </div>
+            <!-- YTD Performance Bar Chart -->
+            <div class="rounded-lg border bg-card shadow-sm p-4">
+                <h3 class="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">YTD Performance</h3>
+                <div class="chart-container">
+                    <canvas id="ytdChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- CHARTS ROW 2: SMA Distance + Radar                           -->
+        <!-- ============================================================ -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Price vs SMA Distance -->
+            <div class="rounded-lg border bg-card shadow-sm p-4">
+                <h3 class="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Price Distance from Moving Averages</h3>
+                <div class="chart-container">
+                    <canvas id="smaChart"></canvas>
+                </div>
+            </div>
+            <!-- Radar Chart -->
+            <div class="rounded-lg border bg-card shadow-sm p-4">
+                <h3 class="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Multi-Dimensional Technical Strength</h3>
+                <div class="chart-container">
+                    <canvas id="radarChart"></canvas>
+                </div>
+                <p class="text-xs text-muted-foreground mt-2 text-center">Normalized scores: RSI, ADX, MA Posture, YTD Return, Trend Alignment</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- DOUGHNUT CHART — Verdict Distribution                       -->
+        <!-- ============================================================ -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="rounded-lg border bg-card shadow-sm p-4 lg:col-span-1">
+                <h3 class="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Technical Verdict Distribution</h3>
+                <div class="chart-container" style="height: 260px;">
+                    <canvas id="verdictChart"></canvas>
+                </div>
+            </div>
+            <div class="rounded-lg border bg-card shadow-sm p-4 lg:col-span-2">
+                <h3 class="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">Technical Posture Summary</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div class="border border-green-500/20 bg-green-500/5 rounded-lg p-3">
+                        <p class="text-2xl font-bold text-green-400 stat-value">2</p>
+                        <p class="text-xs text-muted-foreground">Bullish (NEE, BE)</p>
+                    </div>
+                    <div class="border border-green-500/30 bg-green-500/10 rounded-lg p-3">
+                        <p class="text-2xl font-bold text-green-400 stat-value">1</p>
+                        <p class="text-xs text-muted-foreground">Strongest (PWR)</p>
+                    </div>
+                    <div class="border border-blue-500/20 bg-blue-500/5 rounded-lg p-3">
+                        <p class="text-2xl font-bold text-blue-400 stat-value">1</p>
+                        <p class="text-xs text-muted-foreground">Oversold (GEV)</p>
+                    </div>
+                    <div class="border border-yellow-500/20 bg-yellow-500/5 rounded-lg p-3">
+                        <p class="text-2xl font-bold text-yellow-500 stat-value">1</p>
+                        <p class="text-xs text-muted-foreground">Neutral (CEG)</p>
+                    </div>
+                    <div class="border border-red-500/20 bg-red-500/5 rounded-lg p-3">
+                        <p class="text-2xl font-bold text-red-400 stat-value">1</p>
+                        <p class="text-xs text-muted-foreground">Bearish (VST)</p>
+                    </div>
+                    <div class="border border-border bg-muted/30 rounded-lg p-3">
+                        <p class="text-2xl font-bold text-foreground stat-value">50%</p>
+                        <p class="text-xs text-muted-foreground">Bullish skew</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TECHNICAL SUMMARY TABLE                                      -->
+        <!-- ============================================================ -->
+        <div class="rounded-lg border bg-card shadow-sm overflow-hidden mb-8">
+            <div class="p-4 border-b flex items-center justify-between">
+                <h2 class="text-xl font-semibold">Technical Summary</h2>
+                <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium bg-muted text-muted-foreground">
+                    May 29, 2026
+                </span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted/50">
+                        <tr>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Ticker</th>
+                            <th class="text-right p-3 font-medium text-muted-foreground">Price</th>
+                            <th class="text-right p-3 font-medium text-muted-foreground">RSI(14)</th>
+                            <th class="text-right p-3 font-medium text-muted-foreground">ADX</th>
+                            <th class="text-right p-3 font-medium text-muted-foreground">vs SMA50</th>
+                            <th class="text-right p-3 font-medium text-muted-foreground">vs SMA200</th>
+                            <th class="text-right p-3 font-medium text-muted-foreground">YTD</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">MA Status</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Verdict</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-border">
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-semibold"><span class="w-2 h-2 rounded-full bg-yellow-500 inline-block mr-2"></span>CEG</td>
+                            <td class="p-3 text-right font-mono">$296</td>
+                            <td class="p-3 text-right font-mono text-yellow-500">55</td>
+                            <td class="p-3 text-right font-mono text-muted-foreground">14.5</td>
+                            <td class="p-3 text-right font-mono text-green-500">+2.0%</td>
+                            <td class="p-3 text-right font-mono text-red-500">-8.4%</td>
+                            <td class="p-3 text-right font-mono text-red-500">-13%</td>
+                            <td class="p-3 text-center"><span class="text-yellow-500 text-xs">Death cross</span></td>
+                            <td class="p-3 text-center"><span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-yellow-500/10 text-yellow-500 border-yellow-500/30">Neutral-bearish</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-semibold"><span class="w-2 h-2 rounded-full bg-red-500 inline-block mr-2"></span>VST</td>
+                            <td class="p-3 text-right font-mono">$144</td>
+                            <td class="p-3 text-right font-mono text-red-500">34</td>
+                            <td class="p-3 text-right font-mono text-muted-foreground">14.5</td>
+                            <td class="p-3 text-right font-mono text-red-500">-7.7%</td>
+                            <td class="p-3 text-right font-mono text-red-500">-17.7%</td>
+                            <td class="p-3 text-right font-mono text-red-500">-11%</td>
+                            <td class="p-3 text-center"><span class="text-red-500 text-xs">All MAs below</span></td>
+                            <td class="p-3 text-center"><span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500 border-red-500/30">Bearish</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-semibold"><span class="w-2 h-2 rounded-full bg-green-500 inline-block mr-2"></span>NEE</td>
+                            <td class="p-3 text-right font-mono">$87</td>
+                            <td class="p-3 text-right font-mono text-green-500">61</td>
+                            <td class="p-3 text-right font-mono text-muted-foreground">—</td>
+                            <td class="p-3 text-right font-mono text-muted-foreground">~flat</td>
+                            <td class="p-3 text-right font-mono text-green-500">+8.8%</td>
+                            <td class="p-3 text-right font-mono text-green-500">+15%</td>
+                            <td class="p-3 text-center"><span class="text-green-500 text-xs">Above MA200</span></td>
+                            <td class="p-3 text-center"><span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-green-500/10 text-green-500 border-green-500/30">Bullish</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-semibold"><span class="w-2 h-2 rounded-full bg-blue-400 inline-block mr-2"></span>GEV</td>
+                            <td class="p-3 text-right font-mono">$980</td>
+                            <td class="p-3 text-right font-mono text-red-500">24</td>
+                            <td class="p-3 text-right font-mono text-orange-500">63</td>
+                            <td class="p-3 text-right font-mono text-red-500">-5.1%</td>
+                            <td class="p-3 text-right font-mono text-red-500">-7.7%</td>
+                            <td class="p-3 text-right font-mono text-green-500">+71%</td>
+                            <td class="p-3 text-center"><span class="text-yellow-500 text-xs">Below MA20/50</span></td>
+                            <td class="p-3 text-center"><span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-400 border-blue-500/30">Oversold bounce</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-semibold"><span class="w-2 h-2 rounded-full bg-green-500 inline-block mr-2"></span>BE</td>
+                            <td class="p-3 text-right font-mono">$285</td>
+                            <td class="p-3 text-right font-mono text-green-500">67</td>
+                            <td class="p-3 text-right font-mono text-muted-foreground">31</td>
+                            <td class="p-3 text-right font-mono text-green-500">+46%</td>
+                            <td class="p-3 text-right font-mono text-green-500">+111%</td>
+                            <td class="p-3 text-right font-mono text-green-500">+160%</td>
+                            <td class="p-3 text-center"><span class="text-green-500 text-xs">Golden cross</span></td>
+                            <td class="p-3 text-center"><span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-green-500/10 text-green-500 border-green-500/30">Bullish (extended)</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-semibold"><span class="w-2 h-2 rounded-full bg-green-500 inline-block mr-2"></span>PWR</td>
+                            <td class="p-3 text-right font-mono">$712</td>
+                            <td class="p-3 text-right font-mono text-green-500">71</td>
+                            <td class="p-3 text-right font-mono text-green-500">49</td>
+                            <td class="p-3 text-right font-mono text-green-500">+9.2%</td>
+                            <td class="p-3 text-right font-mono text-green-500">+39.9%</td>
+                            <td class="p-3 text-right font-mono text-green-500">+84%</td>
+                            <td class="p-3 text-center"><span class="text-green-500 text-xs">Stage 2 uptrend</span></td>
+                            <td class="p-3 text-center"><span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-green-500/10 text-green-500 border-green-500/30 font-bold">Strongest</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TIER 1: GENERATORS                                           -->
+        <!-- ============================================================ -->
+        <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+            <span class="w-1.5 h-6 bg-blue-500 rounded-full inline-block"></span>
+            Tier 1: Generators / Independent Power Producers
+        </h2>
+        <p class="text-sm text-muted-foreground mb-4 -mt-2">Direct exposure to rising power prices. Worst technical damage but strongest fundamental leverage.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+
+            <!-- CEG Card -->
+            <div class="rounded-lg border bg-card shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-yellow-500/30 bg-yellow-500/5">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-bold">CEG</h3>
+                            <p class="text-xs text-muted-foreground">Constellation Energy</p>
+                        </div>
+                        <span class="text-lg font-mono font-semibold text-yellow-500">$296</span>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <span class="text-xs bg-yellow-500/10 text-yellow-500 rounded-full px-2 py-0.5">Neutral-bearish</span>
+                        <span class="text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">YTD -13%</span>
+                    </div>
+                </div>
+                <div class="p-4 space-y-2 text-sm">
+                    <p class="text-muted-foreground">Largest US nuclear fleet. 20yr PPA with Meta. Restarting Three Mile Island Unit 1 for Microsoft (2028). Calpine acquisition pending.</p>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-border">
+                        <div><span class="text-muted-foreground text-xs">RSI</span><br><span class="font-mono font-medium">55</span></div>
+                        <div><span class="text-muted-foreground text-xs">ADX</span><br><span class="font-mono font-medium">14.5</span></div>
+                        <div><span class="text-muted-foreground text-xs">Death cross</span><br><span class="font-mono text-red-500">MA50 &lt; MA200</span></div>
+                        <div><span class="text-muted-foreground text-xs">Entry zone</span><br><span class="font-mono text-yellow-500">$260-283</span></div>
+                    </div>
+                    <p class="text-xs text-muted-foreground pt-2 border-t border-border">
+                        <span class="text-yellow-500">Catalyst:</span> PJM 2028/29 BRA auction (June 2026). Short interest doubled to 10.5M shares.
+                    </p>
+                </div>
+            </div>
+
+            <!-- VST Card -->
+            <div class="rounded-lg border bg-card shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-red-500/30 bg-red-500/5">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-bold">VST</h3>
+                            <p class="text-xs text-muted-foreground">Vistra Corp</p>
+                        </div>
+                        <span class="text-lg font-mono font-semibold text-red-400">$144</span>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <span class="text-xs bg-red-500/10 text-red-500 rounded-full px-2 py-0.5">Bearish</span>
+                        <span class="text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">YTD -11%</span>
+                    </div>
+                </div>
+                <div class="p-4 space-y-2 text-sm">
+                    <p class="text-muted-foreground">Largest US independent power producer (41GW: gas, nuclear, solar, battery). Acquiring Cogentrix ($4.7B, +5.5GW gas).</p>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-border">
+                        <div><span class="text-muted-foreground text-xs">RSI</span><br><span class="font-mono font-medium text-red-400">34</span></div>
+                        <div><span class="text-muted-foreground text-xs">Williams %R</span><br><span class="font-mono text-red-400">-92</span></div>
+                        <div><span class="text-muted-foreground text-xs">vs SMA200</span><br><span class="font-mono text-red-400">-17.7%</span></div>
+                        <div><span class="text-muted-foreground text-xs">Entry zone</span><br><span class="font-mono text-muted-foreground">Wait $150+</span></div>
+                    </div>
+                    <p class="text-xs text-muted-foreground pt-2 border-t border-border">
+                        <span class="text-red-400">Most technically damaged</span> in cohort. All MAs declining. Requires confirmed base above $150.
+                    </p>
+                </div>
+            </div>
+
+            <!-- NEE Card -->
+            <div class="rounded-lg border bg-card shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-green-500/30 bg-green-500/5">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-bold">NEE</h3>
+                            <p class="text-xs text-muted-foreground">NextEra Energy</p>
+                        </div>
+                        <span class="text-lg font-mono font-semibold text-green-500">$87</span>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <span class="text-xs bg-green-500/10 text-green-500 rounded-full px-2 py-0.5">Bullish</span>
+                        <span class="text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">YTD +15%</span>
+                    </div>
+                </div>
+                <div class="p-4 space-y-2 text-sm">
+                    <p class="text-muted-foreground">World's largest utility by market cap. $67B all-stock Dominion acquisition (May 18). Combined: 110GW generation, 130GW large-load pipeline.</p>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-border">
+                        <div><span class="text-muted-foreground text-xs">RSI</span><br><span class="font-mono font-medium">61</span></div>
+                        <div><span class="text-muted-foreground text-xs">P/E (fwd)</span><br><span class="font-mono text-yellow-500">22.6x</span></div>
+                        <div><span class="text-muted-foreground text-xs">vs SMA200</span><br><span class="font-mono text-green-500">+8.8%</span></div>
+                        <div><span class="text-muted-foreground text-xs">Support</span><br><span class="font-mono text-green-500">$86-88</span></div>
+                    </div>
+                    <p class="text-xs text-muted-foreground pt-2 border-t border-border">
+                        <span class="text-green-500">Only generator above MA200.</span> Premium valuation (22.6x vs 15.5x industry). Merger execution risk.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TIER 2: INFRASTRUCTURE & EQUIPMENT                            -->
+        <!-- ============================================================ -->
+        <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+            <span class="w-1.5 h-6 bg-green-500 rounded-full inline-block"></span>
+            Tier 2: Infrastructure & Equipment
+        </h2>
+        <p class="text-sm text-muted-foreground mb-4 -mt-2">Clearest technical expression. "Shovels" providers with strong momentum and backlog visibility.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+
+            <!-- GEV Card -->
+            <div class="rounded-lg border bg-card shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-blue-500/30 bg-blue-500/5">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-bold">GEV</h3>
+                            <p class="text-xs text-muted-foreground">GE Vernova</p>
+                        </div>
+                        <span class="text-lg font-mono font-semibold">$980</span>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <span class="text-xs bg-blue-500/10 text-blue-400 rounded-full px-2 py-0.5">Oversold bounce</span>
+                        <span class="text-xs bg-green-500/10 text-green-500 rounded-full px-2 py-0.5">YTD +71%</span>
+                    </div>
+                </div>
+                <div class="p-4 space-y-2 text-sm">
+                    <p class="text-muted-foreground">Gas turbines. $163B backlog. Sold out through 2030. Q1 2026 DC equipment orders: $2.4B (&gt;FY2025 total).</p>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-border">
+                        <div><span class="text-muted-foreground text-xs">RSI</span><br><span class="font-mono font-medium text-red-400">24</span></div>
+                        <div><span class="text-muted-foreground text-xs">ADX</span><br><span class="font-mono text-orange-500">63</span></div>
+                        <div><span class="text-muted-foreground text-xs">Bull flag</span><br><span class="font-mono text-blue-400">Forming</span></div>
+                        <div><span class="text-muted-foreground text-xs">Stop</span><br><span class="font-mono text-red-400">$960</span></div>
+                    </div>
+                    <p class="text-xs text-muted-foreground pt-2 border-t border-border">
+                        <span class="text-blue-400">Highest risk/reward.</span> RSI 24 in long-term uptrend is a statistical anomaly. Bull flag forming above $980 support.
+                    </p>
+                </div>
+            </div>
+
+            <!-- PWR Card -->
+            <div class="rounded-lg border bg-card shadow-sm overflow-hidden border-green-500/40">
+                <div class="p-4 border-b border-green-500/40 bg-green-500/10">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-bold text-green-400">PWR</h3>
+                            <p class="text-xs text-muted-foreground">Quanta Services</p>
+                        </div>
+                        <span class="text-lg font-mono font-semibold text-green-400">$712</span>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <span class="text-xs bg-green-500/20 text-green-400 rounded-full px-2 py-0.5 font-bold">Strongest Setup</span>
+                        <span class="text-xs bg-green-500/10 text-green-500 rounded-full px-2 py-0.5">YTD +84%</span>
+                    </div>
+                </div>
+                <div class="p-4 space-y-2 text-sm">
+                    <p class="text-muted-foreground">Largest private high-voltage lineman workforce in NA. $39.2B backlog. Grid connection is the AI bottleneck; PWR is the labor moat.</p>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-border">
+                        <div><span class="text-muted-foreground text-xs">RSI</span><br><span class="font-mono font-medium text-green-400">71</span></div>
+                        <div><span class="text-muted-foreground text-xs">ADX</span><br><span class="font-mono font-medium text-green-400">49</span></div>
+                        <div><span class="text-muted-foreground text-xs">Minervini</span><br><span class="font-mono text-green-400">Passes all</span></div>
+                        <div><span class="text-muted-foreground text-xs">ChartMill</span><br><span class="font-mono text-green-400">10/10</span></div>
+                    </div>
+                    <p class="text-xs text-muted-foreground pt-2 border-t border-border">
+                        <span class="text-green-400">Perfect Stage 2 uptrend.</span> All MAs rising in correct order. Support at $652 (MA50). Accumulate on dips.
+                    </p>
+                </div>
+            </div>
+
+            <!-- ETN Card -->
+            <div class="rounded-lg border bg-card shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-border">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-bold">ETN</h3>
+                            <p class="text-xs text-muted-foreground">Eaton Corp</p>
+                        </div>
+                        <span class="text-lg font-mono font-semibold text-muted-foreground">—</span>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <span class="text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">Not rated</span>
+                    </div>
+                </div>
+                <div class="p-4 space-y-2 text-sm">
+                    <p class="text-muted-foreground">High-voltage equipment (switchgear, UPS, busways, power distribution). $1.2B capacity expansion underway.</p>
+                    <p class="text-xs text-muted-foreground pt-2 border-t border-border">
+                        Key infrastructure play but no technical rating in this analysis.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TIER 3: DISTRIBUTED / FUEL CELL POWER                         -->
+        <!-- ============================================================ -->
+        <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+            <span class="w-1.5 h-6 bg-orange-500 rounded-full inline-block"></span>
+            Tier 3: Distributed / Fuel Cell Power
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <!-- BE Card -->
+            <div class="rounded-lg border bg-card shadow-sm overflow-hidden md:col-span-2 max-w-lg">
+                <div class="p-4 border-b border-orange-500/30 bg-orange-500/5">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-bold">BE</h3>
+                            <p class="text-xs text-muted-foreground">Bloom Energy</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-lg font-mono font-semibold text-orange-400">$285</span>
+                            <p class="text-xs text-orange-400">+1422% 1Y</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <span class="text-xs bg-green-500/10 text-green-500 rounded-full px-2 py-0.5">Bullish</span>
+                        <span class="text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">YTD +160%</span>
+                        <span class="text-xs bg-orange-500/10 text-orange-400 rounded-full px-2 py-0.5">Extended</span>
+                    </div>
+                </div>
+                <div class="p-4 space-y-2 text-sm">
+                    <p class="text-muted-foreground">Solid oxide fuel cells. Converts NG to electricity at 60% thermal efficiency. Time-to-power: 4 months (vs years for grid). Oracle contracted up to 2.8GW. AEP exercised option for 1GW. Raised FY2026 guidance.</p>
+                    <div class="grid grid-cols-3 gap-2 pt-2 border-t border-border">
+                        <div><span class="text-muted-foreground text-xs">RSI</span><br><span class="font-mono font-medium">67</span></div>
+                        <div><span class="text-muted-foreground text-xs">Golden cross</span><br><span class="font-mono text-green-500">Intact</span></div>
+                        <div><span class="text-muted-foreground text-xs">MACD</span><br><span class="font-mono text-orange-400">Decelerating</span></div>
+                    </div>
+                    <p class="text-xs text-muted-foreground pt-2 border-t border-border">
+                        <span class="text-orange-400">High-flyer momentum setup.</span> Trend firmly bullish but MACD below signal line. 20-30% correction risk. Entry zone: $250-270.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TIER 4: REGULATED UTILITIES                                  -->
+        <!-- ============================================================ -->
+        <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+            <span class="w-1.5 h-6 bg-purple-500 rounded-full inline-block"></span>
+            Tier 4: Regulated Utilities with Data Center Exposure
+        </h2>
+        <p class="text-sm text-muted-foreground mb-4 -mt-2">Defensive yield plays with indirect AI tailwinds through data center load growth in their service territories.</p>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="rounded-lg border bg-card shadow-sm p-4">
+                <h3 class="font-bold">DUK</h3>
+                <p class="text-xs text-muted-foreground mb-2">Duke Energy</p>
+                <p class="text-xs text-muted-foreground">$103B 5yr capex. 14GW new gen + 4.5GW batteries. 73% YoY DC request increase.</p>
+                <span class="inline-block mt-2 text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">Defensive yield</span>
+            </div>
+            <div class="rounded-lg border bg-card shadow-sm p-4">
+                <h3 class="font-bold">ETR</h3>
+                <p class="text-xs text-muted-foreground mb-2">Entergy</p>
+                <p class="text-xs text-muted-foreground">Meta grid deal. Full-stack generation/transmission/distribution for DC.</p>
+                <span class="inline-block mt-2 text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">Meta tailwind</span>
+            </div>
+            <div class="rounded-lg border bg-card shadow-sm p-4">
+                <h3 class="font-bold">AEP</h3>
+                <p class="text-xs text-muted-foreground mb-2">American Electric Power</p>
+                <p class="text-xs text-muted-foreground">1GW Bloom fuel cell deal. Serves MSFT, GOOGL, AMZN, META.</p>
+                <span class="inline-block mt-2 text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">Hyperscaler exposure</span>
+            </div>
+            <div class="rounded-lg border bg-card shadow-sm p-4">
+                <h3 class="font-bold">WEC</h3>
+                <p class="text-xs text-muted-foreground mb-2">WEC Energy Group</p>
+                <p class="text-xs text-muted-foreground">Q1 2026 beat. 7-8% EPS CAGR target (2026-2030).</p>
+                <span class="inline-block mt-2 text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">Growth utility</span>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- INVESTMENT CONSIDERATIONS                                    -->
+        <!-- ============================================================ -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="rounded-lg border bg-card shadow-sm p-5 border-green-500/20">
+                <h3 class="font-semibold text-lg text-green-400 mb-3 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
+                    Bull Case
+                </h3>
+                <ul class="space-y-2 text-sm text-muted-foreground">
+                    <li class="flex gap-2"><span class="text-green-500 flex-shrink-0 mt-0.5">&#9654;</span> Demand is structural, not cyclical. AI inference workloads are persistent, always-on.</li>
+                    <li class="flex gap-2"><span class="text-green-500 flex-shrink-0 mt-0.5">&#9654;</span> The power bottleneck cannot be solved quickly — existing generators have pricing power for years.</li>
+                    <li class="flex gap-2"><span class="text-green-500 flex-shrink-0 mt-0.5">&#9654;</span> $1.4 trillion in infrastructure investment needed through 2030.</li>
+                    <li class="flex gap-2"><span class="text-green-500 flex-shrink-0 mt-0.5">&#9654;</span> NextEra-Dominion merger signals sector consolidation — more M&A likely.</li>
+                    <li class="flex gap-2"><span class="text-green-500 flex-shrink-0 mt-0.5">&#9654;</span> Nuclear and gas are the only viable near-term 24/7 baseload sources.</li>
+                </ul>
+            </div>
+            <div class="rounded-lg border bg-card shadow-sm p-5 border-red-500/20">
+                <h3 class="font-semibold text-lg text-red-400 mb-3 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
+                    Risk Factors
+                </h3>
+                <ul class="space-y-2 text-sm text-muted-foreground">
+                    <li class="flex gap-2"><span class="text-red-500 flex-shrink-0 mt-0.5">&#9660;</span> <strong class="text-foreground">Valuation risk:</strong> GEV +71%, PWR +84%, BE +160% YTD. 15-25% corrections likely even if thesis holds.</li>
+                    <li class="flex gap-2"><span class="text-red-500 flex-shrink-0 mt-0.5">&#9660;</span> <strong class="text-foreground">Technical risk (generators):</strong> CEG/VST death crosses — charts argue lower before higher.</li>
+                    <li class="flex gap-2"><span class="text-red-500 flex-shrink-0 mt-0.5">&#9660;</span> <strong class="text-foreground">GEV trap risk:</strong> RSI 24 but ADX 63 selling pressure intense. $960 invalidation level.</li>
+                    <li class="flex gap-2"><span class="text-red-500 flex-shrink-0 mt-0.5">&#9660;</span> <strong class="text-foreground">BE momentum deceleration:</strong> MACD below signal after +1422% run. Classic correction precursor.</li>
+                    <li class="flex gap-2"><span class="text-red-500 flex-shrink-0 mt-0.5">&#9660;</span> Regulatory, rate sensitivity, supply chain, and merger execution risks.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- DIVERGENCE NOTE                                              -->
+        <!-- ============================================================ -->
+        <div class="rounded-lg border border-yellow-500/30 bg-yellow-500/5 shadow-sm p-5 mb-8">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                    <span class="text-yellow-500 font-bold">!</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-1">The Technical Elephant in the Room</h3>
+                    <p class="text-sm text-muted-foreground leading-relaxed">
+                        The stocks with the <strong class="text-red-400">best fundamentals</strong> (CEG, VST — generators directly exposed to PJM pricing) have the <strong class="text-red-400">worst charts</strong>. The stocks with the <strong class="text-green-400">strongest charts</strong> (PWR, GEV — infrastructure/equipment) have already priced in the buildout. The market is rewarding the "shovels" and discounting the "mine owners." This divergence is normal for the early stages of a capex cycle and may resolve as PJM auction results and actual PPA volumes come through.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- FINAL VERDICT                                                -->
+        <!-- ============================================================ -->
+        <div class="rounded-lg border bg-card shadow-sm p-6 mb-8 border-blue-500/30 bg-blue-500/[0.03]">
+            <h2 class="text-2xl font-bold mb-4 text-center">Verdict</h2>
+            <p class="text-sm text-muted-foreground text-center max-w-3xl mx-auto mb-6 leading-relaxed">
+                The macro thesis is strong — AI power demand is real, quantified, and already flowing into utility capex plans and PPA contracts. The technical setup across the cohort is deeply bifurcated, creating both opportunity and trap risk.
+            </p>
+
+            <h3 class="font-semibold mb-3">Technical Hierarchy (strongest to weakest)</h3>
+            <div class="space-y-2 mb-6">
+                <div class="flex items-center gap-3 p-2 rounded bg-green-500/10 border border-green-500/20">
+                    <span class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-xs font-bold text-green-400">1</span>
+                    <div class="flex-1">
+                        <span class="font-semibold text-green-400">PWR</span>
+                        <span class="text-xs text-muted-foreground ml-2">Perfect Stage 2 uptrend, all MAs aligned, strongest in group</span>
+                    </div>
+                    <span class="text-xs bg-green-500/20 text-green-400 rounded-full px-2 py-0.5 font-medium">Trend-follow</span>
+                </div>
+                <div class="flex items-center gap-3 p-2 rounded bg-green-500/5 border border-green-500/10">
+                    <span class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-xs font-bold text-green-400">2</span>
+                    <div class="flex-1">
+                        <span class="font-semibold text-green-400">NEE</span>
+                        <span class="text-xs text-muted-foreground ml-2">Above MA200, consolidating merger thesis, support $86-88</span>
+                    </div>
+                    <span class="text-xs bg-green-500/20 text-green-400 rounded-full px-2 py-0.5 font-medium">Merger play</span>
+                </div>
+                <div class="flex items-center gap-3 p-2 rounded bg-blue-500/5 border border-blue-500/10">
+                    <span class="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-400">3</span>
+                    <div class="flex-1">
+                        <span class="font-semibold text-blue-400">GEV</span>
+                        <span class="text-xs text-muted-foreground ml-2">RSI 24 oversold bounce candidate, bull flag forming, $980 critical</span>
+                    </div>
+                    <span class="text-xs bg-blue-500/20 text-blue-400 rounded-full px-2 py-0.5 font-medium">Oversold bounce</span>
+                </div>
+                <div class="flex items-center gap-3 p-2 rounded bg-orange-500/5 border border-orange-500/10">
+                    <span class="w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center text-xs font-bold text-orange-400">4</span>
+                    <div class="flex-1">
+                        <span class="font-semibold text-orange-400">BE</span>
+                        <span class="text-xs text-muted-foreground ml-2">Bullish but extended, MACD decelerating, high-flyer risk</span>
+                    </div>
+                    <span class="text-xs bg-orange-500/20 text-orange-400 rounded-full px-2 py-0.5 font-medium">Momentum</span>
+                </div>
+                <div class="flex items-center gap-3 p-2 rounded bg-yellow-500/5 border border-yellow-500/10">
+                    <span class="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center text-xs font-bold text-yellow-500">5</span>
+                    <div class="flex-1">
+                        <span class="font-semibold text-yellow-500">CEG</span>
+                        <span class="text-xs text-muted-foreground ml-2">Death cross, $260-283 entry zone, PJM catalyst in June</span>
+                    </div>
+                    <span class="text-xs bg-yellow-500/20 text-yellow-500 rounded-full px-2 py-0.5 font-medium">Catalyst watch</span>
+                </div>
+                <div class="flex items-center gap-3 p-2 rounded bg-red-500/5 border border-red-500/10">
+                    <span class="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center text-xs font-bold text-red-400">6</span>
+                    <div class="flex-1">
+                        <span class="font-semibold text-red-400">VST</span>
+                        <span class="text-xs text-muted-foreground ml-2">Technically damaged, wait for base above $150</span>
+                    </div>
+                    <span class="text-xs bg-red-500/20 text-red-400 rounded-full px-2 py-0.5 font-medium">Wait</span>
+                </div>
+            </div>
+
+            <h3 class="font-semibold mb-3">Best Risk/Reward</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="rounded-lg border border-green-500/20 bg-green-500/5 p-3">
+                    <p class="font-medium text-green-400 text-sm">Infrastructure (PWR, GEV)</p>
+                    <p class="text-xs text-muted-foreground mt-1">Clearest technical expression. PWR for trend-following, GEV for oversold bounce.</p>
+                </div>
+                <div class="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-3">
+                    <p class="font-medium text-yellow-500 text-sm">Generators (CEG, VST)</p>
+                    <p class="text-xs text-muted-foreground mt-1">Highest fundamental leverage to rising power prices but worst technical damage. CEG preferred.</p>
+                </div>
+                <div class="rounded-lg border border-orange-500/20 bg-orange-500/5 p-3">
+                    <p class="font-medium text-orange-400 text-sm">Distributed (BE)</p>
+                    <p class="text-xs text-muted-foreground mt-1">Highest absolute return potential but highest drawdown risk. Momentum-tolerant capital only.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- FOOTER                                                       -->
+        <!-- ============================================================ -->
+        <footer class="text-center text-xs text-muted-foreground border-t border-border pt-6 mt-8">
+            <p>Generated 2026-06-01 from research at <code class="text-xs bg-muted px-1 rounded">2_knowledges/researches/2026-05-29-ai-energy-stocks-thesis.md</code></p>
+            <p class="mt-1">Data as of market close May 29, 2026. Not financial advice.</p>
+        </footer>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- CHART.JS SCRIPTS                                             -->
+    <!-- ============================================================ -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // --------------- COLORS ---------------
+        const colors = {
+            ceg: { bg: 'rgba(234, 179, 8, 0.7)', border: 'rgb(234, 179, 8)' },
+            vst: { bg: 'rgba(239, 68, 68, 0.7)', border: 'rgb(239, 68, 68)' },
+            nee: { bg: 'rgba(34, 197, 94, 0.7)', border: 'rgb(34, 197, 94)' },
+            gev: { bg: 'rgba(96, 165, 250, 0.7)', border: 'rgb(96, 165, 250)' },
+            be:  { bg: 'rgba(251, 146, 60, 0.7)', border: 'rgb(251, 146, 60)' },
+            pwr: { bg: 'rgba(34, 197, 94, 0.9)', border: 'rgb(34, 197, 94)' },
+        };
+        const tickers = ['CEG', 'VST', 'NEE', 'GEV', 'BE', 'PWR'];
+        const tickerColors = [colors.ceg, colors.vst, colors.nee, colors.gev, colors.be, colors.pwr];
+
+        // Chart defaults
+        Chart.defaults.color = 'hsl(215, 20.2%, 65.1%)';
+        Chart.defaults.borderColor = 'hsl(217.2, 32.6%, 17.5%)';
+        Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        Chart.defaults.plugins.legend.labels.boxWidth = 12;
+        Chart.defaults.plugins.legend.labels.padding = 12;
+
+        // ============================ RSI CHART ============================
+        const rsiCtx = document.getElementById('rsiChart').getContext('2d');
+
+        const rsiPlugin = {
+            id: 'rsiZones',
+            beforeDraw(chart) {
+                const { ctx, chartArea: { left, right, top, bottom }, scales: { y } } = chart;
+                // Oversold zone (0-30)
+                const yOversold = y.getPixelForValue(30);
+                const yZero = y.getPixelForValue(0);
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.06)';
+                ctx.fillRect(left, yOversold, right - left, yZero - yOversold);
+
+                // Overbought zone (70-100)
+                const yOverbought = y.getPixelForValue(70);
+                const y100 = y.getPixelForValue(100);
+                ctx.fillStyle = 'rgba(34, 197, 94, 0.06)';
+                ctx.fillRect(left, y100, right - left, yOverbought - y100);
+
+                // Lines at 30 and 70
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)';
+                ctx.beginPath(); ctx.moveTo(left, yOversold); ctx.lineTo(right, yOversold); ctx.stroke();
+                ctx.strokeStyle = 'rgba(34, 197, 94, 0.3)';
+                ctx.beginPath(); ctx.moveTo(left, yOverbought); ctx.lineTo(right, yOverbought); ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        };
+
+        new Chart(rsiCtx, {
+            type: 'bar',
+            data: {
+                labels: tickers,
+                datasets: [{
+                    label: 'RSI (14)',
+                    data: [55, 34, 61, 24, 67, 71],
+                    backgroundColor: tickerColors.map(c => c.bg),
+                    borderColor: tickerColors.map(c => c.border),
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    barPercentage: 0.65,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'hsl(222.2, 84%, 4.9%)',
+                        borderColor: 'hsl(217.2, 32.6%, 17.5%)',
+                        borderWidth: 1,
+                        callbacks: {
+                            afterLabel: function(context) {
+                                const v = context.parsed.y;
+                                if (v >= 70) return 'Overbought';
+                                if (v <= 30) return 'Oversold';
+                                return 'Neutral';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        min: 0, max: 100,
+                        ticks: {
+                            stepSize: 10,
+                            callback: function(v) {
+                                if (v === 30) return '30 Oversold';
+                                if (v === 70) return '70 Overbought';
+                                return v;
+                            }
+                        },
+                        grid: { color: 'hsl(217.2, 32.6%, 17.5%)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            },
+            plugins: [rsiPlugin]
+        });
+
+        // ============================ YTD CHART ============================
+        const ytdCtx = document.getElementById('ytdChart').getContext('2d');
+        new Chart(ytdCtx, {
+            type: 'bar',
+            data: {
+                labels: tickers,
+                datasets: [{
+                    label: 'YTD Return (%)',
+                    data: [-13, -11, 15, 71, 160, 84],
+                    backgroundColor: tickerColors.map(c => c.bg),
+                    borderColor: tickerColors.map(c => c.border),
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    barPercentage: 0.65,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'hsl(222.2, 84%, 4.9%)',
+                        borderColor: 'hsl(217.2, 32.6%, 17.5%)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(ctx) { return ctx.parsed.y + '%'; }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: { callback: function(v) { return v + '%'; } },
+                        grid: { color: 'hsl(217.2, 32.6%, 17.5%)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // ============================ SMA DISTANCE CHART ============================
+        const smaCtx = document.getElementById('smaChart').getContext('2d');
+        new Chart(smaCtx, {
+            type: 'bar',
+            data: {
+                labels: tickers,
+                datasets: [
+                    {
+                        label: 'vs SMA50 (%)',
+                        data: [2.0, -7.7, 0, -5.1, 46, 9.2],
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        barPercentage: 0.4,
+                    },
+                    {
+                        label: 'vs SMA200 (%)',
+                        data: [-8.4, -17.7, 8.8, -7.7, 111, 39.9],
+                        backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                        borderColor: 'rgb(34, 197, 94)',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        barPercentage: 0.4,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { usePointStyle: true, pointStyle: 'circle', padding: 16 }
+                    },
+                    tooltip: {
+                        backgroundColor: 'hsl(222.2, 84%, 4.9%)',
+                        borderColor: 'hsl(217.2, 32.6%, 17.5%)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y + '%'; }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: { callback: function(v) { return v + '%'; } },
+                        grid: { color: 'hsl(217.2, 32.6%, 17.5%)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // ============================ RADAR CHART ============================
+        const radarCtx = document.getElementById('radarChart').getContext('2d');
+        new Chart(radarCtx, {
+            type: 'radar',
+            data: {
+                labels: ['RSI', 'Trend Strength', 'MA Posture', 'YTD Return', 'Trend Alignment'],
+                datasets: [
+                    {
+                        label: 'CEG',
+                        data: [55, 15, 30, 0, 30],
+                        borderColor: colors.ceg.border,
+                        backgroundColor: 'rgba(234, 179, 8, 0.08)',
+                        borderWidth: 2,
+                        pointBackgroundColor: colors.ceg.border,
+                        pointRadius: 3,
+                    },
+                    {
+                        label: 'VST',
+                        data: [34, 15, 5, 0, 10],
+                        borderColor: colors.vst.border,
+                        backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                        borderWidth: 2,
+                        pointBackgroundColor: colors.vst.border,
+                        pointRadius: 3,
+                    },
+                    {
+                        label: 'NEE',
+                        data: [61, 30, 65, 15, 60],
+                        borderColor: colors.nee.border,
+                        backgroundColor: 'rgba(34, 197, 94, 0.08)',
+                        borderWidth: 2,
+                        pointBackgroundColor: colors.nee.border,
+                        pointRadius: 3,
+                    },
+                    {
+                        label: 'GEV',
+                        data: [24, 90, 25, 71, 50],
+                        borderColor: colors.gev.border,
+                        backgroundColor: 'rgba(96, 165, 250, 0.08)',
+                        borderWidth: 2,
+                        pointBackgroundColor: colors.gev.border,
+                        pointRadius: 3,
+                    },
+                    {
+                        label: 'BE',
+                        data: [67, 40, 85, 100, 70],
+                        borderColor: colors.be.border,
+                        backgroundColor: 'rgba(251, 146, 60, 0.08)',
+                        borderWidth: 2,
+                        pointBackgroundColor: colors.be.border,
+                        pointRadius: 3,
+                    },
+                    {
+                        label: 'PWR',
+                        data: [71, 70, 90, 84, 95],
+                        borderColor: colors.pwr.border,
+                        backgroundColor: 'rgba(34, 197, 94, 0.08)',
+                        borderWidth: 2,
+                        pointBackgroundColor: colors.pwr.border,
+                        pointRadius: 3,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { usePointStyle: true, pointStyle: 'circle', padding: 10, font: { size: 11 } }
+                    },
+                    tooltip: {
+                        backgroundColor: 'hsl(222.2, 84%, 4.9%)',
+                        borderColor: 'hsl(217.2, 32.6%, 17.5%)',
+                        borderWidth: 1,
+                    }
+                },
+                scales: {
+                    r: {
+                        min: 0, max: 100,
+                        ticks: { stepSize: 20, backdropColor: 'transparent', font: { size: 10 } },
+                        grid: { color: 'hsl(217.2, 32.6%, 17.5%)' },
+                        angleLines: { color: 'hsl(217.2, 32.6%, 17.5%)' },
+                        pointLabels: { font: { size: 11 } }
+                    }
+                }
+            }
+        });
+
+        // ============================ VERDICT DOUGHNUT ============================
+        // (Inline chart for distribution — placed below the verdict section if needed)
+        const doughnutCtx = document.getElementById('verdictChart').getContext('2d');
+        new Chart(doughnutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Strongest (PWR)', 'Bullish (NEE, BE)', 'Oversold (GEV)', 'Neutral (CEG)', 'Bearish (VST)'],
+                datasets: [{
+                    data: [1, 2, 1, 1, 1],
+                    backgroundColor: [
+                        'rgba(34, 197, 94, 0.7)',
+                        'rgba(34, 197, 94, 0.4)',
+                        'rgba(96, 165, 250, 0.7)',
+                        'rgba(234, 179, 8, 0.7)',
+                        'rgba(239, 68, 68, 0.7)',
+                    ],
+                    borderColor: [
+                        'rgb(34, 197, 94)',
+                        'rgb(34, 197, 94)',
+                        'rgb(96, 165, 250)',
+                        'rgb(234, 179, 8)',
+                        'rgb(239, 68, 68)',
+                    ],
+                    borderWidth: 1,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, pointStyle: 'circle', padding: 8, font: { size: 11 } }
+                    },
+                    tooltip: {
+                        backgroundColor: 'hsl(222.2, 84%, 4.9%)',
+                        borderColor: 'hsl(217.2, 32.6%, 17.5%)',
+                        borderWidth: 1,
+                    }
+                }
+            }
+        });
+    });
+    </script>
+</body>
+</html>
