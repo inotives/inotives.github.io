@@ -19,3 +19,7 @@ Site rebuilt in April 2026 from Python static generator to React 18 + Vite + Tai
 
 ## Preferences
 - Do not add Co-Authored-By lines in commits
+
+## Web Fetching
+- `webfetch`/`websearch` are preferred for simple lookups but fail on paywalled/bot-protected sites (Bloomberg, Fortune, etc.)
+- When they fail with 403/429, fall back to `playwright-cli open --browser=chromium` to load the page and extract content via `eval "document.body.innerText"`

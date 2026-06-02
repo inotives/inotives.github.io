@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-06-02-ai-inference-cost-crisis-local-models",
+      "filename": "2026-06-02-ai-inference-cost-crisis-local-models.md",
+      "category": "post",
+      "title": "The AI Cost Reckoning Is Here — Local Inference Is the Only Escape Hatch",
+      "date": "2026-06-02",
+      "tags": [
+        "ai-economics",
+        "inference-cost",
+        "local-llm",
+        "ollama",
+        "qwen",
+        "enterprise-ai",
+        "cost-optimization"
+      ],
+      "summary": "Bloomberg, Fortune, and Tech Times all ran the same story this week: AI inference costs are breaking enterprise budgets. GitHub flipped to metered billing. Microsoft is pulling licenses. The fix isn't waiting for prices to drop — it's running models where they belong: on your own hardware.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-06-01-ai-computation-shift-gpu-to-cpu-agent-harness",
       "filename": "2026-06-01-ai-computation-shift-gpu-to-cpu-agent-harness.md",
       "category": "post",
@@ -56,6 +75,25 @@
         "cost-optimization"
       ],
       "summary": "The one-model-for-everything era is ending. Inference costs, vendor platforms, and open protocols are converging on a provider mesh architecture — where generalist models orchestrate domain-specialist agents from Salesforce, Snowflake, Datadog, and beyond.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-29-frame-workflow-crypto-data-analyst",
+      "filename": "2026-05-29-frame-workflow-crypto-data-analyst.md",
+      "category": "post",
+      "title": "The FRAME Workflow: How I Structure My Day as a Crypto Data Analyst",
+      "date": "2026-05-29",
+      "tags": [
+        "data-analyst",
+        "workflow",
+        "crypto",
+        "automation",
+        "dagster",
+        "dbt",
+        "compliance"
+      ],
+      "summary": "A practical breakdown of FRAME (Find, Review, Analyse, Model, Evaluate) — the workflow I use to cut through the chaos of crypto finance data work.",
       "featured_image": null,
       "draft": false
     },
@@ -398,6 +436,26 @@
         "agent-orchestrator"
       ],
       "summary": "Karpathy declared vibe coding obsolete. A new role is crystallizing — part engineer, part orchestrator, part production operator. Here's what it is, what it pays, and how to get there in 8 tiers.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-05-06-ai-terminology-catch-up-sheet",
+      "filename": "2026-05-06-ai-terminology-catch-up-sheet.md",
+      "category": "post",
+      "title": "AI Terminology Catch-Up Sheet: What Changed From Late 2025 to Mid-2026",
+      "date": "2026-05-06",
+      "tags": [
+        "ai-terminology",
+        "agentic-engineering",
+        "context-engineering",
+        "mcp",
+        "skills",
+        "plan-mode",
+        "ai-agents",
+        "llm-economics"
+      ],
+      "summary": "A practitioner-friendly catch-up sheet for the AI terms that started to matter between November 2025 and May 2026: agentic engineering, context engineering, Code Mode, Plan Mode, skills, MCP security, reasoning budgets, and the new cost discipline around tokens.",
       "featured_image": null,
       "draft": false
     },
