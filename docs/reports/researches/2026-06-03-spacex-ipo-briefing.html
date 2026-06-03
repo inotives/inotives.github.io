@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpaceX IPO Briefing -- June 3, 2026</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0c0c0e;
+      --bg-card: #1a1a1e;
+      --bg-card-hover: #222226;
+      --border: #2a2a2e;
+      --muted: #6b6b72;
+      --muted-foreground: #a1a1aa;
+      --foreground: #e4e4e7;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --destructive: #ef4444;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --chart-1: #3b82f6;
+      --chart-2: #22c55e;
+      --chart-3: #f59e0b;
+      --chart-4: #ef4444;
+      --chart-5: #a855f7;
+      --chart-6: #06b6d4;
+      --chart-7: #f97316;
+      --chart-8: #84cc16;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--foreground);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* Header */
+    header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(12,12,14,0.8);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    header .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+    header .logo { font-weight: 700; font-size: 14px; letter-spacing: 0.5px; color: var(--muted-foreground); }
+    header .logo span { color: var(--foreground); }
+    header nav { display: flex; gap: 8px; flex-wrap: wrap; }
+    header nav a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    header nav a:hover { background: var(--bg-card); color: var(--foreground); }
+
+    /* Hero */
+    .hero {
+      padding: 80px 0 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(59,130,246,0.1);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(59,130,246,0.2);
+    }
+    .hero .badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--muted-foreground);
+      max-width: 640px;
+      margin: 0 auto 32px;
+    }
+    .hero .meta {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .hero .meta span { display: flex; align-items: center; gap: 6px; }
+
+    /* Section */
+    .section { padding: 48px 0; }
+    .section-header {
+      margin-bottom: 28px;
+    }
+    .section-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+    .section-header p {
+      font-size: 14px;
+      color: var(--muted-foreground);
+    }
+
+    /* Stat Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: background 0.2s;
+    }
+    .stat-card:hover { background: var(--bg-card-hover); }
+    .stat-card .label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted-foreground);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .stat-card .value {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+    .stat-card .sub {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .stat-card .trend-up { color: var(--success); }
+    .stat-card .trend-down { color: var(--destructive); }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 20px;
+    }
+    .card h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    /* Chart containers */
+    .chart-wrapper {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .chart-wrapper h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .chart-container { position: relative; width: 100%; max-height: 360px; }
+
+    /* Two-col chart layout */
+    .chart-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) { .chart-row { grid-template-columns: 1fr; } }
+
+    /* Full-width chart */
+    .chart-full { margin-bottom: 20px; }
+
+    /* Table */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead th {
+      text-align: left;
+      padding: 12px 16px;
+      font-weight: 600;
+      color: var(--muted-foreground);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      background: #111114;
+    }
+    tbody td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    /* Badges */
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .tag-beneficiary { background: rgba(34,197,94,0.12); color: var(--success); }
+    .tag-headwind { background: rgba(239,68,68,0.12); color: var(--destructive); }
+    .tag-neutral { background: rgba(107,107,114,0.12); color: var(--muted); }
+    .tag-musk { background: rgba(168,85,247,0.12); color: var(--chart-5); }
+
+    /* Timeline */
+    .timeline { position: relative; padding-left: 32px; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 11px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--border);
+    }
+    .timeline-item { position: relative; padding-bottom: 28px; }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-item .dot {
+      position: absolute;
+      left: -26px;
+      top: 6px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--bg);
+    }
+    .timeline-item.active .dot {
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.15);
+    }
+    .timeline-item.today .dot {
+      background: var(--success);
+      border-color: var(--success);
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.15);
+    }
+    .timeline-item .date {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted-foreground);
+      margin-bottom: 2px;
+    }
+    .timeline-item .title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .timeline-item .desc {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Risk cards */
+    .risk-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      border-left: 3px solid var(--chart-4);
+    }
+    .risk-card.medium { border-left-color: var(--warning); }
+    .risk-card.low { border-left-color: var(--success); }
+    .risk-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .risk-card p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .risk-card .severity {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 8px;
+    }
+    .risk-card .severity.high { color: var(--destructive); }
+    .risk-card .severity.medium { color: var(--warning); }
+    .risk-card .severity.low { color: var(--success); }
+
+    /* Sources */
+    .sources { font-size: 12px; color: var(--muted); }
+    .sources a { color: var(--primary); text-decoration: none; }
+    .sources a:hover { text-decoration: underline; }
+    .sources li { margin-bottom: 4px; }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Utility */
+    .mb-4 { margin-bottom: 16px; }
+    .mb-8 { margin-bottom: 32px; }
+    .mt-8 { margin-top: 32px; }
+    .flex { display: flex; }
+    .flex-wrap { flex-wrap: wrap; }
+    .gap-2 { gap: 8px; }
+    .gap-4 { gap: 16px; }
+    .items-center { align-items: center; }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 32px; }
+      .hero { padding: 48px 0 24px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-card { padding: 16px; }
+      .stat-card .value { font-size: 22px; }
+      header nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <header>
+    <div class="container">
+      <div class="logo">AGENT <span>KNOWLEDGE</span></div>
+      <nav>
+        <a href="#overview">Overview</a>
+        <a href="#financials">Financials</a>
+        <a href="#valuation">Valuation</a>
+        <a href="#timeline">Timeline</a>
+        <a href="#risks">Risks</a>
+        <a href="#portfolio">Portfolio</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero" id="overview">
+    <div class="container">
+      <div class="badge"><span class="dot"></span> Roadshow T-1 Day</div>
+      <h1>SpaceX IPO Briefing</h1>
+      <p>Comprehensive pre-IPO analysis covering valuation, financials, timeline, and portfolio impact. Roadshow begins June 4, pricing June 11, Nasdaq debut June 12 under ticker SPCX.</p>
+      <div class="meta">
+        <span>&#x1F4C5; June 3, 2026</span>
+        <span>&#x26A1; 8 min read</span>
+        <span>&#x1F4CA; 6 charts</span>
+        <span>&#x1F4DD; Sources: 12+</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key Stats -->
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">IPO Valuation</div>
+        <div class="value">$1.75T</div>
+        <div class="sub">target, down from ~$2T</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Capital Raise</div>
+        <div class="value">$75B</div>
+        <div class="sub">2.5x Saudi Aramco record</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Est. Price / Share</div>
+        <div class="value">$525-600</div>
+        <div class="sub">range to be set during roadshow</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Ticker / Exchange</div>
+        <div class="value">SPCX</div>
+        <div class="sub">Nasdaq Global Select</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Retail Allocation</div>
+        <div class="value">30%</div>
+        <div class="sub">largest in IPO history</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">IPO Float</div>
+        <div class="value">~4.3%</div>
+        <div class="sub">of post-money equity</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row 1: Valuation Trajectory + IPO Comparison -->
+  <div class="container section" id="valuation">
+    <div class="section-header">
+      <h2>Valuation &amp; Market Position</h2>
+      <p>SpaceX valuation trajectory from private rounds to IPO, compared with the largest IPOs in history and current mega-cap peers.</p>
+    </div>
+    <div class="chart-row">
+      <div class="chart-wrapper">
+        <h3>Valuation Trajectory (2015 -- 2026)</h3>
+        <div class="chart-container">
+          <canvas id="valuationChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <h3>Largest IPOs by Amount Raised</h3>
+        <div class="chart-container">
+          <canvas id="ipoComparisonChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="mt-8 chart-row">
+      <div class="chart-wrapper">
+        <h3>Market Cap at Debut vs Mega-Cap Peers</h3>
+        <div class="chart-container">
+          <canvas id="megaCapChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <h3>SOTP Fair Value vs IPO Target</h3>
+        <div class="chart-container">
+          <canvas id="sotpChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Financials -->
+  <div class="container section" id="financials">
+    <div class="section-header">
+      <h2>Financial Overview</h2>
+      <p>Key financials from the S-1 filing. Starlink is the profitable engine; xAI losses are the primary drag.</p>
+    </div>
+    <div class="chart-row">
+      <div class="chart-wrapper">
+        <h3>Revenue vs Net Income (Loss)</h3>
+        <div class="chart-container">
+          <canvas id="revenueProfitChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <h3>Revenue by Segment (FY2025)</h3>
+        <div class="chart-container">
+          <canvas id="segmentChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>FY2024</th>
+            <th>FY2025</th>
+            <th>Q1 2026</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Revenue</strong></td>
+            <td>$14.1B</td>
+            <td>$18.7B</td>
+            <td>~$4.5-5B</td>
+          </tr>
+          <tr>
+            <td><strong>Starlink Revenue</strong></td>
+            <td>$7.7B</td>
+            <td>$11.4B</td>
+            <td>$3.26B</td>
+          </tr>
+          <tr>
+            <td><strong>Adj. EBITDA</strong></td>
+            <td>--</td>
+            <td>$6.6B</td>
+            <td>--</td>
+          </tr>
+          <tr>
+            <td><strong>GAAP Net Income (Loss)</strong></td>
+            <td>--</td>
+            <td>($4.94B)</td>
+            <td>($4.28B)</td>
+          </tr>
+          <tr>
+            <td><strong>Starlink Operating Profit</strong></td>
+            <td>$2.2B</td>
+            <td>$4.42B</td>
+            <td>$1.19B</td>
+          </tr>
+          <tr>
+            <td><strong>xAI / AI Losses</strong></td>
+            <td>--</td>
+            <td>($6B+)</td>
+            <td>($2.5B)</td>
+          </tr>
+          <tr>
+            <td><strong>Capex</strong></td>
+            <td>--</td>
+            <td>--</td>
+            <td>$10.1B</td>
+          </tr>
+          <tr>
+            <td><strong>Active Starlink Subscribers</strong></td>
+            <td>~4.6M</td>
+            <td>~9.2M</td>
+            <td>~10.3M</td>
+          </tr>
+          <tr>
+            <td><strong>Accumulated Deficit</strong></td>
+            <td>--</td>
+            <td>--</td>
+            <td>($41.3B)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="container section" id="timeline">
+    <div class="section-header">
+      <h2>IPO Timeline</h2>
+      <p>Key milestones from confidential filing through lock-up expiry. Today is T-1 to roadshow.</p>
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="dot"></div>
+            <div class="date">Apr 1, 2026</div>
+            <div class="title">Confidential S-1 Filed</div>
+            <div class="desc">Draft registration submitted under JOBS Act for SEC review</div>
+          </div>
+          <div class="timeline-item">
+            <div class="dot"></div>
+            <div class="date">May 20, 2026</div>
+            <div class="title">Public S-1 Released</div>
+            <div class="desc">First public look at SpaceX financials: $18.7B rev, $4.94B loss. Ticker SPCX confirmed</div>
+          </div>
+          <div class="timeline-item">
+            <div class="dot"></div>
+            <div class="date">Jun 1, 2026</div>
+            <div class="title">S-1/A Amendment Filed</div>
+            <div class="desc">Directed share program (5% for employees). May issue equity for future acquisitions</div>
+          </div>
+          <div class="timeline-item today">
+            <div class="dot"></div>
+            <div class="date">Jun 3, 2026</div>
+            <div class="title">Today -- T-1 to Roadshow</div>
+            <div class="desc">Price range still blank in S-1; to be set during roadshow</div>
+          </div>
+          <div class="timeline-item active">
+            <div class="dot"></div>
+            <div class="date">Jun 4, 2026</div>
+            <div class="title">Roadshow Begins</div>
+            <div class="desc">Institutional marketing -- New York, Boston, SF, London, HK, Singapore. Order book opens</div>
+          </div>
+          <div class="timeline-item active">
+            <div class="dot"></div>
+            <div class="date">Jun 8, 2026</div>
+            <div class="title">Retail Investor Event</div>
+            <div class="desc">1,500 retail investors. CFO: "Retail is going to be a critical part of this IPO"</div>
+          </div>
+          <div class="timeline-item active">
+            <div class="dot"></div>
+            <div class="date">Jun 11, 2026</div>
+            <div class="title">Pricing</div>
+            <div class="desc">Final offer price set after order book closes. SEC declares registration effective</div>
+          </div>
+          <div class="timeline-item active">
+            <div class="dot"></div>
+            <div class="date">Jun 12, 2026</div>
+            <div class="title">Trading Begins -- SPCX</div>
+            <div class="desc">Nasdaq cross auction. Dual listing on Nasdaq Texas activates simultaneously</div>
+          </div>
+          <div class="timeline-item">
+            <div class="dot"></div>
+            <div class="date">Nov 2026</div>
+            <div class="title">First Public Earnings</div>
+            <div class="desc">Q3 2026 -- first SEC-filed quarterly with audited segment detail</div>
+          </div>
+          <div class="timeline-item">
+            <div class="dot"></div>
+            <div class="date">~Dec 9, 2026</div>
+            <div class="title">Lock-Up Expiry</div>
+            <div class="desc">180-day insider lock-up expires. Staggered resale: 20% after Q2 earnings, phased over 6 months. Musk: 366-day lock-up</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="chart-wrapper mb-8">
+          <h3>Lock-Up Release Schedule</h3>
+          <div class="chart-container">
+            <canvas id="lockupChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Underwriting Syndicate</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px;">
+            <span style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 500;">Goldman Sachs <span style="color: var(--muted-foreground); font-weight: 400;">(Lead Left)</span></span>
+            <span style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 500;">Morgan Stanley</span>
+            <span style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 500;">Bank of America</span>
+            <span style="background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.2); border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 500;">Citigroup</span>
+            <span style="background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2); border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 500;">JPMorgan Chase</span>
+          </div>
+          <p style="font-size: 12px; color: var(--muted); margin-top: 12px;">21 banks total in syndicate</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Risks -->
+  <div class="container section" id="risks">
+    <div class="section-header">
+      <h2>Key Risks</h2>
+      <p>The six most material risk factors that could move SPCX post-IPO.</p>
+    </div>
+    <div class="card-grid">
+      <div class="risk-card">
+        <div class="severity high">High</div>
+        <h4>xAI Losses &amp; Accumulated Deficit</h4>
+        <p>xAI burns $2.5B/quarter. Accumulated deficit of $41.3B. Starlink profit ($1.19B/qtr) covers less than half of AI losses. Path to consolidated profitability is unclear.</p>
+      </div>
+      <div class="risk-card">
+        <div class="severity high">High</div>
+        <h4>Scarcity Premium vs Fundamentals</h4>
+        <p>SOTP fair value derived by Aardvark Labs: $1.35-1.55T. IPO target of $1.75T sits 10-30% above. The "scarcity premium" may not survive past lock-up expiry when shares become available.</p>
+      </div>
+      <div class="risk-card">
+        <div class="severity medium">Medium</div>
+        <h4>Musk Voting Control (85.1%)</h4>
+        <p>Dual-class structure gives Musk 85.1% voting power with only ~42% economic stake. May deter European institutions. Danish pension fund AkademikerPension already excluded on governance grounds.</p>
+      </div>
+      <div class="risk-card">
+        <div class="severity medium">Medium</div>
+        <h4>Tight Float / Volatility Risk</h4>
+        <p>Only ~4.3% of equity floats at IPO (~$75B of $1.75T). With 30% retail allocation and massive anticipated demand, first-day volatility could be extreme. Low float + high retail = squeeze risk both ways.</p>
+      </div>
+      <div class="risk-card">
+        <div class="severity medium">Medium</div>
+        <h4>2026 Mega-IPO Wave Liquidity Absorption</h4>
+        <p>SpaceX ($75B) + OpenAI (~$50B) + Anthropic (~$40B) = ~$165B in new issuance. Combined market cap impact of ~$3.7T. Historical precedent: Aramco 2019 depressed EM flows for a quarter.</p>
+      </div>
+      <div class="risk-card">
+        <div class="severity low">Low</div>
+        <h4>Starship Operational Risk</h4>
+        <p>SpaceX is three businesses (Starlink, Launch, xAI) but the $1.75T valuation assumes Starship success. May 22 test deployed mock satellites but booster failed to land. Starship delays directly impact the valuation thesis.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Portfolio Impact -->
+  <div class="container section" id="portfolio">
+    <div class="section-header">
+      <h2>Portfolio Impact on Tracked Equities</h2>
+      <p>How the SpaceX IPO affects each of the 16 tracked stocks.</p>
+    </div>
+
+    <div class="chart-row mb-8">
+      <div class="chart-wrapper">
+        <h3>Portfolio Exposure by Impact Category</h3>
+        <div class="chart-container">
+          <canvas id="portfolioChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <h3>Tech IPO Wave 2026 -- Relative Scale</h3>
+        <div class="chart-container">
+          <canvas id="waveChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Impact</th>
+            <th>Mechanism</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>NVDA</strong></td>
+            <td><span class="tag tag-beneficiary">Beneficiary</span></td>
+            <td>Primary GPU supplier for xAI. Every $ of SpaceX AI capex ($7.72B Q1) flows through NVDA. IPO sustains/accelerates this.</td>
+          </tr>
+          <tr>
+            <td><strong>AMD</strong></td>
+            <td><span class="tag tag-beneficiary">Beneficiary</span></td>
+            <td>Secondary GPU supplier (MI300X/MI400 tested by xAI). Inference share grows with public-market capital access.</td>
+          </tr>
+          <tr>
+            <td><strong>TSM</strong></td>
+            <td><span class="tag tag-beneficiary">Beneficiary</span></td>
+            <td>Manufactures all NVDA/AMD chips. Indirect beneficiary via fab utilization.</td>
+          </tr>
+          <tr>
+            <td><strong>MU</strong></td>
+            <td><span class="tag tag-beneficiary">Beneficiary</span></td>
+            <td>HBM demand from SpaceX AI data centers. Compounds existing HBM tightening.</td>
+          </tr>
+          <tr>
+            <td><strong>DELL</strong></td>
+            <td><span class="tag tag-beneficiary">Beneficiary</span></td>
+            <td>AI server buildout. Post-earnings momentum compounds with SpaceX AI infra spend.</td>
+          </tr>
+          <tr>
+            <td><strong>GOOG</strong></td>
+            <td><span class="tag tag-headwind">Headwind</span></td>
+            <td>xAI competes in AI models. Mechanical index sell-down (~0.1%) when SpaceX enters benchmarks. Orbital data center partnership cuts both ways.</td>
+          </tr>
+          <tr>
+            <td><strong>META</strong></td>
+            <td><span class="tag tag-headwind">Headwind</span></td>
+            <td>xAI competitor in AI. Mechanical index sell-down on benchmark inclusion.</td>
+          </tr>
+          <tr>
+            <td><strong>AMZN</strong></td>
+            <td><span class="tag tag-headwind">Headwind</span></td>
+            <td>Project Kuiper competes with Starlink. A better-funded Starlink (from IPO) is a headwind. Also faces index sell-down.</td>
+          </tr>
+          <tr>
+            <td><strong>ORCL</strong></td>
+            <td><span class="tag tag-neutral">Neutral</span></td>
+            <td>Cloud host optionality cuts both ways. Could be net beneficiary if xAI uses OCI.</td>
+          </tr>
+          <tr>
+            <td><strong>TSLA</strong></td>
+            <td><span class="tag tag-musk">Musk-Correlated</span></td>
+            <td>Basket trading with retail (Musk stocks move together). But concentration-limit funds may trim TSLA to make room for SpaceX. Musk history: sells TSLA to raise cash.</td>
+          </tr>
+          <tr>
+            <td><strong>AAPL</strong></td>
+            <td><span class="tag tag-neutral">No Material Link</span></td>
+            <td>No direct SpaceX tie. Broad rotation risk only.</td>
+          </tr>
+          <tr>
+            <td><strong>CRM</strong></td>
+            <td><span class="tag tag-neutral">No Material Link</span></td>
+            <td>No direct SpaceX tie. Broad rotation risk only.</td>
+          </tr>
+          <tr>
+            <td><strong>CRCL</strong></td>
+            <td><span class="tag tag-neutral">No Material Link</span></td>
+            <td>No direct SpaceX tie. Broad rotation risk only.</td>
+          </tr>
+          <tr>
+            <td><strong>CRWV</strong></td>
+            <td><span class="tag tag-neutral">No Material Link</span></td>
+            <td>No direct SpaceX tie. Broad rotation risk only.</td>
+          </tr>
+          <tr>
+            <td><strong>INTC</strong></td>
+            <td><span class="tag tag-neutral">No Material Link</span></td>
+            <td>No direct SpaceX tie. Broad rotation risk only.</td>
+          </tr>
+          <tr>
+            <td><strong>NIO</strong></td>
+            <td><span class="tag tag-neutral">No Material Link</span></td>
+            <td>No direct SpaceX tie. Broad rotation risk only.</td>
+          </tr>
+          <tr>
+            <td><strong>SNOW</strong></td>
+            <td><span class="tag tag-neutral">No Material Link</span></td>
+            <td>No direct SpaceX tie. Broad rotation risk only.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sources -->
+  <div class="container section">
+    <div class="section-header">
+      <h2>Sources</h2>
+    </div>
+    <div class="card">
+      <ol class="sources" style="padding-left: 20px;">
+        <li>SpaceX S-1 (May 20, 2026) and S-1/A (Jun 1, 2026) -- SEC EDGAR CIK 0001181412</li>
+        <li>Reuters: "SpaceX accelerates IPO timeline, targets June 11 pricing on Nasdaq" (May 15)</li>
+        <li>Reuters: "SpaceX IPO bets $2 trillion on rockets-to-AI vision" (May 21)</li>
+        <li>Reuters: "SpaceX to allow early share resale" (May 22)</li>
+        <li>Reuters: "SpaceX dual-class shares keep founders in control" (May 22)</li>
+        <li>Reuters: "BlackRock weighs multibillion-dollar investment in SpaceX IPO" (May 16)</li>
+        <li>Reuters: "Goldman Sachs set to be named lead left underwriter for SpaceX IPO" (May 19)</li>
+        <li>Aardvark Labs Research: "SPCX S-1 Analysis -- Initiating at Hold" (May 20)</li>
+        <li>SpaceXChart.com: IPO timeline and mechanics tracking</li>
+        <li>CNBC: "SpaceX files for stock sale IPO" (May 20)</li>
+        <li>Yahoo Finance / Bloomberg: "SpaceX sets $800B valuation, confirms 2026 IPO" (Dec 2025)</li>
+        <li>Multiple sources: BitMEX, Crypto Briefing, TechStackIPO, ABHS, Plus500 (May-Jun 2026)</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>Agent Knowledge -- SpaceX IPO Briefing &middot; Generated June 3, 2026 &middot; For informational purposes only. Not investment advice.</p>
+    </div>
+  </footer>
+
+  <script>
+    // ----- Global defaults -----
+    Chart.defaults.color = '#a1a1aa';
+    Chart.defaults.borderColor = '#2a2a2e';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    const COLORS = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#a855f7','#06b6d4','#f97316','#84cc16'];
+    const COLORS_OPACITY = (c, o) => c + Math.round(o * 255).toString(16).padStart(2,'0');
+
+    const formatVal = (v) => {
+      if (v >= 1e12) return '$' + (v/1e12).toFixed(2) + 'T';
+      if (v >= 1e9) return '$' + (v/1e9).toFixed(1) + 'B';
+      if (v >= 1e6) return '$' + (v/1e6).toFixed(0) + 'M';
+      return '$' + v;
+    };
+
+    // 1. Valuation Trajectory
+    new Chart(document.getElementById('valuationChart'), {
+      type: 'line',
+      data: {
+        labels: ['2015','2020','Jul 2025','Dec 2025','Feb 2026\n(xAI merger)','May 2026\n(S-1)','Jun 2026\n(IPO target)'],
+        datasets: [{
+          label: 'Valuation',
+          data: [12, 46, 400, 800, 1250, 1750, 1750],
+          borderColor: COLORS[0],
+          backgroundColor: COLORS_OPACITY(COLORS[0],0.1),
+          fill: true,
+          tension: 0.3,
+          pointBackgroundColor: (ctx) => ctx.dataIndex === 6 ? COLORS[4] : COLORS[0],
+          pointRadius: (ctx) => ctx.dataIndex === 6 ? 8 : 4,
+          pointBorderWidth: (ctx) => ctx.dataIndex === 6 ? 3 : 1,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: { callbacks: { label: (c) => formatVal(c.raw * 1e9) } }
+        },
+        scales: {
+          y: {
+            ticks: { callback: (v) => formatVal(v * 1e9) },
+            grid: { color: 'rgba(255,255,255,0.04)' }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 2. IPO Comparison (amount raised)
+    new Chart(document.getElementById('ipoComparisonChart'), {
+      type: 'bar',
+      data: {
+        labels: ['SpaceX','Saudi\nAramco','Alibaba','SoftBank\nVision','Visa','Meta\n(Facebook)','Uber','AT&T\nWireless'],
+        datasets: [{
+          label: 'Amount Raised',
+          data: [75, 29.4, 25, 23.5, 19.7, 16, 8.1, 13.5],
+          backgroundColor: [
+            COLORS[4], COLORS[1], COLORS[2], COLORS[3],
+            COLORS[0], COLORS[5], COLORS[6], COLORS[7]
+          ],
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+          tooltip: { callbacks: { label: (c) => '$' + c.raw + 'B' } }
+        },
+        scales: {
+          x: {
+            ticks: { callback: (v) => '$' + v + 'B' },
+            grid: { color: 'rgba(255,255,255,0.04)' }
+          },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 3. Mega-Cap Comparison
+    new Chart(document.getElementById('megaCapChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Apple','Microsoft','Nvidia','Amazon','Alphabet','SpaceX\n(IPO)','Meta','Tesla'],
+        datasets: [{
+          label: 'Market Cap',
+          data: [3.5, 3.1, 2.8, 2.0, 1.9, 1.75, 1.5, 0.8],
+          backgroundColor: (ctx) => ctx.dataIndex === 5 ? COLORS[4] : COLORS[0],
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: { callbacks: { label: (c) => '$' + c.raw.toFixed(2) + 'T' } }
+        },
+        scales: {
+          y: {
+            ticks: { callback: (v) => '$' + v.toFixed(1) + 'T' },
+            grid: { color: 'rgba(255,255,255,0.04)' }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 4. SOTP Breakdown
+    new Chart(document.getElementById('sotpChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Starlink DCF','xAI Mark-to-Market','Launch (NPV)','Starship Option','Cash / Other'],
+        datasets: [{
+          data: [1050, 275, 40, 75, -50],
+          backgroundColor: COLORS.slice(0,5),
+          borderWidth: 0,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+          tooltip: { callbacks: { label: (c) => c.label + ': ' + formatVal(Math.abs(c.raw) * 1e9) + (c.raw < 0 ? ' (liability)' : '') } },
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16, font: { size: 11 } } }
+        }
+      }
+    });
+
+    // 5. Revenue vs Net Income
+    new Chart(document.getElementById('revenueProfitChart'), {
+      type: 'bar',
+      data: {
+        labels: ['FY2024','FY2025','Q1 2026'],
+        datasets: [
+          {
+            label: 'Revenue',
+            data: [14.1, 18.7, 4.75],
+            backgroundColor: COLORS[0],
+            borderRadius: 4,
+          },
+          {
+            label: 'Net Income (Loss)',
+            data: [1.5, -4.94, -4.28],
+            backgroundColor: COLORS[3],
+            borderRadius: 4,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: { callbacks: { label: (c) => '$' + c.raw.toFixed(2) + 'B' } }
+        },
+        scales: {
+          y: {
+            ticks: { callback: (v) => '$' + v + 'B' },
+            grid: { color: 'rgba(255,255,255,0.04)' }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 6. Revenue by Segment
+    new Chart(document.getElementById('segmentChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Starlink ($11.4B)','Launch & Other ($5.1B)','xAI / AI ($2.2B)'],
+        datasets: [{
+          data: [11.4, 5.1, 2.2],
+          backgroundColor: [COLORS[1], COLORS[0], COLORS[3]],
+          borderWidth: 0,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '55%',
+        plugins: {
+          tooltip: { callbacks: { label: (c) => c.label + ': $' + c.raw + 'B (' + Math.round(c.raw/18.7*100) + '%)' } },
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16, font: { size: 11 } } }
+        }
+      }
+    });
+
+    // 7. Portfolio Impact
+    new Chart(document.getElementById('portfolioChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Beneficiary','Headwind','Musk-Corr.','No Link'],
+        datasets: [{
+          label: 'Count of Tracked Stocks',
+          data: [5, 3, 1, 7],
+          backgroundColor: [COLORS[1], COLORS[3], COLORS[4], COLORS[6]],
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { ticks: { stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.04)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 8. IPO Wave 2026
+    new Chart(document.getElementById('waveChart'), {
+      type: 'bar',
+      data: {
+        labels: ['SpaceX\n(Jun)','OpenAI\n(~Sep)','Anthropic\n(~Oct)'],
+        datasets: [
+          {
+            label: 'Target Valuation',
+            data: [1.75, 0.9, 0.9],
+            backgroundColor: [COLORS[4], COLORS[2], COLORS[5]],
+            borderRadius: 4,
+          },
+          {
+            label: 'Expected Raise',
+            data: [0.075, 0.05, 0.04],
+            backgroundColor: [COLORS[0], COLORS[0], COLORS[0]],
+            borderRadius: 4,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: { callbacks: { label: (c) => c.dataset.label + ': $' + (c.raw >= 1 ? c.raw.toFixed(2) + 'T' : c.raw * 1000 + 'B') } }
+        },
+        scales: {
+          y: {
+            ticks: { callback: (v) => v >= 1 ? '$' + v.toFixed(1) + 'T' : '$' + (v*1000) + 'B' },
+            grid: { color: 'rgba(255,255,255,0.04)' }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 9. Lock-Up Schedule
+    new Chart(document.getElementById('lockupChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['After Q2 Earnings\n(20%)','30% Above IPO\n(10%)','Blocks at 70-135d\n(35%)','Next Earnings\n(28%)','Remainder\n(7%)','Musk: 366d'],
+        datasets: [{
+          data: [20, 10, 35, 28, 7, 0],
+          backgroundColor: [COLORS[1], COLORS[2], COLORS[0], COLORS[5], COLORS[7], COLORS[3]],
+          borderWidth: 0,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '50%',
+        plugins: {
+          tooltip: { callbacks: { label: (c) => c.label.split('\n')[0] + ': ' + c.raw + '%' } },
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12, font: { size: 10 } } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
