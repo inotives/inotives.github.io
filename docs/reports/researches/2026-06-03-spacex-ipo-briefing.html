@@ -403,9 +403,9 @@
   <!-- Hero -->
   <section class="hero" id="overview">
     <div class="container">
-      <div class="badge"><span class="dot"></span> Roadshow T-1 Day</div>
+      <div class="badge"><span class="dot"></span> BREAKING: Price Fixed at $135</div>
       <h1>SpaceX IPO Briefing</h1>
-      <p>Comprehensive pre-IPO analysis covering valuation, financials, timeline, and portfolio impact. Roadshow begins June 4, pricing June 11, Nasdaq debut June 12 under ticker SPCX.</p>
+      <p>Comprehensive pre-IPO analysis covering valuation, financials, timeline, and portfolio impact. Roadshow begins June 4, pricing June 11, Nasdaq debut June 12 under ticker SPCX. <strong>Price fixed at $135/share (555.6M new shares, $75B raise, $1.75T valuation).</strong></p>
       <div class="meta">
         <span>&#x1F4C5; June 3, 2026</span>
         <span>&#x26A1; 8 min read</span>
@@ -429,9 +429,9 @@
         <div class="sub">2.5x Saudi Aramco record</div>
       </div>
       <div class="stat-card">
-        <div class="label">Est. Price / Share</div>
-        <div class="value">$525-600</div>
-        <div class="sub">range to be set during roadshow</div>
+        <div class="label">IPO Price / Share</div>
+        <div class="value">$135</div>
+        <div class="sub">fixed, no range — unprecedented</div>
       </div>
       <div class="stat-card">
         <div class="label">Ticker / Exchange</div>
@@ -447,6 +447,19 @@
         <div class="label">IPO Float</div>
         <div class="value">~4.3%</div>
         <div class="sub">of post-money equity</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breaking Alert -->
+  <div class="container" style="margin-top: -32px; margin-bottom: 32px;">
+    <div style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--radius); padding: 20px 24px; display: flex; gap: 16px; align-items: flex-start;">
+      <div style="font-size: 32px; line-height: 1; flex-shrink: 0;">&#x26A0;&#xFE0F;</div>
+      <div>
+        <div style="font-size: 14px; font-weight: 700; color: var(--destructive); margin-bottom: 4px;">PRICE CORRECTION — June 3 Breaking News</div>
+        <div style="font-size: 13px; color: var(--muted-foreground); line-height: 1.6;">
+          <strong>Yesterday's report estimated $525-600/share.</strong> On June 3, SpaceX fixed the price at <strong>$135/share</strong> — a take-it-or-leave-it price, no range, no book-building. The $1.75T valuation is unchanged. The difference: the $525-600 estimate assumed ~3.32B fully-diluted shares (pre-xAI-merger). After the xAI merger, total shares outstanding is ~12.96B ($1.75T / $135). The 555.6M new shares at $135 raise the $75B as planned. This is the largest per-share price discrepancy between analyst estimates and actual pricing in IPO history, entirely driven by merger-related share dilution.
+        </div>
       </div>
     </div>
   </div>
@@ -608,8 +621,8 @@
           <div class="timeline-item today">
             <div class="dot"></div>
             <div class="date">Jun 3, 2026</div>
-            <div class="title">Today -- T-1 to Roadshow</div>
-            <div class="desc">Price range still blank in S-1; to be set during roadshow</div>
+            <div class="title">Price Fixed at $135 — No Range</div>
+            <div class="desc">SpaceX broke convention: fixed $135/share, no book-building range. 555.6M new shares. "Take it or leave it."</div>
           </div>
           <div class="timeline-item active">
             <div class="dot"></div>
@@ -652,7 +665,7 @@
 
       <div>
         <div class="chart-wrapper mb-8">
-          <h3>Lock-Up Release Schedule</h3>
+          <h3>Share Count &amp; Lock-Up Release</h3>
           <div class="chart-container">
             <canvas id="lockupChart"></canvas>
           </div>
@@ -854,6 +867,8 @@
         <li>CNBC: "SpaceX files for stock sale IPO" (May 20)</li>
         <li>Yahoo Finance / Bloomberg: "SpaceX sets $800B valuation, confirms 2026 IPO" (Dec 2025)</li>
         <li>Multiple sources: BitMEX, Crypto Briefing, TechStackIPO, ABHS, Plus500 (May-Jun 2026)</li>
+        <li>Reuters: "SpaceX sets $135 price for blockbuster IPO, upending Wall Street convention" (June 3, 2026)</li>
+        <li>ABHS Research: "SpaceX IPO Sets $135 Fixed Price: $75B Raise, Roadshow June 4" (June 4, 2026)</li>
       </ol>
     </div>
   </div>
@@ -861,7 +876,7 @@
   <!-- Footer -->
   <footer>
     <div class="container">
-      <p>Agent Knowledge -- SpaceX IPO Briefing &middot; Generated June 3, 2026 &middot; For informational purposes only. Not investment advice.</p>
+      <p>Agent Knowledge -- SpaceX IPO Briefing &middot; Generated June 3, 2026 &middot; Updated June 4 with $135 fixed price &middot; For informational purposes only. Not investment advice.</p>
     </div>
   </footer>
 
@@ -1119,7 +1134,7 @@
     new Chart(document.getElementById('lockupChart'), {
       type: 'doughnut',
       data: {
-        labels: ['After Q2 Earnings\n(20%)','30% Above IPO\n(10%)','Blocks at 70-135d\n(35%)','Next Earnings\n(28%)','Remainder\n(7%)','Musk: 366d'],
+        labels: ['After Q2 Earnings\n(20%)','30% Above IPO\n(10%)','Blocks at 70-135d\n(35%)','Next Earnings\n(28%)','Remainder\n(7%)','Musk: 366d\n(0% float)'],
         datasets: [{
           data: [20, 10, 35, 28, 7, 0],
           backgroundColor: [COLORS[1], COLORS[2], COLORS[0], COLORS[5], COLORS[7], COLORS[3]],

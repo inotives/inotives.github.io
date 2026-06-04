@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPCX Price Prediction -- Post-IPO Trading Analysis</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0c0c0e;
+      --bg-card: #1a1a1e;
+      --bg-card-hover: #222226;
+      --border: #2a2a2e;
+      --muted: #6b6b72;
+      --muted-foreground: #a1a1aa;
+      --foreground: #e4e4e7;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --destructive: #ef4444;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --chart-1: #3b82f6;
+      --chart-2: #22c55e;
+      --chart-3: #f59e0b;
+      --chart-4: #ef4444;
+      --chart-5: #a855f7;
+      --chart-6: #06b6d4;
+      --chart-7: #f97316;
+      --chart-8: #84cc16;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--foreground);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(12,12,14,0.8);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    header .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+    header .logo { font-weight: 700; font-size: 14px; letter-spacing: 0.5px; color: var(--muted-foreground); }
+    header .logo span { color: var(--foreground); }
+    header nav { display: flex; gap: 8px; flex-wrap: wrap; }
+    header nav a {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    header nav a:hover { background: var(--bg-card); color: var(--foreground); }
+
+    .hero {
+      padding: 80px 0 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(168,85,247,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(168,85,247,0.1);
+      color: var(--chart-5);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(168,85,247,0.2);
+    }
+    .hero .badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--warning);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--muted-foreground);
+      max-width: 680px;
+      margin: 0 auto 32px;
+    }
+    .hero .meta {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .hero .meta span { display: flex; align-items: center; gap: 6px; }
+
+    .section { padding: 48px 0; }
+    .section-header { margin-bottom: 28px; }
+    .section-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+    .section-header p { font-size: 14px; color: var(--muted-foreground); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: background 0.2s;
+    }
+    .stat-card:hover { background: var(--bg-card-hover); }
+    .stat-card .label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted-foreground);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .stat-card .value {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+    .stat-card .sub { font-size: 13px; color: var(--muted); }
+    .stat-card .trend-up { color: var(--success); }
+    .stat-card .trend-down { color: var(--destructive); }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 20px;
+    }
+    .card h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+
+    .chart-wrapper {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .chart-wrapper h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+    .chart-container { position: relative; width: 100%; max-height: 360px; }
+
+    .chart-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) { .chart-row { grid-template-columns: 1fr; } }
+    .chart-full { margin-bottom: 20px; }
+
+    .price-levels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .price-badge {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+    }
+    .price-badge .range-label { font-size: 12px; font-weight: 500; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.3px; }
+    .price-badge .range-value { font-size: 20px; font-weight: 700; }
+    .price-badge .range-desc { font-size: 12px; color: var(--muted); }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead th {
+      text-align: left;
+      padding: 12px 16px;
+      font-weight: 600;
+      color: var(--muted-foreground);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      background: #111114;
+    }
+    tbody td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .tag-bull { background: rgba(34,197,94,0.12); color: var(--success); }
+    .tag-base { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .tag-bear { background: rgba(239,68,68,0.12); color: var(--destructive); }
+
+    .scenario-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      border-left: 3px solid var(--success);
+    }
+    .scenario-card.bear { border-left-color: var(--destructive); }
+    .scenario-card.base { border-left-color: var(--warning); }
+    .scenario-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .scenario-card p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .scenario-card .scenario-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 8px;
+    }
+    .scenario-card .scenario-label.bull { color: var(--success); }
+    .scenario-card .scenario-label.base { color: var(--warning); }
+    .scenario-card .scenario-label.bear { color: var(--destructive); }
+
+    .callout {
+      background: rgba(59,130,246,0.06);
+      border: 1px solid rgba(59,130,246,0.15);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+    }
+    .callout h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--primary); }
+    .callout p { font-size: 13px; color: var(--muted-foreground); line-height: 1.6; }
+
+    .sources { font-size: 12px; color: var(--muted); }
+    .sources a { color: var(--primary); text-decoration: none; }
+    .sources a:hover { text-decoration: underline; }
+    .sources li { margin-bottom: 4px; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .mb-4 { margin-bottom: 16px; }
+    .mb-8 { margin-bottom: 32px; }
+    .mt-8 { margin-top: 32px; }
+    .flex { display: flex; }
+    .flex-wrap { flex-wrap: wrap; }
+    .gap-2 { gap: 8px; }
+    .gap-4 { gap: 16px; }
+    .items-center { align-items: center; }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 32px; }
+      .hero { padding: 48px 0 24px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .stat-card { padding: 16px; }
+      .stat-card .value { font-size: 22px; }
+      .price-levels { grid-template-columns: 1fr; }
+      header nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container">
+      <div class="logo">AGENT <span>KNOWLEDGE</span></div>
+      <nav>
+        <a href="#overview">Overview</a>
+        <a href="#levels">Price Levels</a>
+        <a href="#momentum">Momentum</a>
+        <a href="#scenarios">Scenarios</a>
+        <a href="#fair-value">Fair Value</a>
+        <a href="#risks">Risks</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero" id="overview">
+    <div class="container">
+      <div class="badge"><span class="dot"></span> T-8 Days to Trading</div>
+      <h1>SPCX Price Prediction</h1>
+      <p>Post-IPO trading analysis: momentum, entry levels, fair value, and scenario framework for SpaceX (NASDAQ: SPCX). IPO at $135/share on June 12, 2026. This report estimates where SPCX trades day one, week one, and month one.</p>
+      <div class="meta">
+        <span>&#x1F4C5; June 4, 2026</span>
+        <span>&#x26A1; 6 min read</span>
+        <span>&#x1F4CA; 6 charts</span>
+        <span>&#x1F4DD; Sources: 10+</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">IPO Price</div>
+        <div class="value">$135</div>
+        <div class="sub">fixed, no range</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">First-Day Pop (Est.)</div>
+        <div class="value trend-up">+15-30%</div>
+        <div class="sub">$155-175 range</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Week 1 Range (Est.)</div>
+        <div class="value">$145-200</div>
+        <div class="sub">low float / high vol</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Morningstar Fair Value</div>
+        <div class="value trend-down">$780B</div>
+        <div class="sub">~$60/share — 56% below IPO</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Hyperliquid Perp</div>
+        <div class="value">$203</div>
+        <div class="sub">implied $2.4T valuation</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Polymarket &#x2192;$2T</div>
+        <div class="value">78%</div>
+        <div class="sub">first-day close above $2T (~$154)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container section" id="levels">
+    <div class="section-header">
+      <h2>Key Price Levels</h2>
+      <p>Critical thresholds for SPCX from IPO through first month of trading. All levels in $ per share.</p>
+    </div>
+    <div class="price-levels">
+      <div class="price-badge" style="border-left: 3px solid var(--destructive);">
+        <div>
+          <div class="range-label">Deep Value (Morningstar)</div>
+          <div class="range-value" style="color: var(--destructive);">$55-65</div>
+          <div class="range-desc">-52-58% below IPO — if scarcity premium evaporates</div>
+        </div>
+      </div>
+      <div class="price-badge" style="border-left: 3px solid var(--warning);">
+        <div>
+          <div class="range-label">Internal FMV (May 15)</div>
+          <div class="range-value" style="color: var(--warning);">$105</div>
+          <div class="range-desc">Shareholder FMV adjustment pre-IPO — anchor for underwriters</div>
+        </div>
+      </div>
+      <div class="price-badge" style="border-left: 3px solid var(--primary);">
+        <div>
+          <div class="range-label">IPO Price</div>
+          <div class="range-value" style="color: var(--primary);">$135</div>
+          <div class="range-desc">Fixed price. 555.6M new shares. $75B raise.</div>
+        </div>
+      </div>
+      <div class="price-badge" style="border-left: 3px solid var(--success);">
+        <div>
+          <div class="range-label">First-Day Pop (Base Case)</div>
+          <div class="range-value" style="color: var(--success);">$155-175</div>
+          <div class="range-desc">+15-30% — in line with Arm, Rivian first-day moves</div>
+        </div>
+      </div>
+      <div class="price-badge" style="border-left: 3px solid var(--chart-5);">
+        <div>
+          <div class="range-label">&#x2192;$2T Market Cap</div>
+          <div class="range-value" style="color: var(--chart-5);">$154</div>
+          <div class="range-desc">Polymarket 78% probability. Break-even for $2T close.</div>
+        </div>
+      </div>
+      <div class="price-badge" style="border-left: 3px solid var(--chart-6);">
+        <div>
+          <div class="range-label">Hyperliquid Perpetual</div>
+          <div class="range-value" style="color: var(--chart-6);">$203</div>
+          <div class="range-desc">Implied $2.4T valuation — speculative crypto premium</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container section" id="momentum">
+    <div class="section-header">
+      <h2>Trading Momentum Analysis</h2>
+      <p>Factors driving SPCX price action from open bell through first month.</p>
+    </div>
+    <div class="chart-row mb-8">
+      <div class="chart-wrapper">
+        <h3>First-Day Pop Scenarios (Probability)</h3>
+        <div class="chart-container">
+          <canvas id="popChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <h3>Price Trajectory — First 30 Trading Days</h3>
+        <div class="chart-container">
+          <canvas id="trajectoryChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-grid mt-8">
+      <div class="card">
+        <h3>&#x1F4C8; First-Day Momentum Drivers</h3>
+        <ul style="font-size: 13px; color: var(--muted-foreground); padding-left: 20px; line-height: 2;">
+          <li><strong style="color: var(--foreground);">Tight float:</strong> Only 4.3% of equity floats. $75B of $1.75T. Supply constraint amplifies any demand.</li>
+          <li><strong style="color: var(--foreground);">Retail froth:</strong> 30% allocation is largest in history. Robinhood/Webull/SoFi order flow concentrated at open.</li>
+          <li><strong style="color: var(--foreground);">Passive index demand:</strong> Inclusion in Nasdaq 100 / S&P 500 will force billions in mechanical buying. Timeline is the variable (likely 3-6 months post-IPO).</li>
+          <li><strong style="color: var(--foreground);">No price discovery range:</strong> Fixed $135 means no book-building anchor. First trade is true price discovery — expect wider opening cross.</li>
+          <li><strong style="color: var(--foreground);">Media saturation:</strong> "Largest IPO in history" headlines generate retail FOMO. Expect elevated social media / subreddit volume.</li>
+          <li><strong style="color: var(--foreground);">Short squeeze potential:</strong> Low float + high retail demand = extremely shortable supply is limited. Early shorts could get squeezed.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>&#x1F4C9; Momentum Headwinds</h3>
+        <ul style="font-size: 13px; color: var(--muted-foreground); padding-left: 20px; line-height: 2;">
+          <li><strong style="color: var(--foreground);">Morningstar $780B:</strong> Independent fair value at ~$60/share is a powerful gravitational anchor. Rational money will sell into strength.</li>
+          <li><strong style="color: var(--foreground);">xAI losses:</strong> $2.5B/quarter burn + $41.3B accumulated deficit. Post-IPO scrutiny shifts from narrative to GAAP earnings.</li>
+          <li><strong style="color: var(--foreground);">93.7x trailing revenue:</strong> Even by growth stock standards this is extreme. Nvidia trades at ~30x. Peer comparison caps upside for institutional buyers.</li>
+          <li><strong style="color: var(--foreground);">Insider lock-up overhang:</strong> 95.7% of shares locked. Market knows massive supply arrives ~Dec 2026 (and staggered earlier).</li>
+          <li><strong style="color: var(--foreground);">Musk governance discount:</strong> 85.1% voting control deters ESG and European institutions. Danish pension fund already excluded.</li>
+          <li><strong style="color: var(--foreground);">$165B IPO wave:</strong> SpaceX + OpenAI + Anthropic = $165B in new issuance. Liquidity absorption is a macro headwind for all three.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="container section" id="scenarios">
+    <div class="section-header">
+      <h2>Price Scenarios</h2>
+      <p>Three probability-weighted scenarios for SPCX in the first 30 days of trading.</p>
+    </div>
+    <div class="card-grid">
+      <div class="scenario-card bull">
+        <div class="scenario-label bull">Bull — 35%</div>
+        <h4>$175-220 range</h4>
+        <p>Retail FOMO dominates first week. Index funds begin front-running inclusion. Short squeeze on <1% borrowable float. SPCX touches $220 intraday week 1. Consolidates between $175-200 through first month. Morningstar fair value ignored in the frenzy.</div>
+      <div class="scenario-card base">
+        <div class="scenario-label base">Base — 45%</div>
+        <h4>$145-175 range</h4>
+        <p>First-day pop to $155-165 (+15-22%). Profit-taking from IPO flippers brings it back toward $145 by end of week 1. Gradual recovery to $160-175 as passive buyers accumulate. Range-bound between $145 support and $175 resistance through first month. Healthy consolidation ahead of first earnings.</p>
+      </div>
+      <div class="scenario-card bear">
+        <div class="scenario-label bear">Bear — 20%</div>
+        <h4>$105-145 range</h4>
+        <p>First-day pop fizzles — opens near $150, sells off to $135 within hours. Morningstar downgrade amplifies selling. Macro shock (rate hike, AI capex skepticism) triggers rotation. SPCX trades down to $105-120 (internal FMV level). Lock-up overhang priced in early. Long-term value buyers step in at $105-120.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container section" id="fair-value">
+    <div class="section-header">
+      <h2>Fair Value Analysis</h2>
+      <p>SOTP framework for SPCX intrinsic value, compared against the $135 IPO price and Hyperliquid's speculative $203.</p>
+    </div>
+    <div class="chart-row mb-8">
+      <div class="chart-wrapper">
+        <h3>SOTP Fair Value ($ per share)</h3>
+        <div class="chart-container">
+          <canvas id="sotpShareChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <h3>Valuation Multiple Comparison</h3>
+        <div class="chart-container">
+          <canvas id="multipleChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <h4>Fair Value Framework</h4>
+      <p><strong>Starlink DCF (60% of value):</strong> At 16.8M subscribers by YE 2026, $15.9B revenue, 63% EBITDA margins. A 25-35x EBITDA multiple yields $250-350B for Starlink alone. Per share: ~$19-27.<br><br>
+      <strong>Launch business (15%):</strong> 165 annual Falcon launches, negative segment margins, Starship optionality. Valued at 5-10x revenue (~$20-40B). Per share: ~$1.5-3.<br><br>
+      <strong>xAI / AI (15%):</strong> $250B mark-to-market from merger, $15B/yr Anthropic compute contract. Currently burning $2.5B/qtr. Per share: ~$15-20.<br><br>
+      <strong>Starship option (10%):</strong> If Starship achieves $10M/launch cost, it unlocks entirely new markets (orbital data centers, Mars). Zero in base case. Per share: $0-10 in bull case.<br><br>
+      <strong>SOTP range:</strong> Base case $70-95/share. Bull case (full Starlink multiple expansion + Starship success) $120-160/share. Morningstar at $60/share represents a deep-value "no Starship, no AI optionality" floor.</p>
+    </div>
+
+    <div class="table-wrap mt-8">
+      <table>
+        <thead>
+          <tr>
+            <th>Valuation Anchor</th>
+            <th>Total Value</th>
+            <th>$ / Share</th>
+            <th>vs IPO $135</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Morningstar (June 2)</strong></td>
+            <td>$780B</td>
+            <td>$60</td>
+            <td><span class="tag tag-bear">-56%</span></td>
+          </tr>
+          <tr>
+            <td><strong>Internal FMV (May 15)</strong></td>
+            <td>~$1.36T</td>
+            <td>$105</td>
+            <td><span class="tag tag-bear">-22%</span></td>
+          </tr>
+          <tr>
+            <td><strong>IPO Fixed Price</strong></td>
+            <td>$1.75T</td>
+            <td>$135</td>
+            <td><span class="tag tag-base">Baseline</span></td>
+          </tr>
+          <tr>
+            <td><strong>SOTP Base Case</strong></td>
+            <td>$1.0-1.2T</td>
+            <td>$70-95</td>
+            <td><span class="tag tag-bear">-30 to -48%</span></td>
+          </tr>
+          <tr>
+            <td><strong>SOTP Bull Case</strong></td>
+            <td>$1.55-2.1T</td>
+            <td>$120-160</td>
+            <td><span class="tag tag-base">-11 to +19%</span></td>
+          </tr>
+          <tr>
+            <td><strong>Polymarket >$2T</strong></td>
+            <td>$2.0T</td>
+            <td>$154</td>
+            <td><span class="tag tag-bull">+14%</span></td>
+          </tr>
+          <tr>
+            <td><strong>Hyperliquid Perpetual</strong></td>
+            <td>$2.4T</td>
+            <td>$203</td>
+            <td><span class="tag tag-bull">+50%</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="container section" id="risks">
+    <div class="section-header">
+      <h2>Risk Factors</h2>
+      <p>Events that could break the bull case and drive SPCX toward fair-value levels.</p>
+    </div>
+    <div class="card-grid">
+      <div class="scenario-card bear">
+        <div class="scenario-label bear">High</div>
+        <h4>Float Overwhelmed by Retail</h4>
+        <p>4.3% float with 30% retail allocation creates a dangerous dynamic. If retail demand is as massive as expected, Nasdaq opening cross could gap SPCX to $250-300, creating a "gap and crap" pattern where anyone who bought above $200 loses 50% in the consolidation. Low float + high retail = violent moves both ways.</p>
+      </div>
+      <div class="scenario-card bear">
+        <div class="scenario-label bear">High</div>
+        <h4>Q2 Earnings Reality Check</h4>
+        <p>First public earnings (~Nov 2026) will be the first time SPCX faces GAAP scrutiny. If xAI losses accelerate, the 93x revenue multiple compresses violently. Path to $60-80/share if Starlink growth slows below 30% and xAI burn exceeds $3B/qtr.</p>
+      </div>
+      <div class="scenario-card bear">
+        <div class="scenario-label medium" style="color: var(--warning);">Medium</div>
+        <h4>Index Inclusion Timeline</h4>
+        <p>Nasdaq 100 eligibility requires 3 months of trading. S&P 500 requires GAAP profitability (negative for now). Passive buyers won't arrive immediately. If the IPO pop is driven entirely by retail speculation, the stock could drift for months before institutional buying stabilizes it.</p>
+      </div>
+      <div class="scenario-card bear">
+        <div class="scenario-label medium" style="color: var(--warning);">Medium</div>
+        <h4>Musk Liquidity Event</h4>
+        <p>Musk owns ~42% economic stake (~$735B at $135). History shows he sells when he needs cash (TSLA 2021-22). SPCX lock-up expires staggered from ~Sep 2026, with Musk's 366-day lock-up ending June 2027. Any Form 4 filing from Musk after lock-up expiry would crater the stock.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container section">
+    <div class="section-header">
+      <h2>Suggested Entry Framework</h2>
+    </div>
+    <div class="card">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div>
+          <h4 style="color: var(--success); margin-bottom: 12px;">&#x2705; Conservative Entry</h4>
+          <ul style="font-size: 13px; color: var(--muted-foreground); padding-left: 20px; line-height: 2;">
+            <li><strong>Entry:</strong> Wait 2-4 weeks after IPO</li>
+            <li><strong>Price target:</strong> $120-145</li>
+            <li><strong>Rationale:</strong> Let the retail froth settle. First pop fades as IPO flippers exit. Morningstar $60 anchor pulls early sellers. Buy when volume normalizes and the stock finds a natural equilibrium.</li>
+            <li><strong>Position size:</strong> 25-50% of intended allocation</li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="color: var(--warning); margin-bottom: 12px;">&#x26A0;&#xFE0F; Aggressive Entry</h4>
+          <ul style="font-size: 13px; color: var(--muted-foreground); padding-left: 20px; line-height: 2;">
+            <li><strong>Entry:</strong> First-day open if below $150</li>
+            <li><strong>Price target:</strong> $175-200 (flip), $120-145 (if it pulls back)</li>
+            <li><strong>Rationale:</strong> If the opening cross prints below $150, the risk/reward for a first-day pop to $170-180 is attractive. Tight float + retail demand creates a favorable setup for day 1.</li>
+            <li><strong>Position size:</strong> 10-25% of intended allocation</li>
+          </ul>
+        </div>
+      </div>
+      <div style="border-top: 1px solid var(--border); padding-top: 20px; margin-top: 12px;">
+        <h4 style="color: var(--destructive); margin-bottom: 8px;">&#x274C; Avoid Zone</h4>
+        <p style="font-size: 13px; color: var(--muted-foreground);"><strong>Do not buy SPCX above $200 in the first month.</strong> At $200/share, SPCX trades at ~$2.6T market cap — 138x trailing revenue, 3.3x Morningstar fair value. The Hyperliquid crypto perpetual at $203 is held by leveraged speculators, not long-term allocators. If SPCX opens above $200, the risk of a gap-and-crap reversal to $120-140 is extreme. Wait for the consolidation.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container section">
+    <div class="section-header">
+      <h2>Sources</h2>
+    </div>
+    <div class="card">
+      <ol class="sources" style="padding-left: 20px;">
+        <li>Morningstar: "Morningstar values SpaceX at $780 billion, half its IPO target" (June 2, 2026)</li>
+        <li>Reuters: "SpaceX sets $135 price for blockbuster IPO, upending Wall Street convention" (June 3, 2026)</li>
+        <li>Bloomberg: "SpaceX shareholders notified FMV adjusted to ~$105.32 from $526.59" (May 15, 2026)</li>
+        <li>Polymarket: SPCX first-day close >$2T contract pricing (June 2026)</li>
+        <li>Hyperliquid: SPCX-USD perpetual contract pricing (~$203)</li>
+        <li>SpaceX S-1 (May 20, 2026) and S-1/A (Jun 1, 2026) -- SEC EDGAR</li>
+        <li>Quilty Space: Starlink subscriber and revenue projections 2026</li>
+        <li>PurePowerPicks / TECHi / TradingKey — IPO float and index mechanics analysis (May 2026)</li>
+        <li>CoinGabbar: "SpaceX IPO Valuation: What Happens to $135 After June 12 Trading?" (June 3, 2026)</li>
+        <li>EventHorizonIQ: SPCX first-day close prediction market (June 2026)</li>
+        <li>MarketBeat, Investing.com — SPCX consensus estimates and fair value models</li>
+        <li>TechStackIPO — Share count and dilution analysis post-xAI merger</li>
+      </ol>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <p>Agent Knowledge -- SPCX Price Prediction &middot; Generated June 4, 2026 &middot; For informational purposes only. Not investment advice.</p>
+    </div>
+  </footer>
+
+  <script>
+    Chart.defaults.color = '#a1a1aa';
+    Chart.defaults.borderColor = '#2a2a2e';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    const COLORS = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#a855f7','#06b6d4','#f97316','#84cc16'];
+
+    // 1. First-Day Pop Probability
+    new Chart(document.getElementById('popChart'), {
+      type: 'bar',
+      data: {
+        labels: ['<0%\n(Decline)','0-10%\n(Flat)','10-20%\n(Small Pop)','20-30%\n(Moderate)','30-50%\n(Large Pop)','>50%\n(Meme)'],
+        datasets: [{
+          label: 'Probability',
+          data: [10, 10, 25, 30, 18, 7],
+          backgroundColor: ['#ef4444','#f59e0b','#84cc16','#22c55e','#06b6d4','#a855f7'],
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (c) => c.raw + '% chance' } }
+        },
+        scales: {
+          y: { ticks: { callback: (v) => v + '%', stepSize: 10 }, grid: { color: 'rgba(255,255,255,0.04)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 2. 30-Day Trajectory
+    new Chart(document.getElementById('trajectoryChart'), {
+      type: 'line',
+      data: {
+        labels: ['Day 1\nOpen','Day 1\nClose','Day 3','Day 5','Day 10','Day 15','Day 20','Day 30'],
+        datasets: [
+          {
+            label: 'Bull Case',
+            data: [160, 185, 200, 195, 190, 180, 185, 175],
+            borderColor: '#22c55e',
+            backgroundColor: 'rgba(34,197,94,0.06)',
+            fill: false,
+            tension: 0.3,
+            borderDash: [],
+            pointRadius: 4,
+          },
+          {
+            label: 'Base Case',
+            data: [145, 160, 155, 150, 155, 162, 165, 160],
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245,158,11,0.06)',
+            fill: false,
+            tension: 0.3,
+            borderDash: [],
+            pointRadius: 4,
+          },
+          {
+            label: 'Bear Case',
+            data: [140, 135, 130, 125, 120, 125, 130, 135],
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239,68,68,0.06)',
+            fill: false,
+            tension: 0.3,
+            borderDash: [6, 3],
+            pointRadius: 4,
+          },
+          {
+            label: 'IPO Price',
+            data: [135, 135, 135, 135, 135, 135, 135, 135],
+            borderColor: '#3b82f6',
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0,
+            borderDash: [3, 3],
+            pointRadius: 0,
+            borderWidth: 1,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: { callbacks: { label: (c) => c.dataset.label + ': $' + c.raw } }
+        },
+        scales: {
+          y: {
+            ticks: { callback: (v) => '$' + v },
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            min: 100,
+            max: 220,
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 3. SOTP per Share
+    new Chart(document.getElementById('sotpShareChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Starlink\nDCF','Launch &\nStarship','xAI / AI\n(NPV)','Starship\nOption','Net Cash/\nDebt','SOTP\nTotal'],
+        datasets: [{
+          label: '$ / Share',
+          data: [52, 6, 18, 5, -11, 70],
+          backgroundColor: [COLORS[1], COLORS[0], COLORS[4], COLORS[5], COLORS[3], COLORS[2]],
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (c) => '$' + c.raw + '/share' } }
+        },
+        scales: {
+          y: { ticks: { callback: (v) => '$' + v }, grid: { color: 'rgba(255,255,255,0.04)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    // 4. Multiple Comparison
+    new Chart(document.getElementById('multipleChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Morningstar\nFair Value','Internal\nFMV','SOTP Base\nCase','IPO\nPrice','SOTP Bull\nCase','Polymarket\n>$2T','Hyperliquid\nPerp'],
+        datasets: [{
+          label: '$ per Share',
+          data: [60, 105, 82, 135, 140, 154, 203],
+          backgroundColor: (ctx) => {
+            const vals = [60, 105, 82, 135, 140, 154, 203];
+            return vals[ctx.dataIndex] >= 135 ? COLORS[1] : COLORS[3];
+          },
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (c) => '$' + c.raw + '/share' } }
+        },
+        scales: {
+          y: { ticks: { callback: (v) => '$' + v }, grid: { color: 'rgba(255,255,255,0.04)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

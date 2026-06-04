@@ -1,6 +1,45 @@
 {
   "posts": [
     {
+      "slug": "2026-06-04-skill-chaining-stock-trading-pipeline",
+      "filename": "2026-06-04-skill-chaining-stock-trading-pipeline.md",
+      "category": "post",
+      "title": "Skill Chaining: Building Connected AI Workflows That Pass Data Between Skills",
+      "date": "2026-06-04",
+      "tags": [
+        "claude-skills",
+        "skill-chaining",
+        "trading",
+        "stock-analysis",
+        "pre-market",
+        "workflow-automation",
+        "skill-packs",
+        "agent-skills"
+      ],
+      "summary": "Individual skills handle single workflows. Skill chaining connects them into pipelines — where one skill's output becomes another's input, with explicit interface contracts, prerequisite enforcement, and state management rules between each step.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-04-skills-for-crypto-compliance-workflows",
+      "filename": "2026-06-04-skills-for-crypto-compliance-workflows.md",
+      "category": "post",
+      "title": "How to Build Agent Skills the Right Way — With Real Data Workflow Examples",
+      "date": "2026-06-04",
+      "tags": [
+        "claude-skills",
+        "agent-skills",
+        "workflow-automation",
+        "crypto-compliance",
+        "data-analyst",
+        "progressive-disclosure",
+        "skill-design"
+      ],
+      "summary": "Anthropic's skills guide defines a clear architecture and set of patterns for building repeatable agent workflows. This post walks through the guidelines and shows how they apply to real data analyst workflows — regulatory reporting, KYC tooling, and CRM reconciliation.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-06-02-ai-inference-cost-crisis-local-models",
       "filename": "2026-06-02-ai-inference-cost-crisis-local-models.md",
       "category": "post",
@@ -531,6 +570,19 @@
   ],
   "reports": {
     "adhocResearch": [
+      {
+        "id": "adhoc-research-2026-06-04-spcx-price-prediction-html",
+        "name": "SPCX Price Prediction -- Post-IPO Trading Analysis",
+        "filename": "2026-06-04-spcx-price-prediction.html",
+        "url": "/reports/researches/2026-06-04-spcx-price-prediction.html",
+        "date": "2026-06-04",
+        "tags": [
+          "Adhoc",
+          "Research",
+          "Agent research"
+        ],
+        "description": "Adhoc generated research report produced outside the scheduled stock daily and weekly report streams."
+      },
       {
         "id": "adhoc-research-2026-06-03-spacex-ipo-briefing-html",
         "name": "SpaceX IPO Briefing -- June 3, 2026",
