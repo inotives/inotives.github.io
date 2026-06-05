@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { usePost } from '../hooks/useMarkdown'
 import { getAllPosts } from '../utils/content'
@@ -35,6 +36,7 @@ function getTableOfContents(content) {
 export default function Note() {
   const { slug } = useParams()
   const { post, loading } = usePost(slug)
+  const commentsRef = useRef(null)
 
   // Get prev/next posts
   const allPosts = getAllPosts()
@@ -42,6 +44,30 @@ export default function Note() {
   const prevPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null
   const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null
   const tableOfContents = getTableOfContents(post?.content)
+
+  useEffect(() => {
+    const el = commentsRef.current
+    if (!el) return
+
+    el.innerHTML = ''
+
+    const script = document.createElement('script')
+    script.src = 'https://giscus.app/client.js'
+    script.setAttribute('data-repo', 'inotives/inotives.github.io')
+    script.setAttribute('data-repo-id', 'MDEwOlJlcG9zaXRvcnkxNzMyMTU4NTY=')
+    script.setAttribute('data-category', 'General')
+    script.setAttribute('data-category-id', 'DIC_kwDOClMQcM4C-ijm')
+    script.setAttribute('data-mapping', 'url')
+    script.setAttribute('data-strict', '0')
+    script.setAttribute('data-reactions-enabled', '1')
+    script.setAttribute('data-emit-metadata', '0')
+    script.setAttribute('data-input-position', 'bottom')
+    script.setAttribute('data-theme', 'dark')
+    script.setAttribute('data-lang', 'en')
+    script.setAttribute('crossorigin', 'anonymous')
+    script.async = true
+    el.appendChild(script)
+  }, [slug])
 
   if (loading) {
     return <p className="empty-state">Loading...</p>
@@ -101,6 +127,8 @@ export default function Note() {
           </aside>
         )}
       </div>
+
+      <div ref={commentsRef} className="giscus-comments" />
 
       <nav className="article-nav">
         <div>

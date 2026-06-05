@@ -600,6 +600,12 @@ a.contribution-cell.has-report:hover {
   font-size: 0.96rem;
 }
 
+.giscus-comments {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+}
+
 .article-layout {
   display: grid;
   grid-template-columns: minmax(0, 820px) minmax(180px, 240px);

@@ -180,6 +180,37 @@ This skill runs between prior close (16:00 ET) and target open (09:30 ET). It co
 - **Backtest hook:** After writing the new prediction, it opens the prior session's prediction and appends realised values — building a calibration trail without manual effort.
 - **Sector momentum overlay:** Before generating any prediction, it checks the ticker's sector ETF pre-market performance. If the sector is strongly trending, it suppresses contrary biases — preventing the most common prediction failure mode observed across backtests.
 
+### Consolidated Output Example
+
+When the pipeline finishes for all tracked tickers, the consolidated report is a standalone HTML page served statically. Here is the 2026-06-02 output structure generated from running close summaries on 18 tickers then fanning out 16 parallel pre-open predictions:
+
+**Header strip** — overnight market context badges (NQ -0.3%, VIX 15.32, ORCL AH -7%, etc.) at the top with the full ticker list.
+
+**Market overview banner** — narrative overnight/pre-market context with bullet-pointed tape: futures, commodity moves, individual ticker catalysts (e.g. MRVL +22% AH, DELL +47% in 2d, NVDA Computex Day 2, META insider cluster), and the week-ahead calendar.
+
+**Snapshot summary table** — every ticker in one view:
+
+| Ticker | Anchor Close | Open Cone | Expected Close | Bias | Conf | Biggest Risk |
+|--------|-------------|-----------|---------------|------|------|-------------|
+| NVDA | $224.36 | $222-$231 | $225±$5 | BULL | M | Profit-taking below $222 |
+| DELL | $465.96 | $466-$478 | $473±$14 | BULL | M | Parabolic exhaustion +47% in 2d |
+| MU | $1,035.50 | $1,025-$1,050 | $1,028±$15 | RNG | M | RSI 87 weekly waterfall |
+| META | $607.76 | $603-$618 | $609±$7 | BEAR | L | XLK record pull META higher |
+| ORCL | $248.15 | $226-$245 | $241.50±$12 | RNG | L | AH -7% extends below $226 |
+| TSLA | $415.88 | $412-$422 | $414±$4 | BEAR | M | 200-day SMA breakdown to $400 |
+
+Bias is colour-coded (BULL/RNG/BEAR). Confidence is H/M/L — derived from the anchor brief's gamma topology consistency, overnight tape conviction, and historical prediction accuracy for that ticker.
+
+**Detailed cards** — one card per ticker with open cone, expected close, intraday path narrative, trigger levels (bull/bear/pin), and any override rules applied (e.g. `[no-bearish-after-+5% rule: enforced]` on CRM, `[could-not-corroborate: TWSE 2330.TW print]` on TSM).
+
+**Catalyst calendar** — table of upcoming events across all tickers with date, event description, affected tickers, and impact rating (HIGH/MEDIUM/NEGATIVE).
+
+**Risks grid** — the top 8 cross-tape risks that surfaced during analysis (e.g. parabolic exhaustion cluster, EU CADA regulation, US-Iran escalation, SpaceX IPO rotation), colour-coded by severity.
+
+**Cohort observations** — cross-tape synthesis grouping tickers by theme (semi cohort, AI infra, Mag7, China/EV, macro overlay) with directional bias per cohort.
+
+A real live example with full data is at [`/projects/research-stocks-pro-open-price`](/projects/research-stocks-pro-open-price) — every highlighted square in the calendar links to a specific date's report.
+
 ### How the Chain Handles State
 
 The two skills share a wiki filesystem but never conflict:

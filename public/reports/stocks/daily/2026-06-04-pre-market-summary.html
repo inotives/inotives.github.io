@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Market Summary — 2026-06-04</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: 'hsl(var(--border))',
+                        input: 'hsl(var(--input))',
+                        ring: 'hsl(var(--ring))',
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+                        secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+                        destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+                        muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+                        accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+                        card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+                    },
+                    borderRadius: {
+                        lg: 'var(--radius)', md: 'calc(var(--radius) - 2px)', sm: 'calc(var(--radius) - 4px)',
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        :root {
+            --background: 0 0% 100%; --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%; --card-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%; --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%; --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%; --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%; --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%; --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%; --input: 214.3 31.8% 91.4%;
+            --ring: 222.2 84% 4.9%; --radius: 0.5rem;
+        }
+        .dark {
+            --background: 222.2 84% 4.9%; --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%; --card-foreground: 210 40% 98%;
+            --primary: 210 40% 98%; --primary-foreground: 222.2 47.4% 11.2%;
+            --secondary: 217.2 32.6% 17.5%; --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%; --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%; --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%; --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%; --input: 217.2 32.6% 17.5%;
+            --ring: 212.7 26.8% 83.9%;
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+
+        <!-- ===== HEADER ===== -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-3 text-foreground">
+                Pre-Market Summary
+            </h1>
+            <p class="text-lg text-muted-foreground">
+                Opening Price Cone + Intraday Path Forecast for 2026-06-04
+            </p>
+            <p class="text-sm text-muted-foreground mt-1">
+                Generated 2026-06-04 pre-open | Anchored to 2026-06-03 close briefs
+            </p>
+            <div class="flex items-center justify-center gap-4 mt-3 flex-wrap">
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30">NQ -1.23%</span>
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30">ES -0.49%</span>
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">YM +0.24%</span>
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">RTY +0.30%</span>
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30">AVGO -13% PM</span>
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">SPX Snapped 9d Win Streak</span>
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400 border border-orange-500/30">WTI $94.28</span>
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/30">NFP Jun 5</span>
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30">KOSPI -2.53%</span>
+            </div>
+            <p class="text-sm text-muted-foreground mt-2">
+                Coverage: AAPL, AMD, AMZN, CRM, CRWV, DELL, GOOG, INTC, META, MU, NIO, NVDA, ORCL, SNOW, TSLA, TSM
+            </p>
+        </header>
+
+        <!-- ===== MARKET OVERVIEW BANNER ===== -->
+        <div class="rounded-lg border bg-card shadow-sm p-6 mb-8">
+            <div class="flex items-start gap-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                    <span class="text-red-500 text-lg font-bold">!</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg mb-1">Overnight / Pre-Market Context</h3>
+                    <p class="text-sm text-muted-foreground">Risk-off open expected after the S&P 500 snapped a historic 9-day winning streak. Broadcom (AVGO) is collapsing -13% pre-market after maintaining (not raising) its AI revenue forecast, wiping out $250B+ in market cap and dragging the entire semiconductor cohort lower. NQ -1.23% confirms tech/semi is the epicenter. The Dow (+0.24%) and Russell (+0.30%) are fractionally positive, suggesting rotation out of growth into value. Oil eased on the Israel-Lebanon ceasefire but remains elevated near $94 WTI with the Strait of Hormuz still disrupted. The 10Y yield eased 3bp to 4.47% but rates narrative is firmly hawkish (ADP +122K beat, 85% Fed hike odds by year-end). NFP Friday is the key macro event.</p>
+                    <div class="mt-3 text-sm text-muted-foreground space-y-1">
+                        <div>&bull; <strong>Semi rout:</strong> AVGO -13%, KOSPI -2.53%, Nikkei -1.91%, Taiwan -1.39%. SMH semiconductor ETF hit hard.</div>
+                        <div>&bull; <strong>Rotation:</strong> NQ -1.23% vs YM +0.24%, RTY +0.30% — value over growth intraday bias.</div>
+                        <div>&bull; <strong>Geopolitics:</strong> Israel-Lebanon ceasefire holding. Netanyahu says US/Israel prepared to attack Iran again if necessary. Oil eased 1.7%.</div>
+                        <div>&bull; <strong>Rates:</strong> 10Y 4.47% (-3bp). ADP +122K beat. Market prices 85% chance of Fed hike by year-end.</div>
+                        <div>&bull; <strong>Europe:</strong> DAX +0.6%, FTSE +0.1% on ceasefire optimism. <strong>Asia:</strong> KOSPI -2.53%, Nikkei -1.91%, HSTECH -1.5%.</div>
+                        <div>&bull; <strong>Key events today:</strong> Weekly jobless claims, Fed's Barkin speaks, continued AVGO/CRWD earnings digestion, NFP Friday.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SNAPSHOT SUMMARY TABLE ===== -->
+        <div class="rounded-lg border bg-card shadow-sm overflow-hidden mb-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Snapshot Summary</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted/50">
+                        <tr>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Ticker</th>
+                            <th class="text-right p-3 font-medium text-muted-foreground">Anchor Close</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Open Cone</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Expected Close</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Bias</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Conf</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Biggest Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">AAPL</td><td class="text-right">$310.26</td><td class="text-center">$309-$314</td><td class="text-center">$312±5</td><td class="text-center"><span class="text-yellow-400">Range</span></td><td class="text-center">M</td><td class="text-muted-foreground">AVGO contagion dragging tape</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">AMD</td><td class="text-right">$542.52</td><td class="text-center">$515-$530</td><td class="text-center">$525±12</td><td class="text-center"><span class="text-red-400">Bear</span></td><td class="text-center">M</td><td class="text-muted-foreground">AVGO semi cohort repricing</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">AMZN</td><td class="text-right">$250.02</td><td class="text-center">$246-$252</td><td class="text-center">$249±5</td><td class="text-center"><span class="text-red-400">Bear</span></td><td class="text-center">M</td><td class="text-muted-foreground">Drift lower into Prime Day</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">CRM</td><td class="text-right">$190.61</td><td class="text-center">$186-$192</td><td class="text-center">$188±6</td><td class="text-center"><span class="text-red-400">Bear</span></td><td class="text-center">M</td><td class="text-muted-foreground">Software sector selloff</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">CRWV</td><td class="text-right">$110.93</td><td class="text-center">$104-$110</td><td class="text-center">$107±5</td><td class="text-center"><span class="text-red-400">Bear</span></td><td class="text-center"><span class="text-red-400">L</span></td><td class="text-muted-foreground">AVGO forced liquidation risk</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">DELL</td><td class="text-right">$421.08</td><td class="text-center">$410-$425</td><td class="text-center">$416±8</td><td class="text-center"><span class="text-red-400">Bear</span></td><td class="text-center">M</td><td class="text-muted-foreground">3rd pullback day has room</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">GOOG</td><td class="text-right">$355.68</td><td class="text-center">$350-$358</td><td class="text-center">$353±5</td><td class="text-center"><span class="text-red-400">Bear</span></td><td class="text-center">M</td><td class="text-muted-foreground">$85B dilution overhang</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">INTC</td><td class="text-right">$112.71</td><td class="text-center">$108-$113</td><td class="text-center">$110±4</td><td class="text-center"><span class="text-red-400">Bear</span></td><td class="text-center">M</td><td class="text-muted-foreground">AVGO sector drag</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">META</td><td class="text-right">$622.98</td><td class="text-center">$615-$625</td><td class="text-center">$620±7</td><td class="text-center"><span class="text-yellow-400">Range</span></td><td class="text-center">M</td><td class="text-muted-foreground">Caught in tech-wide liquidation</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">MU</td><td class="text-right">$1,079.57</td><td class="text-center">$1,050-$1,075</td><td class="text-center">$1,060±15</td><td class="text-center"><span class="text-red-400">Bear</span></td><td class="text-center">M</td><td class="text-muted-foreground">AVGO semi repricing</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">NIO</td><td class="text-right">$6.77</td><td class="text-center">$6.70-$6.80</td><td class="text-center">$6.75±0.15</td><td class="text-center"><span class="text-yellow-400">Range</span></td><td class="text-center">M</td><td class="text-muted-foreground">US-China tariff escalation</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">NVDA</td><td class="text-right">$214.75</td><td class="text-center">$205-$213</td><td class="text-center">$208±8</td><td class="text-center"><span class="text-red-400">Bear</span></td><td class="text-center">M</td><td class="text-muted-foreground">AVGO AI networking challenge</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">ORCL</td><td class="text-right">$230.33</td><td class="text-center">$222-$230</td><td class="text-center">$224±6</td><td class="text-center"><span class="text-red-400">Bear</span></td><td class="text-center">M</td><td class="text-muted-foreground">Post-surge unwind continuing</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">SNOW</td><td class="text-right">$241.28</td><td class="text-center">$235-$243</td><td class="text-center">$238±6</td><td class="text-center"><span class="text-red-400">Bear</span></td><td class="text-center">M</td><td class="text-muted-foreground">Software sector profit-taking</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">TSLA</td><td class="text-right">$385.50</td><td class="text-center">$378-$387</td><td class="text-center">$380±6</td><td class="text-center"><span class="text-red-400">Bear</span></td><td class="text-center">M</td><td class="text-muted-foreground">Musk-Trump feud + 50-SMA break</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3 font-medium">TSM</td><td class="text-right">$436.69</td><td class="text-center">$425-$435</td><td class="text-center">$428±7</td><td class="text-center"><span class="text-red-400">Bear</span></td><td class="text-center">M</td><td class="text-muted-foreground">AVGO semi rout + Taiwan -1.39%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== DETAILED CARDS ===== -->
+        <div class="space-y-6">
+
+            <!-- AAPL -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">AAPL</h2><p class="text-sm text-muted-foreground">Range-bound | M | $309-$314 | WWDC June 8 drift</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">Range</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Open near $310.26, drift $312-$315 into WWDC anticipation. AH $313.95 supports mild upside. Insulated from AVGO by WWDC catalyst.</p>
+                    <p><strong>Bull trigger:</strong> >$317 → $325. <strong>Bear trigger:</strong> <$305 → $295. <strong>Invalidator:</strong> NQ -2% pre-open.</p>
+                    <p><strong>Trump:</strong> holdings=N, recent_mention=N, spike=low. China tariff exempt through Jun 2027.</p>
+                </div>
+            </div>
+
+            <!-- AMD -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">AMD</h2><p class="text-sm text-muted-foreground">Bearish | M | $515-$530 | Overbought RSI 76.7 mean reversion</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">Bear</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Gap down $20-25 on AVGO semi contagion. AH $526.15 suggests further downside. Overbought RSI 76.7 prone to mean reversion.</p>
+                    <p><strong>Bull trigger:</strong> Reclaim $545 (improbable). <strong>Bear trigger:</strong> <$520 → $500. <strong>Invalidator:</strong> AVGO -15%+ pre-open.</p>
+                    <p><strong>Sector:</strong> SMH headwind. 2nm EPYC ramp supports medium-term.</p>
+                </div>
+            </div>
+
+            <!-- AMZN -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">AMZN</h2><p class="text-sm text-muted-foreground">Bearish | M | $246-$252 | 50-SMA rejection</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">Bear</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Straddle 50-SMA ($249.65), test $247 on tech weakness, chop $247-$252. Prime Day Jun 23-26 known but not yet a catalyst.</p>
+                    <p><strong>Bull trigger:</strong> N/A. <strong>Bear trigger:</strong> <50-SMA ($249.65) → $244-$247. <strong>Invalidator:</strong> Close >$255.</p>
+                    <p><strong>Sector:</strong> XLY consumer discretionary weak.</p>
+                </div>
+            </div>
+
+            <!-- CRM -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">CRM</h2><p class="text-sm text-muted-foreground">Bearish | M | $186-$192 | Software sector weak</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">Bear</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Gap down on AVGO/CRWD software weakness, test $187 AH print, hold EMA(100) $183-$185. Anthropic $5B stake provides valuation floor.</p>
+                    <p><strong>Bull trigger:</strong> >$195 (VWAP) → $205. <strong>Bear trigger:</strong> <$183 → $177 gap-fill. <strong>Invalidator:</strong> Open <$183.</p>
+                    <p><strong>Sector:</strong> IGV implied -3% pre-market.</p>
+                </div>
+            </div>
+
+            <!-- CRWV -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">CRWV</h2><p class="text-sm text-muted-foreground">Bearish | L | $104-$110 | High-beta AI infra</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">Bear</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">L</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Gap down on AVGO rout extending -6.99% profit-taking. Test $106.40 AH. BNP Outperform $192 PT provides fundamental anchor but macro tide dominates.</p>
+                    <p><strong>Key level:</strong> $105 support; below opens $100. <strong>Invalidator:</strong> NQ -2% at open.</p>
+                    <p><strong>Note:</strong> Vera Rubin NVL72 first-to-cloud catalyst from Dell.</p>
+                </div>
+            </div>
+
+            <!-- DELL -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">DELL</h2><p class="text-sm text-muted-foreground">Bearish | M | $410-$425 | 3rd pullback from ATH</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">Bear</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Third consecutive pullback from $469 ATH. RSI decompressing from 92 — mean reversion has room. AI server narrative intact but profit-taking continues.</p>
+                    <p><strong>Bull trigger:</strong> >$435 → $460/$480. <strong>Bear trigger:</strong> <$400 → $375 gap fill.</p>
+                    <p><strong>Note:</strong> AI server revenue +757%. Silver Lake insider selling.</p>
+                </div>
+            </div>
+
+            <!-- GOOG -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">GOOG</h2><p class="text-sm text-muted-foreground">Bearish | M | $350-$358 | $85B dilution overhang</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">Bear</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Continued post-secondary dilution. Three-day selloff $372→$355.68 has room. $84.75B raise + $40B ATM is massive overhang. Broad tape weakness compounds.</p>
+                    <p><strong>Key level:</strong> $350 round number. <strong>Invalidator:</strong> >$360.</p>
+                    <p><strong>Note:</strong> Berkshire $10B private placement signals some confidence.</p>
+                </div>
+            </div>
+
+            <!-- INTC -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">INTC</h2><p class="text-sm text-muted-foreground">Bearish | M | $108-$113 | AVGO drag +4.43% gain</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">Bear</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Gap down erasing some of +4.43%. CEO Tan CPU narrative ('all CEOs calling me') provides differentiated catalyst vs peer semis. AH $112.65 suggests limited downside.</p>
+                    <p><strong>Bull trigger:</strong> $117.77-$118.50 cup-and-handle → $125. <strong>Bear trigger:</strong> <$105 → $100.</p>
+                </div>
+            </div>
+
+            <!-- META -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">META</h2><p class="text-sm text-muted-foreground">Range-bound | M | $615-$625 | Arete upgrade catalyst</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">Range</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Resilient vs NQ -1.23%. Arete Strong Buy $735 PT and Business Agent global launch provide stock-specific catalysts. Recaptured 50-SMA Tuesday.</p>
+                    <p><strong>Bull trigger:</strong> >$636 → $665/$690. <strong>Bear trigger:</strong> <$600 → $590.</p>
+                    <p><strong>Probability drift:</strong> Bull 55%→30% (AVGO sector headwind rationale).</p>
+                </div>
+            </div>
+
+            <!-- MU -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">MU</h2><p class="text-sm text-muted-foreground">Bearish | M | $1,050-$1,075 | AVGO semi drag</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">Bear</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Gap down partially reversing +1.45% recovery. HBM narrative (50-66% of demand fulfilled, tight beyond 2026) provides fundamental floor. Test $1,060 intraday.</p>
+                    <p><strong>Bull trigger:</strong> >$1,100 → $1,150. <strong>Bear trigger:</strong> <$1,000 → $950.</p>
+                    <p><strong>Catalyst:</strong> FQ3 earnings Jun 24.</p>
+                </div>
+            </div>
+
+            <!-- NIO -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">NIO</h2><p class="text-sm text-muted-foreground">Range-bound | M | $6.70-$6.80 | Record deliveries</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">Range</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Flat to slightly negative. China ADR tape weak (KWEB -3.37%, HSTECH -1.5%). Record May deliveries (+62.3% YoY) provide fundamental support.</p>
+                    <p><strong>Key level:</strong> $6.50 (May lows), $7.00 (Jun 1 high). <strong>Invalidator:</strong> US-China tariff headline.</p>
+                    <p><strong>Sector:</strong> XLY discretionary weak. Penny vol tier (±$0.15).</p>
+                </div>
+            </div>
+
+            <!-- NVDA -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">NVDA</h2><p class="text-sm text-muted-foreground">Bearish | M | $205-$213 | AVGO competitive threat</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">Bear</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Gap down testing $210 bear trigger. AVGO -13% is direct competitive read-through ($50B networking TAM claim vs NVDA $30B InfiniBand). AH $210.00 already confirms weakness.</p>
+                    <p><strong>Bull trigger:</strong> >$225 (improbable today). <strong>Bear trigger:</strong> <$210 → $200. <strong>Invalidator:</strong> Close below $200.</p>
+                    <p><strong>Sector:</strong> SMH headwind. Tariff risk medium (Section 232, Jul 1 report).</p>
+                </div>
+            </div>
+
+            <!-- ORCL -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">ORCL</h2><p class="text-sm text-muted-foreground">Bearish | M | $222-$230 | Post-surge unwind</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">Bear</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Gap down continuing -5.83% profit-taking from 30% three-day surge. AH $220.92 signals further downside. Jun 10 earnings is dominant catalyst.</p>
+                    <p><strong>Key level:</strong> $220 support. <strong>Invalidator:</strong> Open <$220 → chaotic unwind to $210.</p>
+                    <p><strong>Catalyst intensity 2:</strong> Mizuho $320 PT, OpenAI $553B RPO, $125B debt risk.</p>
+                </div>
+            </div>
+
+            <!-- SNOW -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">SNOW</h2><p class="text-sm text-muted-foreground">Bearish | M | $235-$243 | 3-day profit-taking</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">Bear</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Gap down continuing 3-day profit-taking. Broke $257 support, $239 is next anchor. AVGO/CRWD software weakness compounds. Summit conference product updates (CoCo, CoWork) provide narrative insulation.</p>
+                    <p><strong>Bull trigger:</strong> Reclaim $257 (improbable). <strong>Bear trigger:</strong> <$239 → $211. <strong>Invalidator:</strong> Close <$239.</p>
+                    <p><strong>Probability drift:</strong> Bear +35pp vs anchor (AVGO sector weakness rationale).</p>
+                </div>
+            </div>
+
+            <!-- TSLA -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">TSLA</h2><p class="text-sm text-muted-foreground">Bearish | M | $378-$387 | Trump spike risk HIGH</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">Bear</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">Trump HIGH</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Gap down testing $383.50 50-SMA bear trigger. Musk-Trump feud (Musk left White House, Trump threatens contracts) + Robotaxi uncertainty + semi weakness. AH $383.00 already below 50-SMA. Cone widened 1.5x for Trump spike risk.</p>
+                    <p><strong>Bull trigger:</strong> >$400 → $420 (Robotaxi catalyst). <strong>Bear trigger:</strong> <$383.50 → $365 (100-SMA). <strong>Invalidator:</strong> Robotaxi positive catalyst >$390.</p>
+                    <p><strong>Trump:</strong> Musk-Trump feud negative. Insider selling $21.5M/3mo. 9:35 AM ET Trump social media check recommended.</p>
+                </div>
+            </div>
+
+            <!-- TSM -->
+            <div class="rounded-lg border bg-card shadow-sm">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div><h2 class="text-lg font-semibold">TSM</h2><p class="text-sm text-muted-foreground">Bearish | M | $425-$435 | Bearish engulfing ATH</p></div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400">Bear</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">M</span>
+                    </div>
+                </div>
+                <div class="p-4 text-sm space-y-2">
+                    <p><strong>Path:</strong> Gap down extending bearish engulfing from $450.16 intraday ATH. AVGO + Taiwan -1.39% + CEO Wei AGM ("supply won't meet AI demand for years"). Profit-taking from 2 consecutive ATH closes has room.</p>
+                    <p><strong>Key level:</strong> $430 round number, $420 pre-run base. <strong>Invalidator:</strong> NQ -2%.</p>
+                    <p><strong>Probability drift:</strong> Bear +30pp vs anchor (AVGO + Taiwan overnight rationale). Tariff risk: medium (Section 232, Jul 1 report).</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===== KEY / UPCOMING CATALYSTS ===== -->
+        <section class="rounded-lg border bg-card shadow-sm mt-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Key / Upcoming Catalysts</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted/50">
+                        <tr>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Date</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Event</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Tickers Affected</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <tr class="hover:bg-muted/20"><td class="p-3">Jun 4</td><td>Weekly jobless claims, Fed Barkin speaks</td><td>All</td><td class="text-muted-foreground">Rate sentiment</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3">Jun 5</td><td>Nonfarm Payrolls (NFP)</td><td>All</td><td class="text-yellow-400">HIGH — rate path inflection</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3">Jun 8</td><td>AAPL WWDC</td><td>AAPL</td><td class="text-yellow-400">HIGH — new ATH setup</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3">Jun 10</td><td>ORCL Q4 FY26 earnings</td><td>ORCL</td><td class="text-yellow-400">HIGH — OpenAI RPO validation</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3">Jun 12</td><td>SPCX (SpaceX) IPO debut</td><td>SPCX, CRWV, DELL</td><td class="text-yellow-400">SpaceX/NVDA ecosystem read</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3">Jun 23-26</td><td>Amazon Prime Day</td><td>AMZN</td><td class="text-muted-foreground">Mid — retail catalyst</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3">Jun 24</td><td>MU FQ3 earnings</td><td>MU</td><td class="text-yellow-400">HIGH — HBM demand validation</td></tr>
+                        <tr class="hover:bg-muted/20"><td class="p-3">Jul 1</td><td>Commerce semi tariff report</td><td>NVDA, AMD, TSM, MU</td><td class="text-yellow-400">Section 232 modification review</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== RISKS GRID ===== -->
+        <section class="rounded-lg border bg-card shadow-sm mt-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Risks Grid</h2>
+            </div>
+            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="rounded-lg border bg-card p-4"><h4 class="font-medium text-red-400">AVGO Semi Contagion</h4><p class="text-xs text-muted-foreground mt-1">Broadcom -13% pre-market after holding (not raising) AI guidance. Direct read-through for NVDA/AMD/MU/TSM. Sector-wide repricing risk.</p></div>
+                <div class="rounded-lg border bg-card p-4"><h4 class="font-medium text-red-400">NFP Friday Hawkish Surprise</h4><p class="text-xs text-muted-foreground mt-1">ADP +122K beat already has market pricing 85% Fed hike odds. Hot NFP could push yields higher, pressuring growth stocks further.</p></div>
+                <div class="rounded-lg border bg-card p-4"><h4 class="font-medium text-red-400">Musk-Trump TSLA Overhang</h4><p class="text-xs text-muted-foreground mt-1">Full feud escalation (White House departure, federal contract threats, impeachment calls). 50-SMA breakdown today could accelerate to $365.</p></div>
+                <div class="rounded-lg border bg-card p-4"><h4 class="font-medium text-yellow-400">Israel-Iran Escalation</h4><p class="text-xs text-muted-foreground mt-1">Ceasefire holding but Netanyahu signals readiness to strike again. Any fresh missile activity would spike oil and trigger risk-off.</p></div>
+                <div class="rounded-lg border bg-card p-4"><h4 class="font-medium text-yellow-400">GOOG $85B Dilution Unwind</h4><p class="text-xs text-muted-foreground mt-1">Largest equity raise in history. $40B ATM program for Q3 is an unresolved overhang. Downside below $350 possible.</p></div>
+                <div class="rounded-lg border bg-card p-4"><h4 class="font-medium text-yellow-400">ORCL Pre-Earnings Chaos</h4><p class="text-xs text-muted-foreground mt-1">Three-day -$27 unwind from $257+ post-surge high. Jun 10 earnings binary event. $125B debt and negative FCF until 2029 are structural risks.</p></div>
+            </div>
+        </section>
+
+        <!-- ===== FOOTER ===== -->
+        <footer class="mt-8 text-center text-xs text-muted-foreground border-t pt-4">
+            <p>Forward-looking pre-market summary generated 2026-06-04 pre-open. Not investment advice.</p>
+            <p>Anchored to daily briefs from 2026-06-03. Backtest hooks pending fill at EOD 2026-06-04.</p>
+            <p class="mt-1">Data sourced from live web search + anchor briefs. [could-not-corroborate] flags noted inline per prediction.</p>
+            <p class="mt-1">16 tickers covered: AAPL, AMD, AMZN, CRM, CRWV, DELL, GOOG, INTC, META, MU, NIO, NVDA, ORCL, SNOW, TSLA, TSM. Generated by stock_pre_open_prediction skill.</p>
+        </footer>
+    </div>
+</body>
+</html>
