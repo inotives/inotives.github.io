@@ -46,6 +46,7 @@ export default function Note() {
   const tableOfContents = getTableOfContents(post?.content)
 
   useEffect(() => {
+    if (loading || !post) return
     const el = commentsRef.current
     if (!el) return
 
@@ -67,7 +68,7 @@ export default function Note() {
     script.setAttribute('crossorigin', 'anonymous')
     script.async = true
     el.appendChild(script)
-  }, [slug])
+  }, [slug, loading, post])
 
   if (loading) {
     return <p className="empty-state">Loading...</p>
