@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-06-05-giscus-comments-discussions-to-issues",
+      "filename": "2026-06-05-giscus-comments-discussions-to-issues.md",
+      "category": "post",
+      "title": "Free Comments on a Static Site: Giscus + Discussion-to-Issue Pipeline",
+      "date": "2026-06-05",
+      "tags": [
+        "giscus",
+        "github-discussions",
+        "comments",
+        "static-site",
+        "workflow",
+        "github-actions",
+        "discussion-to-issue"
+      ],
+      "summary": "Giscus gives you a full comment system on a static site for free — backed by GitHub Discussions. Pair it with a workflow that converts bug reports from comments into issues, and you get a lightweight community feedback loop with zero infrastructure cost.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-06-04-skill-chaining-stock-trading-pipeline",
       "filename": "2026-06-04-skill-chaining-stock-trading-pipeline.md",
       "category": "post",
