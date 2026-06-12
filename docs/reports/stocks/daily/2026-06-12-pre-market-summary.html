@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Market Summary — 2026-06-12</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: 'hsl(var(--border))',
+                        input: 'hsl(var(--input))',
+                        ring: 'hsl(var(--ring))',
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+                        secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+                        destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+                        muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+                        accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+                        card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+                    },
+                    borderRadius: {
+                        lg: 'var(--radius)', md: 'calc(var(--radius) - 2px)', sm: 'calc(var(--radius) - 4px)',
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        :root {
+            --background: 0 0% 100%; --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%; --card-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%; --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%; --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%; --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%; --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%; --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%; --input: 214.3 31.8% 91.4%;
+            --ring: 222.2 84% 4.9%; --radius: 0.5rem;
+        }
+        .dark {
+            --background: 222.2 84% 4.9%; --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%; --card-foreground: 210 40% 98%;
+            --primary: 210 40% 98%; --primary-foreground: 222.2 47.4% 11.2%;
+            --secondary: 217.2 32.6% 17.5%; --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%; --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%; --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%; --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%; --input: 217.2 32.6% 17.5%;
+            --ring: 212.7 26.8% 83.9%;
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+
+        <!-- ===== HEADER ===== -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-3 text-foreground">
+                Pre-Market Summary
+            </h1>
+            <p class="text-lg text-muted-foreground">
+                Opening Price Cone + Intraday Path Forecast for 2026-06-12
+            </p>
+            <p class="text-sm text-muted-foreground mt-1">
+                Generated 2026-06-12 pre-open | Anchored to 2026-06-11 close briefs
+            </p>
+            <div class="flex items-center justify-center gap-4 mt-3 flex-wrap">
+                <span class="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 text-sm font-medium">ES ~7,341 flat</span>
+                <span class="px-3 py-1 rounded-full bg-green-500/20 text-green-500 text-sm font-medium">NQ +0.3%</span>
+                <span class="px-3 py-1 rounded-full bg-red-500/20 text-red-500 text-sm font-medium">VIX 22 elevated</span>
+                <span class="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 text-sm font-medium">CPI 4.2%</span>
+                <span class="px-3 py-1 rounded-full bg-green-500/20 text-green-500 text-sm font-medium">Asia risk-on</span>
+                <span class="px-3 py-1 rounded-full bg-red-500/20 text-red-500 text-sm font-medium">Iran tensions</span>
+                <span class="px-3 py-1 rounded-full bg-green-500/20 text-green-500 text-sm font-medium">SOX +7.91%</span>
+            </div>
+            <p class="text-sm text-muted-foreground mt-2">
+                Tracking: AAPL AMD AMZN CRM CRWV DELL GOOG INTC META MSFT MU NIO NVDA ORCL SNOW TSLA TSM
+            </p>
+        </header>
+
+        <!-- ===== MARKET OVERVIEW BANNER ===== -->
+        <div class="rounded-lg border bg-card shadow-sm p-6 mb-8">
+            <div class="flex items-start gap-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                    <span class="text-yellow-500 text-lg font-bold">!</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg mb-1">Overnight / Pre-Market Context</h3>
+                    <p class="text-sm text-muted-foreground">
+                        Risk-on continues after Thursday's blistering +1.75% SPX / +3.29% NDX rally on Iran de-escalation hopes (Trump cancelled strikes). Asian markets rallied overnight (Sensex +1.3%, Nikkei positive). S&P 500 futures flat-to-slightly-green around 7,341 pre-market. The June 11 session was dominated by semis (SOX +7.91%) — MU +11.66%, INTC +9.27%, AMD +7.97% — though NVDA lagged at +2.22%. Oracle -8.53% dragged down enterprise software and cast a capex-ROI shadow on MSFT -1.77%. CPI remains hot at 4.2% with VIX ~22, keeping the macro picture fragile despite the risk-on tape.
+                    </p>
+                    <div class="mt-3 text-sm text-muted-foreground space-y-1">
+                        <li>Iran: Trump cancelled strikes, peace deal talks continue but naval clashes ongoing. Oil volatile.</li>
+                        <li>NVDA pre-market: ~$205.67 (+0.39%). NQ futures pointing to modest green open.</li>
+                        <li>SPX futures range: 7,305-7,404 today. Key level: Thursday's close at 7,394.</li>
+                        <li>Capex-return debate: Oracle hangover may spill into day 2 for enterprise software.</li>
+                        <li>SpaceX IPO lists today (Jun 12) — $135/share, $1.75T valuation — capital rotation away from Tesla.</li>
+                        <li>No major economic data today. Focus on Iran headlines and FOMC-speak.</li>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SNAPSHOT SUMMARY TABLE ===== -->
+        <div class="rounded-lg border bg-card shadow-sm overflow-hidden mb-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Snapshot Summary</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted/50">
+                        <tr>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Ticker</th>
+                            <th class="text-right p-3 font-medium text-muted-foreground">Anchor Close</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Open Cone</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Expected Close</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Bias</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Conf</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Biggest Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">NVDA</td>
+                            <td class="text-right p-3 text-muted-foreground">$204.87 (+2.22%)</td>
+                            <td class="text-center p-3">$203-208</td>
+                            <td class="text-center p-3">$205 &plusmn; 5</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">range-bound</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">EMA ribbon ($206-$213) caps; RSI 46.9 still bearish</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">AMD</td>
+                            <td class="text-right p-3 text-muted-foreground">$488.45 (+7.97%)</td>
+                            <td class="text-center p-3">$480-502</td>
+                            <td class="text-center p-3">$490 &plusmn; 12</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">$500 profit-taking; +5% rule enforced (55% bull min)</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">INTC</td>
+                            <td class="text-right p-3 text-muted-foreground">$116.96 (+9.27%)</td>
+                            <td class="text-center p-3">$114-120</td>
+                            <td class="text-center p-3">$117 &plusmn; 6</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">+9.27% consolidation; analyst ceiling at $120</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">MU</td>
+                            <td class="text-right p-3 text-muted-foreground">$995.87 (+11.66%)</td>
+                            <td class="text-center p-3">$980-1,005</td>
+                            <td class="text-center p-3">$990 &plusmn; 15</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">RSI 69.6 overbought; pre-market -0.77% consolidation</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">TSM</td>
+                            <td class="text-right p-3 text-muted-foreground">$421.07 (+3.26%)</td>
+                            <td class="text-center p-3">$425-435</td>
+                            <td class="text-center p-3">$428 &plusmn; 5</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">No catalyst to sustain premium; $440 ATH needs more than beta</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">AAPL</td>
+                            <td class="text-right p-3 text-muted-foreground">$295.63 (+1.39%)</td>
+                            <td class="text-center p-3">$294.50-299.50</td>
+                            <td class="text-center p-3">$297.50 &plusmn; 3</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">range-bound</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">No catalyst post-WWDC; $290 support vulnerable</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">AMZN</td>
+                            <td class="text-right p-3 text-muted-foreground">$241.51 (+1.47%)</td>
+                            <td class="text-center p-3">$239.50-247.50</td>
+                            <td class="text-center p-3">$243 &plusmn; 3</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">range-bound</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">Below both SMAs; no catalyst; overhead supply $245-250</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">GOOG</td>
+                            <td class="text-right p-3 text-muted-foreground">$356.56 (+0.92%)</td>
+                            <td class="text-center p-3">$354-366</td>
+                            <td class="text-center p-3">$362 &plusmn; 4</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">$363 (20-EMA) resistance; antitrust overhang</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">META</td>
+                            <td class="text-right p-3 text-muted-foreground">$568.43 (-0.45%)</td>
+                            <td class="text-center p-3">$562-578</td>
+                            <td class="text-center p-3">$572 &plusmn; 6</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">bearish</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">Below all EMAs; $550 breakdown to new 2026 low</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">MSFT</td>
+                            <td class="text-right p-3 text-muted-foreground">$390.34 (-1.77%)</td>
+                            <td class="text-center p-3">$387-397</td>
+                            <td class="text-center p-3">$393 &plusmn; 4</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">bearish</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">Capex scrutiny (Oracle contagion); below all EMAs</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">CRM</td>
+                            <td class="text-right p-3 text-muted-foreground">$166.45 (-2.36%)</td>
+                            <td class="text-center p-3">$161-168</td>
+                            <td class="text-center p-3">$164 &plusmn; 4</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">bearish</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">ORCL-sector contagion; enterprise software multiple compression</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">CRWV</td>
+                            <td class="text-right p-3 text-muted-foreground">$95.74 (+0.14%)</td>
+                            <td class="text-center p-3">$98-109</td>
+                            <td class="text-center p-3">$102 &plusmn; 12</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">OpenAI contract funding concern; profit-taking after 7% gap-up</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">DELL</td>
+                            <td class="text-right p-3 text-muted-foreground">$391.45 (+5.85%)</td>
+                            <td class="text-center p-3">$382-398</td>
+                            <td class="text-center p-3">$389 &plusmn; 6</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">neutral-bullish</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">Silver Lake insider selling $30M+; +5% rule enforced</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">NIO</td>
+                            <td class="text-right p-3 text-muted-foreground">$5.23 (+0.97%)</td>
+                            <td class="text-center p-3">$4.95-5.40</td>
+                            <td class="text-center p-3">$5.15 &plusmn; 0.35</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">base-bearish</span></td>
+                            <td class="text-center p-3">L</td>
+                            <td class="text-left p-3 text-muted-foreground">Pentagon list escalation; China EV price war</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">ORCL</td>
+                            <td class="text-right p-3 text-muted-foreground">$184.10 (-8.53%)</td>
+                            <td class="text-center p-3">$175-188</td>
+                            <td class="text-center p-3">$182 &plusmn; 6</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">bearish</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">Institutional distribution; $40B financing; $175 max pain</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">SNOW</td>
+                            <td class="text-right p-3 text-muted-foreground">$240.39 (+0.20%)</td>
+                            <td class="text-center p-3">$237-248</td>
+                            <td class="text-center p-3">$243 &plusmn; 6</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">neutral</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">Profit-taking after 58% monthly surge; $236 bull flag invalidation</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">TSLA</td>
+                            <td class="text-right p-3 text-muted-foreground">$399.15 (+4.60%)</td>
+                            <td class="text-center p-3">$390-415</td>
+                            <td class="text-center p-3">$402 &plusmn; 12</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">neutral</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">SpaceX IPO listing draws speculative retail; 200-SMA rejection</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== DETAILED CARDS ===== -->
+        <div class="space-y-6">
+
+            <!-- NVDA -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">NVDA</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Anchor: $204.87 (+2.22%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">range-bound 45%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$205.50</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$203-208</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$205 &plusmn; 5</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">low</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Open ~$205.50, test 10-EMA $206.50 resistance, drift range-bound. EMA ribbon $206-$213 overhead caps upside. $199.54 dual low is the floor. <span class="text-yellow-500">Single biggest risk:</span> EMA ribbon overhead; RSI 46.9 remains bearish.</p>
+                <details class="mt-2">
+                    <summary class="text-xs text-muted-foreground cursor-pointer hover:text-foreground">Triggers</summary>
+                    <p class="text-xs text-muted-foreground mt-1">Bull >$215 (50-EMA) → target $220. Bear <$199 (dual low) → target $193 (zero-gamma). Chop: $199-$208 pin.</p>
+                </details>
+            </div>
+
+            <!-- AMD -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">AMD</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Anchor: $488.45 (+7.97%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 55%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$492</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$480-502</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$490 &plusmn; 12</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">high</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Gap-up open near $492, test $500 psychological, intraday fade to $485-$490 range. SMH tailwind supportive. <span class="text-yellow-500">Risk:</span> $500 profit-taking after +7.97% day (+5% rule: 55% bull min enforced).</p>
+                <details class="mt-2">
+                    <summary class="text-xs text-muted-foreground cursor-pointer hover:text-foreground">Triggers</summary>
+                    <p class="text-xs text-muted-foreground mt-1">Bull >$500 → open ATH run. Bear <$480 → anchor brief low fail. Chop: $480-$500 consolidation.</p>
+                </details>
+            </div>
+
+            <!-- INTC -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">INTC</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Anchor: $116.96 (+9.27%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 55%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$117</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$114-120</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$117 &plusmn; 6</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">mid</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Open ~$117, consolidate after massive +9.27% institutional volume day. Foundry narrative upside but JPM skepticism creates analyst ceiling at $120. <span class="text-yellow-500">Risk:</span> Post +9.27% consolidation; Hold consensus caps near-term upside.</p>
+            </div>
+
+            <!-- MU -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">MU</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Anchor: $995.87 (+11.66%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 50%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$992</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$980-1,005</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$990 &plusmn; 15</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">high</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Pre-market -0.77% suggests consolidation after +11.66% day. $1,000 psychological resistance, RSI 69.6 near overbought. Earnings Jun 24 binary catalyst. <span class="text-yellow-500">Risk:</span> Profit-taking after massive run; pre-market -0.77%.</p>
+            </div>
+
+            <!-- TSM -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">TSM</h3>
+                        <p class="text-sm text-muted-foreground">NYSE | Anchor: $421.07 (+3.26%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 50%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$430</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$425-435</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$428 &plusmn; 5</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">low</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Beta-to-SOX continuation. Above all golden-crossed MAs. No company-specific catalyst — pure sector momentum. <span class="text-yellow-500">Risk:</span> No catalyst to sustain premium; $440 ATH needs more than beta.</p>
+            </div>
+
+            <!-- AAPL -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">AAPL</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Anchor: $295.63 (+1.39%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">range-bound 50%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$297</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$294.50-299.50</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$297.50 &plusmn; 3</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">low</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Range-bound $293-$301. Siri AI catalyst muted by EU/China exclusions (~35% of iPhones). Max pain $295 pins price. <span class="text-yellow-500">Risk:</span> No catalyst post-WWDC; $290 support vulnerable.</p>
+            </div>
+
+            <!-- AMZN -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">AMZN</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Anchor: $241.51 (+1.47%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">range-bound 55%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$243.50</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$239.50-247.50</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$243 &plusmn; 3</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">mid</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> No catalyst — pure market beta. Below 20/50 SMAs with RSI 43.8 neutral-bearish. AWS story intact but $245-250 overhead supply. <span class="text-yellow-500">Risk:</span> Below both SMAs; no fresh catalyst.</p>
+            </div>
+
+            <!-- GOOG -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">GOOG</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Anchor: $356.56 (+0.92%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 45%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$360</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$354-366</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$362 &plusmn; 4</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">mid</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Mild bullish drift. Analyst PT upgrades ($430-$475). SpaceX sentiment carryover. TPU v7 and GCP momentum supportive. <span class="text-yellow-500">Risk:</span> $363 (20-EMA) resistance; antitrust overhang.</p>
+            </div>
+
+            <!-- META -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">META</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Anchor: $568.43 (-0.45%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">bearish 40%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$570</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$562-578</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$572 &plusmn; 6</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">low</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Full bearish EMA cascade — negative drift. Resistance at $600 (10-EMA) far above. AI Business Agent launch not moving needle. <span class="text-yellow-500">Risk:</span> $550 breakdown opens new 2026 low.</p>
+            </div>
+
+            <!-- MSFT -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">MSFT</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Anchor: $390.34 (-1.77%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">bearish 40%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$392</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$387-397</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$393 &plusmn; 4</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">low</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Oracle capex contagion day 2. Below all EMAs, full bearish alignment. RSI 36.8 approaching oversold. AI revenue story intact but market wants capex returns. <span class="text-yellow-500">Risk:</span> $380 support; if broken, accelerates to $360.</p>
+            </div>
+
+            <!-- CRM -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">CRM</h3>
+                        <p class="text-sm text-muted-foreground">NYSE | Anchor: $166.45 (-2.36%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">bearish 50%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$164</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$161-168</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$164 &plusmn; 4</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">low</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Negative drift below all EMAs. Enterprise software sector under rotation pressure from legacy SaaS to AI infrastructure. <span class="text-yellow-500">Risk:</span> ORCL-sector contagion continuing; $160 support tested.</p>
+            </div>
+
+            <!-- CRWV -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">CRWV</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Anchor: $95.74 (+0.14%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 55%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$103.50</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$98-109</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$102 &plusmn; 12</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">high</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Gap-up from AI infra thematic carryover. Debt/capex concerns remain but Cantor Overweight $167 provides analyst support. <span class="text-yellow-500">Risk:</span> OpenAI contract funding concern; profit-taking fade after 7% gap-up.</p>
+            </div>
+
+            <!-- DELL -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">DELL</h3>
+                        <p class="text-sm text-muted-foreground">NYSE | Anchor: $391.45 (+5.85%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">neutral-bullish 50%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$388</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$382-398</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$389 &plusmn; 6</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">mid</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> AI server infrastructure theme intact. Extended above SMAs. Silver Lake insider selling post-close (+$30M+) creates overhead. <span class="text-yellow-500">Risk:</span> Insider selling overhang; +5% rule enforced (50% bull min).</p>
+            </div>
+
+            <!-- NIO -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">NIO</h3>
+                        <p class="text-sm text-muted-foreground">NYSE | Anchor: $5.23 (+0.97%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">base-bearish 35%</span>
+                        <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">Conf L</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$5.15</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$4.95-5.40</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$5.15 &plusmn; 0.35</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">penny</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Below all MAs for 7th straight session. Onvo L60 launch positive but Pentagon list overhang dominant. China EV price war structural. <span class="text-yellow-500">Risk:</span> Pentagon list escalation; max pain $5.00 pin risk lower.</p>
+            </div>
+
+            <!-- ORCL -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">ORCL</h3>
+                        <p class="text-sm text-muted-foreground">NYSE | Anchor: $184.10 (-8.53%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">bearish 55%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$180</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$175-188</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$182 &plusmn; 6</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">mid</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Continued distribution post-earnings. RSI 33.9 approaching oversold but no dip-buyers yet. $175 max pain is the magnet. <span class="text-yellow-500">Risk:</span> Institutional distribution continues; $40B financing overhang.</p>
+            </div>
+
+            <!-- SNOW -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">SNOW</h3>
+                        <p class="text-sm text-muted-foreground">NYSE | Anchor: $240.39 (+0.20%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">neutral 40%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$242</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$237-248</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$243 &plusmn; 6</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">mid</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Bull flag consolidation above $236. RSI 63.4 cooling constructively. $6B AWS deal, 7,100+ CoCo accounts. Path of least resistance higher. <span class="text-yellow-500">Risk:</span> Profit-taking after 58% monthly surge; $236 flag invalidation.</p>
+            </div>
+
+            <!-- TSLA -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">TSLA</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Anchor: $399.15 (+4.60%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">neutral 40%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-3">
+                    <div><span class="text-muted-foreground">Open:</span> <span class="font-medium">$403</span></div>
+                    <div><span class="text-muted-foreground">Cone:</span> <span class="font-medium">$390-415</span></div>
+                    <div><span class="text-muted-foreground">Close:</span> <span class="font-medium">$402 &plusmn; 12</span></div>
+                    <div><span class="text-muted-foreground">Vol:</span> <span class="font-medium">high</span></div>
+                </div>
+                <p class="text-sm text-muted-foreground"><span class="text-foreground">Path:</span> Belgium FSD approval positive but SpaceX IPO listing today draws speculative retail capital. 200-SMA at $415.42 is the key overhead. MA cluster $397-$416 unresolved. <span class="text-yellow-500">Risk:</span> SpaceX IPO capital rotation; 200-SMA rejection.</p>
+            </div>
+
+        </div>
+
+        <!-- ===== KEY / UPCOMING CATALYSTS ===== -->
+        <section class="rounded-lg border bg-card shadow-sm mt-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Key / Upcoming Catalysts</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted/50">
+                        <tr>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Date</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Event</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Tickers Affected</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Jun 12</td>
+                            <td class="p-3">SpaceX IPO listing ($135/share, $1.75T)</td>
+                            <td class="p-3">TSLA (capital rotation), all tech (sentiment)</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Medium</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Jun 17</td>
+                            <td class="p-3">May Retail Sales / Industrial Production</td>
+                            <td class="p-3">All</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Medium</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Jun 18</td>
+                            <td class="p-3">Monthly OpEx (options expiry)</td>
+                            <td class="p-3">All (max pain pinning)</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Medium</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Jun 18</td>
+                            <td class="p-3">FOMC rate decision</td>
+                            <td class="p-3">All</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">High</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Jun 24</td>
+                            <td class="p-3">MU earnings (binary — options imply ~20% swing)</td>
+                            <td class="p-3">MU, semis sector (SMH)</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">High</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Ongoing</td>
+                            <td class="p-3">US-Iran peace deal negotiations</td>
+                            <td class="p-3">All (oil, defense, macro)</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">High</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Ongoing</td>
+                            <td class="p-3">DOJ antitrust appeal (Google)</td>
+                            <td class="p-3">GOOG</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Medium</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Ongoing</td>
+                            <td class="p-3">Pentagon "Chinese military companies" list</td>
+                            <td class="p-3">NIO</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">High</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== RISKS GRID ===== -->
+        <section class="rounded-lg border bg-card shadow-sm mt-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Risks Grid</h2>
+            </div>
+            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="rounded border p-4 bg-card">
+                    <h4 class="font-semibold text-sm mb-1">Iran escalation reversal</h4>
+                    <p class="text-xs text-muted-foreground">If peace talks break down and US-Iran strikes resume, the entire risk-on tape unwinds. Every bullish call in this summary would gap-fill. Highest impact on semis and high-beta names.</p>
+                </div>
+                <div class="rounded border p-4 bg-card">
+                    <h4 class="font-semibold text-sm mb-1">FOMC hawkish surprise (Jun 18)</h4>
+                    <p class="text-xs text-muted-foreground">CPI at 4.2% gives Fed cover for hawkish dot. A 25bp hike or higher terminal rate would hit growth/tech names hardest. MU/AMD would see multiple compression.</p>
+                </div>
+                <div class="rounded border p-4 bg-card">
+                    <h4 class="font-semibold text-sm mb-1">Capex-return contagion broadening</h4>
+                    <p class="text-xs text-muted-foreground">If the market punishes more hyperscalers (AMZN, GOOG, MSFT) for AI capex without near-term ROI, the AI infrastructure thesis gets repriced. Oracle -8.53% as canary in the coal mine.</p>
+                </div>
+                <div class="rounded border p-4 bg-card">
+                    <h4 class="font-semibold text-sm mb-1">Oil supply shock</h4>
+                    <p class="text-xs text-muted-foreground">Strait of Hormuz remains contested. A sustained oil spike above $100 reignites inflation fears, pauses Fed rate cuts, and stresses consumer stocks. Sector rotation out of growth into energy.</p>
+                </div>
+                <div class="rounded border p-4 bg-card">
+                    <h4 class="font-semibold text-sm mb-1">Semi profit-taking after SOX +7.91%</h4>
+                    <p class="text-xs text-muted-foreground">The June 11 semi rally was extreme. INTC +9.27%, MU +11.66%, AMD +7.97%. Mean reversion would hit the entire SMH complex and erase 25% of portfolio gains in a single session.</p>
+                </div>
+                <div class="rounded border p-4 bg-card">
+                    <h4 class="font-semibold text-sm mb-1">China EV tariff / Pentagon list escalation</h4>
+                    <p class="text-xs text-muted-foreground">Further sanctions on Chinese companies or expansion of the Pentagon list would crater NIO and drag KWEB. China retaliatory tariffs could hit AAPL supply chain.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== FOOTER ===== -->
+        <footer class="mt-8 text-center text-xs text-muted-foreground border-t pt-4">
+            <p>Forward-looking pre-market summary generated 2026-06-12 pre-open. Not investment advice.</p>
+            <p>Anchored to daily briefs from 2026-06-11. Backtest hooks pending fill at EOD 2026-06-12.</p>
+            <p class="mt-1">Data sourced from live web search + anchor briefs. [could-not-corroborate] flags noted inline.</p>
+            <p class="mt-1">Cross-cohort cross-tape applied: semis (SMH), mega-cap tech (XLK), software (IGV), China ADRs (KWEB), consumer (XLY). Cohort peer predictions cross-referenced where available.</p>
+        </footer>
+    </div>
+</body>
+</html>
