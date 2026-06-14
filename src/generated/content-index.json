@@ -1,6 +1,49 @@
 {
   "posts": [
     {
+      "slug": "2026-06-14-fine-tune-local-slm-mlx-lm",
+      "filename": "2026-06-14-fine-tune-local-slm-mlx-lm.md",
+      "category": "post",
+      "title": "Training My Own Local SLM: Fine-Tuning Gemma 4 with mlx-lm for a Coding Agent",
+      "date": "2026-06-14",
+      "tags": [
+        "local-llm",
+        "fine-tuning",
+        "mlx-lm",
+        "mlx",
+        "apple-silicon",
+        "slm",
+        "coding-agent",
+        "data-analysis",
+        "lora",
+        "qlora",
+        "open-source"
+      ],
+      "summary": "I've been exploring how to fine-tune a small language model locally on Apple Silicon to serve as the backbone of a personal coding and data analysis agent. No cloud APIs, no per-token costs, no data leaving my machine. Here's what I found and where I'm heading.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-14-local-llm-tools-comparison",
+      "filename": "2026-06-14-local-llm-tools-comparison.md",
+      "category": "post",
+      "title": "The Local LLM Toolbox: Picking the Right Runner for Your Models",
+      "date": "2026-06-14",
+      "tags": [
+        "local-llm",
+        "llama-cpp",
+        "ollama",
+        "lm-studio",
+        "mlx-lm",
+        "llm-cli",
+        "developer-tools",
+        "open-source"
+      ],
+      "summary": "Five tools dominate the local LLM landscape, and they're not interchangeable. llama.cpp is the engine, Ollama is the one-liner, LM Studio is the GUI, LLM CLI is the Swiss army knife, and mlx-lm is the Apple Silicon specialist. Here's how I think about which one to reach for.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-06-13-claude-fable-5-jailbreak-government-shutdown",
       "filename": "2026-06-13-claude-fable-5-jailbreak-government-shutdown.md",
       "category": "post",
@@ -1097,6 +1140,19 @@
       }
     ],
     "stockWeekly": [
+      {
+        "id": "stock-weekly-2026-W24",
+        "name": "Weekly Stock Market Summary",
+        "filename": "2026-W24-weekly_summary.html",
+        "url": "/reports/stocks/weekly/2026-W24-weekly_summary.html",
+        "date": "2026-W24",
+        "tags": [
+          "Stocks",
+          "Weekly",
+          "Agent research"
+        ],
+        "description": "Weekly stock market research summary generated from agent analysis of broad market context, sector movement, notable names, and next-week watchpoints."
+      },
       {
         "id": "stock-weekly-2026-W23",
         "name": "Weekly Stock Market Summary",
