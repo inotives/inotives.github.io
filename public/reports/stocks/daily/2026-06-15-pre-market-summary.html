@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Market Summary — 2026-06-15</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: 'hsl(var(--border))',
+                        input: 'hsl(var(--input))',
+                        ring: 'hsl(var(--ring))',
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+                        secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+                        destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+                        muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+                        accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+                        card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+                    },
+                    borderRadius: {
+                        lg: 'var(--radius)', md: 'calc(var(--radius) - 2px)', sm: 'calc(var(--radius) - 4px)',
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        :root {
+            --background: 0 0% 100%; --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%; --card-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%; --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%; --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%; --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%; --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%; --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%; --input: 214.3 31.8% 91.4%;
+            --ring: 222.2 84% 4.9%; --radius: 0.5rem;
+        }
+        .dark {
+            --background: 222.2 84% 4.9%; --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%; --card-foreground: 210 40% 98%;
+            --primary: 210 40% 98%; --primary-foreground: 222.2 47.4% 11.2%;
+            --secondary: 217.2 32.6% 17.5%; --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%; --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%; --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%; --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%; --input: 217.2 32.6% 17.5%;
+            --ring: 212.7 26.8% 83.9%;
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+
+        <!-- ===== HEADER ===== -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-3 text-foreground">
+                Pre-Market Summary
+            </h1>
+            <p class="text-lg text-muted-foreground">
+                Opening Price Cone + Intraday Path Forecast for 2026-06-15
+            </p>
+            <p class="text-sm text-muted-foreground mt-1">
+                Generated 2026-06-15 pre-open | Anchored to 2026-06-12 (Friday) close briefs
+            </p>
+            <div class="flex items-center justify-center gap-4 mt-3 flex-wrap">
+                <span class="px-3 py-1 rounded-full bg-green-500/20 text-green-500 text-sm font-medium">ES +1.27%</span>
+                <span class="px-3 py-1 rounded-full bg-green-500/20 text-green-500 text-sm font-medium">NQ +2.0%</span>
+                <span class="px-3 py-1 rounded-full bg-green-500/20 text-green-500 text-sm font-medium">Nikkei +5%</span>
+                <span class="px-3 py-1 rounded-full bg-red-500/20 text-red-500 text-sm font-medium">Oil -5% (Iran deal)</span>
+                <span class="px-3 py-1 rounded-full bg-green-500/20 text-green-500 text-sm font-medium">US-Iran ceasefire MOU</span>
+                <span class="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 text-sm font-medium">FOMC Jun 16-17</span>
+                <span class="px-3 py-1 rounded-full bg-green-500/20 text-green-500 text-sm font-medium">Asia semis +5-7%</span>
+            </div>
+            <p class="text-sm text-muted-foreground mt-2">
+                Tracking: AAPL AMD AMZN CRM CRWV DELL GOOG INTC META MSFT MU NIO NVDA ORCL SNOW TSLA TSM SPCX
+            </p>
+        </header>
+
+        <!-- ===== MARKET OVERVIEW BANNER ===== -->
+        <div class="rounded-lg border bg-card shadow-sm p-6 mb-8">
+            <div class="flex items-start gap-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                    <span class="text-yellow-500 text-lg font-bold">!</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg mb-1">Overnight / Pre-Market Context</h3>
+                    <p class="text-sm text-muted-foreground">
+                        The weekend delivered a regime-change macro catalyst: US and Iran signed a ceasefire Memorandum of Understanding (MOU), confirmed Sunday Jun 14. Oil plunged ~5% (WTI from $84 to ~$80), triggering a global risk-on rally — Nikkei +5%, Asia semis +5-7%, ES +1.27%, NQ +2.0%. This is the most supportive macro setup for risk assets since the Jun 11 semi rally. FOMC meets Jun 16-17 (Kevin Warsh's debut as Chair, dot plot revision, removal of easing bias expected) — this caps conviction and creates a Tuesday-Wednesday caution ceiling. The VIX opened at ~15.5 Sunday night, down from 17.68 Friday close, confirming fear unwinding.
+                    </p>
+                    <div class="mt-3 text-sm text-muted-foreground space-y-1">
+                        <li>Iran ceasefire MOU confirmed Sunday — oil -5%, Middle East risk premium collapsing. Risk-on across all global equity indices.</li>
+                        <li>ES +1.27%, NQ +2.0% Sunday night — broad-based risk-on. Nikkei +5%, HSTECH +3.5%, KOSPI +2.8%.</li>
+                        <li>Asia semi cohort surged: SK Hynix +6.8%, Samsung +4.2%, TSMC ADR +1.5% pre-market. SMH indicated +3.7%.</li>
+                        <li>FOMC Jun 16-17: Kevin Warsh's first meeting as Chair. Market pricing ~25% chance of a hike after CPI 3.9% / PPI 6.5%. Dot plot likely signals higher-for-longer.</li>
+                        <li>DXY ~99.5 (weaker on Iran deal). 10Y ~4.45%. Curve still inverted ~40bp.</li>
+                        <li>No major US economic data Monday. Positioning dominates into FOMC.</li>
+                        <li>Triple Witching Jun 20 — options/futures expiration adds vol risk later in week.</li>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SNAPSHOT SUMMARY TABLE ===== -->
+        <div class="rounded-lg border bg-card shadow-sm overflow-hidden mb-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Snapshot Summary</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted/50">
+                        <tr>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Ticker</th>
+                            <th class="text-right p-3 font-medium text-muted-foreground">Fri Close</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Open Cone</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Expected Close</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Bias</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Conf</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Biggest Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">AAPL</td>
+                            <td class="text-right p-3 text-muted-foreground">$291.13 (-1.52%)</td>
+                            <td class="text-center p-3">$292.50-295.50</td>
+                            <td class="text-center p-3">$294.50 +- 4.50</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 70%</span></td>
+                            <td class="text-center p-3">H</td>
+                            <td class="text-left p-3 text-muted-foreground">Sell-the-news on Iran deal; AAPL pre-market +0.84% only vs NQ +2%</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">AMD</td>
+                            <td class="text-right p-3 text-muted-foreground">$84.88 (+4.73%)</td>
+                            <td class="text-center p-3">$86-89</td>
+                            <td class="text-center p-3">$88 +- 5</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 65%</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">FOMC hawkish surprise caps semi upside; Citi upgrade already priced</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">AMZN</td>
+                            <td class="text-right p-3 text-muted-foreground">$239 (+0.4%)</td>
+                            <td class="text-center p-3">$238-250</td>
+                            <td class="text-center p-3">$245 +- 4</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish-bounce 50%</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">Iran deal fading; FOMC imposes ceiling on run-up</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">CRM</td>
+                            <td class="text-right p-3 text-muted-foreground">$165.89 (-2.4%)</td>
+                            <td class="text-center p-3">$164-167</td>
+                            <td class="text-center p-3">$165 +- 3</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">BASE 25/45/30</span></td>
+                            <td class="text-center p-3">LOW-MEDIUM</td>
+                            <td class="text-left p-3 text-muted-foreground">Pre-market -1.15% vs NQ +2% = 315bp divergence, stock-specific weakness</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">CRWV</td>
+                            <td class="text-right p-3 text-muted-foreground">~$100 (+0.1%)</td>
+                            <td class="text-center p-3">$99-108</td>
+                            <td class="text-center p-3">$105.50 +- 5</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 60%</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">FOMC proximity caps follow-through; 5% gain Friday = consolidation base path</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">DELL</td>
+                            <td class="text-right p-3 text-muted-foreground">~$390 (-0.5%)</td>
+                            <td class="text-center p-3">$407-415</td>
+                            <td class="text-center p-3">~$414 +- 7</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">BULL 65/25/10</span></td>
+                            <td class="text-center p-3">H/M</td>
+                            <td class="text-left p-3 text-muted-foreground">Conflicting pre-market data ($380 vs $413); Silver Lake insider selling $54.7M</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">GOOG</td>
+                            <td class="text-right p-3 text-muted-foreground">~$358 (+0.6%)</td>
+                            <td class="text-center p-3">$361-375</td>
+                            <td class="text-center p-3">$370 +- 6</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 55%</span></td>
+                            <td class="text-center p-3">M-H</td>
+                            <td class="text-left p-3 text-muted-foreground">FOMC week caution; DOJ antitrust appeal overhang</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">INTC</td>
+                            <td class="text-right p-3 text-muted-foreground">$124.57 (+0.2%)</td>
+                            <td class="text-center p-3">$124.50-133.50</td>
+                            <td class="text-center p-3">$130 +- 7</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 65%</span></td>
+                            <td class="text-center p-3">H</td>
+                            <td class="text-left p-3 text-muted-foreground">$132.75 52-week high resistance; consensus PT -25% below current</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">META</td>
+                            <td class="text-right p-3 text-muted-foreground">~$567 (+1.1%)</td>
+                            <td class="text-center p-3">$578-598</td>
+                            <td class="text-center p-3">$592 +- 8</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 55%</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">Gap-fade into FOMC Wed; ex-div day adds noise</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">MSFT</td>
+                            <td class="text-right p-3 text-muted-foreground">~$398 (+0.4%)</td>
+                            <td class="text-center p-3">$395-404</td>
+                            <td class="text-center p-3">$400 +- 5</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">Base-Bull 35/50/15</span></td>
+                            <td class="text-center p-3">H</td>
+                            <td class="text-left p-3 text-muted-foreground">Open below $395 triggers bearish override; antitrust/capex scrutiny</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">MU</td>
+                            <td class="text-right p-3 text-muted-foreground">$981.61 (+0.4%)</td>
+                            <td class="text-center p-3">$1,015-1,050</td>
+                            <td class="text-center p-3">$1,035 +- 20</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 65%</span></td>
+                            <td class="text-center p-3">H</td>
+                            <td class="text-left p-3 text-muted-foreground">FOMC caps runaway upside; earnings Jun 24 binary risk</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">NIO</td>
+                            <td class="text-right p-3 text-muted-foreground">$5.21 (-0.2%)</td>
+                            <td class="text-center p-3">$5.05-5.70</td>
+                            <td class="text-center p-3">$5.30 +- 0.45</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bull 45%</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">Pentagon list overhang caps institutional buying; gap-fade risk</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">NVDA</td>
+                            <td class="text-right p-3 text-muted-foreground">$205.19 (+0.16%)</td>
+                            <td class="text-center p-3">$208.75-211.75</td>
+                            <td class="text-center p-3">$210 +- 6</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 30/50/20</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">Iran deal reversal / FOMC hawkish leak; persistent RS lag vs SOXX</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">ORCL</td>
+                            <td class="text-right p-3 text-muted-foreground">$184.13 (-8.53%)</td>
+                            <td class="text-center p-3">$183.50-188.50</td>
+                            <td class="text-center p-3">$185 +- 7</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">bearish 50%</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">Post-earnings institutional distribution; $40B financing overhang</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">SNOW</td>
+                            <td class="text-right p-3 text-muted-foreground">$232.78 (+2.0%)</td>
+                            <td class="text-center p-3">$237-247</td>
+                            <td class="text-center p-3">~$242 +- 5</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish-gap-up 55%</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">FOMC caps session upside; gap-fill to $235 support possible</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">TSLA</td>
+                            <td class="text-right p-3 text-muted-foreground">~$406 (+1.2%)</td>
+                            <td class="text-center p-3">$408-418</td>
+                            <td class="text-center p-3">~$412 +- 7</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 55/35/10</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">MA200 ($415.40) resistance; China EV weakness</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">TSM</td>
+                            <td class="text-right p-3 text-muted-foreground">$423.93 (+0.5%)</td>
+                            <td class="text-center p-3">$425-435</td>
+                            <td class="text-center p-3">$428 +- 5</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">Base-Bull 45/40/15</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">SMH pre-market data conflict ($642 vs $605); FOMC caps upside</td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3 font-medium">SPCX</td>
+                            <td class="text-right p-3 text-muted-foreground">$161.11 (+3.5%)</td>
+                            <td class="text-center p-3">$166-172</td>
+                            <td class="text-center p-3">$165-174</td>
+                            <td class="text-center p-3"><span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">BULLISH 55/30/15</span></td>
+                            <td class="text-center p-3">M</td>
+                            <td class="text-left p-3 text-muted-foreground">Pre-market not corroborated; options listing date pending confirmation</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== DETAILED CARDS ===== -->
+        <div class="space-y-6">
+
+            <!-- AAPL -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">AAPL</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Fri close $291.13 (-1.52%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 70%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf H</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    Bullish on Iran ceasefire risk-on catalyst, but AAPL pre-market (+0.84%) dramatically lags NQ (+2%). AAPL is the worst megacap performer since WWDC. RSI 40.95 approaching oversold. Bull trigger &gt;$296 (reclaim Monday open) targets $300 (10-EMA). Bear trigger &lt;$289.62 targets $280 support. The most likely path is a modest gap-up open ($293.75 midpoint), fade toward $290-$292 by midday, then pin into close. FOMC starts tomorrow — afternoon profit-taking likely caps any rally.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Trigger levels:</strong> Bull &gt;$296 &rarr; $300 | Bear &lt;$289.62 &rarr; $280 | Base $289-$296</p>
+                    <p><strong>Anchor probs:</strong> Bull 25% / Base 45% / Bear 30% &rarr; revised Bull 70% / Base 20% / Bear 10%</p>
+                    <p><strong>Intraday:</strong> 9:30 $292-296 | 10:00-11:30 fade VWAP | 11:30-13:30 pin $290-$293 | 13:30-15:30 range drift | 15:30-16:00 close near $294.50</p>
+                    <p><strong>Invalidator:</strong> Open below $289.62 (Friday low breakdown) = prediction override to bearish</p>
+                </div>
+            </div>
+
+            <!-- NVDA -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">NVDA</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Fri close $205.19 (+0.16%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 30/50/20</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    NVDA predicted open ~$210.25 (+2.5%) on Iran ceasefire tailwind. Reclaims 50 DMA ($206.32) at open for first time since AVGO rout. However, NVDA pre-market +2.5% still lags SMH/SOXX +3.7% — the persistent relative-strength divergence continues. NR7 consolidation pattern sets up for directional expansion. Key battle: close above 50 DMA today. FOMC Jun 16-17 caps conviction. Vera CPU China narrative intact as stock-specific catalyst.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Trigger levels:</strong> Bull &gt;$207.07 &rarr; $208.86 &rarr; $210.64 | Bear &lt;$203.40 &rarr; $201.60 &rarr; $199.72</p>
+                    <p><strong>Anchor probs:</strong> Bull 45% / Base 35% / Bear 20% &rarr; revised Bull 30% / Base 50% / Bear 20%</p>
+                    <p><strong>Intraday:</strong> 9:30 $208-212 | 10:00-11:30 test 50 DMA ($206.32) | 11:30-13:30 pin $208-$210 | 13:30-15:30 FOMC positioning | 15:30-16:00 $210 close</p>
+                    <p><strong>Invalidator:</strong> Iran deal reversal headline or FOMC hawkish leak</p>
+                </div>
+            </div>
+
+            <!-- AMD -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">AMD</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Fri close $84.88 (+4.73%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 65%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    Revived upward from anchor's 50% Bull to 65% Bull on Iran peace deal. AMD is well-positioned as the best semi name to absorb risk-on flow — leads the sector in relative strength (+4.73% Fri closing at the top of its range). Citi double upgrade and Meta MI450 AI deal provide company-specific catalyst density. Open cone $86-89, expected close ~$88. However, +5% rule consolidation and FOMC proximity cap runaway upside.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Vol tier:</strong> High (ATR ~$4-5 on ~$85 = ~5%) | <strong>Catalyst intensity:</strong> 4/5</p>
+                    <p><strong>Intraday:</strong> 9:30 $86-89 | 10:00-11:30 morning trend higher | 11:30-13:30 midday consolidation at $87-$88 | 13:30-15:30 drift | 15:30-16:00 close near $88</p>
+                    <p><strong>Invalidator:</strong> FOMC hawkish surprise crushes semi multiple</p>
+                </div>
+            </div>
+
+            <!-- AMZN -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">AMZN</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Fri close ~$239 (+0.4%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish-bounce 50%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    Bullish-bounce on US-Iran ceasefire tailwind (NQ +2%). AMZN predicted open $244.50 (+2.5% gap), close $245 +/- $4. RSI 27 oversold + geopolitical catalyst = mean-reversion setup. Key complicating factors: Anthropic Fable 5 shutdown (AWS CEO triggered it), FOMC Warsh debut Wed, CME roll date today. The oversold condition argues for a strong gap-open but fading into FOMC.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Trigger levels:</strong> Bull &gt;$245 &rarr; $250 (20-EMA) | Bear &lt;$237 &rarr; $230</p>
+                    <p><strong>Anchor probs:</strong> Bull 20% / Base 50% / Bear 30% &rarr; revised Bull 50% / Base 35% / Bear 15%</p>
+                    <p><strong>Intraday:</strong> 9:30 $242-248 | 10:00-11:30 gap-hold test | 11:30-13:30 pin $243-$246 | 13:30-15:30 fade toward $243 | 15:30-16:00 close ~$245</p>
+                    <p><strong>Invalidator:</strong> Iran deal fading + FOMC ceiling = retreat to $240</p>
+                </div>
+            </div>
+
+            <!-- MSFT -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">MSFT</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Fri close ~$398 (+0.4%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">Base-Bull 35/50/15</span>
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">Conf H</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    MSFT predicted open $400 (cone $395-404), close $400 +/- $5. The Iran ceasefire is a genuine macro shock — oil -4-5%, NQ +2%, MSFT after-hours at $398.71 (+2.04%). The $400 bull trigger from Friday's anchor is now the opening midpoint. FOMC (Warsh debut Jun 17) caps afternoon upside. Confidence HIGH on direction. Open below $395 = prediction override to bearish — would mean MSFT-specific headwinds (antitrust, capex ROI, FTC) are overwhelming the macro tailwind.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Trigger levels:</strong> Bull &gt;$400 &rarr; $405 (20-EMA) | Bear &lt;$395 &rarr; $390</p>
+                    <p><strong>Vol tier:</strong> Mid (ATR ~$8 on ~$398 = ~2%) | <strong>Catalyst intensity:</strong> 3/5</p>
+                    <p><strong>Intraday:</strong> 9:30 $398-403 | 10:00-11:30 test $400 support | 11:30-13:30 pin $399-$401 | 13:30-15:30 drift into FOMC caution | 15:30-16:00 close near $400</p>
+                    <p><strong>Invalidator:</strong> Open below $395 (gap-fill) = bearish override</p>
+                </div>
+            </div>
+
+            <!-- META -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">META</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Fri close ~$567 (+1.1%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 55%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    Predicted open $588 (+3.7%), close $592 +/- $8. The Iran peace deal is a regime-changing catalyst for the most oversold mega-cap — lower oil crushes inflation narrative, reopening discount-rate relief for tech. Risk: gap-fade into FOMC Wednesday. META ex-div day adds noise. EU antitrust deadline (DMA compliance Jun 15) is an unresolved company-specific overhang that could cap upside despite macro tailwind.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Vol tier:</strong> Mid (ATR ~$15 on ~$568 = ~2.6%) | <strong>Catalyst intensity:</strong> 5/5 (macro + EU deadline + ex-div)</p>
+                    <p><strong>Intraday:</strong> 9:30 $580-595 | 10:00-11:30 strength from semi cohort cross-tape | 11:30-13:30 drift | 13:30-15:30 fade on FOMC caution | 15:30-16:00 close ~$592</p>
+                    <p><strong>Invalidator:</strong> EU antitrust decision breaks negative before 10:00 ET</p>
+                </div>
+            </div>
+
+            <!-- GOOG -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">GOOG</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Fri close ~$358 (+0.6%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 55%</span>
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">Conf M-H</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    Predicted open $368 (cone $361-$375), close $370 +/- $6. Dominant driver is US-Iran ceasefire MOU; FOMC week caution caps upside. GOOG benefits from risk-on rotation into mega-cap tech. DOJ antitrust appeal remains an overhang but unlikely to break intraday. Anchor probabilities revised upward from 45% Bull to 55% Bull on the macro catalyst. Key level to watch: $375 (prior resistance zone).
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Trigger levels:</strong> Bull &gt;$368 &rarr; $375 | Bear &lt;$360 &rarr; $355</p>
+                    <p><strong>Intraday:</strong> 9:30 $363-372 | 10:00-11:30 test $368 | 11:30-13:30 pin $367-$370 | 13:30-15:30 drift | 15:30-16:00 close ~$370</p>
+                    <p><strong>Invalidator:</strong> DOJ antitrust negative headline at open</p>
+                </div>
+            </div>
+
+            <!-- INTC -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">INTC</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Fri close $124.57 (+0.2%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 65%</span>
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">Conf H</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    Verdict upgraded to Bullish 65% on the Iran ceasefire catalyst. Predicted open $129 (cone $124.50-$133.50), close $130 +/- $7. Critical level: $132.75 (52-week high) — breakout above targets $135+ (BofA PT). Three catalysts converging in one session: Iran peace deal risk-on, BofA double upgrade momentum, Google foundry partnership narrative. FOMC Jun 16-17 is the primary risk factor.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Vol tier:</strong> High (20d ATR ~$6 on ~$125 = ~4.8%) | <strong>Catalyst intensity:</strong> 5/5</p>
+                    <p><strong>Intraday:</strong> 9:30 $126-132 | 10:00-11:30 test $132.75 resistance | 11:30-13:30 consolidate | 13:30-15:30 position ahead of FOMC | 15:30-16:00 close near $130</p>
+                    <p><strong>Invalidator:</strong> FOMC hawkish surprise negates semi sector momentum</p>
+                </div>
+            </div>
+
+            <!-- MU -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">MU</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Fri close $981.61 (+0.4%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 65%</span>
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">Conf H</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    Bullish / H confidence / catalyst intensity 5/5. Open ~$1,030 (cone $1,015-$1,050), close ~$1,035 +/- $20. Key driver: US-Iran peace deal triggering broad risk-on (+1.97% NQ, MU overnight +5.31%). HBM thesis intact, earnings Jun 24. MU offers the highest beta exposure to the semi rally among tracked tickers. FOMC Jun 16-17 caps runaway upside. 12 numbered sources, 6 could-not-corroborate flags on exact SMH close and overnight liquidity.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Vol tier:</strong> High (20d ATR ~$40 on ~$982 = ~4%) | <strong>Catalyst intensity:</strong> 5/5</p>
+                    <p><strong>Intraday:</strong> 9:30 $1,015-$1,045 | 10:00-11:30 semi momentum continuation | 11:30-13:30 pin $1,025-$1,035 | 13:30-15:30 drift | 15:30-16:00 close near $1,035</p>
+                    <p><strong>Invalidator:</strong> FOMC hawkish surprise compresses semi multiple</p>
+                </div>
+            </div>
+
+            <!-- TSLA -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">TSLA</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Fri close ~$406 (+1.2%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 55/35/10</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    US-Iran ceasefire / crude -5% is the dominant overnight tailwind for TSLA. Pre-market $412.30 (+1.44%) confirms gap-up. MA200 ($415.40) is the live battle line today — reclaiming the 200-day would be technically significant. Expected range $405-$420. FOMC (Warsh debut, Tue-Wed) caps the bullish conviction at Medium and keeps the bear probability at 10%. Risk: China EV demand weakness remains an unresolved structural headwind.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Intraday:</strong> 9:30 $408-418 | 10:00-11:30 test MA200 | 11:30-13:30 pin $410-$415 | 13:30-15:30 drift | 15:30-16:00 close ~$412</p>
+                    <p><strong>Invalidator:</strong> Rejection at MA200 ($415.40) with volume below 30d avg</p>
+                    <p><strong>Could-not-corroborate:</strong> Pre-market exact volume; HKEX cross-listing data</p>
+                </div>
+            </div>
+
+            <!-- TSM -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">TSM</h3>
+                        <p class="text-sm text-muted-foreground">NYSE | Fri close $423.93 (+0.5%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">Base-Bull 45/40/15</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    Dominant catalyst: US-Iran peace deal. TSM closed at $423.93 Friday above all SMAs, RSI neutral-bullish. FOMC caps upside. Premarket indications mixed: SMH +3.76% vs pre-open print conflict. Key level: $418.30 (20-SMA) must hold. Verdict: $420-$435 range, slight bullish bias. Open ~$425-428, close ~$426-432.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Intraday:</strong> 9:30 $425-432 | 10:00-11:30 test $432 resistance | 11:30-13:30 pin $427-$430 | 13:30-15:30 drift into FOMC caution | 15:30-16:00 close ~$428</p>
+                    <p><strong>Invalidator:</strong> 20-SMA ($418.30) breaks = bearish breakdown</p>
+                    <p><strong>Flags:</strong> SMH pre-market data conflict [could-not-corroborate]</p>
+                </div>
+            </div>
+
+            <!-- ORCL -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">ORCL</h3>
+                        <p class="text-sm text-muted-foreground">NYSE | Fri close $184.13 (-8.53%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">bearish 50%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    The lone bearish tilt in the tracked universe. ORCL predicted open $186, close $185 +/- $7, bias 25/50/15 bearish-tilt base. Anchored to Friday's $184.13 (-8.53%) post-earnings collapse. Iran deal risk-on tailwind should help, but persistent institutional distribution and $40B capex financing overhang dominate. The -8.53% gap on Friday was the worst single-day loss in ORCL in 2026. Recovery will take multiple sessions.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Intraday:</strong> 9:30 $183-188 | 10:00-11:30 relief bounce on macro | 11:30-13:30 distribution resumes | 13:30-15:30 fade toward $184 | 15:30-16:00 close ~$185</p>
+                    <p><strong>Invalidator:</strong> Institutional buying emerges with volume &gt;2x avg = bullish override</p>
+                </div>
+            </div>
+
+            <!-- CRM -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">CRM</h3>
+                        <p class="text-sm text-muted-foreground">NYSE | Fri close $165.89 (-2.4%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs">BASE 25/45/30</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf LOW-MEDIUM</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    Downgraded from BASE-BULL to pure BASE. CRM pre-market is trading -1.15% vs NQ +2.0% — a 315bp divergence that signals company-specific weakness. Open cone $164-167, close $163-168. Core tension: Iran deal risk-on tailwind vs CRM's own post-earnings drift and enterprise software multiple compression (Oracle contagion). Lowest confidence call in the cohort due to the conflicting signals.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Trigger levels:</strong> Bull &gt;$167 &rarr; $170 | Bear &lt;$163 &rarr; $160</p>
+                    <p><strong>Intraday:</strong> 9:30 $163-167 | 10:00-11:30 divergence from NQ widens/narrows | 11:30-13:30 drift lower | 13:30-15:30 test $163 support | 15:30-16:00 close ~$165</p>
+                    <p><strong>Invalidator:</strong> CRM pre-market recovers above $167 = upgrade to neutral-bullish</p>
+                </div>
+            </div>
+
+            <!-- CRWV -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">CRWV</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Fri close ~$100 (+0.1%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish 60%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    Iran ceasefire + NQ +2% creates a risk-on tailwind, but Friday's +5% means consolidation is the base path. Predicted open $99-108 (midpoint $103.50), close ~$105.50. FOMC Wednesday caps upside conviction at M. The pre-market CRWV print could not be corroborated from available sources. 17 numbered sources, 60/30/10 verdict upgraded from anchor's 55/30/15.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Intraday:</strong> 9:30 $101-107 | 10:00-11:30 test high end of cone | 11:30-13:30 consolidate | 13:30-15:30 drift | 15:30-16:00 close ~$105.50</p>
+                    <p><strong>Invalidator:</strong> Breakdown below $98 = bearish override</p>
+                </div>
+            </div>
+
+            <!-- DELL -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">DELL</h3>
+                        <p class="text-sm text-muted-foreground">NYSE | Fri close ~$390 (-0.5%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">BULL 65/25/10</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf H/M</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    Verdict upgraded to BULL from Friday's Base-Bull on US-Iran peace deal. Gap-open $407-415, weighted average close ~$414. Confidence HIGH on direction, MEDIUM on magnitude due to conflicting pre-market data ($380 vs overnight ATS $413). Notable data quality flag on the discrepancy. Silver Lake insider selling ($54.7M) flagged as caution signal.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Intraday:</strong> 9:30 $405-415 | 10:00-11:30 gap-hold validation | 11:30-13:30 pin $410-$414 | 13:30-15:30 drift into FOMC caution | 15:30-16:00 close ~$414</p>
+                    <p><strong>Invalidator:</strong> Open below $400 = gap-fill, prediction invalidated</p>
+                </div>
+            </div>
+
+            <!-- SNOW -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">SNOW</h3>
+                        <p class="text-sm text-muted-foreground">NYSE | Fri close $232.78 (+2.0%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bullish-gap-up 55%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    Verdict upgraded to BULLISH GAP-UP (55/30/15). Iran peace deal overrides Friday's technical breakdown. Predicted open ~$241 (+3.5% from $232.78). Close ~$242 ($235-250 cone). Gap partially holds. Primary risk: FOMC Wed caps the session. Scotiabank PT $320, Loop Capital $320, UBS $370 all confirmed. Note: actual Jun 12 close was $232.78 (not $233.04 as in anchor), and intraday high reached $242.80 (not $239).
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Intraday:</strong> 9:30 $237-247 | 10:00-11:30 test $245 | 11:30-13:30 pin $240-$243 | 13:30-15:30 drift | 15:30-16:00 close ~$242</p>
+                    <p><strong>Invalidator:</strong> Gap-fill below $235 = bearish breakdown</p>
+                </div>
+            </div>
+
+            <!-- NIO -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">NIO</h3>
+                        <p class="text-sm text-muted-foreground">NYSE | Fri close $5.21 (-0.2%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">bull 45%</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    Bull-biased gap open ($5.45 midpoint) on US-Iran peace deal — ES +0.77%, NQ +1.26%, VIX -9%, crude -5%. That's the dominant catalyst. But NIO is still below ALL major MAs (8-session streak) and the Pentagon list overhang caps institutional buying. Expect gap-fade risk toward $5.20-$5.30 unless follow-through arrives. FOMC Tue-Wed provides caution ceiling. Close $5.30 +/- $0.45. Penny vol tier applied.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Vol tier:</strong> Penny (price &lt;$20) — close band +/-$0.30-$0.50</p>
+                    <p><strong>Intraday:</strong> 9:30 $5.20-5.60 | 10:00-11:30 gap-fade test | 11:30-13:30 pin $5.25-$5.35 | 13:30-15:30 drift | 15:30-16:00 close ~$5.30</p>
+                    <p><strong>Invalidator:</strong> Break below $5.00 = bearish breakdown, stop-loss signal</p>
+                </div>
+            </div>
+
+            <!-- SPCX -->
+            <div class="rounded-lg border bg-card shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-xl font-bold">SPCX</h3>
+                        <p class="text-sm text-muted-foreground">NASDAQ | Fri close $161.11 (+3.5%)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-xs">BULLISH 55/30/15</span>
+                        <span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Conf M</span>
+                    </div>
+                </div>
+                <p class="text-sm mb-3 text-muted-foreground">
+                    SPCX opens Week 2 post-IPO against a powerful risk-on macro backdrop (US-Iran peace deal, oil -5%, ES +1.27%, Nikkei +5%). Options listing imminent — potential catalyst for vol expansion. Gina Rinehart $1B+ institutional stake validates demand. Predicted open $166-172, range $158-$178, close $165-$174 with upside skew. Common stock (not ETF). Pre-market levels inferred from Friday close + macro context; no real-time corroboration available.
+                </p>
+                <div class="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Intraday:</strong> 9:30 $166-172 | 10:00-11:30 test $170 | 11:30-13:30 range validation | 13:30-15:30 drift | 15:30-16:00 close $165-$174</p>
+                    <p><strong>Invalidator:</strong> Break below $158 (Friday low) = bearish breakdown</p>
+                    <p><strong>Flags:</strong> Options listing date conflicting (Mon vs Tue) — left PENDING</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ===== KEY / UPCOMING CATALYSTS ===== -->
+        <section class="rounded-lg border bg-card shadow-sm mt-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Key / Upcoming Catalysts</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted/50">
+                        <tr>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Date</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Event</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Tickers Affected</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Jun 14 (weekend)</td>
+                            <td class="p-3">US-Iran ceasefire MOU signed</td>
+                            <td class="p-3">All (semis, macro, risk assets)</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">HIGH</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Jun 15</td>
+                            <td class="p-3">EU DMA compliance deadline (META)</td>
+                            <td class="p-3">META, big tech</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Medium</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Jun 16-17</td>
+                            <td class="p-3">FOMC rate decision + SEP dots + Powell presser</td>
+                            <td class="p-3">All</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">HIGH</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Jun 18</td>
+                            <td class="p-3">Weekly options expiry</td>
+                            <td class="p-3">All (max pain pinning)</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Medium</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Jun 20</td>
+                            <td class="p-3">Triple Witching (monthly options/futures expiry)</td>
+                            <td class="p-3">All</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">HIGH</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Jun 24</td>
+                            <td class="p-3">NVDA Annual Meeting (virtual, 9am PT) / Jensen speaks</td>
+                            <td class="p-3">NVDA, semis</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">HIGH</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Jun 24</td>
+                            <td class="p-3">MU earnings (binary — options imply ~20% swing)</td>
+                            <td class="p-3">MU, semis sector (SMH)</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">HIGH</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">TBD this week</td>
+                            <td class="p-3">SPCX options listing (pending exchange confirmation)</td>
+                            <td class="p-3">SPCX</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Medium</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Late Aug</td>
+                            <td class="p-3">NVDA FQ2 FY2027 earnings (est)</td>
+                            <td class="p-3">NVDA, semis</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">HIGH</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Ongoing</td>
+                            <td class="p-3">China export control / Vera CPU shipment timeline</td>
+                            <td class="p-3">NVDA, semis</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Medium</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Ongoing</td>
+                            <td class="p-3">Pentagon "Chinese military companies" list</td>
+                            <td class="p-3">NIO</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs">HIGH</span></td>
+                        </tr>
+                        <tr class="hover:bg-muted/30">
+                            <td class="p-3">Ongoing</td>
+                            <td class="p-3">DOJ antitrust appeal (Google)</td>
+                            <td class="p-3">GOOG</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 text-xs">Medium</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== RISKS GRID ===== -->
+        <section class="rounded-lg border bg-card shadow-sm mt-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Risks Grid</h2>
+            </div>
+            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="rounded border p-4 bg-card">
+                    <h4 class="font-semibold text-sm mb-1">Iran deal reversal</h4>
+                    <p class="text-xs text-muted-foreground">If the ceasefire collapses (Iran hardliner rejection, new naval clash), every bullish call in this summary reverses. Oil spikes back above $85, risk-off dominates, semis give back the gap. Highest impact on NVDA, MU, AMD, INTC.</p>
+                </div>
+                <div class="rounded border p-4 bg-card">
+                    <h4 class="font-semibold text-sm mb-1">FOMC hawkish surprise (Jun 16-17)</h4>
+                    <p class="text-xs text-muted-foreground">Warsh's debut dot plot could signal fewer cuts or a hike. CPI 3.9% + PPI 6.5% give hawks ammunition. Long-duration tech (NVDA, SNOW, MU) gets hit hardest. A 25bp hike would erase the entire Iran deal risk-on move.</p>
+                </div>
+                <div class="rounded border p-4 bg-card">
+                    <h4 class="font-semibold text-sm mb-1">Pre-market data quality</h4>
+                    <p class="text-xs text-muted-foreground">Multiple tickers (DELL, CRWV, SPCX, SMH) had conflicting or uncorroborated pre-market prints. If the actual open diverges from predicted cones, the entire session thesis needs rapid recalibration.</p>
+                </div>
+                <div class="rounded border p-4 bg-card">
+                    <h4 class="font-semibold text-sm mb-1">Oil supply shock / Middle East risk</h4>
+                    <p class="text-xs text-muted-foreground">Even with a ceasefire MOU, Strait of Hormuz remains contested. A sustained oil spike above $85 reignites inflation fears and stresses consumer stocks. Sector rotation out of growth into energy.</p>
+                </div>
+                <div class="rounded border p-4 bg-card">
+                    <h4 class="font-semibold text-sm mb-1">Semi momentum exhaustion</h4>
+                    <p class="text-xs text-muted-foreground">The Jun 11 SOX +7.91% rally was extreme. If semis fail to follow through on the Iran deal catalyst, momentum reversal could erase the entire sector's gains. NVDA's persistent RS lag vs SMH is a warning signal.</p>
+                </div>
+                <div class="rounded border p-4 bg-card">
+                    <h4 class="font-semibold text-sm mb-1">Capex-return contagion broadening</h4>
+                    <p class="text-xs text-muted-foreground">Oracle -8.53% punished hyperscaler AI capex without near-term ROI. If the market broadens this scrutiny to MSFT, AMZN, GOOG, the AI infrastructure thesis reprices. MSFT antitrust adds another dimension.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== FOOTER ===== -->
+        <footer class="mt-8 text-center text-xs text-muted-foreground border-t pt-4">
+            <p>Forward-looking pre-market summary generated 2026-06-15 pre-open. Not investment advice.</p>
+            <p>Anchored to daily briefs from 2026-06-12. Backtest hooks pending fill at EOD 2026-06-15.</p>
+            <p class="mt-1">Data sourced from live web search + anchor briefs. [could-not-corroborate] flags noted inline.</p>
+            <p class="mt-1">Cross-cohort cross-tape applied: semis (SMH/SOXX), mega-cap tech (XLK), software (IGV), China ADRs (KWEB), consumer (XLY), defense/space. Cohort peer predictions cross-referenced where available.</p>
+        </footer>
+    </div>
+</body>
+</html>
