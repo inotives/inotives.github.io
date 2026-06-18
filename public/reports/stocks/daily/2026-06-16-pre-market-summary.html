@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Market Summary — 2026-06-16</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: 'hsl(var(--border))',
+                        input: 'hsl(var(--input))',
+                        ring: 'hsl(var(--ring))',
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+                        secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+                        destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+                        muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+                        accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+                        card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+                    },
+                    borderRadius: {
+                        lg: 'var(--radius)', md: 'calc(var(--radius) - 2px)', sm: 'calc(var(--radius) - 4px)',
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        :root {
+            --background: 0 0% 100%; --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%; --card-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%; --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%; --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%; --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%; --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%; --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%; --input: 214.3 31.8% 91.4%;
+            --ring: 222.2 84% 4.9%; --radius: 0.5rem;
+        }
+        .dark {
+            --background: 222.2 84% 4.9%; --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%; --card-foreground: 210 40% 98%;
+            --primary: 210 40% 98%; --primary-foreground: 222.2 47.4% 11.2%;
+            --secondary: 217.2 32.6% 17.5%; --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%; --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%; --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%; --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%; --input: 217.2 32.6% 17.5%;
+            --ring: 212.7 26.8% 83.9%;
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+
+        <!-- ===== HEADER ===== -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-3 text-foreground">
+                Pre-Market Summary
+            </h1>
+            <p class="text-lg text-muted-foreground">
+                Opening Price Cone + Intraday Path Forecast for 2026-06-16
+            </p>
+            <p class="text-sm text-muted-foreground mt-1">
+                Generated 2026-06-16 pre-open | Anchored to 2026-06-15 close briefs
+            </p>
+            <div class="flex items-center justify-center gap-4 mt-3 flex-wrap">
+                <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium bg-yellow-500/20 text-yellow-500">FOMC Day 1</span><span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium bg-green-500/20 text-green-500">Iran Ceasefire</span><span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium bg-red-500/20 text-red-500">Oil -2.88%</span><span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium bg-blue-500/20 text-blue-500">Nasdaq +3.1%</span><span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium bg-purple-500/20 text-purple-500">SMH +4.38%</span>
+            </div>
+            <p class="text-sm text-muted-foreground mt-2">
+                Coverage: AAPL AMD AMZN CRM CRWV DELL GOOG INTC META MU NIO NVDA ORCL SNOW TSLA TSM MSFT SPCX
+            </p>
+        </header>
+
+        <!-- ===== MARKET OVERVIEW BANNER ===== -->
+        <div class="rounded-lg border bg-card shadow-sm p-6 mb-8">
+            <div class="flex items-start gap-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                    <span class="text-yellow-500 text-lg font-bold">!</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg mb-1">Overnight / Pre-Market Context</h3>
+                    <p class="text-sm text-muted-foreground">US-Iran ceasefire deal signed over the weekend sent oil plunging, triggering a broad risk-on rally Monday. Nasdaq +3.1%, S&P +1.7%. FOMC Day 1 is the dominant event — first FOMC under new Chair Kevin Warsh. Hot CPI (+3.9% YoY) and PPI (+6.5% YoY) have re-ignited rate hike speculation (CME ~25% hike prob). DXY 99.2, 10Y 4.42%, VIX 15.1. Semis (SMH +4.38%) led.</p>
+                    <div class="mt-3 text-sm text-muted-foreground space-y-1"><ul class="list-disc pl-5 space-y-1"><li>US-Iran peace framework signed Sunday — oil -2.88%, risk-on rally</li><li>FOMC Jun 16-17: Kevin Warsh first meeting — hawkish risk repriced</li><li>CPI +3.9% YoY / PPI +6.5% YoY — rate hike probability ~25%</li><li>10Y yield 4.42% (-7bp), DXY 99.2 — dollar softening</li><li>SPCX Day 3: +42.6% from IPO, options begin trading</li></ul></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SNAPSHOT SUMMARY TABLE ===== -->
+        <div class="rounded-lg border bg-card shadow-sm overflow-hidden mb-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Snapshot Summary</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted/50">
+                        <tr>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Ticker</th>
+                            <th class="text-right p-3 font-medium text-muted-foreground">Anchor Close</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Open Cone</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Expected Close</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Bias</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Conf</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Biggest Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y"><tr><td class="p-3 font-medium"><a href="#card-aapl" class="text-primary hover:underline">AAPL</a></td><td class="text-right p-3">$296.42</td><td class="text-center p-3">$293.00-299.50</td><td class="text-center p-3">$295.50 +/- 6.50</td><td class="text-center p-3" style="color:#ca8a04;font-weight:600">range-bound</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">FOMC surprise</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-amd" class="text-primary hover:underline">AMD</a></td><td class="text-right p-3">$547.26</td><td class="text-center p-3">$535.00-558.00</td><td class="text-center p-3">$545.00 +/- 18.00</td><td class="text-center p-3" style="color:#16a34a;font-weight:600">bullish</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">FOMC surprise</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-amzn" class="text-primary hover:underline">AMZN</a></td><td class="text-right p-3">$248.89</td><td class="text-center p-3">$243.00-250.50</td><td class="text-center p-3">$247.00 +/- 7.00</td><td class="text-center p-3" style="color:#16a34a;font-weight:600">bullish</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">FOMC surprise</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-crm" class="text-primary hover:underline">CRM</a></td><td class="text-right p-3">$164.55</td><td class="text-center p-3">$163.00-168.00</td><td class="text-center p-3">$164.00</td><td class="text-center p-3" style="color:#ca8a04;font-weight:600">range-bound</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">FOMC surprise (hawkish hold or hike) could crack $160 support
+- **Net directional bias:** Range-bound with bearish lean (45% prob)
+
+### 1.</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-crwv" class="text-primary hover:underline">CRWV</a></td><td class="text-right p-3">$106.71</td><td class="text-center p-3">$103.00-110.00</td><td class="text-center p-3">$108.00</td><td class="text-center p-3" style="color:#16a34a;font-weight:600">bullish</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">FOMC risk-off rotation punishes high-beta AI infra names
+- **Net directional bias:** Bullish (60% prob)
+
+### 1.</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-dell" class="text-primary hover:underline">DELL</a></td><td class="text-right p-3">$409.07</td><td class="text-center p-3">$406.00-417.00</td><td class="text-center p-3">$413.00</td><td class="text-center p-3" style="color:#16a34a;font-weight:600">bullish</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">ADX 44.</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-goog" class="text-primary hover:underline">GOOG</a></td><td class="text-right p-3">$367.11</td><td class="text-center p-3">$366.00-371.00</td><td class="text-center p-3">$368.00 +/- 8.00</td><td class="text-center p-3" style="color:#16a34a;font-weight:600">bullish</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">FOMC surprise</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-intc" class="text-primary hover:underline">INTC</a></td><td class="text-right p-3">$127.86</td><td class="text-center p-3">$125.50-130.00</td><td class="text-center p-3">$126.00 +/- 7.00</td><td class="text-center p-3" style="color:#ca8a04;font-weight:600">range-bound</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">FOMC surprise</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-meta" class="text-primary hover:underline">META</a></td><td class="text-right p-3">$593.48</td><td class="text-center p-3">$586.00-597.00</td><td class="text-center p-3">$590.00 +/- 9.00</td><td class="text-center p-3" style="color:#ca8a04;font-weight:600">range-bound</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">FOMC surprise</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-mu" class="text-primary hover:underline">MU</a></td><td class="text-right p-3">$1,087.99</td><td class="text-center p-3">$1100-1135</td><td class="text-center p-3">$1095</td><td class="text-center p-3" style="color:#16a34a;font-weight:600">bullish</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">FOMC surprise</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-nio" class="text-primary hover:underline">NIO</a></td><td class="text-right p-3">$5.05</td><td class="text-center p-3">$5.05-5.18</td><td class="text-center p-3">$5.06</td><td class="text-center p-3" style="color:#dc2626;font-weight:600">bearish</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">FOMC surprise</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-nvda" class="text-primary hover:underline">NVDA</a></td><td class="text-right p-3">$212.45</td><td class="text-center p-3">$208-214</td><td class="text-center p-3">$211</td><td class="text-center p-3" style="color:#ca8a04;font-weight:600">range-bound</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">FOMC surprise</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-orcl" class="text-primary hover:underline">ORCL</a></td><td class="text-right p-3">$192.64</td><td class="text-center p-3">$188.00-196.00</td><td class="text-center p-3">$190.00</td><td class="text-center p-3" style="color:#ca8a04;font-weight:600">range-bound</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">hawkish Warsh debut sends rates higher, crushing ORCL's debt-funded capex narrative.</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-snow" class="text-primary hover:underline">SNOW</a></td><td class="text-right p-3">$240.78</td><td class="text-center p-3">$236.00-246.00</td><td class="text-center p-3">$240.00</td><td class="text-center p-3" style="color:#ca8a04;font-weight:600">range-bound</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">hawkish Warsh surprise sending growth stocks lower, breaking $235.</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-tsla" class="text-primary hover:underline">TSLA</a></td><td class="text-right p-3">$411.15</td><td class="text-center p-3">$403.00-415.00</td><td class="text-center p-3">$410.00</td><td class="text-center p-3" style="color:#ca8a04;font-weight:600">range-bound</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">MA200 rejection at $415 triggers profit-taking back to $400.</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-tsm" class="text-primary hover:underline">TSM</a></td><td class="text-right p-3">$441.40</td><td class="text-center p-3">$435-447</td><td class="text-center p-3">$441</td><td class="text-center p-3" style="color:#16a34a;font-weight:600">bullish</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">** FOMC hawkish surprise triggering profit-taking on the Jun 15 gap
+
+### 1.</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-msft" class="text-primary hover:underline">MSFT</a></td><td class="text-right p-3">$393.30</td><td class="text-center p-3">$393-402</td><td class="text-center p-3">$397</td><td class="text-center p-3" style="color:#ca8a04;font-weight:600">range-bound</td><td class="text-center p-3">M</td><td class="text-left p-3 text-muted-foreground">** FOMC hawkish surprise resets the tech rally, dragging MSFT back to $382-$390
+
+### 1.</td></tr>
+<tr><td class="p-3 font-medium"><a href="#card-spcx" class="text-primary hover:underline">SPCX</a></td><td class="text-right p-3">$192.50</td><td class="text-center p-3">$195-210</td><td class="text-center p-3">$205</td><td class="text-center p-3" style="color:#16a34a;font-weight:600">bullish</td><td class="text-center p-3">L</td><td class="text-left p-3 text-muted-foreground">** Second-week mean reversion; options market enables short-selling at scale
+
+### 1.</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== DETAILED CARDS ===== -->
+        <div class="space-y-6"><div id="card-aapl" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">AAPL</h3><p class="text-sm text-muted-foreground">Anchor close: $296.42 &middot; Predicted open: $296.50 &middot; Cone: $293.00-299.50</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#ca8a0420;color:#ca8a04">range-bound</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $296.50 (pre-market $296.56 implies flat open vs Monday close) | - **1-sigma open cone:** $293.00 - $299.50 (FOMC-widened bands, 1.5x normal vol) | - **Most-likely intraday path:** Flat open, drift lower toward $293-294 in the first 2 hours as post-US-Iran-rally profit-taking hits laggards, then recover toward $296 into close on FOMC positioning | - **Predicted close:** $295.50 +/- $6.50 (FOMC vol tier: low x 1.5 = +/-$6-7.50)</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> </div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> FOMC surprise</div>
+  </div>
+</div>
+
+<div id="card-amd" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">AMD</h3><p class="text-sm text-muted-foreground">Anchor close: $547.26 &middot; Predicted open: $549.00 &middot; Cone: $535.00-558.00</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#16a34a20;color:#16a34a">bullish</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $549.00 (pre-market $550.41 suggests flat-to-slightly-up open vs Monday close $547.26) | - **1-sigma open cone:** $535.00 - $558.00 (high vol tier x 1.5 FOMC = +/-$15-22.50 range) | - **Most-likely intraday path:** Mild gap-up to $549-552, profit-taking fade to $538-542 by midday as extended longs trim ahead of FOMC, late-session dip-buying recovers to $545-548 | - **Predicted close:** $545.00 +/- $18.00 (high vol tier x 1.5 FOMC multiplier, weekly realized vol ~$10-15)</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> </div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> FOMC surprise</div>
+  </div>
+</div>
+
+<div id="card-amzn" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">AMZN</h3><p class="text-sm text-muted-foreground">Anchor close: $248.89 &middot; Predicted open: $247.00 &middot; Cone: $243.00-250.50</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#16a34a20;color:#16a34a">bullish</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $247.00 (pre-market $247.75 suggests mild gap-up vs Monday close $246.02) | - **1-sigma open cone:** $243.00 - $250.50 (mid vol tier x 1.5 FOMC = +/-$7.50-10.50, conservatively +/-$4) | - **Most-likely intraday path:** Mild gap-up to $247-248, shallow fade to $244-245 in early afternoon as FOMC caution takes hold, recovery to $246-248 by close | - **Predicted close:** $247.00 +/- $7.00 (mid vol tier x 1.5 FOMC multiplier)</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> </div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> FOMC surprise</div>
+  </div>
+</div>
+
+<div id="card-crm" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">CRM</h3><p class="text-sm text-muted-foreground">Anchor close: $164.55 &middot; Predicted open: $166.00 &middot; Cone: $163.00-168.00</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#ca8a0420;color:#ca8a04">range-bound</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $166.00 (1-sigma cone: $163-$168) | - **Most-likely intraday path:** Gap-open to ~$166, drift lower into $163-$165 range through morning, brief bounce attempt toward $167-$168 on Fin acquisition headlines, then fade into FOMC caution ahead of Wednesday's rate decision. | - **Predicted close:** $164 ± $4 | - **Confidence:** M — single biggest risk: FOMC surprise (hawkish hold or hike) could crack $160 support</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> 9:30-10:00  $164.50-$167.50  Gap-open to ~$166, initial buy-the-dip / Fin headline algo buying 
+ Late morning  10:00-11:30  $164-$167  Sellers test $164 area; profit-taking from gap-up 
+ Lunch  11:30-13:00  $163-$166  Volume drop; drift toward session low; FOMC caution sets in 
+ Afternoon  13:00-15:30  $163-$166  Range-bound; option gamma pin at $165 max pain 
+ Close  15:30-16:00  $163-$165  Pin risk; close near $164 if no FOMC leak</div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> FOMC surprise (hawkish hold or hike) could crack $160 support
+- **Net directional bias:** Range-bound with bearish lean (45% prob)
+
+### 1.</div>
+  </div>
+</div>
+
+<div id="card-crwv" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">CRWV</h3><p class="text-sm text-muted-foreground">Anchor close: $106.71 &middot; Predicted open: $107.00 &middot; Cone: $103.00-110.00</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#16a34a20;color:#16a34a">bullish</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $107.00 (1-sigma cone: $103-$110) | - **Most-likely intraday path:** Flat-to-slightly-higher open on continued NDX inclusion momentum. Intraday profit-taking from $108-$109 zone as high-beta names face FOMC caution, settling $105-$108 range. Bull case: continuation to $110-$112. Bear case: <$103 triggers gap-fill to $100-$101. | - **Predicted close:** $108 ± $10 | - **Confidence:** M — single biggest risk: FOMC risk-off rotation punishes high-beta AI infra names</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> 9:30-10:00  $105-$109  Flat-to-gently-higher open; algo buying on NDX momentum 
+ Late morning  10:00-11:30  $104-$109  Profit-taking after +6% Mon; $108-$109 resistance tested 
+ Lunch  11:30-13:00  $104-$107  Low-volume drift; support at $105 (prior resistance now support) 
+ Afternoon  13:00-15:30  $104-$108  FOMC pre-positioning; high-beta names under modest pressure 
+ Close  15:30-16:00  $105-$109  Squaring; potential late buying if NDX momentum holds</div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> FOMC risk-off rotation punishes high-beta AI infra names
+- **Net directional bias:** Bullish (60% prob)
+
+### 1.</div>
+  </div>
+</div>
+
+<div id="card-dell" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">DELL</h3><p class="text-sm text-muted-foreground">Anchor close: $409.07 &middot; Predicted open: $412.00 &middot; Cone: $406.00-417.00</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#16a34a20;color:#16a34a">bullish</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $412.00 (1-sigma cone: $406-$417) | - **Most-likely intraday path:** Pre-market momentum carries to a gap-up open near $412. Initial push toward $415-$418 (Mon high $415.91). Profit-taking and FOMC caution cap gains. Consolidation $408-$415 through afternoon. Close in upper half of range. | - **Predicted close:** $413 ± $8 | - **Confidence:** M — single biggest risk: ADX 44.1 suggests overextended trend; FOMC could trigger position-squaring</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> 9:30-10:00  $407-$415  Gap-open to ~$412; initial buy momentum toward $415 (Mon high) 
+ Late morning  10:00-11:30  $408-$415  Test of $415 resistance; profit-taking from gap-up 
+ Lunch  11:30-13:00  $407-$412  Volume drop; $410 acts as magnetic midpoint 
+ Afternoon  13:00-15:30  $407-$413  FOMC pre-positioning; range compression 
+ Close  15:30-16:00  $408-$415  Potential push toward $415 if NVDA/XLK hold gains</div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> ADX 44.</div>
+  </div>
+</div>
+
+<div id="card-goog" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">GOOG</h3><p class="text-sm text-muted-foreground">Anchor close: $367.11 &middot; Predicted open: $368.50 &middot; Cone: $366.00-371.00</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#16a34a20;color:#16a34a">bullish</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $368.50 (cone $366-$371) | - **Most-likely intraday path:** Flat-to-positive open, early push toward $372 resistance, then fade into FOMC caution by mid-afternoon, settling near $368. | - **Predicted close:** $368 +/- $8 (FOMC widened bands) | - **Confidence: M** — biggest risk: hawkish FOMC surprise on Jun 17 front-running.</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> </div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> FOMC surprise</div>
+  </div>
+</div>
+
+<div id="card-intc" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">INTC</h3><p class="text-sm text-muted-foreground">Anchor close: $127.86 &middot; Predicted open: $127.50 &middot; Cone: $125.50-130.00</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#ca8a0420;color:#ca8a04">range-bound</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $127.50 (cone $125.50-$130.00) | - **Most-likely intraday path:** Slight gap-down or flat open, early selling into the Jun 15 rally, consolidation around $125-128 as the parabolic move takes a breather, possible late bounce but unlikely to reclaim $132. | - **Predicted close:** $126 +/- $7 (FOMC-widened from low vol tier $4-5) | - **Confidence: M** — biggest risk: continued momentum buying overwhelms profit-taking (momentum begets momentum).</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> </div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> FOMC surprise</div>
+  </div>
+</div>
+
+<div id="card-meta" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">META</h3><p class="text-sm text-muted-foreground">Anchor close: $593.48 &middot; Predicted open: $592.00 &middot; Cone: $586.00-597.00</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#ca8a0420;color:#ca8a04">range-bound</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $592 (cone $586-$597) | - **Most-likely intraday path:** Flat-to-slightly-lower open, test of $588 support, bounce toward $595 in late morning, then drift lower into FOMC positioning. Range-bound consolidation after yesterday's outsized gain. | - **Predicted close:** $590 +/- $9 (FOMC-widened from mid vol tier $5-7) | - **Confidence: M** — biggest risk: the bounce was entirely macro-driven (ceasefire); if macro fades, META has no company-specific catalyst to sustain it.</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> </div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> FOMC surprise</div>
+  </div>
+</div>
+
+<div id="card-mu" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">MU</h3><p class="text-sm text-muted-foreground">Anchor close: $1,087.99 &middot; Predicted open: $1118 &middot; Cone: $1100-1135</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#16a34a20;color:#16a34a">bullish</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $1,118 (pre-market $1,120.91 at 7:48 AM, +3.03% from Mon close) | - **1-sigma cone:** $1,100 - $1,135 | - **Most-likely intraday path:** Gap-up open near $1,118, early momentum push toward $1,130-1,135, then fade through the session as FOMC caution and profit-taking cap upside. | - **Predicted close:** $1,095 +/- $15</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> 9:30-10:00  Gap-up print, initial buy program  $1,105-$1,130  2.0-3.0x (elevated) 
+ AM  10:00-11:30  Momentum high, possible push toward $1,130  $1,110-$1,135  1.2-1.5x 
+ Midday  11:30-14:00  FOMC positioning, drift from highs, profit-taking  $1,090-$1,120  0.6-0.8x (lull) 
+ PM  14:00-15:30  Potential afternoon selloff if no FOMC headline  $1,085-$1,110  1.0-1.2x 
+ Close  15:30-16:00  Squaring into FOMC decision Wed. Weak close likely  $1,080-$1,110  1.5-2.0x</div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> FOMC surprise</div>
+  </div>
+</div>
+
+<div id="card-nio" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">NIO</h3><p class="text-sm text-muted-foreground">Anchor close: $5.05 &middot; Predicted open: $5.12 &middot; Cone: $5.05-5.18</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#dc262620;color:#dc2626">bearish</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $5.12 (pre-market $5.12 at 7:44 AM, -$0.09, -1.73%) | - **1-sigma cone:** $5.05 - $5.18 | - **Most-likely intraday path:** Weak open at $5.12, grind lower through the session toward $5.00 max pain. No catalyst to reverse the slide. | - **Predicted close:** $5.06 +/- $0.08</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> 9:30-10:00  Gap-down open, initial sell program  $5.08-$5.16  1.0-1.5x 
+ AM  10:00-11:30  Drift lower, test $5.05  $5.05-$5.14  0.7-1.0x 
+ Midday  11:30-14:00  Low-liquidity grind toward $5.00  $5.00-$5.10  0.4-0.6x 
+ PM  14:00-15:30  Possible support test at $5.00  $5.00-$5.08  0.6-0.8x 
+ Close  15:30-16:00  Pin toward $5.00 Jun 18 max pain  $5.00-$5.08  0.8-1.0x</div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> FOMC surprise</div>
+  </div>
+</div>
+
+<div id="card-nvda" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">NVDA</h3><p class="text-sm text-muted-foreground">Anchor close: $212.45 &middot; Predicted open: $212.00 &middot; Cone: $208-214</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#ca8a0420;color:#ca8a04">range-bound</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $212.00 (pre-market $212.08 at 7:44 AM, -$0.37, -0.17%) | - **1-sigma cone:** $208 - $214 | - **Most-likely intraday path:** Flat-to-slightly-lower open, test $210 support in the first hour, then range-bound between $208-$213 through the session as FOMC positioning dominates. | - **Predicted close:** $211 +/- $4</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> 9:30-10:00  Flat-to-slight dip, test $210-$212  $210-$213  1.5-2.0x 
+ AM  10:00-11:30  Range bound, consolidation after Mon breakout  $209-$213  1.0-1.2x 
+ Midday  11:30-14:00  FOMC positioning lull, drift to session low  $208-$211  0.5-0.7x 
+ PM  14:00-15:30  Potential late short-covering if SMH holds gains  $209-$213  0.8-1.0x 
+ Close  15:30-16:00  Squaring into FOMC; VWAP pin likely  $210-$212  1.2-1.5x</div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> FOMC surprise</div>
+  </div>
+</div>
+
+<div id="card-orcl" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">ORCL</h3><p class="text-sm text-muted-foreground">Anchor close: $192.64 &middot; Predicted open: $192.00 &middot; Cone: $188.00-196.00</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#ca8a0420;color:#ca8a04">range-bound</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted Open:** $192.00 ± $4 (cone $188-$196) | - **Most-likely intraday path:** Flat open near $192, drift lower into FOMC uncertainty, $190 tested, recovery if $192 holds into close | - **Predicted Close:** $190 ± $6 (vol-tier compliant, 1.5x FOMC widener) | - **Confidence: Medium.** Oversold bounce confirmed on Jun 15 (+$8.51) but FOMC begins today — macro uncertainty caps conviction. Single biggest risk: hawkish Warsh debut sends rates higher, crushing ORCL's debt-funded capex narrative.</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> </div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> hawkish Warsh debut sends rates higher, crushing ORCL's debt-funded capex narrative.</div>
+  </div>
+</div>
+
+<div id="card-snow" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">SNOW</h3><p class="text-sm text-muted-foreground">Anchor close: $240.78 &middot; Predicted open: $241.00 &middot; Cone: $236.00-246.00</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#ca8a0420;color:#ca8a04">range-bound</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted Open:** $241.00 ± $5 (cone $236-$246) | - **Most-likely intraday path:** Open near $241, mild drift lower as FOMC uncertainty builds, $240 tested, possible squeeze if yields continue falling | - **Predicted Close:** $240 ± $5 (mid vol tier, 1.5x FOMC widener => +/-$7.5 band) | - **Confidence: Medium.** Monday's +3.44% recovery confirmed that Friday's breakdown was technical rather than fundamental. However, FOMC is the dominant risk for high-duration names. Single biggest risk: hawkish Warsh surprise sending growth stocks lower, breaking $235.</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> </div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> hawkish Warsh surprise sending growth stocks lower, breaking $235.</div>
+  </div>
+</div>
+
+<div id="card-tsla" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">TSLA</h3><p class="text-sm text-muted-foreground">Anchor close: $411.15 &middot; Predicted open: $409.00 &middot; Cone: $403.00-415.00</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#ca8a0420;color:#ca8a04">range-bound</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted Open:** $409.00 ± $6 (cone $403-$415) | - **Most-likely intraday path:** Open near $409, attempt $410-$415 resistance zone, fade from MA200 ($415.40) if tested, settle in $405-$412 range | - **Predicted Close:** $410 ± $6 (mid vol tier, 1.5x FOMC widener => +/-$9 band) | - **Confidence: Medium.** The technical picture is constructive (reclaimed MA50) but MA200 rejection risk and SPCX capital allocation concerns create uncertainty. FOMC adds macro risk. Single biggest risk: MA200 rejection at $415 triggers profit-taking back to $400.</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> </div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> MA200 rejection at $415 triggers profit-taking back to $400.</div>
+  </div>
+</div>
+
+<div id="card-tsm" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">TSM</h3><p class="text-sm text-muted-foreground">Anchor close: $441.40 &middot; Predicted open: $441 &middot; Cone: $435-447</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#16a34a20;color:#16a34a">bullish</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $441 (flat from Jun 15 close; pre-mkt $441.33) | - **1-sigma cone:** $435-$447 | - **Most-likely intraday path:** Fade open high, drift into FOMC-waiting $437-$443 range by lunch, slight recovery into close. | - **Predicted close:** $441 +/- $6</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> </div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> ** FOMC hawkish surprise triggering profit-taking on the Jun 15 gap
+
+### 1.</div>
+  </div>
+</div>
+
+<div id="card-msft" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">MSFT</h3><p class="text-sm text-muted-foreground">Anchor close: $393.30 &middot; Predicted open: $397 &middot; Cone: $393-402</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#ca8a0420;color:#ca8a04">range-bound</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">M</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $397 (midpoint; Jun 15 close $399.76, pre-mkt $395.75) | - **1-sigma cone:** $393-$402 | - **Most-likely intraday path:** Gap down slightly from close, test $394-$396 support in first hour, drift sideways with FOMC overhead, close near $397. | - **Predicted close:** $397 +/- $4</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> </div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> ** FOMC hawkish surprise resets the tech rally, dragging MSFT back to $382-$390
+
+### 1.</div>
+  </div>
+</div>
+
+<div id="card-spcx" class="rounded-lg border bg-card shadow-sm">
+  <div class="p-4 border-b flex items-center justify-between">
+    <div><h3 class="text-lg font-semibold">SPCX</h3><p class="text-sm text-muted-foreground">Anchor close: $192.50 &middot; Predicted open: $200 &middot; Cone: $195-210</p></div>
+    <div class="text-right"><span class="inline-block px-2 py-1 rounded text-xs font-medium" style="background:#16a34a20;color:#16a34a">bullish</span><span class="inline-block px-2 py-1 rounded text-xs font-medium bg-muted ml-1">L</span></div>
+  </div>
+  <div class="p-4 text-sm space-y-2">
+    <div><strong class="text-muted-foreground">Verdict:</strong> - **Predicted open:** $200 (Jun 15 close $192.50, pre-mkt $200.32) | - **1-sigma cone:** $195-$210 (widened 1.5x for FOMC week) | - **Most-likely intraday path:** Gap open near $200-$205, retail buying pushes toward $208-$215 in first hour, institutional profit-taking fades toward $195-$200 by afternoon, possible late recovery. | - **Predicted close:** $205 +/- $12</div>
+    <div><strong class="text-muted-foreground">Intraday path:</strong> </div>
+    <div><strong class="text-muted-foreground">Biggest risk:</strong> ** Second-week mean reversion; options market enables short-selling at scale
+
+### 1.</div>
+  </div>
+</div></div>
+
+        <!-- ===== KEY / UPCOMING CATALYSTS ===== -->
+        <section class="rounded-lg border bg-card shadow-sm mt-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Key / Upcoming Catalysts</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted/50">
+                        <tr>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Date</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Event</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Tickers Affected</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y"><tr><td class="p-3">Jun 16-17</td><td class="p-3">FOMC decision + SEP dots (Warsh debut)</td><td class="p-3">ALL</td><td class="p-3"><span class="text-red-500 font-medium">HIGH</span></td></tr><tr><td class="p-3">Jun 18</td><td class="p-3">Weekly options expiry</td><td class="p-3">ALL</td><td class="p-3">Medium</td></tr><tr><td class="p-3">Jun 20</td><td class="p-3">Triple Witching</td><td class="p-3">ALL</td><td class="p-3"><span class="text-red-500 font-medium">HIGH</span></td></tr><tr><td class="p-3">Jun 24</td><td class="p-3">NVDA Annual Meeting (Jensen speaks)</td><td class="p-3">NVDA</td><td class="p-3"><span class="text-red-500 font-medium">HIGH</span></td></tr><tr><td class="p-3">Ongoing</td><td class="p-3">US-Iran ceasefire execution details</td><td class="p-3">ALL</td><td class="p-3">HIGH</td></tr><tr><td class="p-3">TBD</td><td class="p-3">SPCX index inclusion fast-track</td><td class="p-3">SPCX</td><td class="p-3">Medium</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== RISKS GRID ===== -->
+        <section class="rounded-lg border bg-card shadow-sm mt-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Risks Grid</h2>
+            </div>
+            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4"><div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">AAPL</h4><p class="text-xs text-muted-foreground">FOMC surprise</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">AMD</h4><p class="text-xs text-muted-foreground">FOMC surprise</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">AMZN</h4><p class="text-xs text-muted-foreground">FOMC surprise</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">CRM</h4><p class="text-xs text-muted-foreground">FOMC surprise (hawkish hold or hike) could crack $160 support
+- **Net directional bias:** Range-bound with bearish lean (45% prob)
+
+### 1.</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">CRWV</h4><p class="text-xs text-muted-foreground">FOMC risk-off rotation punishes high-beta AI infra names
+- **Net directional bias:** Bullish (60% prob)
+
+### 1.</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">DELL</h4><p class="text-xs text-muted-foreground">ADX 44.</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">GOOG</h4><p class="text-xs text-muted-foreground">FOMC surprise</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">INTC</h4><p class="text-xs text-muted-foreground">FOMC surprise</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">META</h4><p class="text-xs text-muted-foreground">FOMC surprise</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">MU</h4><p class="text-xs text-muted-foreground">FOMC surprise</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">NIO</h4><p class="text-xs text-muted-foreground">FOMC surprise</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">NVDA</h4><p class="text-xs text-muted-foreground">FOMC surprise</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">ORCL</h4><p class="text-xs text-muted-foreground">hawkish Warsh debut sends rates higher, crushing ORCL's debt-funded capex narrative.</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">SNOW</h4><p class="text-xs text-muted-foreground">hawkish Warsh surprise sending growth stocks lower, breaking $235.</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">TSLA</h4><p class="text-xs text-muted-foreground">MA200 rejection at $415 triggers profit-taking back to $400.</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">TSM</h4><p class="text-xs text-muted-foreground">** FOMC hawkish surprise triggering profit-taking on the Jun 15 gap
+
+### 1.</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">MSFT</h4><p class="text-xs text-muted-foreground">** FOMC hawkish surprise resets the tech rally, dragging MSFT back to $382-$390
+
+### 1.</p></div>
+<div class="rounded-lg border bg-card p-4"><h4 class="font-semibold text-sm mb-1">SPCX</h4><p class="text-xs text-muted-foreground">** Second-week mean reversion; options market enables short-selling at scale
+
+### 1.</p></div></div>
+        </section>
+
+        <!-- ===== FOOTER ===== -->
+        <footer class="mt-8 text-center text-xs text-muted-foreground border-t pt-4">
+            <p>Forward-looking pre-market summary generated 2026-06-16 pre-open. Not investment advice.</p>
+            <p>Anchored to daily briefs from 2026-06-12. Backtest hooks pending fill at EOD 2026-06-16.</p>
+            <p class="mt-1">Data sourced from live web search + anchor briefs. [could-not-corroborate] flags noted inline.</p>
+            <p class="mt-1">All 18 tracked tickers covered. FOMC Jun 16-17 is the primary macro risk. US-Iran ceasefire deal the primary tailwind.</p>
+        </footer>
+    </div>
+</body>
+</html>
