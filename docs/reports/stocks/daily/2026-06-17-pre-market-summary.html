@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Market Summary — 2026-06-17</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: 'hsl(var(--border))',
+                        input: 'hsl(var(--input))',
+                        ring: 'hsl(var(--ring))',
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+                        secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+                        destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+                        muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+                        accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+                        card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+                    },
+                    borderRadius: {
+                        lg: 'var(--radius)', md: 'calc(var(--radius) - 2px)', sm: 'calc(var(--radius) - 4px)',
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        :root {
+            --background: 0 0% 100%; --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%; --card-foreground: 222.2 84% 4.9%;
+            --primary: 222.2 47.4% 11.2%; --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%; --secondary-foreground: 222.2 47.4% 11.2%;
+            --muted: 210 40% 96.1%; --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 96.1%; --accent-foreground: 222.2 47.4% 11.2%;
+            --destructive: 0 84.2% 60.2%; --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%; --input: 214.3 31.8% 91.4%;
+            --ring: 222.2 84% 4.9%; --radius: 0.5rem;
+        }
+        .dark {
+            --background: 222.2 84% 4.9%; --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%; --card-foreground: 210 40% 98%;
+            --primary: 210 40% 98%; --primary-foreground: 222.2 47.4% 11.2%;
+            --secondary: 217.2 32.6% 17.5%; --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%; --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%; --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%; --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%; --input: 217.2 32.6% 17.5%;
+            --ring: 212.7 26.8% 83.9%;
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+
+        <!-- ===== HEADER ===== -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-3 text-foreground">
+                Pre-Market Summary
+            </h1>
+            <p class="text-lg text-muted-foreground">
+                Opening Price Cone + Intraday Path Forecast for 2026-06-17
+            </p>
+            <p class="text-sm text-muted-foreground mt-1">
+                Generated 2026-06-17 pre-open | Anchored to 2026-06-16 close briefs
+            </p>
+            <div class="flex items-center justify-center gap-4 mt-3 flex-wrap">
+                <span class="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium bg-green-500/10 text-green-500 border-green-500/20">
+    <span class="font-semibold">ES</span>
+    <span>+0.16%</span>
+  </span>
+                <span class="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium bg-green-500/10 text-green-500 border-green-500/20">
+    <span class="font-semibold">NQ</span>
+    <span>+0.64%</span>
+  </span>
+                <span class="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+    <span class="font-semibold">VIX</span>
+    <span>16.32</span>
+  </span>
+                <span class="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium bg-blue-500/10 text-blue-500 border-blue-500/20">
+    <span class="font-semibold">FOMC Day</span>
+    <span>Hold 91.5%</span>
+  </span>
+                <span class="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium bg-blue-500/10 text-blue-500 border-blue-500/20">
+    <span class="font-semibold">DXY</span>
+    <span>~101.8</span>
+  </span>
+                <span class="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium bg-green-500/10 text-green-500 border-green-500/20">
+    <span class="font-semibold">AAPL+1.27%</span>
+    <span>Dow record</span>
+  </span>
+            </div>
+            <p class="text-sm text-muted-foreground mt-2">
+                <a href="#aapl" class="text-primary underline underline-offset-2 hover:text-primary/80">AAPL</a> &middot; <a href="#amd" class="text-primary underline underline-offset-2 hover:text-primary/80">AMD</a> &middot; <a href="#amzn" class="text-primary underline underline-offset-2 hover:text-primary/80">AMZN</a> &middot; <a href="#crm" class="text-primary underline underline-offset-2 hover:text-primary/80">CRM</a> &middot; <a href="#crwv" class="text-primary underline underline-offset-2 hover:text-primary/80">CRWV</a> &middot; <a href="#dell" class="text-primary underline underline-offset-2 hover:text-primary/80">DELL</a> &middot; <a href="#goog" class="text-primary underline underline-offset-2 hover:text-primary/80">GOOG</a> &middot; <a href="#intc" class="text-primary underline underline-offset-2 hover:text-primary/80">INTC</a> &middot; <a href="#meta" class="text-primary underline underline-offset-2 hover:text-primary/80">META</a> &middot; <a href="#mu" class="text-primary underline underline-offset-2 hover:text-primary/80">MU</a> &middot; <a href="#nio" class="text-primary underline underline-offset-2 hover:text-primary/80">NIO</a> &middot; <a href="#nvda" class="text-primary underline underline-offset-2 hover:text-primary/80">NVDA</a> &middot; <a href="#orcl" class="text-primary underline underline-offset-2 hover:text-primary/80">ORCL</a> &middot; <a href="#snow" class="text-primary underline underline-offset-2 hover:text-primary/80">SNOW</a> &middot; <a href="#tsla" class="text-primary underline underline-offset-2 hover:text-primary/80">TSLA</a> &middot; <a href="#tsm" class="text-primary underline underline-offset-2 hover:text-primary/80">TSM</a> &middot; <a href="#msft" class="text-primary underline underline-offset-2 hover:text-primary/80">MSFT</a> &middot; <a href="#spcx" class="text-primary underline underline-offset-2 hover:text-primary/80">SPCX</a>
+            </p>
+        </header>
+
+        <!-- ===== MARKET OVERVIEW BANNER ===== -->
+        <div class="rounded-lg border bg-card shadow-sm p-6 mb-8">
+            <div class="flex items-start gap-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                    <span class="text-yellow-500 text-lg font-bold">!</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg mb-1">Overnight / Pre-Market Context</h3>
+                    <p class="text-sm text-muted-foreground"><p><strong>Macro Context:</strong> FOMC rate decision at 2:00 PM ET followed by Powell presser at 2:30 PM. Markets are pricing a hold; the dot plot and SEP (Summary of Economic Projections) are the main event — specifically the median 2026 dots and any shift in the long-run neutral rate (R-star). CME FedWatch shows 91.5% probability of a hold.</p><p><strong>Futures & Volatility:</strong> NQ +0.64% leading gains, ES +0.16%, YM flat, RTY +0.25%. VIX at 16.32 (-0.55%), below the 20 threshold, indicating contained fear despite FOMC event risk. Pre-market action suggests positioning for a dovish-to-neutral outcome.</p><p><strong>Sector Rotation — Semi Bounce, Software Slump:</strong> Semiconductors bouncing hard in pre-market: MU +3.7%, MRVL +3.6%, AMD +3.0%, INTC +4.4%, WDC +2.3%, AVGO +1.8%, NVDA +0.5%. The SMH hit a record intraday high on Jun 16 before fading. Software remains the most out-of-favor sector — IGV -15% from 52-week high, CRM extending a 10-session losing streak.</p><p><strong>Commodities & FX:</strong> WTI $75.11 (-0.21%) — oil continues to slide, which lowers input costs for enterprise IT and consumer discretionary. DXY ~101.8, modestly softer, providing a tailwind for USD-denominated equities.</p></p>
+                    <div class="mt-3 text-sm text-muted-foreground space-y-1"><li class="flex items-start gap-2"><span class="text-yellow-500 mt-1">&#8226;</span>FOMC rate decision 2:00 PM ET + Powell presser 2:30 PM — dot plot is main event</li>
+                        <li class="flex items-start gap-2"><span class="text-yellow-500 mt-1">&#8226;</span>NQ +0.64% leading bounce; VIX 16.32 below fear threshold despite event risk</li>
+                        <li class="flex items-start gap-2"><span class="text-yellow-500 mt-1">&#8226;</span>Semis bouncing hard: MU +3.7%, INTC +4.4%, AMD +3.0% pre-market</li>
+                        <li class="flex items-start gap-2"><span class="text-yellow-500 mt-1">&#8226;</span>Software remains out-of-favor: IGV -15% from 52wk high, CRM 10-session losing streak</li>
+                        <li class="flex items-start gap-2"><span class="text-yellow-500 mt-1">&#8226;</span>WTI $75.11 (-0.21%), DXY ~101.8 — modest tailwinds</li></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SNAPSHOT SUMMARY TABLE ===== -->
+        <div class="rounded-lg border bg-card shadow-sm overflow-hidden mb-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Snapshot Summary</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted/50">
+                        <tr>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Ticker</th>
+                            <th class="text-right p-3 font-medium text-muted-foreground">Anchor Close</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Open Cone</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Expected Close</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Bias</th>
+                            <th class="text-center p-3 font-medium text-muted-foreground">Conf</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Biggest Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y"><tr>
+    <td class="p-3 font-medium"><a href="#aapl" class="text-primary hover:underline">AAPL</a></td>
+    <td class="text-right p-3 font-mono">$300.17</td>
+    <td class="text-center p-3 font-mono">$295-$304</td>
+    <td class="text-center p-3 font-mono">$300.00 &plusmn; $7.50</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-yellow-500/10 text-yellow-500">range-bound</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">Hawkish FOMC surprise reverses Jun 16 rally</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#amd" class="text-primary hover:underline">AMD</a></td>
+    <td class="text-right p-3 font-mono">$518.42</td>
+    <td class="text-center p-3 font-mono">$518-$550</td>
+    <td class="text-center p-3 font-mono">$530.00 &plusmn; $18.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-yellow-500/10 text-yellow-500">range-bound, upside skew</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">Fragile bounce after -5.28% positioning crash</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#amzn" class="text-primary hover:underline">AMZN</a></td>
+    <td class="text-right p-3 font-mono">$246.00</td>
+    <td class="text-center p-3 font-mono">$242-$250</td>
+    <td class="text-center p-3 font-mono">$246.00 &plusmn; $7.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-yellow-500/10 text-yellow-500">range-bound</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">FTC ad probe escalation; 168bps QQQ underperformance</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#crm" class="text-primary hover:underline">CRM</a></td>
+    <td class="text-right p-3 font-mono">$161.72</td>
+    <td class="text-center p-3 font-mono">$159-$165</td>
+    <td class="text-center p-3 font-mono">$161.00 &plusmn; $4.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">bearish lean</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">10-session losing streak; no bottom pattern confirmed</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#crwv" class="text-primary hover:underline">CRWV</a></td>
+    <td class="text-right p-3 font-mono">$117.03</td>
+    <td class="text-center p-3 font-mono">$112-$122</td>
+    <td class="text-center p-3 font-mono">$118.00 &plusmn; $12.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-500/10 text-green-500">bullish (50% floor)</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">High-beta FOMC vulnerability + post-surge exhaustion</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#dell" class="text-primary hover:underline">DELL</a></td>
+    <td class="text-right p-3 font-mono">$408.78</td>
+    <td class="text-center p-3 font-mono">$404-$416</td>
+    <td class="text-center p-3 font-mono">$409.00 &plusmn; $8.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-yellow-500/10 text-yellow-500">range-bound</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">Gamma pin distortion; Jun 18 expiry $400 max pain</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#goog" class="text-primary hover:underline">GOOG</a></td>
+    <td class="text-right p-3 font-mono">$371.10</td>
+    <td class="text-center p-3 font-mono">$365-$372</td>
+    <td class="text-center p-3 font-mono">$369 &plusmn; $6.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-yellow-500/10 text-yellow-500">range-bound 45%</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">FOMC binary; AH faded -0.35% after +1.09% day</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#intc" class="text-primary hover:underline">INTC</a></td>
+    <td class="text-right p-3 font-mono">$117.05</td>
+    <td class="text-center p-3 font-mono">$123-$132</td>
+    <td class="text-center p-3 font-mono">$127 &plusmn; $8.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-500/10 text-green-500">bullish bounce 50%</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">Jun 16 -8.45% may not be fully recovered by pre-mkt bounce</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#meta" class="text-primary hover:underline">META</a></td>
+    <td class="text-right p-3 font-mono">$600.21</td>
+    <td class="text-center p-3 font-mono">$593-$605</td>
+    <td class="text-center p-3 font-mono">$599 &plusmn; $6.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-yellow-500/10 text-yellow-500">range-bound 45%</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">First $600 close since May 21 — psychological resistance</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#mu" class="text-primary hover:underline">MU</a></td>
+    <td class="text-right p-3 font-mono">$1020.76</td>
+    <td class="text-center p-3 font-mono">$1030-$1080</td>
+    <td class="text-center p-3 font-mono">$1055 &plusmn; $15.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-yellow-500/10 text-yellow-500">range-bound 45%</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">ATH-to-close -6.18% reversal; RSI 91 mean reversion incomplete</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#nio" class="text-primary hover:underline">NIO</a></td>
+    <td class="text-right p-3 font-mono">$5.01</td>
+    <td class="text-center p-3 font-mono">$4.93-$5.05</td>
+    <td class="text-center p-3 font-mono">$4.99 &plusmn; $0.40</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">bearish 55%</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">China auto -15-20% warning; below all EMAs</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#nvda" class="text-primary hover:underline">NVDA</a></td>
+    <td class="text-right p-3 font-mono">$207.41</td>
+    <td class="text-center p-3 font-mono">$205-$212</td>
+    <td class="text-center p-3 font-mono">$208.50 &plusmn; $5.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-yellow-500/10 text-yellow-500">range-bound 50%</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">$25B bond sale executed; FOMC erodes risk-on appetite</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#orcl" class="text-primary hover:underline">ORCL</a></td>
+    <td class="text-right p-3 font-mono">$190.08</td>
+    <td class="text-center p-3 font-mono">$186-$193</td>
+    <td class="text-center p-3 font-mono">$189 &plusmn; $6.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">bearish</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">Microsoft walked from $3B cloud deal over FedRAMP</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#snow" class="text-primary hover:underline">SNOW</a></td>
+    <td class="text-right p-3 font-mono">$238.07</td>
+    <td class="text-center p-3 font-mono">$235-$242</td>
+    <td class="text-center p-3 font-mono">$238 &plusmn; $5.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-yellow-500/10 text-yellow-500">range-bound</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">No catalyst; flat pre-market; data quality flag</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#tsla" class="text-primary hover:underline">TSLA</a></td>
+    <td class="text-right p-3 font-mono">$404.66</td>
+    <td class="text-center p-3 font-mono">$400-$410</td>
+    <td class="text-center p-3 font-mono">$404 &plusmn; $6.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-yellow-500/10 text-yellow-500">range-bound</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">SMA200 at $418 unbroken resistance; China EV weak</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#tsm" class="text-primary hover:underline">TSM</a></td>
+    <td class="text-right p-3 font-mono">$425.83</td>
+    <td class="text-center p-3 font-mono">$430-$445</td>
+    <td class="text-center p-3 font-mono">$438 &plusmn; $12.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-500/10 text-green-500">bullish lean</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">Semi bounce fragile; TWSE +2.81% may not fully carry to ADR</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#msft" class="text-primary hover:underline">MSFT</a></td>
+    <td class="text-right p-3 font-mono">$393.83</td>
+    <td class="text-center p-3 font-mono">$390-$398</td>
+    <td class="text-center p-3 font-mono">$393 &plusmn; $5.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-yellow-500/10 text-yellow-500">range-bound</span></td>
+    <td class="text-center p-3 font-bold">M</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">Below all EMAs; worst tech setup in cohort</td>
+  </tr><tr>
+    <td class="p-3 font-medium"><a href="#spcx" class="text-primary hover:underline">SPCX</a></td>
+    <td class="text-right p-3 font-mono">$201.80</td>
+    <td class="text-center p-3 font-mono">$198-$205</td>
+    <td class="text-center p-3 font-mono">$201 &plusmn; $4.00</td>
+    <td class="text-center p-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-yellow-500/10 text-yellow-500">range-bound</span></td>
+    <td class="text-center p-3 font-bold">L</td>
+    <td class="text-left p-3 text-muted-foreground max-w-xs">Day 3 first distribution pattern; highest FOMC vulnerability</td>
+  </tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== DETAILED CARDS ===== -->
+        <div class="space-y-6">
+      <div id="aapl" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">AAPL</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $295-$304 &middot; Expected close $300.00 &plusmn; $7.50</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; range-bound</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Range-bound with FOMC binary. Predicted open $299.50 (cone $295-$304). Expected close $300.00 ± $7.50. Bull 40% / Base 40% / Bear 20%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$297-$303 — opening range, pre-mkt flat</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$296-$304 — FOMC wait, volume drops</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$295-$300 — drift into decision</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$298-$308 — FOMC volatility spike</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$296-$304 — close near anchor depending on dot plot</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="amd" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">AMD</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $518-$550 &middot; Expected close $530.00 &plusmn; $18.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; range-bound, upside skew</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Bounce from -5.28% crash. NQ +0.64% tailwind. Predicted open $532 (cone $518-$550). Expected close $530 ± $18. Bull 45% / Base 35% / Bear 20%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$520-$540 — semi bounce confirmation</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$525-$545 — trend-follow if SMH holds</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$520-$535 — midday pause</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$518-$555 — FOMV vol expansion</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$520-$540 — semi momentum vs FOMC binary</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="amzn" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">AMZN</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $242-$250 &middot; Expected close $246.00 &plusmn; $7.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; range-bound</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Range-bound, FTC overhang. Predicted open $246.50 (cone $242-$250). Expected close $246 ± $7. Bull 35% / Base 40% / Bear 25%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$244-$248 — pre-mkt follow-through?</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$243-$249 — FTC headline risk</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$242-$246 — drifting low</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$242-$250 — FOMV vol limited</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$242-$248 — close range low end</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="crm" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">CRM</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $159-$165 &middot; Expected close $161.00 &plusmn; $4.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; bearish lean</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Desperate bounce. 10th red day possible. Predicted open $162 (cone $159-$165). Expected close $161 ± $4. Bull 10% / Base 30% / Bear 60%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$160-$163 — anemic bounce attempt</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$159-$162 — continuation</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$158-$161 — new low risk</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$158-$163 — FOMV no help</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$158-$162 — close near low</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="crwv" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">CRWV</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $112-$122 &middot; Expected close $118.00 &plusmn; $12.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; bullish (50% floor)</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Momentum with FOMC risk. No-bearish-after-+5% rule active. Predicted open $118 (cone $112-$122). Expected close $118 ± $12. Bull 50% / Base 30% / Bear 20%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$116-$120 — gap-and-capture</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$115-$122 — NDX front-running</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$114-$118 — midday dip risk</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$112-$124 — FOMC wide vol</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$114-$120 — close depends on risk-on</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="dell" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">DELL</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $404-$416 &middot; Expected close $409.00 &plusmn; $8.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; range-bound</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Gamma pin candidate. Predicted open $410 (cone $404-$416). Expected close $409 ± $8. Bull 40% / Base 40% / Bear 20%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$406-$412 — gamma support</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$405-$415 — contract bid</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$404-$410 — midday pin</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$402-$416 — FOMV vol short-lived</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$404-$412 — max pain $400 anchor</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="goog" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">GOOG</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $365-$372 &middot; Expected close $369 &plusmn; $6.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; range-bound 45%</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Range-bound. Predicted open $368.50 (cone $365-$372). Expected close $369 ± $6. Bear 30% / Base 45% / Range 25%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$366-$370 — pre-mkt direction test</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$365-$371 — AH fade digestion</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$364-$368 — midday drift</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$365-$372 — FOMV vol</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$365-$369 — close range mid</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="intc" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">INTC</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $123-$132 &middot; Expected close $127 &plusmn; $8.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; bullish bounce 50%</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Bullish bounce. Predicted open $127 (cone $123-$132). Expected close $127 ± $8. Bull 50% / Base 30% / Bear 20%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$125-$130 — semi recovery tailwind</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$126-$132 — trend extension</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$124-$128 — midday pullback</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$123-$133 — FOMC binary</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$124-$130 — close depends on semi momentum</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="meta" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">META</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $593-$605 &middot; Expected close $599 &plusmn; $6.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; range-bound 45%</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Range-bound. Predicted open $599 (cone $593-$605). Expected close $599 ± $6. Bull 35% / Base 45% / Bear 20%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$596-$602 — pre-mkt flat</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$595-$603 — AI mode catalyst?</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$594-$598 — midday drift</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$594-$606 — FOMV vol</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$595-$601 — close near $600</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="mu" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">MU</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $1030-$1080 &middot; Expected close $1055 &plusmn; $15.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; range-bound 45%</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Range-bound. Predicted open $1055 (cone $1030-$1080). Expected close $1055 ± $15. Bull 35% / Base 45% / Bear 20%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$1040-$1065 — semi bounce</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$1045-$1075 — MRVL/AVGO read</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$1035-$1055 — midday mean reversion</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$1030-$1080 — FOMC wide cone</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$1040-$1065 — earnings Jun 24 anchors</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="nio" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">NIO</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $4.93-$5.05 &middot; Expected close $4.99 &plusmn; $0.40</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; bearish 55%</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Bearish. Predicted open $4.99 (cone $4.93-$5.05). Expected close $4.99 ± $0.40. Bear 55% / Base 30% / Bull 15%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$4.95-$5.02 — pre-mkt weak</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$4.90-$5.00 — China auto headwind</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$4.88-$4.96 — new low risk</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$4.86-$5.00 — FOMC no help</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$4.88-$4.98 — close near low</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="nvda" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">NVDA</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $205-$212 &middot; Expected close $208.50 &plusmn; $5.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; range-bound 50%</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Range-bound. Predicted open $208.50 (cone $205-$212). Expected close $208.50 ± $5. Bull 35% / Base 50% / Bear 15%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$207-$211 — pre-mkt muted</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$206-$212 — bond sale absorption</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$205-$209 — midday drift</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$205-$213 — FOMC vol</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$206-$210 — close mid</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="orcl" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">ORCL</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $186-$193 &middot; Expected close $189 &plusmn; $6.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; bearish</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Bearish. Predicted open $187 (cone $184-$192). Expected close $188 ± $6. Bull 20% / Base 35% / Bear 45%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$185-$189 — MSFT deal leak damage</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$184-$190 — FOMC overhang</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$183-$187 — $185 bear trigger risk</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$183-$192 — FOMV vol</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$184-$189 — close near low</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="snow" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">SNOW</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $235-$242 &middot; Expected close $238 &plusmn; $5.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; range-bound</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Range-bound. Predicted open $237 (cone $234-$241). Expected close $237 ± $5. Bull 30% / Base 45% / Bear 25%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$236-$239 — pre-mkt flat</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$235-$240 — no catalyst</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$234-$237 — midday drift</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$234-$241 — FOMV vol</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$235-$238 — close mid</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="tsla" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">TSLA</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $400-$410 &middot; Expected close $404 &plusmn; $6.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; range-bound</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Range-bound. Predicted open $403 (cone $398-$408). Expected close $403 ± $6. Bull 30% / Base 45% / Bear 25%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$400-$405 — pre-mkt -0.23%</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$399-$406 — China EV sector weak</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$398-$403 — midday drift</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$398-$408 — FOMV vol</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$399-$405 — SMA200 resistance holds</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="tsm" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">TSM</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $430-$445 &middot; Expected close $438 &plusmn; $12.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; bullish lean</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Bullish lean. Predicted open $438 (cone $430-$448). Expected close $438 ± $12. Bull 45% / Base 35% / Bear 20%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$432-$442 — TWSE carryover</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$435-$445 — SMH tailwind</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$430-$440 — midday pullback</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$430-$450 — FOMC vol wide</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$432-$442 — close mid-high</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="msft" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">MSFT</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $390-$398 &middot; Expected close $393 &plusmn; $5.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf M &middot; range-bound</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Range-bound. Predicted open $393 (cone $389-$397). Expected close $393 ± $5. Bull 30% / Base 45% / Bear 25%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$391-$395 — pre-mkt flat</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$390-$396 — below all EMAs</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$389-$393 — midday drift</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$389-$397 — FOMV vol</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$390-$394 — close flat</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+        
+      <div id="spcx" class="rounded-lg border bg-card shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">SPCX</h3>
+            <p class="text-sm text-muted-foreground">Predicted open $198-$205 &middot; Expected close $201 &plusmn; $4.00</p>
+          </div>
+          <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary/10 text-primary">Conf L &middot; range-bound</span>
+        </div>
+        <div class="p-4">
+          <p class="text-sm text-muted-foreground mb-3">Range-bound (Low confidence). Predicted open $201 (cone $197-$204). Expected close $201 ± $4. Bull 30% / Base 40% / Bear 30%.</p>
+          <table class="w-full text-sm">
+            <thead><tr class="text-muted-foreground text-xs"><th class="text-left p-1">Bucket</th><th class="text-left p-1">Price Range</th><th class="text-left p-1">Tone</th></tr></thead>
+            <tbody class="divide-y text-xs">
+              <tr><td class="p-1 font-medium">9:30-10:00</td><td class="p-1 text-muted-foreground">Opening Range</td><td class="p-1">$199-$203 — AH fade confirmation?</td></tr><tr><td class="p-1 font-medium">10:00-11:30</td><td class="p-1 text-muted-foreground">Morning Trend</td><td class="p-1">$198-$203 — Day 3 distribution</td></tr><tr><td class="p-1 font-medium">11:30-13:30</td><td class="p-1 text-muted-foreground">Midday</td><td class="p-1">$197-$201 — midday drift</td></tr><tr><td class="p-1 font-medium">13:30-15:30</td><td class="p-1 text-muted-foreground">Afternoon</td><td class="p-1">$197-$205 — FOMC vol</td></tr><tr><td class="p-1 font-medium">15:30-16:00</td><td class="p-1 text-muted-foreground">Close Auction</td><td class="p-1">$198-$203 — close mid-low</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div></div>
+
+        <!-- ===== KEY / UPCOMING CATALYSTS ===== -->
+        <section class="rounded-lg border bg-card shadow-sm mt-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Key / Upcoming Catalysts</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted/50">
+                        <tr>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Date</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Event</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Tickers Affected</th>
+                            <th class="text-left p-3 font-medium text-muted-foreground">Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y"><tr><td class="p-3 font-mono text-xs">2026-06-17 14:00 ET</td><td class="p-3">FOMC Rate Decision</td><td class="p-3">ALL</td><td class="p-3 text-muted-foreground">Rate decision + SEP/dot plot release. Market pricing 91.5% hold. Dot plot shifts and R-star the key variables.</td></tr><tr><td class="p-3 font-mono text-xs">2026-06-17 14:30 ET</td><td class="p-3">Powell Press Conference</td><td class="p-3">ALL</td><td class="p-3 text-muted-foreground">Jerome Powell's post-FOMC presser. Tone on inflation trajectory, labor market, and neutral rate will drive post-decision price action.</td></tr><tr><td class="p-3 font-mono text-xs">2026-06-22</td><td class="p-3">NDX Inclusion Effective Date</td><td class="p-3">CRWV</td><td class="p-3 text-muted-foreground">CRWV joining the Nasdaq-100 index effective Jun 22. Estimated $400-800M in passive index fund inflows. Front-running is driving pre-inclusion price action.</td></tr><tr><td class="p-3 font-mono text-xs">2026-06-18</td><td class="p-3">Monthly Options Expiry</td><td class="p-3">DELL</td><td class="p-3 text-muted-foreground">Jun 18 monthly expiry. Maximum pain at $400 provides gamma support and may pin DELL price regardless of FOMC outcome.</td></tr><tr><td class="p-3 font-mono text-xs">Ongoing</td><td class="p-3">FTC Ad Probe</td><td class="p-3">AMZN</td><td class="p-3 text-muted-foreground">Bloomberg reported Jun 16 that the FTC is drafting a complaint over Amazon's ad practices. New headline risk not priced into anchor probabilities.</td></tr><tr><td class="p-3 font-mono text-xs">Ongoing</td><td class="p-3">10-Session Losing Streak — Statistical Mean Reversion</td><td class="p-3">CRM</td><td class="p-3 text-muted-foreground">CRM has fallen for 10 consecutive sessions, a <0.1% probability event in a random walk. RSI 33.2 approaching oversold (<30). March 2026: RSI <30 produced +10% 3-day bounce. Statistical rebuttal: the streak could extend.</td></tr><tr><td class="p-3 font-mono text-xs">Announced Jun 16</td><td class="p-3">Air Force $1.44B Contract</td><td class="p-3">DELL</td><td class="p-3 text-muted-foreground">DELL awarded $1.44B Air Force contract. $51.3B AI server backlog provides structural demand visibility.</td></tr><tr><td class="p-3 font-mono text-xs">2026-06-17 14:00 ET</td><td class="p-3">FOMC Rate Decision</td><td class="p-3">ALL</td><td class="p-3 text-muted-foreground">Rate decision + SEP/dot plot. Warsh first meeting.</td></tr><tr><td class="p-3 font-mono text-xs">2026-06-17 14:30 ET</td><td class="p-3">Powell Press Conference</td><td class="p-3">ALL</td><td class="p-3 text-muted-foreground">Post-FOMC presser — inflation, labor, neutral rate.</td></tr><tr><td class="p-3 font-mono text-xs">Ongoing</td><td class="p-3">MSFT walked from $3B cloud deal</td><td class="p-3">ORCL</td><td class="p-3 text-muted-foreground">FedRAMP compliance dispute. Oracle pre-market -2.24%.</td></tr><tr><td class="p-3 font-mono text-xs">2026-06-22</td><td class="p-3">NDX Inclusion</td><td class="p-3">CRWV</td><td class="p-3 text-muted-foreground">Nasdaq-100 inclusion effective Jun 22. $400-800M passive inflows.</td></tr><tr><td class="p-3 font-mono text-xs">2026-06-18</td><td class="p-3">Monthly Options Expiry</td><td class="p-3">DELL</td><td class="p-3 text-muted-foreground">Max pain $400 gamma pin.</td></tr><tr><td class="p-3 font-mono text-xs">Ongoing</td><td class="p-3">FTC Ad Probe</td><td class="p-3">AMZN</td><td class="p-3 text-muted-foreground">Draft complaint over advertising practices (Bloomberg).</td></tr><tr><td class="p-3 font-mono text-xs">2026-06-24</td><td class="p-3">Earnings</td><td class="p-3">MU</td><td class="p-3 text-muted-foreground">FQ3 earnings — key AI memory demand read.</td></tr><tr><td class="p-3 font-mono text-xs">Announced</td><td class="p-3">Air Force $1.44B Contract</td><td class="p-3">DELL</td><td class="p-3 text-muted-foreground">AI server backlog $51.3B.</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== RISKS GRID ===== -->
+        <section class="rounded-lg border bg-card shadow-sm mt-8">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-semibold">Risks Grid</h2>
+            </div>
+            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4"><div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">AAPL</span>
+      <span class="font-semibold text-sm">Hawkish FOMC reversal</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">AAPL rallied +1.27% on Jun 16. A hawkish dot plot could erase those gains quickly. At $300, AAPL trades at ~30x P/E — multiple compression from higher rates is the biggest risk.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> AAPL is a low-vol tier name (ATR ~$5). Even in a hawkish scenario, downside is likely contained to the $290-295 support zone.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">AMD</span>
+      <span class="font-semibold text-sm">Fragile bounce after positioning crash</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">AMD -5.28% on Jun 16 despite SMH record intraday high — the divergence was stock-specific, not sector-wide. Pre-market bounce could be exhausted by the open. FOMC binary risk is acute for high-beta AMD (ATR $14.59, vol tier: high).</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> Semi sector momentum is strong (MU, MRVL, INTC all up in pre-market). A dovish FOMC could accelerate the bounce toward $550.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">AMZN</span>
+      <span class="font-semibold text-sm">FTC ad probe escalation</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">AMZN massively underperformed QQQ by 168bps on Jun 16 (+0.64% vs -0.01%). The FTC drafting a complaint over ad practices (Bloomberg) adds regulatory headline risk. The $238-256 range has held since May — break below $238 opens $228 (200-day MA).</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> AMZN holds Trump exposure (Bezos/Amazon favorable). FTC scrutiny is well-known — a draft complaint is escalation but not existential.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">CRM</span>
+      <span class="font-semibold text-sm">No bottom in a persistent downtrend</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">CRM has fallen for 10 consecutive sessions to a new 52-week low. Pre-market bounce is only +0.20%. Software rotation out of favor (IGV -15% from 52-week high). Analyst price targets have not adjusted to reality (Needham still at $400 — 2.5x spot).</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> RSI 33.2 approaching oversold. 9-day RSI already oversold (~27.5). Statistical mean reversion probability increases with each red day. Mar 2026 RSI <30 produced +10% 3-day bounce.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">CRWV</span>
+      <span class="font-semibold text-sm">High-beta FOMC vulnerability + post-surge exhaustion</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">CRWV surged +9.67% on Jun 16 on 42.7M volume (+70% avg). High-beta names are the most vulnerable to hawkish FOMC outcomes. Post-surge exhaustion could amplify a downside move. The no-bearish-after-+5% rule caps bearish positioning but does not prevent a hawkish-FOMC-driven selloff.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> NDX inclusion (Jun 22) provides mechanical buying support — $400-800M estimated inflows. Front-running creates a structural bid that may persist through FOMC volatility.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">DELL</span>
+      <span class="font-semibold text-sm">Gamma pin distortion + ATR unreliability</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">DELL has an ATR of $27.83 — abnormally high, making vol-tier band widths unreliable. Jun 18 monthly expiry with $400 max pain may pin price action, overriding FOMC-driven movement. The Air Force contract and $51.3B AI backlog are long-term positives but do not protect against a broad market selloff.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> $400 max pain provides gamma support — dealers will hedge to keep price near $400. The -0.07% anchor day shows equilibrium holding. Predicted close $409 ± $8 with ATR-judgmental narrowing.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">GOOG</span>
+      <span class="font-semibold text-sm">AH fade — +1.09% close vs -0.35% AH</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">Buyers exhausted at close. Pre-market flat — follow-through not confirmed.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> Berkshire accumulation provides structural bid. </p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">INTC</span>
+      <span class="font-semibold text-sm">Recovery from -8.45% may be exhausted</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">Pre-market +4.4% bounce is high but may reverse if semi sector fades.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> BoA upgrade provides analyst floor.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">META</span>
+      <span class="font-semibold text-sm">$600 psychological resistance</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">First $600 close since May 21. RSI may be extended.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> AI search mode launch catalyst provides momentum.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">MU</span>
+      <span class="font-semibold text-sm">ATH-to-close -6.18% reversal + RSI mean reversion</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">RSI 90.98 was unsustainable. Earnings Jun 24 is binary.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> SMH pre-market +2.39%, semi cohort bouncing.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">NIO</span>
+      <span class="font-semibold text-sm">China auto sector contraction</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">Li Auto warned 15-20% sales decline. Below all EMAs.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> Near-term short squeeze potential at RSI ~37.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">NVDA</span>
+      <span class="font-semibold text-sm">$25B bond sale overhang</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">4x oversubscribed but dilutive overhang may cap upside. P/E 20x at 5-yr low.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> P/E 20x is attractive for value buyers. Strong semi ecosystem.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">ORCL</span>
+      <span class="font-semibold text-sm">MSFT deal walk threatens cloud credibility</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">$3B deal killed over FedRAMP. Pre-market -2.24%.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> OCI backlog still large; enterprise installed base sticky.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">TSM</span>
+      <span class="font-semibold text-sm">Semi bounce fragility</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">TWSE +2.81% is strong but SOXX -5.84% Jun 16 weighs.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> AAPL A22 Pro 1.4nm news positive catalyst for HVM business.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">SNOW</span>
+      <span class="font-semibold text-sm">No catalyst, data quality concerns</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">Close from batch 3 flagged [partial-corroboration]. No momentum catalyst.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> EMA structure still technically bullish (from anchor brief).</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">TSLA</span>
+      <span class="font-semibold text-sm">SMA200 resistance at $418</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">Unbroken since breaking below. China EV sector weak.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> Trump exposure could produce positive mention spike.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">MSFT</span>
+      <span class="font-semibold text-sm">Worst technicals in cohort</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">Below all EMAs. Oracle deal leak is net neutral.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> Enterprise spend visibility supports floor.</p>
+  </div>
+            <div class="rounded-lg border bg-card p-4">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-500/10 text-red-500">SPCX</span>
+      <span class="font-semibold text-sm">Day 3 first distribution pattern</span>
+    </div>
+    <p class="text-xs text-muted-foreground mb-2">AH +2.06% then pre-market -0.50% — gap-up fade pattern forming.</p>
+    <p class="text-xs text-green-500"><strong>Mitigant:</strong> Equal-weight ETF benefits from value rotation.</p>
+  </div></div>
+        </section>
+
+        <!-- ===== FOOTER ===== -->
+        <footer class="mt-8 text-center text-xs text-muted-foreground border-t pt-4">
+            <p>Forward-looking pre-market summary generated 2026-06-17 pre-open. Not investment advice.</p>
+            <p>Anchored to daily briefs from 2026-06-16. Backtest hooks pending fill at EOD 2026-06-17.</p>
+            <p class="mt-1">Data sourced from live web search + anchor briefs. [could-not-corroborate] flags noted inline.</p>
+            <p class="mt-1"><p>FOMC decision day: All 6 tickers carry elevated catalyst intensity (2-3). The dot plot is the single most important variable for the cohort's EOD positioning.</p><p>Semi divergence: AMD cratered on Jun 16 despite SMH record highs — a stark stock-specific dislocation. The pre-market bounce (+3.02%) resolves some but not all of the divergence. Watch for AMD to either confirm the bounce or reveal it as a dead-cat bounce.</p><p>Software vs hardware: CRM (10-session losing streak, 52-week low) vs CRWV (+9.67% surge, NDX inclusion front-running) represent the extremes of the cohort's sentiment spectrum. The gap between CRM-Bear-60% and CRWV-Bull-50% (adjusted) is the widest in this batch.</p><p>AMZN anomaly: Flat on a +1.67% QQQ day is the most bearish technical signal in the cohort. 168bps of QQQ underperformance is structural, not random. If this persists on a green tape day, the bear case (<$238, target $228) becomes the base case.</p><p>Gamma dynamics: DELL $400 max pain for Jun 18 expiry may create artificial price support regardless of FOMC outcome. AAPL has no notable gamma concentration. CRWV high vol may overwhelm any gamma effects.</p><p>Data quality note: All pre-market prices from Yahoo Finance flagged [partial-corroboration] due to 'temporary issues' with delayed market data banner. Directional % changes treated as indicative; absolute prices vs anchor close are estimates. Cross-checked against stockmarketwatch.com where available.</p></p>
+        </footer>
+    </div>
+</body>
+</html>

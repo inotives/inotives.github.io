@@ -23,17 +23,17 @@ And yet, the web is the single most important data source for agents that need t
 
 Here's the honest breakdown of what goes wrong:
 
-**Rate limits kill research tasks.** Google's free search API gives you 100 queries per day. Bing gives you 1,000 per month. An agent doing a proper research sweep — comparing five sources, cross-referencing — burns through that in minutes. Direct \`webfetch\` has no built-in throttling, which means your IP gets blocked instead.
+**Rate limits kill research tasks.** Google's free search API gives you 100 queries per day. Bing gives you 1,000 per month. An agent doing a proper research sweep by comparing five sources, cross-referencing that burns through that in minutes. Direct \`webfetch\` has no built-in throttling, which means your IP gets blocked instead.
 
-**JavaScript rendering is table stakes now.** Over 60% of modern websites are single-page applications. React, Vue, Angular — they render content client-side. A plain HTTP fetch gets you the loading skeleton, not the actual content. Your agent thinks it extracted an article, but it got "Loading...".
+**JavaScript rendering is table stakes now.** Over 60% of modern websites are single-page applications. React, Vue, Angular -> they render content client-side. A plain HTTP fetch gets you the loading skeleton, not the actual content. Your agent thinks it extracted an article, but it got "Loading...".
 
-**Anti-bot protection is everywhere.** Cloudflare, Akamai, PerimeterX, DataDome, Imperva — these systems fingerprint HTTP requests, detect automation patterns, and block anything that looks like a bot. Standard \`webfetch\` is immediately flagged.
+**Anti-bot protection is everywhere.** Cloudflare, Akamai, PerimeterX, DataDome, Imperva -> these systems fingerprint HTTP requests, detect automation patterns, and block anything that looks like a bot. Standard \`webfetch\` is immediately flagged.
 
-**CAPTCHAs are an unsolvable wall.** reCAPTCHA, hCaptcha, Cloudflare Turnstile — agents can't solve these without specialized services, and most agents don't have that capability.
+**CAPTCHAs are an unsolvable wall.** reCAPTCHA, hCaptcha, Cloudflare Turnstile -> agents can't solve these without specialized services, and most agents don't have that capability.
 
 **Paywalls and login walls** cut off news sites (NYT, WSJ, Bloomberg), academic papers (IEEE, ACM), social media (LinkedIn, X), and government databases. Your agent has no way to authenticate.
 
-**Content extraction from raw HTML** is its own problem. A fetched page has navigation, ads, sidebars, footers, cookie banners, and JavaScript injection — all mixed in with the actual content. Extracting what matters requires parsing logic that standard tools don't provide.
+**Content extraction from raw HTML** is its own problem. A fetched page has navigation, ads, sidebars, footers, cookie banners, and JavaScript injection -> all mixed in with the actual content. Extracting what matters requires parsing logic that standard tools don't provide.
 
 The pattern is clear: standard tools work for the easy 20% of the web. The other 80% requires real tooling.
 
@@ -43,9 +43,9 @@ The pattern is clear: standard tools work for the easy 20% of the web. The other
 
 The web scraping ecosystem for AI agents splits into two distinct layers:
 
-**The Foundation Layer** — Playwright, Puppeteer, Scrapy — provides the raw capability. Browser automation, HTTP crawling, JavaScript execution. These are the engines that everything else builds on.
+**The Foundation Layer** — Playwright, Puppeteer, Scrapy -> provides the raw capability. Browser automation, HTTP crawling, JavaScript execution. These are the engines that everything else builds on.
 
-**The AI-Agent Layer** — Firecrawl, Browser Use, Crawl4AI, Scrapling, ScrapeGraphAI, Jina Reader — wraps those engines in agent-friendly interfaces. LLM-ready output, MCP integration, anti-bot handling, natural language extraction.
+**The AI-Agent Layer** — Firecrawl, Browser Use, Crawl4AI, Scrapling, ScrapeGraphAI, Jina Reader -> wraps those engines in agent-friendly interfaces. LLM-ready output, MCP integration, anti-bot handling, natural language extraction.
 
 If you're building an agent, you almost never reach for Playwright directly. You reach for the tools on top of it. But understanding the foundation helps you debug when things go wrong.
 
@@ -89,7 +89,7 @@ The tradeoff: cloud pricing starts at $16/month. Self-hosting requires PostgreSQ
 
 ### Browser Use — The Full Agent
 
-**98.8k stars.** Browser Use isn't just a scraper — it's a full browser automation agent. Give it a task ("find the cheapest flight from SFO to JFK on July 15") and it navigates, clicks, types, fills forms, and completes the workflow.
+**98.8k stars.** Browser Use isn't just a scraper, it's a full browser automation agent. Give it a task ("find the cheapest flight from SFO to JFK on July 15") and it navigates, clicks, types, fills forms, and completes the workflow.
 
 Key features:
 - **Real browser interaction**: Not just scraping — clicking, scrolling, form filling, multi-step workflows

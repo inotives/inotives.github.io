@@ -1,6 +1,114 @@
 {
   "posts": [
     {
+      "slug": "2026-06-19-dbx-agent-reach-for-databases",
+      "filename": "2026-06-19-dbx-agent-reach-for-databases.md",
+      "category": "post",
+      "title": "DBX: The Agent-Reach for Databases",
+      "date": "2026-06-19",
+      "tags": [
+        "database",
+        "dbx",
+        "mcp",
+        "ai-agents",
+        "developer-tools",
+        "sqlite",
+        "postgresql",
+        "mysql",
+        "rust",
+        "tauri"
+      ],
+      "summary": "Found a tool that does for databases what agent-reach does for internet platforms — one unified interface to 50+ databases, with built-in AI assistant and MCP support for AI agents. DBX is 15MB, cross-platform, and self-hostable.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-19-from-puppeteer-to-agent-reach-my-web-scraping-evolution",
+      "filename": "2026-06-19-from-puppeteer-to-agent-reach-my-web-scraping-evolution.md",
+      "category": "post",
+      "title": "From Puppeteer to Agent-Reach: My Web Scraping Evolution",
+      "date": "2026-06-19",
+      "tags": [
+        "playwright",
+        "puppeteer",
+        "agent-reach",
+        "web-scraping",
+        "ai-agents",
+        "browser-automation",
+        "cli-tools"
+      ],
+      "summary": "I started with webfetch, hit its limits fast, moved to Puppeteer for browser automation, then Playwright for cross-browser support. Now I run Agent-Reach as my primary internet access layer and keep Playwright for UI testing and complex browser interactions. Here's the journey and why the split makes sense.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-19-my-agentic-development-stack",
+      "filename": "2026-06-19-my-agentic-development-stack.md",
+      "category": "post",
+      "title": "My Agentic Development Stack: The Seven Tools That Actually Work Together",
+      "date": "2026-06-19",
+      "tags": [
+        "agentic-stack",
+        "ai-agents",
+        "mattpocock-skills",
+        "context-mode",
+        "codegraph",
+        "agent-reach",
+        "playwright-mcp",
+        "strata-memory",
+        "git-conveyor",
+        "developer-tools",
+        "mcp"
+      ],
+      "summary": "After months of experimenting with AI coding agents, I've settled on a seven-tool stack that covers every layer of the workflow: engineering discipline, context optimization, code intelligence, internet access, browser automation, persistent memory, and multi-agent orchestration. Here's what each tool does and why they compose.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-19-stop-chasing-models-start-building-harnesses",
+      "filename": "2026-06-19-stop-chasing-models-start-building-harnesses.md",
+      "category": "post",
+      "title": "Stop Chasing Models, Start Building Harnesses",
+      "date": "2026-06-19",
+      "tags": [
+        "ai-engineering",
+        "agentic-ai",
+        "harness-engineering",
+        "llm-models",
+        "agent-agnostic",
+        "developer-tools",
+        "ai-workflow",
+        "loop-engineering"
+      ],
+      "summary": "New LLMs drop every month — faster, stronger, more capable. But the 2-3% benchmark gains don't matter for professional AI engineers. What matters is the 20% that comes from your harness: your stack, your skills, your workflows. That's agent-agnostic, it's yours, and it compounds.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-17-agent-identity-revocation-problem",
+      "filename": "2026-06-17-agent-identity-revocation-problem.md",
+      "category": "post",
+      "title": "Who Revokes the Rogue Agent? The Revocation Gap in AI Agent Identity",
+      "date": "2026-06-17",
+      "tags": [
+        "ai-agents",
+        "blockchain",
+        "identity",
+        "revocation",
+        "agent-identity",
+        "pkli",
+        "ocsp",
+        "crl",
+        "did",
+        "solana",
+        "agent-commerce",
+        "trust"
+      ],
+      "summary": "Agent identity standards are shipping fast — SAID, SAS, Entra Agent ID, AIS-1. But a comment on my last post pointed out the gap nobody's solving well: what happens when an agent key goes rogue? There's no OCSP for agents. No revocation list. No emergency kill switch. This is the hardest unsolved piece of the agent identity stack.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-06-15-web-scraping-tools-for-ai-agents",
       "filename": "2026-06-15-web-scraping-tools-for-ai-agents.md",
       "category": "post",
@@ -900,6 +1008,58 @@
       }
     ],
     "stockPreOpen": [
+      {
+        "id": "stock-pre-open-2026-06-19",
+        "name": "Stock Market Pre-Opening Price Estimation",
+        "filename": "2026-06-19-pre-market-summary.html",
+        "url": "/reports/stocks/daily/2026-06-19-pre-market-summary.html",
+        "date": "2026-06-19",
+        "tags": [
+          "Stocks",
+          "Pre-open",
+          "Agent research"
+        ],
+        "description": "Pre-market stock research report generated by my stock analysis agents before the market opens, focused on opening price estimation signals and market setup."
+      },
+      {
+        "id": "stock-pre-open-2026-06-18",
+        "name": "Stock Market Pre-Opening Price Estimation",
+        "filename": "2026-06-18-pre-market-summary.html",
+        "url": "/reports/stocks/daily/2026-06-18-pre-market-summary.html",
+        "date": "2026-06-18",
+        "tags": [
+          "Stocks",
+          "Pre-open",
+          "Agent research"
+        ],
+        "description": "Pre-market stock research report generated by my stock analysis agents before the market opens, focused on opening price estimation signals and market setup."
+      },
+      {
+        "id": "stock-pre-open-2026-06-17",
+        "name": "Stock Market Pre-Opening Price Estimation",
+        "filename": "2026-06-17-pre-market-summary.html",
+        "url": "/reports/stocks/daily/2026-06-17-pre-market-summary.html",
+        "date": "2026-06-17",
+        "tags": [
+          "Stocks",
+          "Pre-open",
+          "Agent research"
+        ],
+        "description": "Pre-market stock research report generated by my stock analysis agents before the market opens, focused on opening price estimation signals and market setup."
+      },
+      {
+        "id": "stock-pre-open-2026-06-16",
+        "name": "Stock Market Pre-Opening Price Estimation",
+        "filename": "2026-06-16-pre-market-summary.html",
+        "url": "/reports/stocks/daily/2026-06-16-pre-market-summary.html",
+        "date": "2026-06-16",
+        "tags": [
+          "Stocks",
+          "Pre-open",
+          "Agent research"
+        ],
+        "description": "Pre-market stock research report generated by my stock analysis agents before the market opens, focused on opening price estimation signals and market setup."
+      },
       {
         "id": "stock-pre-open-2026-06-15",
         "name": "Stock Market Pre-Opening Price Estimation",
