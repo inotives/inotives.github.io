@@ -1,24 +1,46 @@
 {
   "posts": [
     {
-      "slug": "2026-06-19-dbx-agent-reach-for-databases",
-      "filename": "2026-06-19-dbx-agent-reach-for-databases.md",
+      "slug": "2026-06-20-ponytail-lazy-senior-dev-skill",
+      "filename": "2026-06-20-ponytail-lazy-senior-dev-skill.md",
       "category": "post",
-      "title": "DBX: The Agent-Reach for Databases",
-      "date": "2026-06-19",
+      "title": "Ponytail: The Lazy Senior Dev Skill for Your AI Agent",
+      "date": "2026-06-20",
       "tags": [
-        "database",
-        "dbx",
-        "mcp",
         "ai-agents",
         "developer-tools",
-        "sqlite",
-        "postgresql",
-        "mysql",
-        "rust",
-        "tauri"
+        "code-minimization",
+        "yagni",
+        "claude-code",
+        "codex",
+        "skills",
+        "agent-skills",
+        "prompt-engineering"
       ],
-      "summary": "Found a tool that does for databases what agent-reach does for internet platforms — one unified interface to 50+ databases, with built-in AI assistant and MCP support for AI agents. DBX is 15MB, cross-platform, and self-hostable.",
+      "summary": "Found a skill that makes AI agents write minimal, necessary code — like the laziest senior dev in the room. ~54% less code, ~20% cheaper, ~27% faster, 100% safe. Works with 14 agents. When combined with context-mode and codegraph, token usage drops ~95% per task.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-20-securing-your-local-ai-agent",
+      "filename": "2026-06-20-securing-your-local-ai-agent.md",
+      "category": "post",
+      "title": "Securing Your Local AI Agent: Why VPN Isn't Enough Anymore",
+      "date": "2026-06-20",
+      "tags": [
+        "ai-agents",
+        "security",
+        "remote-access",
+        "tailscale",
+        "mcp-security",
+        "sandboxing",
+        "prompt-injection",
+        "local-llm",
+        "devsecops",
+        "codex",
+        "openai"
+      ],
+      "summary": "Everyone's running agents from personal machines now. Models like Claude's Fable 5 get jailbroken with basic prompts. Your local setup is exposed. Tailscale VPN is the starting point, not the finish line — here's the full defense-in-depth stack, including Codex's cloud sandbox as the most secure option.",
       "featured_image": null,
       "draft": false
     },
@@ -81,6 +103,28 @@
         "loop-engineering"
       ],
       "summary": "New LLMs drop every month — faster, stronger, more capable. But the 2-3% benchmark gains don't matter for professional AI engineers. What matters is the 20% that comes from your harness: your stack, your skills, your workflows. That's agent-agnostic, it's yours, and it compounds.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-18-dbx-agent-reach-for-databases",
+      "filename": "2026-06-18-dbx-agent-reach-for-databases.md",
+      "category": "post",
+      "title": "DBX: The Agent-Reach for Databases",
+      "date": "2026-06-18",
+      "tags": [
+        "database",
+        "dbx",
+        "mcp",
+        "ai-agents",
+        "developer-tools",
+        "sqlite",
+        "postgresql",
+        "mysql",
+        "rust",
+        "tauri"
+      ],
+      "summary": "Found a tool that does for databases what agent-reach does for internet platforms — one unified interface to 50+ databases, with built-in AI assistant and MCP support for AI agents. DBX is 15MB, cross-platform, and self-hostable.",
       "featured_image": null,
       "draft": false
     },

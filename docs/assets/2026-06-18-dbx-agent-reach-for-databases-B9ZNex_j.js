@@ -1,6 +1,6 @@
 var e=`---
 title: "DBX: The Agent-Reach for Databases"
-date: 2026-06-19
+date: 2026-06-18
 tags: [database, dbx, mcp, ai-agents, developer-tools, sqlite, postgresql, mysql, rust, tauri]
 summary: "Found a tool that does for databases what agent-reach does for internet platforms — one unified interface to 50+ databases, with built-in AI assistant and MCP support for AI agents. DBX is 15MB, cross-platform, and self-hostable."
 ---
