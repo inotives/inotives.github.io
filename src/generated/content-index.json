@@ -1,6 +1,86 @@
 {
   "posts": [
     {
+      "slug": "2026-06-21-aiso-agent-search-optimization",
+      "filename": "2026-06-21-aiso-agent-search-optimization.md",
+      "category": "post",
+      "title": "AISO: The New SEO for the Agent Era",
+      "date": "2026-06-21",
+      "tags": [
+        "aiso",
+        "agent-seo",
+        "agent-discovery",
+        "mcp",
+        "a2a-protocol",
+        "agent-market",
+        "api-first",
+        "developer-tools"
+      ],
+      "summary": "SEO made websites discoverable by Google. AISO makes applications discoverable by AI agents. The A2A market is in the land grab phase — the first companies to master AISO will capture the agent economy. Here's how it works and how to implement it.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-21-axo-agent-experience-optimization",
+      "filename": "2026-06-21-axo-agent-experience-optimization.md",
+      "category": "post",
+      "title": "AXO: Agent Experience Optimization — The Design Architecture Your App Is Missing",
+      "date": "2026-06-21",
+      "tags": [
+        "axo",
+        "agent-experience",
+        "application-design",
+        "agent-goals",
+        "workflow-design",
+        "developer-tools",
+        "agent-optimization",
+        "ux-design"
+      ],
+      "summary": "AXO (Agent Experience Optimization) goes beyond API connection. It's the full design architecture that ensures agents achieve their goals smoothly in your application. Like UX optimizes for human goals, AXO optimizes for agent goals. Here's what it means and how to implement it.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-21-future-of-application-design-dual-flow",
+      "filename": "2026-06-21-future-of-application-design-dual-flow.md",
+      "category": "post",
+      "title": "The Future of Application Design: Why Every App Needs an Agent Interface",
+      "date": "2026-06-21",
+      "tags": [
+        "application-design",
+        "ai-agents",
+        "dual-flow",
+        "mcp",
+        "a2a-protocol",
+        "agent-experience",
+        "api-first",
+        "future-of-software",
+        "ax-design"
+      ],
+      "summary": "Applications are evolving from human-only interfaces to dual-flow architectures. The human flow (UI, forms, visual) optimizes for human cognition. The agent flow (API, CLI, MCP, structured data) optimizes for machine consumption. Every app will need an agent interface — the question is when, not if.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-21-git-worktrees-multi-agent-isolation",
+      "filename": "2026-06-21-git-worktrees-multi-agent-isolation.md",
+      "category": "post",
+      "title": "Git Worktrees: The Missing Piece for Multi-Agent Development",
+      "date": "2026-06-21",
+      "tags": [
+        "git-worktrees",
+        "multi-agent",
+        "agentic-workflow",
+        "git-conveyor",
+        "parallel-execution",
+        "developer-tools",
+        "code-isolation"
+      ],
+      "summary": "Git worktrees solve the fundamental problem of parallel agent execution: multiple agents working on the same repo without conflicts. Each agent gets its own worktree with its own HEAD, index, and working directory, while sharing the same .git object database. This is the missing infrastructure layer for our agentic stack.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-06-20-ponytail-lazy-senior-dev-skill",
       "filename": "2026-06-20-ponytail-lazy-senior-dev-skill.md",
       "category": "post",
