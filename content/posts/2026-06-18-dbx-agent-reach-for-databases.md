@@ -31,7 +31,7 @@ One app. All of them.
 
 ## The AI Layer
 
-Here's where it gets interesting for agentic workflows. DBX has two AI integration points:
+This is where it gets interesting for agentic workflows. DBX has two AI integration points:
 
 **1. Built-in AI SQL Assistant**
 
@@ -72,7 +72,7 @@ The parallel is exact:
 | **Health Check** | `agent-reach doctor` | Connection manager |
 | **Zero Config** | 6 platforms out of the box | Local SQLite/Redis out of the box |
 
-Both tools recognize the same pattern: instead of writing platform-specific or database-specific code for each target, provide a unified capability layer that handles the routing, authentication, and data formatting automatically.
+Both tools follow the same pattern: instead of writing platform-specific or database-specific code for each target, provide a unified capability layer that handles the routing, authentication, and data formatting automatically.
 
 ## Self-Hosted
 

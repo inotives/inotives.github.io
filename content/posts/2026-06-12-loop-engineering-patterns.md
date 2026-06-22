@@ -7,7 +7,7 @@ summary: "Addy Osmani named it in June 2026: loop engineering is building the sy
 
 ## Loop Engineering: Stop Prompting Agents, Start Building Systems That Prompt Them
 
-There's a shift happening right now in how people build with coding agents, and it has a name.
+There's a shift happening in how people build with coding agents, and it has a name.
 
 Addy Osmani published "Loop Engineering" on June 8, building on Peter Steinberger's observation: *"You shouldn't be prompting coding agents anymore. You should be designing loops that prompt your agents."* Boris Cherny said it even more directly: *"I don't prompt Claude anymore. I have loops running that prompt Claude... My job is to write loops."*
 
@@ -29,7 +29,7 @@ Most people are still stuck on layer one. Here's the full picture:
 
 Prompt engineering never goes away — a sloppy prompt inside a loop just produces sloppy work faster. Context engineering doesn't go away either — the loop still needs to inject the right files and history on each turn. Loop engineering wraps both layers in an autonomous control structure.
 
-The one-sentence version from Lushbinary: *"Loop engineering is building a system that prompts your agent on a schedule and against a goal, instead of typing each prompt yourself."*
+Lushbinary puts it simply: *"Loop engineering is building a system that prompts your agent on a schedule and against a goal, instead of typing each prompt yourself."*
 
 ---
 

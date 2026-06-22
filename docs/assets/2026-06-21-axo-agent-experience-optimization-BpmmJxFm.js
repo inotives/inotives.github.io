@@ -11,16 +11,16 @@ Most people think connecting an agent to your API is enough. Expose an endpoint,
 
 That's like putting a door on a building and calling it accessible. The door exists. But can someone in a wheelchair actually get through it? Can they find the right room? Can they accomplish what they came for?
 
-AXO (Agent Experience Optimization) is the design architecture that ensures agents can actually achieve their goals in your application. Not just connect. Not just call an endpoint. Actually accomplish what they set out to do.
+AXO (Agent Experience Optimization) is the design architecture that gets agents to their goals. Not just to your API. To the actual outcome they came for.
 
 ## What is AXO?
 
-AXO is the discipline of optimizing your entire application — not just the API layer — for agent goal completion.
+AXO optimizes your entire application — not just the API layer — for agent goal completion.
 
 **API connection** = "The agent can call your endpoint."
 **AXO** = "The agent can achieve its goal efficiently, reliably, and repeatedly."
 
-Think of it this way:
+Three layers:
 
 | Layer | What It Is | What It Enables |
 |-------|-----------|-----------------|
@@ -28,15 +28,15 @@ Think of it this way:
 | **MCP** | Tool is discoverable | Agent can find and understand it |
 | **AXO** | Full goal path is optimized | Agent can achieve its goal |
 
-Most apps stop at layer 1 or 2. AXO is layer 3 — and it's where the real value lives.
+Most apps stop at layer 1 or 2. AXO is layer 3 — where the real value lives.
 
 ## The Agent Goal Path
 
-When an agent enters your application, it has a goal. AXO optimizes the entire path from goal initiation to goal completion.
+When an agent enters your application, it has a goal. AXO optimizes the entire path from start to finish.
 
 \`\`\`
 AGENT GOAL PATH
-═══════════════════════════════════════════════════════════════
+══════════════════════════════════════════════════════════════
 
 1. DISCOVERY
    Agent needs your capability → finds your Agent Card
@@ -73,7 +73,7 @@ AGENT GOAL PATH
 
 ## A Real Example: E-Commerce Agent Flow
 
-Let's trace an agent trying to buy office supplies through your e-commerce platform.
+Here's what happens when an agent tries to buy office supplies through your e-commerce platform.
 
 **Without AXO (just API connection)**:
 \`\`\`
@@ -120,11 +120,11 @@ Agent Retries: Will use again
 
 ## The AXO Framework
 
-AXO has five pillars. Each one optimizes a different aspect of the agent's journey.
+AXO has five pillars. Each one optimizes a different part of the agent's journey.
 
 ### Pillar 1: Goal Clarity
 
-**Principle**: The agent must know exactly what it can achieve in your application.
+The agent must know exactly what it can achieve in your application.
 
 **Without it**:
 \`\`\`json
@@ -152,7 +152,7 @@ Agent thinks: "I can search, compare, order, and track. I know the constraints. 
 
 ### Pillar 2: Path Simplicity
 
-**Principle**: The shortest path from goal to completion should be clear and linear.
+The shortest path from goal to completion should be clear and linear.
 
 **Without it**:
 \`\`\`
@@ -171,7 +171,7 @@ Agent: "Four steps. Clear progression. I can track where I am."
 
 ### Pillar 3: Error Recovery
 
-**Principle**: When something fails, the agent must know exactly how to recover.
+When something fails, the agent must know exactly how to recover.
 
 **Without it**:
 \`\`\`json
@@ -195,7 +195,7 @@ Agent: "I know exactly what happened and what to do next."
 
 ### Pillar 4: State Continuity
 
-**Principle**: Agent progress must survive interruptions, retries, and context switches.
+Agent progress must survive interruptions, retries, and context switches.
 
 **Without it**:
 \`\`\`
@@ -214,7 +214,7 @@ Agent: "Right, I was ordering paper. Let me continue."
 
 ### Pillar 5: Verifiable Outcomes
 
-**Principle**: Every action must produce a verifiable result the agent can act on.
+Every action must produce a verifiable result the agent can act on.
 
 **Without it**:
 \`\`\`
@@ -259,7 +259,7 @@ How do you measure if your AXO is working?
 | **Success metric** | Conversion, satisfaction | Tool usage | Goal completion rate |
 | **Failure mode** | Confused user | Confused agent | Failed goal |
 
-AXO is the evolution of both UX and AX. UX optimizes for human happiness. AX optimizes for agent usability. AXO optimizes for agent goal achievement.
+UX optimizes for human happiness. AX optimizes for agent usability. AXO optimizes for agent goal achievement.
 
 ## How to Implement AXO
 

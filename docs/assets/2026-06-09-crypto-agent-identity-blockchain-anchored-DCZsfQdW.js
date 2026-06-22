@@ -9,7 +9,7 @@ summary: "I run my own Hermes agent. In 2-3 years, everyone will have a personal
 
 I run my own Hermes agent. It handles research, writes drafts, interacts with tools, and increasingly acts as my proxy in automated workflows. It's powerful. It's also making me think about a problem I didn't expect to face this soon.
 
-Here's the thought experiment:
+Think about this:
 
 In 2-3 years, everyone will have a personal AI agent. Not a chatbot you occasionally open — an agent that lives online, represents you, communicates with other agents, and eventually transacts on your behalf. Your agent negotiates with a freelancer's agent. A vendor's agent sends your agent an invoice. A service agent offers your agent a subscription.
 
@@ -78,7 +78,7 @@ The research landscape is further along than I expected. Here's what's productio
 
 ## Microsoft Entra Agent ID: The Enterprise Counterpart
 
-I'd be remiss not to mention Microsoft's entry in this space. [**Microsoft Entra Agent ID**](https://learn.microsoft.com/en-us/entra/agent-id/) — announced at Build 2025, now generally available — is Microsoft's identity and authorization framework for AI agents in enterprise environments. It treats agents as first-class identities in Entra ID, complete with:
+I also need to mention Microsoft's entry in this space. [**Microsoft Entra Agent ID**](https://learn.microsoft.com/en-us/entra/agent-id/) — announced at Build 2025, now generally available — is Microsoft's identity and authorization framework for AI agents in enterprise environments. It treats agents as first-class identities in Entra ID, complete with:
 
 - **Agent identity blueprints** — Reusable templates that define what kind of agent it is and what credentials it can use ([GitHub samples](https://github.com/Azure-Samples/ms-identity-agent-identities))
 - **Sponsors** — Every agent has a human sponsor recorded on the identity object, so there's always someone accountable
@@ -108,7 +108,7 @@ My Hermes agent doesn't need all four layers today. It needs Layer 1 and Layer 2
 
 The market is already signalling demand. The decentralised identity market is projected at **$7.4B in 2026**, with non-human identities growing **44% YoY**. Machine-to-human ratios in some enterprises have reached **144:1**. Mastercard and Visa are both shipping agent identity products. Google AP2 has 60+ launch partners.
 
-This isn't speculative infrastructure. It's being deployed now.
+This isn't speculative. It's being deployed now.
 
 ---
 

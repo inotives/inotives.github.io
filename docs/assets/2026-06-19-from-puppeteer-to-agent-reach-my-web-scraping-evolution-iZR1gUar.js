@@ -24,7 +24,7 @@ I could work around some of these, but it felt like I was fighting the tool inst
 
 ## Phase 2: Puppeteer
 
-Puppeteer was my first real browser automation tool. Launch a headless Chrome instance, navigate to a page, wait for it to render, extract what you need. Suddenly, JavaScript-heavy sites weren't a problem anymore.
+Puppeteer was my first real browser automation tool. Launch a headless Chrome instance, navigate to a page, wait for it to render, extract what you need. JavaScript-heavy sites weren't a problem anymore.
 
 For a while, it was great. I could:
 
@@ -53,13 +53,13 @@ Playwright felt like the natural evolution. Microsoft built it to fix Puppeteer'
 
 I switched all my browser automation to Playwright and haven't looked back. For UI testing specifically, it's the clear winner. The test runner, the assertions, the ability to test across browsers — nothing else comes close.
 
-But here's the thing: Playwright is still a browser automation tool. It's fantastic at controlling browsers. It's not fantastic at being an AI agent's internet access layer.
+Playwright is still a browser automation tool. It's fantastic at controlling browsers. It's not fantastic at being an AI agent's internet access layer.
 
 When I needed my agent to "search Twitter for recent AI news" or "read this Reddit thread and summarize it," I was still writing platform-specific Playwright scripts. Navigate to Twitter, handle the login, find the search box, type the query, wait for results, parse the DOM, extract the data. Repeat for Reddit. Repeat for YouTube. Repeat for every platform.
 
 ## Phase 4: Agent-Reach (Primary) + Playwright (When Needed)
 
-This is where I landed, and it makes the most sense for my workflow.
+This is where I landed, and it works for my workflow.
 
 **Agent-Reach** is fundamentally different from Playwright and Puppeteer. It's not a browser automation tool — it's a capability layer. Instead of asking "how do I control a browser to read a tweet?", it asks "how do I read a tweet?" and routes to the best available backend.
 
@@ -93,7 +93,7 @@ Each tool solved a real problem:
 | 3 | Playwright | Cross-browser automation | Still browser-level, platform-agnostic |
 | 4 | Agent-Reach + Playwright | Platform-aware access + browser interaction | — |
 
-The key insight: **abstraction layers matter.** Playwright/Puppeteer operate at the browser level — they're the transport layer. Agent-Reach operates at the platform level — it's the application layer. For AI agents that need broad internet access, the application layer is usually what matters. The agent doesn't care HOW it reads a tweet — it cares THAT it can read a tweet.
+The key insight: abstraction layers matter. Playwright/Puppeteer operate at the browser level — they're the transport layer. Agent-Reach operates at the platform level — it's the application layer. For AI agents that need broad internet access, the application layer is usually what matters. The agent doesn't care HOW it reads a tweet — it cares THAT it can read a tweet.
 
 If you're building AI agents that need to research across multiple platforms, start with Agent-Reach. If you need to test web apps or do complex browser interactions, add Playwright. They complement each other better than any single tool covers everything.
 

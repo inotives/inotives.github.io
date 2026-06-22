@@ -213,5 +213,4 @@ The loop runs itself now. Your job is to make sure it's running toward something
 - [Context Degradation in AI Coding Sessions](/posts/2026-05-23-context-degradation-in-coding-sessions) — the technical symptoms of comprehension debt in practice
 - [Skill Chaining: Building Connected AI Workflows](/posts/2026-06-04-skill-chaining-stock-trading-pipeline) — decomposed pipeline with interface contracts and prerequisite enforcement
 - [Loop Engineering: Stop Prompting Agents, Start Building Systems](/posts/2026-06-13-loop-engineering-patterns) — the system design layer above this workflow
-- [Crypto Asset Data: Why Clean Data Matters for Agentic Workflows](/posts/2026-06-08-crypto-asset-data-cleanup-agentic-spaces) — diagnosis-before-solution in practice
-`;export{e as default};
+- [Crypto Asset Data: Why Clean Data Matters for Agentic Workflows](/posts/2026-06-08-crypto-asset-data-cleanup-agentic-spaces) — diagnosis-before-solution in practice`;export{e as default};

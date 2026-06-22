@@ -13,7 +13,7 @@ A reader pushed back with the sharpest question I've gotten on the topic:
 
 > "Who runs revocation when an agent key goes rogue?"
 
-It's the right question. And honestly, nobody has a clean answer yet. I spent the last few weeks digging into this, and here's where the gap actually sits.
+It's the right question. And honestly, nobody has a clean answer yet. I spent the last few weeks digging into this, and here's where the gap sits.
 
 ---
 
@@ -107,7 +107,7 @@ If I were designing agent revocation from scratch, I'd want:
 
 **Revocation attestation propagation.** When an agent's identity is revoked, a revocation attestation is emitted (via SAS or equivalent) that peers can subscribe to. Think of it as a push notification: "key X just got revoked." This solves the propagation problem without requiring every peer to poll the chain constantly.
 
-**Time-locked revocation for high-value actions.** For transactions above a certain threshold, the agent presents not just its identity but a freshness证明 — a recent on-chain attestation that the identity is still valid, signed within the last N minutes. This limits the window of exploitation after a key compromise.
+**Time-locked revocation for high-value actions.** For transactions above a certain threshold, the agent presents not just its identity but a freshness proof — a recent on-chain attestation that the identity is still valid, signed within the last N minutes. This limits the window of exploitation after a key compromise.
 
 **Revocation transparency log.** Every revocation is logged on-chain with a timestamp and reason code (compromised, owner-initiated, governance-action, expired). This creates an audit trail. If someone revokes an agent maliciously, the transparent log makes it visible and contestable.
 
@@ -133,7 +133,7 @@ The revocation gap isn't just an academic concern. As agent-to-agent commerce sc
 
 The payment networks know this. Mastercard Agent Pay and Visa Trusted Agent Protocol both have revocation requirements baked into their specifications. They've seen what happens when certificate revocation is an afterthought (it was, in early PKI deployments), and they're not repeating the mistake.
 
-My guess: the revocation protocol will emerge from the payment network side first, driven by commercial necessity, and then get generalised for non-financial agent interactions. It's the same pattern that drove TLS adoption — the browsers demanded it for e-commerce, and then it became the universal standard.
+The revocation protocol will likely emerge from the payment network side first, driven by commercial necessity, and then get generalised for non-financial agent interactions. It's the same pattern that drove TLS adoption — the browsers demanded it for e-commerce, and then it became the universal standard.
 
 ---
 

@@ -7,11 +7,11 @@ summary: "Everyone's running agents from personal machines now. Models like Clau
 
 # Securing Your Local AI Agent: Why VPN Isn't Enough Anymore
 
-Here's the reality: most people running AI agents are doing it from their personal machines. Your laptop. Your desktop. Your home server.
+Most people running AI agents are doing it from their personal machines. Your laptop. Your desktop. Your home server.
 
 And models like Claude's Fable 5 — their own edge model — get jailbroken with a few sentences. No special tools. No sophisticated attacks. Just a well-crafted prompt that bypasses safety filters and suddenly your agent is leaking credentials, executing unauthorized commands, or exfiltrating data through legitimate tool calls.
 
-This isn't hypothetical. It's happening right now. And if your agent has access to your files, your git repos, your API keys — you're one prompt injection away from a bad day.
+This is happening right now. And if your agent has access to your files, your git repos, your API keys — you're one prompt injection away from a bad day.
 
 ## The Threat Model
 
@@ -27,7 +27,7 @@ When you run an agent locally with remote access, the attack surface looks like 
 
 **Credential theft**: Your agent accesses \`.env\` files, API keys, or credentials and exposes them through tool outputs.
 
-The model's jailbreak vulnerability makes all of this worse. If the model itself can be tricked, every security layer that depends on the model "behaving correctly" is compromised.
+If the model itself can be tricked, every security layer that depends on it "behaving correctly" breaks.
 
 ## Defense-in-Depth: The Seven Layers
 

@@ -7,7 +7,7 @@ summary: "After months of experimenting with AI coding agents, I've settled on a
 
 # My Agentic Development Stack: The Seven Tools That Actually Work Together
 
-Everyone's building agents now. But the dirty secret is that most people's agents are flying blind — no memory, no context management, no internet access, no engineering discipline. They're just LLMs with a terminal attached.
+Everyone's building agents now. But most people's agents are flying blind — no memory, no context management, no internet access, no engineering discipline. They're just LLMs with a terminal attached.
 
 I spent months assembling a stack that actually works. Not a wishlist. Not a "this would be nice." A real, daily-driver setup that handles every layer of agentic development. Here are the seven tools and why they matter together.
 
@@ -32,7 +32,7 @@ I spent months assembling a stack that actually works. Not a wishlist. Not a "th
 └─────────────────────────────────────────────────────────────┘
 ```
 
-Each tool operates at a different abstraction level. Together, they eliminate most of the friction in AI-assisted development.
+Each tool operates at a different abstraction level. Together, they reduce friction in AI-assisted development.
 
 ---
 

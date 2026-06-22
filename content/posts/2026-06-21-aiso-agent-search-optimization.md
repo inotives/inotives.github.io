@@ -9,17 +9,17 @@ summary: "SEO made websites discoverable by Google. AISO makes applications disc
 
 Remember when SEO was optional? When you could build a great product and just hope people found it?
 
-That's where we are with AISO (Agent Search Optimization). Except the stakes are higher — because the "search engine" isn't just indexing pages. It's choosing which tools to use, which services to call, and which companies to pay.
+That's where we are with AISO (Agent Search Optimization). The difference: the "search engine" isn't indexing pages. It's choosing which tools to use, which services to call, and which companies to pay.
 
 ## What is AISO?
 
-AISO is the discipline of making your application discoverable, understandable, and usable by AI agents.
+AISO makes your application discoverable, understandable, and usable by AI agents.
 
 **SEO**: Optimize for Google's crawlers → rank higher in search results → humans click your link → revenue.
 
 **AISO**: Optimize for agent discovery → rank higher in Agent Card registries → agents connect to your MCP server → revenue.
 
-The shift is profound. SEO optimizes for a search algorithm that indexes web pages. AISO optimizes for agents that consume structured capabilities.
+SEO optimizes for a search algorithm that indexes web pages. AISO optimizes for agents that consume structured capabilities.
 
 ## The AISO Funnel
 
@@ -61,7 +61,7 @@ Same structure. Different consumer. Different optimization strategy.
 
 ## How AISO Works: A Real Example
 
-Let's say an agent needs to process payments. Here's what happens:
+Say an agent needs to process payments. Here's what happens:
 
 ```
 Agent needs to process payments
@@ -75,13 +75,13 @@ Agent needs to process payments
   → Agent uses tool regularly → revenue
 ```
 
-The agent doesn't browse websites. It doesn't read blog posts. It queries a registry, matches capabilities, and connects.
+The agent queries a registry, matches capabilities, and connects. It doesn't browse websites. It doesn't read blog posts.
 
 If your Agent Card isn't in that registry, you don't exist.
 
 ## Agent Card Optimization: Your New Landing Page
 
-The Agent Card is your application's "homepage" for agents. Optimize it like you would a landing page for humans.
+The Agent Card is your application's "homepage" for agents. Treat it like a landing page for humans.
 
 **Bad Agent Card**:
 ```json
@@ -159,11 +159,11 @@ Your MCP server is your application's "API" for agents. Optimize it for agent co
 }
 ```
 
-Compare this to bad documentation: "Search for stuff." No schema, no examples, no description. No agent will use this.
+Bad documentation: "Search for stuff." No schema, no examples, no description. No agent will use this.
 
 ## Semantic Tagging: Your New Keywords
 
-Tags are how agents discover your capabilities. Think of them as keywords for the agent era.
+Tags are how agents discover your capabilities. They're keywords for the agent era.
 
 **Tag taxonomy**:
 ```

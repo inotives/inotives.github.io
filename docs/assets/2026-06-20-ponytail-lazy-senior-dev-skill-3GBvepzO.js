@@ -13,7 +13,7 @@ Ponytail puts him inside your AI agent.
 
 ## What It Is
 
-[Ponytail](https://github.com/DietrichGebert/ponytail) is a skill that enforces code minimization discipline. Before writing code, the agent stops at the first rung that holds:
+[Ponytail](https://github.com/DietrichGebert/ponytail) is a skill that forces code minimization. Before writing code, the agent stops at the first rung that holds:
 
 \`\`\`
 1. Does this need to exist?   → no: skip it (YAGNI)
@@ -60,7 +60,7 @@ Our current agentic stack has mattpocock/skills for engineering discipline — T
 | mattpocock/skills | Engineering practices | Misalignment, no tests, verbose code |
 | ponytail | Code minimization | Over-engineering, unnecessary deps, bloat |
 
-Together, they create a tighter feedback loop:
+Together, they form a tighter loop:
 1. \`/grill-me\` aligns on what to build
 2. Ponytail ensures you build only what's needed
 3. \`/tdd\` ensures it works correctly
@@ -176,7 +176,7 @@ Playwright handles browser automation when CLI tools aren't enough. Ponytail ens
 └─────────────────────────────────────────────────────────────┘
 \`\`\`
 
-Ponytail sits in the Agent Interface Layer, right next to mattpocock/skills. It's the first filter before code reaches the other layers — ensuring what gets written is minimal, which makes everything downstream faster and cheaper.
+Ponytail belongs in the Agent Interface Layer, right next to mattpocock/skills. It's the first filter before code reaches the other layers — ensuring what gets written is minimal, which makes everything downstream faster and cheaper.
 
 ## Multi-Agent Compatibility
 

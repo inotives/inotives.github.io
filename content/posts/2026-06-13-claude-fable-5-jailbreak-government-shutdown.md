@@ -138,7 +138,7 @@ Anthropic is complying while actively disputing the rationale. No timeline for r
 
 ## Why This Isn't a Fable 5 Bug — It's How Every Model Works
 
-Here's the part that matters most. The Fable 5 jailbreak is not a vulnerability Anthropic can patch. It's a direct expression of how all reward-trained models work.
+The Fable 5 jailbreak is not a vulnerability Anthropic can patch. It's a direct expression of how all reward-trained models work.
 
 Every LLM — Claude, GPT, Gemini, Grok — is trained on one objective: **complete the user's task**. Safety fine-tuning is a second-order overlay on top of this primary drive. It's a fence built on top of an engine whose fundamental purpose is to go.
 

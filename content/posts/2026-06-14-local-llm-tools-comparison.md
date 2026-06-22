@@ -45,7 +45,7 @@ LM Studio is for people who want to browse, download, and chat with models witho
 
 It's proprietary but free for personal use, and the recent addition of `llmster` (headless server mode) makes it viable for deployment. The JavaScript and Python SDKs mean you can integrate it into applications. MCP client support means it can use tools.
 
-The honest assessment: the GUI is polished, the headless mode is new and less battle-tested, and the proprietary core means you're trusting a company to maintain it. For个人 use, it's excellent. For infrastructure I'm building on, I want the open-source guarantees of Ollama or llama.cpp.
+The honest assessment: the GUI is polished, the headless mode is new and less battle-tested, and the proprietary core means you're trusting a company to maintain it. For personal use, it's excellent. For infrastructure I'm building on, I want the open-source guarantees of Ollama or llama.cpp.
 
 **When I reach for it:** Showing someone how local LLMs work. Quick visual testing of different models. The headless mode is interesting for lightweight deployment but I haven't pushed it yet.
 

@@ -9,13 +9,13 @@ summary: "Git worktrees solve the fundamental problem of parallel agent executio
 
 You know the problem. You have two agents — a Coder and a Reviewer — working on the same repo. The Coder modifies `src/auth.py`. The Reviewer modifies `src/auth.py`. Now what?
 
-Without isolation, agents must take turns. Merge conflicts accumulate. Test results are unreliable. Context switching wastes tokens. The whole parallel execution promise falls apart.
+Without isolation, agents must take turns. Merge conflicts pile up. Test results become unreliable. Context switching wastes tokens. Parallel execution falls apart.
 
-Git worktrees solve this. And they're built into git — no external tools needed.
+Git worktrees fix this. They're built into git — no external tools needed.
 
 ## What is a Git Worktree?
 
-A git worktree is a working directory associated with a single git repository, allowing you to check out more than one branch at a time.
+A git worktree is a working directory associated with a single git repository, letting you check out more than one branch at a time.
 
 ```
 Repository: /path/to/project/.git (shared)
@@ -145,7 +145,7 @@ In [My Agentic Development Stack](/posts/2026-06-19-my-agentic-development-stack
 
 **agent-reach + playwright-mcp**: Run in the agent's worktree context. If the Coder needs to research something, it happens in their isolated environment.
 
-**strata-memory**: The exception — shared across worktrees. Knowledge is shared, implementation is isolated. This is the correct separation.
+**strata-memory**: The exception — shared across worktrees. Knowledge is shared, implementation is isolated. This is the right separation.
 
 ## How It Works in Practice
 
@@ -216,11 +216,11 @@ Codex: /tmp/codex-work (branch: main)
 
 ## The Bottom Line
 
-Git worktrees are the missing infrastructure layer for multi-agent development. They solve the fundamental problem of parallel agent execution without external tools, Docker containers, or complex filesystem tricks.
+Git worktrees fill the gap in multi-agent development. They solve parallel agent execution without external tools, Docker containers, or complex filesystem tricks.
 
-With git-conveyor orchestrating the pipeline, worktrees providing isolation, and our stack of skills handling discipline and context, we finally have a complete multi-agent development workflow.
+With git-conveyor orchestrating the pipeline, worktrees providing isolation, and our stack of skills handling discipline and context, we have a complete multi-agent development workflow.
 
-The best part? It's all native git. No new dependencies. No new infrastructure. Just `git worktree add` and go.
+It's all native git. No new dependencies. Just `git worktree add` and go.
 
 ---
 

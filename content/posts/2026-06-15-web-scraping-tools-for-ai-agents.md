@@ -21,7 +21,7 @@ And yet, the web is the single most important data source for agents that need t
 
 ## Why Standard Tools Fail
 
-Here's the honest breakdown of what goes wrong:
+Here's what goes wrong:
 
 **Rate limits kill research tasks.** Google's free search API gives you 100 queries per day. Bing gives you 1,000 per month. An agent doing a proper research sweep by comparing five sources, cross-referencing that burns through that in minutes. Direct `webfetch` has no built-in throttling, which means your IP gets blocked instead.
 
@@ -35,7 +35,7 @@ Here's the honest breakdown of what goes wrong:
 
 **Content extraction from raw HTML** is its own problem. A fetched page has navigation, ads, sidebars, footers, cookie banners, and JavaScript injection -> all mixed in with the actual content. Extracting what matters requires parsing logic that standard tools don't provide.
 
-The pattern is clear: standard tools work for the easy 20% of the web. The other 80% requires real tooling.
+The pattern: standard tools work for the easy 20% of the web. The other 80% requires real tooling.
 
 ---
 
@@ -77,7 +77,7 @@ Pure Python HTTP crawling framework. No browser, no JavaScript rendering, just f
 
 Firecrawl converts any URL to clean markdown or structured JSON. It handles JavaScript rendering, anti-bot protection, proxy rotation, and rate limiting automatically. P95 latency is 3.4 seconds across millions of pages. Covers 96% of the web.
 
-The killer features for agents:
+The key features for agents:
 - **MCP server**: One command (`npx -y firecrawl-mcp`) integrates with Claude Code, Cursor, any MCP-compatible agent
 - **Agent endpoint**: Describe what you need, Firecrawl searches and extracts it automatically — no CSS selectors, no URL lists
 - **Batch scraping**: Hit multiple pages in parallel
@@ -162,7 +162,7 @@ The tradeoff: rate-limited free tier, single URL only (no crawling), no browser 
 
 ## The Decision Framework
 
-Here's how I actually choose between these tools:
+Here's how I choose between these tools:
 
 | Need | Tool | Why |
 |---|---|---|
@@ -182,7 +182,7 @@ The pattern: start with Jina Reader for quick reads. Graduate to Firecrawl when 
 
 Web scraping isn't a nice-to-have for AI agents — it's fundamental infrastructure. An agent without reliable web access is an agent with a knowledge cutoff. It can reason about last year's data but not today's. It can analyze trends it read about but can't verify if they're still current.
 
-The tools have matured significantly. Firecrawl's 96% web coverage, Crawl4AI's self-hosted model, Browser Use's full automation, Scrapling's anti-bot bypass — these aren't experimental anymore. They're production infrastructure.
+The tools have matured. Firecrawl's 96% web coverage, Crawl4AI's self-hosted model, Browser Use's full automation, Scrapling's anti-bot bypass — these aren't experimental anymore. They're production infrastructure.
 
 The question isn't whether your agent needs web scraping. It's which tools you've wired up, and whether they actually work when you point them at the sites that matter.
 

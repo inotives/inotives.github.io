@@ -84,7 +84,7 @@ The harness *is* the product.
 
 ## Agent-Agnostic by Design
 
-Here's the key insight: harnessing is model-agnostic.
+Harnessing is model-agnostic.
 
 Your custom skills, your memory system, your orchestration pipeline — none of it depends on which model you use. When the next model drops, you don't rebuild your stack. You point it at the same harness.
 

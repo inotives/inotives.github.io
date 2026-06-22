@@ -167,7 +167,7 @@ It also means fine-tuning is most valuable for *stable* patterns — the things 
 
 This is still exploration, not production. My current plan:
 
-1. **Curate the dataset** — Pull 500-1,000 examples from my git history, project configs, and code review patterns. Focus on the coding and data analysis workflows I重复 daily.
+1. **Curate the dataset** — Pull 500-1,000 examples from my git history, project configs, and code review patterns. Focus on the coding and data analysis workflows I repeat daily.
 2. **Fine-tune Gemma 4 12B** — Use QLoRA on a 4-bit quantized model. Should fit in 32GB with room to spare.
 3. **Evaluate** — Test against a held-out set of coding tasks. Does the fine-tuned model produce better code for *my* projects than the base model?
 4. **Export to GGUF** — Fuse the adapter, export, load into Ollama as a local coding assistant.
