@@ -8,12 +8,12 @@ import {
 export default function Projects() {
   const publicRepos = [
     {
-      id: 'agent-knowledge',
-      name: 'Agent Knowledge',
-      url: 'https://github.com/inotives/agent-knowledge',
-      tags: ['AI agents', 'memory', 'CLI', 'knowledge workflows'],
+      id: 'strata-memory',
+      name: 'Strata Memory',
+      url: 'https://github.com/inotives/strata-memory',
+      tags: ['AI agents', 'memory', 'markdown', 'SQLite', 'CLI'],
       description:
-        'A persistent-memory system for AI agents. It captures session history through CLI hooks, turns conversations into draft knowledge, and supports human-curated markdown knowledge bases, skills, and agent workflows.',
+        'A 3-tier wiki-like memory system for AI agents. Markdown files are canonical, SQLite is a rebuildable derived index for FTS5 search. Supports draft → knowledge → intelligence lifecycle with safe promotion via CLI.',
     },
     {
       id: 'barebone-agents',
@@ -46,6 +46,14 @@ export default function Projects() {
       tags: ['AI workflows', 'data engineering', 'skills', 'scripts'],
       description:
         'My day-to-day collection of scripts, workflows, and skills for agentic development as a data engineer and data analyst. It captures practical patterns for working with AI agents across data, automation, and analysis tasks.',
+    },
+    {
+      id: 'felts',
+      name: 'Felts',
+      url: 'https://github.com/inotives/felts',
+      tags: ['Python', 'dbt', 'Postgres', 'Prefect', 'financial-data'],
+      description:
+        'Financial ELT Stacks — a Python, dbt, Postgres, and Prefect project for extracting financial data (crypto, stocks, macro), landing it as raw evidence, and transforming it into source-owned analytical models.',
     },
     {
       id: 'inotives-github-pages',
