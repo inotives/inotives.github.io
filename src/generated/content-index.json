@@ -1,6 +1,46 @@
 {
   "posts": [
     {
+      "slug": "2026-06-25-agent-side-analytics-landscape",
+      "filename": "2026-06-25-agent-side-analytics-landscape.md",
+      "category": "post",
+      "title": "Agent Analytics: Stop Trying to Detect Bots, Let Them Report Themselves",
+      "date": "2026-06-25",
+      "tags": [
+        "agent-analytics",
+        "agent-side",
+        "webmcp",
+        "llms-txt",
+        "bot-detection",
+        "aso",
+        "product-idea",
+        "cloudflare"
+      ],
+      "summary": "Server-side agent detection has two structural problems: a standards adoption loop nobody can break, and infrastructure incumbents who already see everything at the edge. Agent-side analytics flips the model. Instead of detecting agents on your server, let the agent report on its own browsing. No standards needed, no edge infrastructure required, and the data covers the full agent experience.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-25-web-traffic-composition-dead-internet-aso",
+      "filename": "2026-06-25-web-traffic-composition-dead-internet-aso.md",
+      "category": "post",
+      "title": "Web Traffic Just Flipped: 57% Is Bots Now, and Your Website Isn't Ready",
+      "date": "2026-06-25",
+      "tags": [
+        "bots",
+        "agent-traffic",
+        "aso",
+        "dead-internet",
+        "webmcp",
+        "care-framework",
+        "seo",
+        "ai-web"
+      ],
+      "summary": "For the first time in history, automated traffic outnumbers human visitors on the web. Cloudflare reports 57.4% bot traffic. Stanford found 35% of new pages are AI-generated. The dead internet theory is becoming measurable fact. And a new discipline called Agent Search Optimization (ASO) is emerging to help websites survive in a bot-first world.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-06-24-ai-honesty-problem",
       "filename": "2026-06-24-ai-honesty-problem.md",
       "category": "post",
