@@ -21,6 +21,22 @@ summary: "One-paragraph description of the post."
 - Do not include `status` or other extra fields
 - Add a `## References` section at the end with links to relevant resources (GitHub repos, articles, docs, posts, etc.) mentioned in the post
 
+### Humanizer Skill
+
+When writing articles or notes, apply the humanizer skill to remove AI-generated writing patterns. The skill is located at:
+`/Users/inotives/.strata-memory/3_intelligence/skill/writing/humanizer/SKILL.md`
+
+Key rules:
+- Delete filler phrases ("In order to", "It is worth noting")
+- Break formulaic structures (binary contrasts, dramatic reveals)
+- Vary sentence length and rhythm
+- Trust the reader — state facts directly, skip softening
+- Delete quotable lines — if it sounds like a pull quote, rewrite it
+- Add genuine personality and voice, not just removal of bad patterns
+- Use specific details instead of vague claims
+- Limit em dashes to max 2 per 500 words
+- Avoid rule of three, negative parallelism, synonym cycling
+
 ### Notes Writing 
 
 Store the notes into .notes/ folder. Notes filename format: `YYYY-MM-DD--<short-topic-title>.md`.
