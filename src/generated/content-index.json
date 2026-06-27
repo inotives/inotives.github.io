@@ -1,6 +1,23 @@
 {
   "posts": [
     {
+      "slug": "2026-06-27-loop-engineering-effectiveness",
+      "filename": "2026-06-27-loop-engineering-effectiveness.md",
+      "category": "post",
+      "title": "The Effectiveness of Loop Engineering: When Autonomy Burns More Than It Builds",
+      "date": "2026-06-27",
+      "tags": [
+        "agent-loop",
+        "loop-engineering",
+        "token-cost",
+        "react",
+        "human-in-the-loop"
+      ],
+      "summary": "Agent loops look efficient until you see the token bill. The O(N²) cost curve, the ambiguity tax, and the gap between what loops promise and what they deliver in practice.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-06-26-agent-skills-vs-workflows",
       "filename": "2026-06-26-agent-skills-vs-workflows.md",
       "category": "post",

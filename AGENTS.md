@@ -20,6 +20,7 @@ summary: "One-paragraph description of the post."
 - `summary` is the meta description, not `description`
 - Do not include `status` or other extra fields
 - Add a `## References` section at the end with links to relevant resources (GitHub repos, articles, docs, posts, etc.) mentioned in the post
+- After writing or updating an article note, always run `npm run build` to rebuild the site
 
 ### Humanizer Skill
 
