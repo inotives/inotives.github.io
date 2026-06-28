@@ -1,6 +1,42 @@
 {
   "posts": [
     {
+      "slug": "2026-06-28-asia-ai-regulation-wave",
+      "filename": "2026-06-28-asia-ai-regulation-wave.md",
+      "category": "post",
+      "title": "Asia's AI Regulation Wave: Five Countries, Five Approaches, Zero Coordination",
+      "date": "2026-06-28",
+      "tags": [
+        "ai-regulation",
+        "asia-pacific",
+        "ai-governance",
+        "policy",
+        "tech-policy"
+      ],
+      "summary": "By mid-2026, five Asia-Pacific jurisdictions have enacted binding AI laws. The approaches range from China's 30+ enforceable standards to Japan's voluntary guidelines. The result is a fragmented compliance landscape where a single AI deployment can trigger obligations under multiple incompatible regimes.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-28-western-vs-eastern-llm-landscape",
+      "filename": "2026-06-28-western-vs-eastern-llm-landscape.md",
+      "category": "post",
+      "title": "Western LLMs vs Eastern LLMs: The Business Model Fork",
+      "date": "2026-06-28",
+      "tags": [
+        "llm",
+        "deepseek",
+        "openai",
+        "anthropic",
+        "open-source",
+        "enterprise-ai",
+        "ai-ecosystem"
+      ],
+      "summary": "The global LLM market has split into two ecosystems. Western labs sell closed, premium-priced models. Eastern labs ship open-weight models at aggressive prices. The benchmark gap has collapsed to 3-6 months. The Fable 5 export control incident proved that access to frontier AI is a geopolitical lever, accelerating the sovereign AI push across Europe, Asia, and non-aligned states.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-06-27-loop-engineering-effectiveness",
       "filename": "2026-06-27-loop-engineering-effectiveness.md",
       "category": "post",
