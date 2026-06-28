@@ -733,6 +733,10 @@ a.contribution-cell.has-report:hover {
   color: var(--ink);
 }
 
+.manual-prose strong {
+  color: #31fbdd;
+}
+
 .manual-prose a {
   border-bottom: 1px solid transparent;
   color: var(--accent);

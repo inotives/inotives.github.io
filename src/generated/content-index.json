@@ -37,6 +37,24 @@
       "draft": false
     },
     {
+      "slug": "2026-06-27-context-bloat-from-skills-tools-mcp",
+      "filename": "2026-06-27-context-bloat-from-skills-tools-mcp.md",
+      "category": "post",
+      "title": "Context Bloat: How Skills, Tools, and MCP Servers Eat Your Agent's Working Memory",
+      "date": "2026-06-27",
+      "tags": [
+        "context-bloat",
+        "mcp",
+        "skills",
+        "agent-efficiency",
+        "token-optimization",
+        "ai-engineering"
+      ],
+      "summary": "Every installed skill, MCP server, and tool definition adds tokens to your system prompt at session start. After months of agent usage, this overhead consumes 10-30% of context before any real work begins. Real-world measurements show three MCP servers burning 72% of a 200K context window. Solutions exist but require architectural changes.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-06-27-loop-engineering-effectiveness",
       "filename": "2026-06-27-loop-engineering-effectiveness.md",
       "category": "post",
