@@ -22,6 +22,16 @@ summary: "One-paragraph description of the post."
 - Add a `## References` section at the end with links to relevant resources (GitHub repos, articles, docs, posts, etc.) mentioned in the post
 - After writing or updating an article note, always run `npm run build` to rebuild the site
 
+#### Adding Images to Articles
+
+Store images in `public/assets/images/`. Use absolute paths in markdown:
+
+```markdown
+![Alt text](/assets/images/filename.jpeg)
+```
+
+Do NOT use relative paths like `assets/images/...` — Vite/GitHub Pages will resolve them incorrectly and the browser will 404. The `content/` directory is not served; only `public/` is.
+
 ### Humanizer Skill
 
 When writing articles or notes, apply the humanizer skill to remove AI-generated writing patterns. The skill is located at:
