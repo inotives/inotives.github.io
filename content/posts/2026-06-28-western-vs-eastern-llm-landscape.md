@@ -13,7 +13,7 @@ The benchmark gap between top Western and Eastern models has collapsed to 3-6 mo
 
 ## The Two Camps
 
-![Western Labs vs Eastern Labs: Closed Premium vs Open-Weight Volume](assets/images/2026-06-28-western-vs-eastern-llm-landscape-1.jpeg)
+![Western Labs vs Eastern Labs: Closed Premium vs Open-Weight Volume](/assets/images/2026-06-28-western-vs-eastern-llm-landscape-1.jpeg)
 
 Western labs (OpenAI, Anthropic, Google) optimize for revenue per token. Premium pricing, enterprise lock-in, safety documentation, SLAs. GPT-5.5 costs $30/M output tokens. Claude Opus 4.7 costs $25/M. These models lead on frontier reasoning and hard benchmarks, but the margin is thin.
 
@@ -33,7 +33,7 @@ The US government's CAISI evaluation put DeepSeek V4-Pro roughly 8 months behind
 
 ## The Cost Math
 
-![Benchmark Gap Collapses But Cost Diverges: Performance vs Pricing](assets/images/2026-06-28-western-vs-eastern-llm-landscape-2.jpeg)
+![Benchmark Gap Collapses But Cost Diverges: Performance vs Pricing](/assets/images/2026-06-28-western-vs-eastern-llm-landscape-2.jpeg)
 
 At 1 billion tokens per month, the monthly cost differences are stark:
 
@@ -77,7 +77,7 @@ For Western enterprises considering Chinese open-weight models, the risks are re
 
 ## The Fable 5 Incident: The Sovereign AI Wake-Up Call
 
-![The Fable 5 Incident: Geopolitical AI Leverage and the Sovereign AI Wake-Up Call](assets/images/2026-06-28-western-vs-eastern-llm-landscape-3.jpeg)
+![The Fable 5 Incident: Geopolitical AI Leverage and the Sovereign AI Wake-Up Call](/assets/images/2026-06-28-western-vs-eastern-llm-landscape-3.jpeg)
 
 On June 12, 2026, the US Department of Commerce sent Anthropic a letter. The government was imposing export controls on Fable 5 and Mythos 5, Anthropic's two most powerful models. An approved export license from the Bureau of Industry and Security was now required for any foreign person to access the models. The requirement included Anthropic's own foreign national employees.
 
