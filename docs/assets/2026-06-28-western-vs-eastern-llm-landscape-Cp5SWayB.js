@@ -13,6 +13,8 @@ The benchmark gap between top Western and Eastern models has collapsed to 3-6 mo
 
 ## The Two Camps
 
+![Western Labs vs Eastern Labs: Closed Premium vs Open-Weight Volume](assets/images/2026-06-28-western-vs-eastern-llm-landscape-1.jpeg)
+
 Western labs (OpenAI, Anthropic, Google) optimize for revenue per token. Premium pricing, enterprise lock-in, safety documentation, SLAs. GPT-5.5 costs $30/M output tokens. Claude Opus 4.7 costs $25/M. These models lead on frontier reasoning and hard benchmarks, but the margin is thin.
 
 Eastern labs (DeepSeek, Alibaba/Qwen, Xiaomi, Zhipu, MiniMax) optimize for volume per token. Open-weight by default, aggressive pricing, community-driven distribution. DeepSeek V4-Flash costs $0.28/M output tokens. Qwen 3.6 Plus costs roughly $0.60/M. That is a 109x price difference at the flagship tier.
@@ -30,6 +32,8 @@ But DeepSeek V4-Pro wins on coding and math. LiveCodeBench: 93.5 vs Claude's 88.
 The US government's CAISI evaluation put DeepSeek V4-Pro roughly 8 months behind the US frontier on aggregate. DeepSeek disputes this. On math, coding, and natural sciences specifically, V4-Pro closes most of the gap. The 8-month lag is real on the hardest agentic and reasoning benchmarks, but matters less for routine production workloads.
 
 ## The Cost Math
+
+![Benchmark Gap Collapses But Cost Diverges: Performance vs Pricing](assets/images/2026-06-28-western-vs-eastern-llm-landscape-2.jpeg)
 
 At 1 billion tokens per month, the monthly cost differences are stark:
 
@@ -72,6 +76,8 @@ Microsoft is considering using DeepSeek V4 inside Copilot, but through Azure, ke
 For Western enterprises considering Chinese open-weight models, the risks are real. Training data provenance uncertain. Content censorship may be baked in. Export-control and supply-chain complications. But the mitigations are straightforward when self-hosted. Download weights, run on your own infrastructure, no data leaves your network, full auditability.
 
 ## The Fable 5 Incident: The Sovereign AI Wake-Up Call
+
+![The Fable 5 Incident: Geopolitical AI Leverage and the Sovereign AI Wake-Up Call](assets/images/2026-06-28-western-vs-eastern-llm-landscape-3.jpeg)
 
 On June 12, 2026, the US Department of Commerce sent Anthropic a letter. The government was imposing export controls on Fable 5 and Mythos 5, Anthropic's two most powerful models. An approved export license from the Bureau of Industry and Security was now required for any foreign person to access the models. The requirement included Anthropic's own foreign national employees.
 
