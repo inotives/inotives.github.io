@@ -1,6 +1,23 @@
 {
   "posts": [
     {
+      "slug": "2026-06-28-ai-economic-paradox-demand-destruction",
+      "filename": "2026-06-28-ai-economic-paradox-demand-destruction.md",
+      "category": "post",
+      "title": "The AI Economic Paradox: When Replacing Workers Destroys the Customers Who Buy What You Sell",
+      "date": "2026-06-28",
+      "tags": [
+        "ai-economics",
+        "demand-destruction",
+        "labor-displacement",
+        "macroeconomics",
+        "automation-paradox"
+      ],
+      "summary": "AI adoption cuts jobs to reduce costs, but displaced workers stop spending, which hurts the same businesses that adopted AI. Economists call this the AI Layoff Trap. It is a Prisoner's Dilemma where every firm automates to survive, even though collective restraint would raise all profits. The result is over-automation that harms both workers and owners.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-06-28-asia-ai-regulation-wave",
       "filename": "2026-06-28-asia-ai-regulation-wave.md",
       "category": "post",
