@@ -1,6 +1,6 @@
 ---
 title: "The AI Economic Paradox: When Replacing Workers Destroys the Customers Who Buy What You Sell"
-date: 2026-06-28
+date: 2026-06-29
 tags: [ai-economics, demand-destruction, labor-displacement, macroeconomics, automation-paradox]
 summary: "AI adoption cuts jobs to reduce costs, but displaced workers stop spending, which hurts the same businesses that adopted AI. Economists call this the AI Layoff Trap. It is a Prisoner's Dilemma where every firm automates to survive, even though collective restraint would raise all profits. The result is over-automation that harms both workers and owners."
 ---
@@ -12,6 +12,8 @@ The pitch is simple. Deploy AI, cut costs, boost margins, grow the business. Eve
 The problem nobody mentions: the cost you cut is the income someone uses to buy your product.
 
 This is not a theoretical concern. Economists have formalized it. The math shows that in a competitive market, each firm's rational decision to replace workers with AI destroys aggregate demand, but no single firm can stop because it bears only a fraction of the demand destruction while capturing 100% of the cost savings.
+
+![The AI Paradox: Replacing workers destroys the customers who buy what you sell](/assets/images/2026-06-28-ai-economic-paradox-demand-destruction-1.jpeg)
 
 ## The Displacement Spiral
 
@@ -28,6 +30,8 @@ More workers displaced. More demand destruction. More firms adopt AI.
 Each firm's rational decision accelerates the spiral. No individual firm can profitably deviate. This is a Nash equilibrium.
 
 ## The Prisoner's Dilemma
+
+![AI Displacement Spiral: The Prisoner's Dilemma where over-automation becomes the Nash equilibrium](/assets/images/2026-06-28-ai-economic-paradox-demand-destruction-2.jpeg)
 
 A paper called "The AI Layoff Trap" (Falk & Tsoukalas, arXiv March 2026) proved this mathematically.
 
@@ -67,6 +71,8 @@ Microsoft warned: "Storage and memory prices have more than doubled and we expec
 
 ## The Three-Dimensional Squeeze
 
+![The Three-Dimensional Squeeze: How AI's infrastructure demands deflate consumer power](/assets/images/2026-06-28-ai-economic-paradox-demand-destruction-3.jpeg)
+
 AI's impact on consumer purchasing power now has three reinforcement loops:
 
 AI replaces workers, reducing income and spending. AI data centers consume power, raising electricity bills and reducing spending. AI consumes DRAM, raising electronics prices and reducing spending.
@@ -85,9 +91,50 @@ The efficiency gains from AI are being partially or fully offset by the cost inc
 
 ## What Actually Fixes It
 
-Wage adjustments raise the threshold but do not close the wedge. Free entry does not eliminate the distortion. Capital income taxes do not change the automation incentive. Worker equity participation does not solve the demand destruction. Universal basic income helps demand but does not stop the automation race. Upskilling requires workers to have jobs to be skilled for.
+The "AI Layoff Trap" paper tested six popular policy responses against the externality margin. Five of them fail. Here is why, and what works.
 
-Only a Pigouvian automation tax changes the calculus that drives the race. A tax on automation itself that makes the firm internalize the demand destruction it causes.
+**Wage adjustments** raise the cost threshold for automation but do not close the wedge between private and social cost. A firm still captures 100% of the savings while bearing only a fraction of the demand destruction. The automation rate stays above the cooperatively efficient level.
+
+**Free entry** does not eliminate the distortion. More firms entering the market means more competition, which widens the gap between individual and collective optimality. The Prisoner's Dilemma gets worse with more players, not better.
+
+**Capital income taxes** do not change the automation decision. They operate on profit levels, not on the per-task margin where the externality resides. Taxing profits after automation does not change whether a firm automates.
+
+**Worker equity participation** sounds fair but does not solve the demand destruction problem. Workers own a fraction of the firm, but if the firm automates and demand falls, the equity value falls too. The pie shrinks for everyone.
+
+**Universal basic income** raises the floor on living standards but leaves every firm's incentive to automate unchanged. UBI addresses the symptom (displaced workers have no income) but not the cause (firms race to automate faster than the economy can absorb).
+
+**Upskilling** requires workers to have jobs to be skilled for. It builds human capital over time but does not stop the automation race today. The timing mismatch is the problem. The economy needs a mechanism to slow the rate of displacement, not just prepare people for jobs that may not exist.
+
+### The One That Works: Pigouvian Automation Tax
+
+A Pigouvian tax corrects a market failure by making the actor internalize the cost they impose on others. In this case, the firm automating destroys demand for rival firms. That demand destruction is a negative externality. The tax makes the firm pay for it.
+
+**How it works:** Charge a per-task fee on automation equal to the demand loss the firm removes from others. The firm now faces the true social cost of replacing a worker, not just its private cost savings. This shifts the automation rate from the individually optimal level to the collectively efficient level.
+
+**Why it is the only solution:** Every other policy operates downstream of the decision. Wage adjustments change the cost threshold. UBI changes the income floor. Retraining changes the worker's capability. But none of them change the firm's decision calculus at the margin where the externality resides. The Pigouvian tax is the only instrument that directly corrects the incentive.
+
+**Revenue recycling:** The tax revenue can fund two channels simultaneously. Short-run transfers (wage insurance, severance supplements) cushion displaced workers immediately. Long-run retraining programs build durable human capital, raising the rate at which displaced workers re-enter the labor market. This makes the tax potentially self-limiting: as retraining improves reabsorption, the demand destruction shrinks, and the optimal tax rate falls.
+
+**Implementation options:**
+- Remove the tax asymmetry that favors capital over labor. Currently, employers pay payroll taxes for human workers but receive accelerated depreciation and R&D credits for automation equipment. Making the tax code neutral between labor and capital eliminates the artificial subsidy for automation.
+- Tax "so-so automation" that exploits tax arbitrage without meaningfully increasing output. Not all automation creates value. Some exists purely to shift costs from labor to capital. A targeted tax can distinguish productive automation from tax-driven automation.
+- Set the tax equal to the per-task demand externality. The paper derives this formally: the optimal tax rate equals the uninternalized demand loss per automated task. In practice, this means estimating the consumption impact of displacement and pricing the tax accordingly.
+
+**The coordination problem:** One country adopting an automation tax alone could push automation offshore. The paper acknowledges this: international coordination strengthens the case. But partial adoption still helps. A domestic tax slows the automation race within that jurisdiction, even if firms can automate elsewhere. The alternative — doing nothing — guarantees the race continues unimpeded.
+
+### What else helps alongside the tax
+
+The Pigouvian tax corrects the core externality. But a complete policy response layers complementary measures:
+
+**Sector-specific transition funds.** Retraining programs targeted at industries with the highest displacement rates. Generic "learn to code" programs do not work. Sector-specific transitions — from customer service to healthcare support, from data entry to logistics coordination — require tailored curricula and employer partnerships.
+
+**Demand-side redistribution.** Policies that put money into the hands of high-propensity consumers. The top 20% spend 59% of aggregate consumption, but the marginal propensity to consume is highest among middle-income workers. Targeted transfers to this group generate more demand per dollar than broad stimulus.
+
+**Procurement incentives.** Government procurement policies that reward firms for augmenting workers rather than replacing them. Firms that use AI to increase worker productivity (not eliminate jobs) get preferential treatment in government contracts.
+
+**Data center cost pass-through regulation.** Ensure that the cost of AI infrastructure — power, DRAM, data centers — does not act as a regressive tax on consumers. Rate caps on electricity in data center clusters. Requirements that memory supply diversion to AI does not completely starve consumer electronics.
+
+The core insight: displacement policy must address not only the aftermath of AI labor displacement but also the competitive incentives that drive it. Cleaning up after the fire is necessary. But so is installing sprinklers.
 
 ## The Irony
 

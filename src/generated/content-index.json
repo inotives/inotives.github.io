@@ -1,11 +1,43 @@
 {
   "posts": [
     {
-      "slug": "2026-06-28-ai-economic-paradox-demand-destruction",
-      "filename": "2026-06-28-ai-economic-paradox-demand-destruction.md",
+      "slug": "2026-06-30-deepseek-dspark-speculative-decoding",
+      "filename": "2026-06-30-deepseek-dspark-speculative-decoding.md",
+      "category": "post",
+      "title": "DeepSeek DSpark: Making LLMs Faster Without Retraining",
+      "date": "2026-06-30",
+      "tags": [
+        "deepseek",
+        "speculative-decoding",
+        "llm-inference",
+        "ai-infrastructure"
+      ],
+      "summary": "DSpark is DeepSeek's speculative decoding framework that speeds up LLM inference by 60-85% without changing model weights. Here's how it works and why it matters.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-30-enterprise-ai-data-consolidation",
+      "filename": "2026-06-30-enterprise-ai-data-consolidation.md",
+      "category": "post",
+      "title": "Before You Deploy AI, Consolidate Your Data",
+      "date": "2026-06-30",
+      "tags": [
+        "enterprise-ai",
+        "data-consolidation",
+        "data-modeling",
+        "financial-services"
+      ],
+      "summary": "Enterprise AI fails not because the models are bad, but because the data is scattered. In financial services, customer data lives in CRM, KYC systems, exchange feeds, and blockchain analytics tools that do not talk to each other. Consolidating this data is the first real step before AI can do anything useful.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-06-29-ai-economic-paradox-demand-destruction",
+      "filename": "2026-06-29-ai-economic-paradox-demand-destruction.md",
       "category": "post",
       "title": "The AI Economic Paradox: When Replacing Workers Destroys the Customers Who Buy What You Sell",
-      "date": "2026-06-28",
+      "date": "2026-06-29",
       "tags": [
         "ai-economics",
         "demand-destruction",
