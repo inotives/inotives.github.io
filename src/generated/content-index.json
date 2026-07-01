@@ -1,6 +1,38 @@
 {
   "posts": [
     {
+      "slug": "2026-07-01-enterprise-ai-split-screen-what-separates-winners-from-losers",
+      "filename": "2026-07-01-enterprise-ai-split-screen-what-separates-winners-from-losers.md",
+      "category": "post",
+      "title": "Enterprise AI's Split Screen: What Separates Winners From Losers in 2026",
+      "date": "2026-07-01",
+      "tags": [
+        "enterprise-ai",
+        "ai-deployment",
+        "ai-adoption",
+        "market-outlook"
+      ],
+      "summary": "Enterprise AI in mid-2026 is a split screen. Stripe, Coinbase, and Santander report real ROI. Ford rehired 350 engineers after AI failed. Klarna walked back its AI-first push. The difference isn't the technology. It's whether you treat AI as workflow augmentation or labor replacement.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-01-loop-engineering-without-going-broke",
+      "filename": "2026-07-01-loop-engineering-without-going-broke.md",
+      "category": "post",
+      "title": "Loop Engineering Without Controls Is Just Tokenmaxxing",
+      "date": "2026-07-01",
+      "tags": [
+        "loop-engineering",
+        "ai-coding-agents",
+        "token-cost",
+        "human-in-the-loop"
+      ],
+      "summary": "Loop engineering sounds like sophistication but without verifiable exit conditions and hard budget caps, it's tokenmaxxing with better marketing. Here's what separates the two and when human judgment beats another iteration.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-06-30-deepseek-dspark-speculative-decoding",
       "filename": "2026-06-30-deepseek-dspark-speculative-decoding.md",
       "category": "post",
