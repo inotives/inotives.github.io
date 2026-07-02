@@ -1,4 +1,4 @@
----
+var e=`---
 title: "Portfolio"
 ---
 
@@ -93,3 +93,4 @@ Before focusing on crypto data systems, I worked as a software engineer and web 
 ## inoTives Site
 
 This site itself is a small project: a React SPA with Markdown-based content authoring, build-time content indexing, notes search and filtering, and static GitHub Pages deployment. All content — articles, notes, portfolio — lives as Markdown files that get indexed at build time.
+`;export{e as default};

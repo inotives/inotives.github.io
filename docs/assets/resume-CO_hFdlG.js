@@ -1,4 +1,4 @@
----
+var e=`---
 title: "Resume"
 ---
 
@@ -203,3 +203,4 @@ Graduated with Merit. Recognized for outstanding Final Year Project contribution
 - English: Fluent
 - Chinese: Fluent
 - Malay: Able to understand, spoken slightly
+`;export{e as default};

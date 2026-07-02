@@ -19,6 +19,24 @@
       "draft": false
     },
     {
+      "slug": "2026-07-02-plan-vs-react-agent-patterns",
+      "filename": "2026-07-02-plan-vs-react-agent-patterns.md",
+      "category": "post",
+      "title": "Plan-and-Execute vs ReAct: The Architecture Decision That Shapes Your Agent's Cost, Speed, and Failure Mode",
+      "date": "2026-07-02",
+      "tags": [
+        "agent-patterns",
+        "plan-and-execute",
+        "react",
+        "langgraph",
+        "ai-agents",
+        "agent-architecture"
+      ],
+      "summary": "ReAct and plan-and-execute are the two dominant agent architectures in 2026. They fail differently, cost differently, and suit different tasks. The real insight is that production systems use both — plan-and-execute as the outer loop, ReAct as the inner loop. Here is the full comparison with cost math, failure modes, and domain-specific workflows.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-01-enterprise-ai-split-screen-what-separates-winners-from-losers",
       "filename": "2026-07-01-enterprise-ai-split-screen-what-separates-winners-from-losers.md",
       "category": "post",

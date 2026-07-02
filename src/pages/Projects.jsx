@@ -16,6 +16,22 @@ export default function Projects() {
         'A 3-tier wiki-like memory system for AI agents. Markdown files are canonical, SQLite is a rebuildable derived index for FTS5 search. Supports draft → knowledge → intelligence lifecycle with safe promotion via CLI.',
     },
     {
+      id: 'agent-rig',
+      name: 'agent-rig',
+      url: 'https://github.com/inotives/agent-rig',
+      tags: ['TypeScript', 'multi-agent', 'CLI', 'workspace'],
+      description:
+        'Filesystem-first CLI scaffolding auditable, version-controlled multi-agent workspaces with zero API lock-in. Supports solo, swarm, supervisor-worker, and coder-reviewer agent patterns. Published on npm.',
+    },
+    {
+      id: 'market-pipe',
+      name: 'market-pipe',
+      url: 'https://github.com/inotives/market-pipe',
+      tags: ['Python', 'market-data', 'stocks', 'crypto', 'ingestion'],
+      description:
+        'Makes ingestion and retrieval of market data like stocks and crypto easier for AI agents. Standardizes data access so agents can pull market data without writing custom integrations for each source.',
+    },
+    {
       id: 'barebone-agents',
       name: 'barebone-agents',
       url: 'https://github.com/inotives/barebone-agents',
