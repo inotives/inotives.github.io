@@ -1,6 +1,24 @@
 {
   "posts": [
     {
+      "slug": "2026-07-02-codex-role-specific-plugins-deep-dive",
+      "filename": "2026-07-02-codex-role-specific-plugins-deep-dive.md",
+      "category": "post",
+      "title": "Codex Role-Specific Plugins: Pre-Built Agent Personas?",
+      "date": "2026-07-02",
+      "tags": [
+        "codex",
+        "openai",
+        "plugins",
+        "agent-design",
+        "skills",
+        "mcp"
+      ],
+      "summary": "OpenAI's six Codex role-specific plugins package domain skills, MCP servers, and app connectors into installable bundles. They look a lot like agent personas with pre-configured tools. The difference matters for how we design our own agent systems.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-01-enterprise-ai-split-screen-what-separates-winners-from-losers",
       "filename": "2026-07-01-enterprise-ai-split-screen-what-separates-winners-from-losers.md",
       "category": "post",
