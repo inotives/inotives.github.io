@@ -32,6 +32,7 @@ function scanMarkdownDir(dir, category) {
             : String(data.date).slice(0, 10)
           : null,
         tags: data.tags || [],
+        series: data.series || null,
         summary: data.summary || '',
         featured_image: data.featured_image || null,
         draft: data.draft || false,

@@ -23,6 +23,10 @@ export function getAllPosts() {
   return contentIndex.posts
 }
 
+export function getPostsBySeries(seriesSlug) {
+  return contentIndex.posts.filter((p) => p.series === seriesSlug)
+}
+
 export function getAllPages() {
   return contentIndex.pages
 }

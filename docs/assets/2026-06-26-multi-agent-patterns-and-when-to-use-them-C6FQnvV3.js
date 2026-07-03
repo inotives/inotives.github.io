@@ -2,6 +2,7 @@ var e=`---
 title: "Multi-Agent Patterns and When to Actually Use Them"
 date: 2026-06-26
 tags: [multi-agent, architecture, agent-design, orchestration]
+series: building-ai-systems
 summary: "Four patterns dominate multi-agent orchestration: Trinity, Swarm, Coder-Reviewer, and Supervisor-Worker. But most tasks don't need any of them — the real question is whether the task is complex enough to justify the token overhead."
 ---
 

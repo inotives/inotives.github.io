@@ -1,6 +1,120 @@
 {
   "posts": [
     {
+      "slug": "2026-07-03-apache-airflow-deep-dive",
+      "filename": "2026-07-03-apache-airflow-deep-dive.md",
+      "category": "post",
+      "title": "Apache Airflow: The Workflow Orchestrator That 80% of the Data Stack Still Runs On",
+      "date": "2026-07-03",
+      "tags": [
+        "apache-airflow",
+        "workflow-orchestration",
+        "data-engineering",
+        "python",
+        "dag",
+        "scheduler"
+      ],
+      "series": "data-engineering",
+      "summary": "Airflow is the most widely adopted orchestrator. 46k GitHub stars, Apache 2.0, Python DAGs. 80+ providers cover AWS, GCP, Azure, databases, and more. Airflow 3.x adds event-driven triggers and a modernized UI. Enterprise via MWAA, Cloud Composer, and Astronomer. The Python DAG approach is both its greatest strength and its limitation.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-03-apache-spark-deep-dive",
+      "filename": "2026-07-03-apache-spark-deep-dive.md",
+      "category": "post",
+      "title": "Apache Spark in 2026: The Compute Engine That 80% of Fortune 500 Still Runs On",
+      "date": "2026-07-03",
+      "tags": [
+        "apache-spark",
+        "big-data",
+        "distributed-computing",
+        "data-engineering",
+        "sdp",
+        "machine-learning"
+      ],
+      "series": "data-engineering",
+      "summary": "Spark handles petabytes per job, runs on 80% of Fortune 500, and just got Declarative Pipelines in version 4.1. But the modern data stack shifted from ETL to ELT, and for sub-1TB analytics dbt + Snowflake wins. Here's where Spark still matters, where it doesn't, and what SDP changes.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-03-kestra-workflow-orchestrator-deep-dive",
+      "filename": "2026-07-03-kestra-workflow-orchestrator-deep-dive.md",
+      "category": "post",
+      "title": "Kestra: Open-Source Workflow Orchestrator, Compared Against Airflow, Prefect, Spark, and n8n",
+      "date": "2026-07-03",
+      "tags": [
+        "kestra",
+        "workflow-orchestration",
+        "data-engineering",
+        "airflow",
+        "prefect",
+        "spark",
+        "n8n",
+        "open-source"
+      ],
+      "series": "data-engineering",
+      "summary": "Kestra is a language-agnostic, event-driven orchestrator that runs on YAML and Java. It starts faster than Airflow, supports more languages than Prefect, and orchestrates beyond what Spark's Declarative Pipelines handle natively. But its enterprise features live behind a paywall, and none of the open-source orchestrators ship real RBAC or multi-user auth. Here's where Kestra fits and where it doesn't.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-03-n8n-deep-dive",
+      "filename": "2026-07-03-n8n-deep-dive.md",
+      "category": "post",
+      "title": "n8n: The Low-Code Platform With 195K GitHub Stars That Isn't What You Think",
+      "date": "2026-07-03",
+      "tags": [
+        "n8n",
+        "workflow-automation",
+        "low-code",
+        "business-automation",
+        "ai-agents"
+      ],
+      "series": "data-engineering",
+      "summary": "n8n is the most starred workflow tool on GitHub (195K stars). But it is not open source — it uses the Sustainable Use License (fair-code). Visual drag-and-drop editor, 400+ integrations, built-in AI agents. Used by Microsoft, Meta, NVIDIA. Targets business users, not data engineers. Here's what it actually does, what it can't do, and why it complements rather than competes with Airflow/Prefect/Kestra.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-03-prefect-deep-dive",
+      "filename": "2026-07-03-prefect-deep-dive.md",
+      "category": "post",
+      "title": "Prefect: Python-Native Orchestration That Feels Like Writing Plain Python",
+      "date": "2026-07-03",
+      "tags": [
+        "prefect",
+        "workflow-orchestration",
+        "data-engineering",
+        "python",
+        "data-pipelines"
+      ],
+      "series": "data-engineering",
+      "summary": "Prefect turns Python functions into orchestrated workflows with @flow and @task decorators. No DAGs, no YAML, no DSLs. Created by a former Airflow PMC member, it trades Airflow's scale for Python-native simplicity. Best for small-to-medium teams with 20-50 flows. Breaks down at 500+ flows with complex dependencies.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-03-scalable-agentic-systems-loop-prevention",
+      "filename": "2026-07-03-scalable-agentic-systems-loop-prevention.md",
+      "category": "post",
+      "title": "Scalable Agentic Systems: Seven Loop Types, Layered Guardrails, and When Humans Should Pull the Plug",
+      "date": "2026-07-03",
+      "tags": [
+        "agentic-systems",
+        "ai-agents",
+        "loop-detection",
+        "token-cost",
+        "human-in-the-loop",
+        "workflow-design"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Agentic systems iterate, and iteration consumes tokens. Without guardrails, a stuck agent burns through budget while producing nothing. This covers the seven loop types that show up in production, the layered defense that actually works, and the R.A.I.L. framework for deciding when to involve humans. First in a series on building ai-systems that don't eat your wallet.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-02-codex-role-specific-plugins-deep-dive",
       "filename": "2026-07-02-codex-role-specific-plugins-deep-dive.md",
       "category": "post",
@@ -14,6 +128,7 @@
         "skills",
         "mcp"
       ],
+      "series": null,
       "summary": "OpenAI's six Codex role-specific plugins package domain skills, MCP servers, and app connectors into installable bundles. They look a lot like agent personas with pre-configured tools. The difference matters for how we design our own agent systems.",
       "featured_image": null,
       "draft": false
@@ -32,6 +147,7 @@
         "ai-agents",
         "agent-architecture"
       ],
+      "series": "building-ai-systems",
       "summary": "ReAct and plan-and-execute are the two dominant agent architectures in 2026. They fail differently, cost differently, and suit different tasks. The real insight is that production systems use both — plan-and-execute as the outer loop, ReAct as the inner loop. Here is the full comparison with cost math, failure modes, and domain-specific workflows.",
       "featured_image": null,
       "draft": false
@@ -48,6 +164,7 @@
         "ai-adoption",
         "market-outlook"
       ],
+      "series": null,
       "summary": "Enterprise AI in mid-2026 is a split screen. Stripe, Coinbase, and Santander report real ROI. Ford rehired 350 engineers after AI failed. Klarna walked back its AI-first push. The difference isn't the technology. It's whether you treat AI as workflow augmentation or labor replacement.",
       "featured_image": null,
       "draft": false
@@ -64,6 +181,7 @@
         "token-cost",
         "human-in-the-loop"
       ],
+      "series": null,
       "summary": "Loop engineering sounds like sophistication but without verifiable exit conditions and hard budget caps, it's tokenmaxxing with better marketing. Here's what separates the two and when human judgment beats another iteration.",
       "featured_image": null,
       "draft": false
@@ -80,6 +198,7 @@
         "llm-inference",
         "ai-infrastructure"
       ],
+      "series": null,
       "summary": "DSpark is DeepSeek's speculative decoding framework that speeds up LLM inference by 60-85% without changing model weights. Here's how it works and why it matters.",
       "featured_image": null,
       "draft": false
@@ -96,6 +215,7 @@
         "data-modeling",
         "financial-services"
       ],
+      "series": null,
       "summary": "Enterprise AI fails not because the models are bad, but because the data is scattered. In financial services, customer data lives in CRM, KYC systems, exchange feeds, and blockchain analytics tools that do not talk to each other. Consolidating this data is the first real step before AI can do anything useful.",
       "featured_image": null,
       "draft": false
@@ -113,6 +233,7 @@
         "macroeconomics",
         "automation-paradox"
       ],
+      "series": null,
       "summary": "AI adoption cuts jobs to reduce costs, but displaced workers stop spending, which hurts the same businesses that adopted AI. Economists call this the AI Layoff Trap. It is a Prisoner's Dilemma where every firm automates to survive, even though collective restraint would raise all profits. The result is over-automation that harms both workers and owners.",
       "featured_image": null,
       "draft": false
@@ -130,6 +251,7 @@
         "policy",
         "tech-policy"
       ],
+      "series": null,
       "summary": "By mid-2026, five Asia-Pacific jurisdictions have enacted binding AI laws. The approaches range from China's 30+ enforceable standards to Japan's voluntary guidelines. The result is a fragmented compliance landscape where a single AI deployment can trigger obligations under multiple incompatible regimes.",
       "featured_image": null,
       "draft": false
@@ -149,6 +271,7 @@
         "enterprise-ai",
         "ai-ecosystem"
       ],
+      "series": null,
       "summary": "The global LLM market has split into two ecosystems. Western labs sell closed, premium-priced models. Eastern labs ship open-weight models at aggressive prices. The benchmark gap has collapsed to 3-6 months. The Fable 5 export control incident proved that access to frontier AI is a geopolitical lever, accelerating the sovereign AI push across Europe, Asia, and non-aligned states.",
       "featured_image": null,
       "draft": false
@@ -167,6 +290,7 @@
         "token-optimization",
         "ai-engineering"
       ],
+      "series": null,
       "summary": "Every installed skill, MCP server, and tool definition adds tokens to your system prompt at session start. After months of agent usage, this overhead consumes 10-30% of context before any real work begins. Real-world measurements show three MCP servers burning 72% of a 200K context window. Solutions exist but require architectural changes.",
       "featured_image": null,
       "draft": false
@@ -184,6 +308,7 @@
         "react",
         "human-in-the-loop"
       ],
+      "series": null,
       "summary": "Agent loops look efficient until you see the token bill. The O(N²) cost curve, the ambiguity tax, and the gap between what loops promise and what they deliver in practice.",
       "featured_image": null,
       "draft": false
@@ -199,6 +324,7 @@
         "architecture",
         "llm-agents"
       ],
+      "series": null,
       "summary": "Skills are atomic capabilities. Workflows orchestrate them. But the boundary gets murky when a skill internally sequences steps, or a workflow is simple enough to look like one skill.",
       "featured_image": null,
       "draft": false
@@ -215,6 +341,7 @@
         "agent-design",
         "orchestration"
       ],
+      "series": "building-ai-systems",
       "summary": "Four patterns dominate multi-agent orchestration: Trinity, Swarm, Coder-Reviewer, and Supervisor-Worker. But most tasks don't need any of them — the real question is whether the task is complex enough to justify the token overhead.",
       "featured_image": null,
       "draft": false
@@ -235,6 +362,7 @@
         "product-idea",
         "cloudflare"
       ],
+      "series": null,
       "summary": "Server-side agent detection has two structural problems: a standards adoption loop nobody can break, and infrastructure incumbents who already see everything at the edge. Agent-side analytics flips the model. Instead of detecting agents on your server, let the agent report on its own browsing. No standards needed, no edge infrastructure required, and the data covers the full agent experience.",
       "featured_image": null,
       "draft": false
@@ -255,6 +383,7 @@
         "seo",
         "ai-web"
       ],
+      "series": null,
       "summary": "For the first time in history, automated traffic outnumbers human visitors on the web. Cloudflare reports 57.4% bot traffic. Stanford found 35% of new pages are AI-generated. The dead internet theory is becoming measurable fact. And a new discipline called Agent Search Optimization (ASO) is emerging to help websites survive in a bot-first world.",
       "featured_image": null,
       "draft": false
@@ -275,6 +404,7 @@
         "ai-ethics",
         "prompt-injection"
       ],
+      "series": null,
       "summary": "AI models are trained to complete tasks, not to tell the truth. When the two conflict, the model chooses task completion every time. This is why AI hallucinates, fabricates sources, and confidently states wrong answers. The fix isn't more intelligence — it's more honesty. Here's how harnessing and guardrails can help.",
       "featured_image": null,
       "draft": false
@@ -295,6 +425,7 @@
         "model-orchestration",
         "ai-architecture"
       ],
+      "series": null,
       "summary": "Fusion models combine multiple specialized LLMs into a single coordinated system. SakanaAI's Fugu uses a 0.6B coordinator to orchestrate a pool of frontier models, matching or beating Fable 5 on benchmarks. The key insight: collective intelligence from diverse models outperforms any single model.",
       "featured_image": null,
       "draft": false
@@ -316,6 +447,7 @@
         "rag",
         "agent-memory"
       ],
+      "series": null,
       "summary": "Google released OKF v0.1 — a markdown-based standard for agent-readable knowledge. It formalizes the LLM-wiki pattern Karpathy described. We've been building the same idea with strata-memory, but with SQLite indexing for when markdown files grow past 1000.",
       "featured_image": null,
       "draft": false
@@ -338,6 +470,7 @@
         "wasm",
         "ai-agents"
       ],
+      "series": null,
       "summary": "Turso is a ground-up Rust rewrite of SQLite that adds concurrent writes, async I/O, WebAssembly-first design, vector search, and an MCP server for AI agents. I'm not using it yet — but I'm evaluating it for strata-memory, where SQLite indexing is the bottleneck when markdown files grow past 1,000.",
       "featured_image": null,
       "draft": false
@@ -358,6 +491,7 @@
         "api-first",
         "developer-tools"
       ],
+      "series": null,
       "summary": "SEO made websites discoverable by Google. AISO makes applications discoverable by AI agents. The A2A market is in the land grab phase — the first companies to master AISO will capture the agent economy. Here's how it works and how to implement it.",
       "featured_image": null,
       "draft": false
@@ -378,6 +512,7 @@
         "agent-optimization",
         "ux-design"
       ],
+      "series": null,
       "summary": "AXO (Agent Experience Optimization) goes beyond API connection. It's the full design architecture that ensures agents achieve their goals smoothly in your application. Like UX optimizes for human goals, AXO optimizes for agent goals. Here's what it means and how to implement it.",
       "featured_image": null,
       "draft": false
@@ -399,6 +534,7 @@
         "future-of-software",
         "ax-design"
       ],
+      "series": null,
       "summary": "Applications are evolving from human-only interfaces to dual-flow architectures. The human flow (UI, forms, visual) optimizes for human cognition. The agent flow (API, CLI, MCP, structured data) optimizes for machine consumption. Every app will need an agent interface — the question is when, not if.",
       "featured_image": null,
       "draft": false
@@ -418,6 +554,7 @@
         "developer-tools",
         "code-isolation"
       ],
+      "series": null,
       "summary": "Git worktrees solve the fundamental problem of parallel agent execution: multiple agents working on the same repo without conflicts. Each agent gets its own worktree with its own HEAD, index, and working directory, while sharing the same .git object database. This is the missing infrastructure layer for our agentic stack.",
       "featured_image": null,
       "draft": false
@@ -439,6 +576,7 @@
         "agent-skills",
         "prompt-engineering"
       ],
+      "series": null,
       "summary": "Found a skill that makes AI agents write minimal, necessary code — like the laziest senior dev in the room. ~54% less code, ~20% cheaper, ~27% faster, 100% safe. Works with 14 agents. When combined with context-mode and codegraph, token usage drops ~95% per task.",
       "featured_image": null,
       "draft": false
@@ -462,6 +600,7 @@
         "codex",
         "openai"
       ],
+      "series": null,
       "summary": "Everyone's running agents from personal machines now. Models like Claude's Fable 5 get jailbroken with basic prompts. Your local setup is exposed. Tailscale VPN is the starting point, not the finish line — here's the full defense-in-depth stack, including Codex's cloud sandbox as the most secure option.",
       "featured_image": null,
       "draft": false
@@ -481,6 +620,7 @@
         "browser-automation",
         "cli-tools"
       ],
+      "series": null,
       "summary": "I started with webfetch, hit its limits fast, moved to Puppeteer for browser automation, then Playwright for cross-browser support. Now I run Agent-Reach as my primary internet access layer and keep Playwright for UI testing and complex browser interactions. Here's the journey and why the split makes sense.",
       "featured_image": null,
       "draft": false
@@ -504,6 +644,7 @@
         "developer-tools",
         "mcp"
       ],
+      "series": null,
       "summary": "After months of experimenting with AI coding agents, I've settled on a seven-tool stack that covers every layer of the workflow: engineering discipline, context optimization, code intelligence, internet access, browser automation, persistent memory, and multi-agent orchestration. Here's what each tool does and why they compose.",
       "featured_image": null,
       "draft": false
@@ -524,6 +665,7 @@
         "ai-workflow",
         "loop-engineering"
       ],
+      "series": null,
       "summary": "New LLMs drop every month — faster, stronger, more capable. But the 2-3% benchmark gains don't matter for professional AI engineers. What matters is the 20% that comes from your harness: your stack, your skills, your workflows. That's agent-agnostic, it's yours, and it compounds.",
       "featured_image": null,
       "draft": false
@@ -546,6 +688,7 @@
         "rust",
         "tauri"
       ],
+      "series": null,
       "summary": "Found a tool that does for databases what agent-reach does for internet platforms — one unified interface to 50+ databases, with built-in AI assistant and MCP support for AI agents. DBX is 15MB, cross-platform, and self-hostable.",
       "featured_image": null,
       "draft": false
@@ -570,6 +713,7 @@
         "agent-commerce",
         "trust"
       ],
+      "series": null,
       "summary": "Agent identity standards are shipping fast — SAID, SAS, Entra Agent ID, AIS-1. But a comment on my last post pointed out the gap nobody's solving well: what happens when an agent key goes rogue? There's no OCSP for agents. No revocation list. No emergency kill switch. This is the hardest unsolved piece of the agent identity stack.",
       "featured_image": null,
       "draft": false
@@ -592,6 +736,7 @@
         "mcp",
         "agentic-workflows"
       ],
+      "series": null,
       "summary": "Base LLMs have knowledge cutoffs. For live data, agents need the web. But standard websearch and webfetch tools fail constantly — rate limits, JavaScript rendering, anti-bot walls, CAPTCHAs. Here's the tooling stack that actually works, from Playwright at the foundation to Firecrawl, Crawl4AI, and Browser Use at the agent layer.",
       "featured_image": null,
       "draft": false
@@ -615,6 +760,7 @@
         "qlora",
         "open-source"
       ],
+      "series": null,
       "summary": "I've been exploring how to fine-tune a small language model locally on Apple Silicon to serve as the backbone of a personal coding and data analysis agent. No cloud APIs, no per-token costs, no data leaving my machine. Here's what I found and where I'm heading.",
       "featured_image": null,
       "draft": false
@@ -635,6 +781,7 @@
         "developer-tools",
         "open-source"
       ],
+      "series": null,
       "summary": "Five tools dominate the local LLM landscape, and they're not interchangeable. llama.cpp is the engine, Ollama is the one-liner, LM Studio is the GUI, LLM CLI is the Swiss army knife, and mlx-lm is the Apple Silicon specialist. Here's how I think about which one to reach for.",
       "featured_image": null,
       "draft": false
@@ -655,6 +802,7 @@
         "ai-regulation",
         "system-prompt"
       ],
+      "series": null,
       "summary": "Anthropic launched Fable 5 on June 9 with 1,000+ hours of pre-launch security testing. By June 11, a researcher had jailbroken it using a multi-agent 'pack hunt' technique, leaked its 120K-character system prompt, and by June 12 the US government had ordered a global suspension. Here's what happened, how the jailbreak works, and why classifier-based safety has reached the end of its useful life.",
       "featured_image": null,
       "draft": false
@@ -674,6 +822,7 @@
         "human-in-the-loop",
         "goal-directed"
       ],
+      "series": null,
       "summary": "Andrej Karpathy killed vibe coding in May 2026. The replacement — agentic engineering — moves the leverage point from writing code to maintaining intent. Here's the workflow discipline that keeps you on the right side of cognitive offloading, how I apply it in my own agentic pipelines, and why intent debt is the one debt agents cannot pay down.",
       "featured_image": null,
       "draft": false
@@ -693,6 +842,7 @@
         "automation",
         "multi-agent"
       ],
+      "series": null,
       "summary": "Addy Osmani named it in June 2026: loop engineering is building the system that prompts your agent on a schedule, not typing each prompt yourself. I've been building exactly this with git-conveyor — a multi-agent pipeline that uses GitHub Issues and Projects kanban as the looping backbone. Here's the pattern, the building blocks, and what I learned.",
       "featured_image": null,
       "draft": false
@@ -716,6 +866,7 @@
         "consumer-ai",
         "on-device-ai"
       ],
+      "series": null,
       "summary": "WWDC 2026 was Apple's biggest AI push yet — Siri AI with on-screen awareness, multi-turn conversation, and system-wide integration. As someone who uses AI agents daily, here's why I think Apple came in just nice, not late, and why their hardware install base makes this potentially the most consequential AI launch of the year.",
       "featured_image": null,
       "draft": false
@@ -740,6 +891,7 @@
         "sas",
         "said"
       ],
+      "series": null,
       "summary": "I run my own Hermes agent. In 2-3 years, everyone will have a personal AI acting as their online avatar. How do you know which agent belongs to whom? And would you let your agent send money to a stranger's agent? Blockchain-based identity — anchored in cryptographic keys and peer-to-peer networks — is the most solid answer I've found.",
       "featured_image": null,
       "draft": false
@@ -762,6 +914,7 @@
         "coinmarketcap",
         "coingecko"
       ],
+      "series": null,
       "summary": "Every crypto firm that consumes data from multiple vendors faces the same problem: BTC on one provider is not the same BTC on another. This post covers the asset-provider mapping model we use at the firm, why data cleanliness determines whether your agents produce trustworthy output, and what happens when you pipe garbage into an AI agent.",
       "featured_image": null,
       "draft": false
@@ -788,6 +941,7 @@
         "opencode",
         "mcp"
       ],
+      "series": null,
       "summary": "I spent a year rotating through seven AI-augmented development tools. This post covers what each does well, where each falls short, and how my actual workflow — CLI coding agents with skills, plugins, and MCP servers connecting to GitHub, Postgres, BigQuery, and more — shaped the tools that survived in my daily bag.",
       "featured_image": null,
       "draft": false
@@ -807,6 +961,7 @@
         "github-actions",
         "discussion-to-issue"
       ],
+      "series": null,
       "summary": "Giscus gives you a full comment system on a static site for free — backed by GitHub Discussions. Pair it with a workflow that converts bug reports from comments into issues, and you get a lightweight community feedback loop with zero infrastructure cost.",
       "featured_image": null,
       "draft": false
@@ -827,6 +982,7 @@
         "skill-packs",
         "agent-skills"
       ],
+      "series": null,
       "summary": "Individual skills handle single workflows. Skill chaining connects them into pipelines — where one skill's output becomes another's input, with explicit interface contracts, prerequisite enforcement, and state management rules between each step.",
       "featured_image": null,
       "draft": false
@@ -846,6 +1002,7 @@
         "progressive-disclosure",
         "skill-design"
       ],
+      "series": null,
       "summary": "Anthropic's skills guide defines a clear architecture and set of patterns for building repeatable agent workflows. This post walks through the guidelines and shows how they apply to real data analyst workflows — regulatory reporting, KYC tooling, and CRM reconciliation.",
       "featured_image": null,
       "draft": false
@@ -865,6 +1022,7 @@
         "enterprise-ai",
         "cost-optimization"
       ],
+      "series": null,
       "summary": "Bloomberg, Fortune, and Tech Times all ran the same story this week: AI inference costs are breaking enterprise budgets. GitHub flipped to metered billing. Microsoft is pulling licenses. The fix isn't waiting for prices to drop — it's running models where they belong: on your own hardware.",
       "featured_image": null,
       "draft": false
@@ -884,6 +1042,7 @@
         "heterogeneous-compute",
         "ai-infrastructure"
       ],
+      "series": null,
       "summary": "Agentic AI is not just GPU inference anymore. Tool calls, MCP servers, web search, schedulers, context management, and workflow orchestration can consume most of the wall-clock time. The practical bottleneck is shifting from the model to the harness.",
       "featured_image": null,
       "draft": false
@@ -902,6 +1061,7 @@
         "enterprise-ai",
         "token-economics"
       ],
+      "series": null,
       "summary": "Frontier AI inference costs $5-30 per million tokens to run. Subscriptions are priced 10-100x below cost, subsidized by VC, hyperscaler circular investment, and light users. Microsoft and Uber have publicly retreated from enterprise AI after burning through budgets. The all-you-can-eat era is ending.",
       "featured_image": null,
       "draft": false
@@ -924,6 +1084,7 @@
         "open-source",
         "cost-optimization"
       ],
+      "series": null,
       "summary": "The one-model-for-everything era is ending. Inference costs, vendor platforms, and open protocols are converging on a provider mesh architecture — where generalist models orchestrate domain-specialist agents from Salesforce, Snowflake, Datadog, and beyond.",
       "featured_image": null,
       "draft": false
@@ -943,6 +1104,7 @@
         "dbt",
         "compliance"
       ],
+      "series": null,
       "summary": "A practical breakdown of FRAME (Find, Review, Analyse, Model, Evaluate) — the workflow I use to cut through the chaos of crypto finance data work.",
       "featured_image": null,
       "draft": false
@@ -962,6 +1124,7 @@
         "ai-washing",
         "future-of-work"
       ],
+      "series": null,
       "summary": "Three HBR studies show AI expands rather than reduces workloads. May 2026 saw 28,000+ tech layoffs. These aren't contradictions — they're the same structural shift: fewer workers doing more, harder work.",
       "featured_image": null,
       "draft": false
@@ -983,6 +1146,7 @@
         "developer-tools",
         "ai-agents"
       ],
+      "series": null,
       "summary": "How playwright-cli fits into daily data extraction workflows, why it replaces web-fetch and web-search for JS-rendered content, why CLI is preferable to MCP for token efficiency, and how to set it up in Codex and opencode with a reusable skill.",
       "featured_image": null,
       "draft": false
@@ -1001,6 +1165,7 @@
         "workflow",
         "perplexity-ai"
       ],
+      "series": null,
       "summary": "How Perplexity AI's Bumblebee fits into a daily coding routine: scanning lockfiles against known compromised packages, pre-commit hooks, cron jobs, and keeping the threat surface visible without getting in the way.",
       "featured_image": null,
       "draft": false
@@ -1021,6 +1186,7 @@
         "production",
         "workflows"
       ],
+      "series": null,
       "summary": "How CI/CD pipelines evolve when AI agents are generating PRs, what the standard enterprise patterns look like, and how to scale from a few agent PRs per day to 100+.",
       "featured_image": null,
       "draft": false
@@ -1039,6 +1205,7 @@
         "tooling",
         "session-management"
       ],
+      "series": null,
       "summary": "Concrete signs of context degradation during AI coding sessions, the tools and strategies we use to detect and mitigate it, and how session structure matters more than model choice past a certain point.",
       "featured_image": null,
       "draft": false
@@ -1059,6 +1226,7 @@
         "monitoring",
         "data-engineering"
       ],
+      "series": null,
       "summary": "Why Grafana is the observability layer for production agents. How to set up Grafana MCP, create dashboards with Codex, and common data-agentic workflow patterns for monitoring, cost tracking, and incident response.",
       "featured_image": null,
       "draft": false
@@ -1080,6 +1248,7 @@
         "infrastructure",
         "data-engineering"
       ],
+      "series": null,
       "summary": "Why a single Postgres instance with the right extensions replaces Redis, RabbitMQ, Pinecone, and Celery in agentic workflows. How pgvector, pgmq, pg_cron, and other extensions cover state, memory, queue, scheduling, and search.",
       "featured_image": null,
       "draft": false
@@ -1097,6 +1266,7 @@
         "workflow",
         "developer-tools"
       ],
+      "series": null,
       "summary": "How CodeGraph fits into an AI-assisted development workflow: fast structural code context, MCP-native querying, and where it complements rather than replaces mixed-content knowledge graphs.",
       "featured_image": null,
       "draft": false
@@ -1115,6 +1285,7 @@
         "data-analysis",
         "developer-tools"
       ],
+      "series": null,
       "summary": "A practical evaluation of the mattpocock/skills ecosystem — how its composable agent skills apply to data engineering and analysis workflows, what works, what doesn't, and where it fits.",
       "featured_image": null,
       "draft": false
@@ -1133,6 +1304,7 @@
         "workflow",
         "developer-tools"
       ],
+      "series": null,
       "summary": "Evaluating Graphify as a tool for AI-assisted development: how its mixed-content knowledge graph compares with structural code tools, what it excels at, its rough edges, and where it fits in an agentic workflow.",
       "featured_image": null,
       "draft": false
@@ -1151,6 +1323,7 @@
         "workflow",
         "developer-tools"
       ],
+      "series": null,
       "summary": "Evaluating RTK — a CLI proxy that reduces LLM token consumption by 60-90% on common dev commands. Single Rust binary, zero dependencies, hooks into 13 AI coding tools.",
       "featured_image": null,
       "draft": false
@@ -1167,6 +1340,7 @@
         "pipeline",
         "market-prediction"
       ],
+      "series": null,
       "summary": "The full workflow, skills, metrics, and reasoning behind the daily pre-market opening-price prediction and intraday forecast system.",
       "featured_image": null,
       "draft": false
@@ -1183,6 +1357,7 @@
         "analysis",
         "market-close"
       ],
+      "series": null,
       "summary": "The full 11-section post-close analysis workflow for a single equity ticker — entry conditions, sub-agent dispatch, technical metrics, options derivatives, and entity bump.",
       "featured_image": null,
       "draft": false
@@ -1202,6 +1377,7 @@
         "data-workflows",
         "ai-agents"
       ],
+      "series": null,
       "summary": "How LLMs translate prompts into tokens and use them to predict responses. How to structure effective prompts. How prompt-optimizer works and how it integrates into data workflows via MCP and API.",
       "featured_image": null,
       "draft": false
@@ -1225,6 +1401,7 @@
         "markdown",
         "knowledge-management"
       ],
+      "series": null,
       "summary": "How I built agent-knowledge — a CLI + session hooks system inspired by Andrej Karpathy's LLM Wiki pattern. Agent-agnostic, works across Claude Code, Codex, and OpenCode, stores everything as plain markdown compatible with Obsidian, and uses GitHub private repos for sync instead of Obsidian Sync subscription.",
       "featured_image": null,
       "draft": false
@@ -1245,6 +1422,7 @@
         "open-source",
         "gpu"
       ],
+      "series": null,
       "summary": "AirLLM streams model layers from disk to fit 70B+ LLMs on tiny GPUs. The mechanism is clever. The speed is ~0.7 tok/s. Here's how it works, when it makes sense, and when to reach for Ollama instead.",
       "featured_image": null,
       "draft": false
@@ -1266,6 +1444,7 @@
         "agent-agnostic",
         "developer-tools"
       ],
+      "series": null,
       "summary": "How I use Claude Code for work and OpenCode for personal projects — the agent-agnostic model switching, free Zen models for research and organizing, and why this dual-agent setup works better than committing to one.",
       "featured_image": null,
       "draft": false
@@ -1285,6 +1464,7 @@
         "job-market",
         "agent-orchestrator"
       ],
+      "series": null,
       "summary": "Karpathy declared vibe coding obsolete. A new role is crystallizing — part engineer, part orchestrator, part production operator. Here's what it is, what it pays, and how to get there in 8 tiers.",
       "featured_image": null,
       "draft": false
@@ -1305,6 +1485,7 @@
         "ai-agents",
         "llm-economics"
       ],
+      "series": null,
       "summary": "A practitioner-friendly catch-up sheet for the AI terms that started to matter between November 2025 and May 2026: agentic engineering, context engineering, Code Mode, Plan Mode, skills, MCP security, reasoning budgets, and the new cost discipline around tokens.",
       "featured_image": null,
       "draft": false
@@ -1323,6 +1504,7 @@
         "workflow",
         "developer-tools"
       ],
+      "series": null,
       "summary": "A survey of the agent-harness landscape: what defines a harness, why the abstraction matters, and the top open-source harnesses worth knowing.",
       "featured_image": null,
       "draft": false
@@ -1339,6 +1521,7 @@
         "obsidian",
         "tutorial"
       ],
+      "series": null,
       "summary": "The writing workflow, content format, and publishing steps for adding notes to the inoTives site.",
       "featured_image": null,
       "draft": false
@@ -1352,6 +1535,7 @@
       "title": "About",
       "date": null,
       "tags": [],
+      "series": null,
       "summary": "",
       "featured_image": null,
       "draft": false
@@ -1363,6 +1547,7 @@
       "title": "Portfolio",
       "date": null,
       "tags": [],
+      "series": null,
       "summary": "",
       "featured_image": null,
       "draft": false
@@ -1374,6 +1559,7 @@
       "title": "Resume",
       "date": null,
       "tags": [],
+      "series": null,
       "summary": "",
       "featured_image": null,
       "draft": false

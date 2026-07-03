@@ -16,6 +16,14 @@ summary: "One-paragraph description of the post."
 ---
 ```
 
+Optional series field for articles that belong to a series:
+```yaml
+series: building-ai-systems
+```
+- When writing articles for a series, include the `series` field in frontmatter. This auto-populates the series listing page at `/series/<slug>`.
+- Current series: `building-ai-systems` (Building AI Systems That Scale)
+- To create a new series, add the slug to `SERIES_META` in `src/pages/BuildingAISystemsPage.jsx` (or create a new page component) and register the route in `src/App.jsx`.
+
 - Use inline array format for tags: `[tag1, tag2]` (not multi-line YAML list)
 - `summary` is the meta description, not `description`
 - Do not include `status` or other extra fields

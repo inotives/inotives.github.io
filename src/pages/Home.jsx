@@ -61,6 +61,34 @@ export default function Home() {
             Projects and things I've built.
           </p>
         </Link>
+
+        <Link
+          to="/series/building-ai-systems"
+          className="record"
+        >
+          <div className="record-meta">
+            <span>04</span>
+            <span>Series</span>
+          </div>
+          <h2 className="record-title">Building AI Systems That Scale</h2>
+          <p className="record-copy">
+            Notes on designing, operating, and cost-controlling agentic AI systems.
+          </p>
+        </Link>
+
+        <Link
+          to="/series/data-engineering"
+          className="record"
+        >
+          <div className="record-meta">
+            <span>05</span>
+            <span>Series</span>
+          </div>
+          <h2 className="record-title">Data Engineering</h2>
+          <p className="record-copy">
+            Notes on data pipelines, ELT stacks, data modeling, and infrastructure.
+          </p>
+        </Link>
       </section>
 
       {recentPosts.length > 0 && (

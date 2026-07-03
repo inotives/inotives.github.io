@@ -2,6 +2,7 @@
 title: "Plan-and-Execute vs ReAct: The Architecture Decision That Shapes Your Agent's Cost, Speed, and Failure Mode"
 date: 2026-07-02
 tags: [agent-patterns, plan-and-execute, react, langgraph, ai-agents, agent-architecture]
+series: building-ai-systems
 summary: "ReAct and plan-and-execute are the two dominant agent architectures in 2026. They fail differently, cost differently, and suit different tasks. The real insight is that production systems use both — plan-and-execute as the outer loop, ReAct as the inner loop. Here is the full comparison with cost math, failure modes, and domain-specific workflows."
 ---
 
