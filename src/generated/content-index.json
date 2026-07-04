@@ -1,6 +1,67 @@
 {
   "posts": [
     {
+      "slug": "2026-07-04-agentic-memory-management-production-architecture",
+      "filename": "2026-07-04-agentic-memory-management-production-architecture.md",
+      "category": "post",
+      "title": "Agentic Memory Management: How Production Agents Remember, Retrieve, and Forget",
+      "date": "2026-07-04",
+      "tags": [
+        "ai-agents",
+        "memory-management",
+        "vector-search",
+        "knowledge-graph",
+        "hallucination",
+        "production-architecture"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Production agent memory is not a single vector store. It is a layered cognitive system with working memory, episodic memory, semantic memory, and archival storage. Retrieval uses composite scoring (similarity + recency + importance). Forgetting is essential — time-decay and consolidation prevent stale data from polluting responses. The key accuracy insight: structured typed memory beats unstructured vector search for high-stakes domains.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-04-dbt-fusion-core-v2-rust-rewrite",
+      "filename": "2026-07-04-dbt-fusion-core-v2-rust-rewrite.md",
+      "category": "post",
+      "title": "dbt Fusion and Core v2.0: The Rust Rewrite, Free Binary, and AI Integration",
+      "date": "2026-07-04",
+      "tags": [
+        "dbt",
+        "dbt-fusion",
+        "dbt-core",
+        "rust",
+        "data-transformation",
+        "ai-agents",
+        "mcp",
+        "lineage"
+      ],
+      "series": "data-engineering",
+      "summary": "dbt Fusion rewrites the engine in Rust — 30x faster parsing, SQL comprehension, column-level lineage, static analysis. dbt Core v2.0 is now built on the same Rust foundation. Fusion's binary is free to use without an account. The AI angle: Fusion generates rich metadata at compile time, exposes it via MCP for AI agents, and powers dbt Wizard for autonomous model generation.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-04-production-pdf-document-handling-for-rag",
+      "filename": "2026-07-04-production-pdf-document-handling-for-rag.md",
+      "category": "post",
+      "title": "Production PDF Handling for RAG: Why Text Extraction Fails and What to Do Instead",
+      "date": "2026-07-04",
+      "tags": [
+        "pdf",
+        "rag",
+        "document-parsing",
+        "multimodal",
+        "chunking",
+        "ocr",
+        "layout-analysis",
+        "table-extraction"
+      ],
+      "series": "building-ai-systems",
+      "summary": "PDFs are the #1 source of RAG quality problems. Tables collapse into word soup, charts vanish, reading order scrambles across columns. The fix is a multi-stage pipeline: layout detection, element-type-aware extraction, semantic chunking, and dual-layer storage. Here's the production pipeline from ingestion to retrieval, including tool benchmarks and document-type-specific strategies.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-03-apache-airflow-deep-dive",
       "filename": "2026-07-03-apache-airflow-deep-dive.md",
       "category": "post",
