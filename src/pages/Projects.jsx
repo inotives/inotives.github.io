@@ -32,6 +32,14 @@ export default function Projects() {
         'Makes ingestion and retrieval of market data like stocks and crypto easier for AI agents. Standardizes data access so agents can pull market data without writing custom integrations for each source.',
     },
     {
+      id: 'agent-pipe',
+      name: 'agent-pipe',
+      url: 'https://github.com/inotives/agent-pipe',
+      tags: ['Python', 'data-pipeline', 'CLI', 'SQLite', 'scheduler'],
+      description:
+        'A local data pipeline CLI with SQLite-backed job scheduling and run history. Built with agent-rig using the planner-worker-reviewer pattern across 5 phases with 25 tasks.',
+    },
+    {
       id: 'barebone-agents',
       name: 'barebone-agents',
       url: 'https://github.com/inotives/barebone-agents',
