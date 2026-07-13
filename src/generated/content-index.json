@@ -1,6 +1,83 @@
 {
   "posts": [
     {
+      "slug": "2026-07-13-pg-durable-microsoft-postgres-plugin",
+      "filename": "2026-07-13-pg-durable-microsoft-postgres-plugin.md",
+      "category": "post",
+      "title": "pg_durable: Durable Workflow Execution Inside PostgreSQL",
+      "date": "2026-07-13",
+      "tags": [
+        "postgresql",
+        "microsoft",
+        "durable-execution",
+        "workflow-orchestration",
+        "data-engineering"
+      ],
+      "series": "data-engineering",
+      "summary": "Microsoft released pg_durable, a PostgreSQL extension that runs durable workflows entirely inside the database. SQL-native operators replace external orchestrators like Airflow and Temporal for ETL, scheduled jobs, and data pipelines. Built on Rust (pgrx), it checkpoints every step, retries failures automatically, and survives crashes — all without leaving PostgreSQL.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-06-agent-rig-filesystem-first-multi-agent-workspaces",
+      "filename": "2026-07-06-agent-rig-filesystem-first-multi-agent-workspaces.md",
+      "category": "post",
+      "title": "Agent-Rig: Filesystem-First Multi-Agent Workspaces That Actually Catch Bugs",
+      "date": "2026-07-06",
+      "tags": [
+        "agent-rig",
+        "multi-agent",
+        "planner-worker-reviewer",
+        "agentic-stack",
+        "developer-tools",
+        "cli"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Agent-rig scaffolds .agent-rig/ directories into project repos so agents share context via files, not APIs. After 48 tasks across two production projects, the planner-worker-reviewer pattern catches edge cases that single-agent workflows miss — pre-execution error handling gaps, stale documentation, and contract mismatches. Token cost increases ~2-3x, but the structured handoffs reduce rework.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-06-postgresql-huge-pages-deep-dive",
+      "filename": "2026-07-06-postgresql-huge-pages-deep-dive.md",
+      "category": "post",
+      "title": "PostgreSQL Huge Pages: The 512x Reduction You're Probably Not Using",
+      "date": "2026-07-06",
+      "tags": [
+        "postgresql",
+        "huge-pages",
+        "linux-kernel",
+        "performance-tuning",
+        "memory-management",
+        "data-engineering"
+      ],
+      "series": "data-engineering",
+      "summary": "PostgreSQL huge pages replace 4KB memory pages with 2MB pages, reducing page-table entries by 512x and cutting per-backend RAM overhead from 200MB to tens of-MB. For a 100GB shared_buffers with 100 connections, that's ~20GB of RAM reclaimed. Configuration is two steps: reserve at Linux level, enable in postgresql.conf. The critical detail: use huge_pages=on, not try.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-06-right-tools-right-time-context-over-capability",
+      "filename": "2026-07-06-right-tools-right-time-context-over-capability.md",
+      "category": "post",
+      "title": "The Right Tools at the Right Time: Why Context Matters More Than Capability",
+      "date": "2026-07-06",
+      "tags": [
+        "agentic-stack",
+        "ai-agents",
+        "context-mode",
+        "codegraph",
+        "agent-reach",
+        "strata-memory",
+        "tool-selection",
+        "agent-performance"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Four tools I use daily — context-mode, codegraph, agent-reach, and strata-memory — aren't agent memory. They're infrastructure that controls what information reaches the agent and how efficiently it accesses knowledge. The best agents aren't the ones with the most tools. They're the ones that use the right tool at the right time.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-04-agentic-memory-management-production-architecture",
       "filename": "2026-07-04-agentic-memory-management-production-architecture.md",
       "category": "post",
