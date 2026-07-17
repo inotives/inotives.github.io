@@ -71,6 +71,8 @@ platform: linkedin
 status: draft
 ---
 ```
+For social post like linkedin, include hashtags at the end of the post.
+
 
 ---
 

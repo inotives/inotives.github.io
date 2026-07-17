@@ -1,6 +1,24 @@
 {
   "posts": [
     {
+      "slug": "2026-07-17-what-is-data-cleaning",
+      "filename": "2026-07-17-what-is-data-cleaning.md",
+      "category": "post",
+      "title": "What is Data Cleaning: The Task That Consumes 80% of a Data Scientist's Time",
+      "date": "2026-07-17",
+      "tags": [
+        "data-cleaning",
+        "data-quality",
+        "data-preparation",
+        "ai-data",
+        "machine-learning"
+      ],
+      "series": "data-engineering",
+      "summary": "Data cleaning is the unsexy part of AI that eats 60-80% of working hours. This covers what it actually involves, how AI has shifted the patterns from static rules to learning-based detection, and what the modern tool landscape looks like for practitioners.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-13-pg-durable-microsoft-postgres-plugin",
       "filename": "2026-07-13-pg-durable-microsoft-postgres-plugin.md",
       "category": "post",
