@@ -1,6 +1,44 @@
 {
   "posts": [
     {
+      "slug": "2026-07-18-data-contracts-crypto-pipelines",
+      "filename": "2026-07-18-data-contracts-crypto-pipelines.md",
+      "category": "post",
+      "title": "Data Contracts: The API Layer Your Crypto Pipeline Is Missing",
+      "date": "2026-07-18",
+      "tags": [
+        "data-contracts",
+        "data-quality",
+        "crypto",
+        "dbt",
+        "data-engineering",
+        "market-data"
+      ],
+      "series": "data-engineering",
+      "summary": "Data contracts turn fragile pipeline assumptions into executable rules. For crypto data, where identifiers, vendors, schemas, and freshness guarantees drift constantly, contracts are the difference between a usable warehouse and a pile of plausible-looking garbage.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-18-data-quality-checks-save-pipelines",
+      "filename": "2026-07-18-data-quality-checks-save-pipelines.md",
+      "category": "post",
+      "title": "Data Quality Checks: The Boring Layer That Saves Pipelines",
+      "date": "2026-07-18",
+      "tags": [
+        "data-quality",
+        "data-testing",
+        "dbt",
+        "crypto",
+        "data-engineering",
+        "pipelines"
+      ],
+      "series": "data-engineering",
+      "summary": "Data quality checks are the cheap tripwires that stop bad crypto data before it reaches dashboards, agents, and reports. The useful checks are boring: row counts, freshness, uniqueness, nulls, relationships, accepted values, and a few business rules that encode how the domain actually works.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-17-what-is-data-cleaning",
       "filename": "2026-07-17-what-is-data-cleaning.md",
       "category": "post",
