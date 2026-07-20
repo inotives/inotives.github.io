@@ -1,6 +1,80 @@
 {
   "posts": [
     {
+      "slug": "2026-07-20-crypto-symbols-are-not-ids",
+      "filename": "2026-07-20-crypto-symbols-are-not-ids.md",
+      "category": "post",
+      "title": "Crypto Symbols Are Not IDs",
+      "date": "2026-07-20",
+      "tags": [
+        "crypto",
+        "data-quality",
+        "asset-identity",
+        "data-engineering",
+        "market-data"
+      ],
+      "series": "data-engineering",
+      "summary": "Crypto symbols are display labels, not durable identifiers. If a pipeline joins on BTC, ETH, USDT, or any other ticker, it is one token migration, chain collision, or provider mismatch away from producing clean-looking bad data.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-20-dbt-small-crypto-projects",
+      "filename": "2026-07-20-dbt-small-crypto-projects.md",
+      "category": "post",
+      "title": "Why dbt Makes Sense Even for Small Crypto Projects",
+      "date": "2026-07-20",
+      "tags": [
+        "dbt",
+        "crypto",
+        "data-engineering",
+        "data-quality",
+        "market-data"
+      ],
+      "series": "data-engineering",
+      "summary": "Small crypto projects still need repeatable transforms, tested joins, freshness checks, and clear model boundaries. dbt is useful long before the warehouse is big because crypto data gets messy before it gets large.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-20-when-agents-should-not-touch-your-database",
+      "filename": "2026-07-20-when-agents-should-not-touch-your-database.md",
+      "category": "post",
+      "title": "When Agents Should Not Touch Your Database",
+      "date": "2026-07-20",
+      "tags": [
+        "ai-agents",
+        "database-security",
+        "data-engineering",
+        "mcp",
+        "postgres",
+        "crypto"
+      ],
+      "series": "data-engineering",
+      "summary": "Database access is one of the easiest ways to make agents useful and one of the fastest ways to make them dangerous. The right default is not full access. It is narrow, read-only, observable access to the data shape the agent actually needs.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-19-freshness-data-quality-dimension",
+      "filename": "2026-07-19-freshness-data-quality-dimension.md",
+      "category": "post",
+      "title": "Freshness Is a Data Quality Dimension",
+      "date": "2026-07-19",
+      "tags": [
+        "data-quality",
+        "freshness",
+        "crypto",
+        "data-engineering",
+        "dbt",
+        "market-data"
+      ],
+      "series": "data-engineering",
+      "summary": "Freshness is not a monitoring afterthought. For crypto pipelines, stale data can be worse than missing data because dashboards, reports, and agents will still treat it as current unless the pipeline makes age visible and enforceable.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-18-data-contracts-crypto-pipelines",
       "filename": "2026-07-18-data-contracts-crypto-pipelines.md",
       "category": "post",
