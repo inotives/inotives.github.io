@@ -40,6 +40,25 @@
       "draft": false
     },
     {
+      "slug": "2026-07-21-what-is-etl-and-elt",
+      "filename": "2026-07-21-what-is-etl-and-elt.md",
+      "category": "post",
+      "title": "What Is ETL and ELT? When to Use One Over the Other",
+      "date": "2026-07-21",
+      "tags": [
+        "etl",
+        "elt",
+        "data-engineering",
+        "pipelines",
+        "data-warehouse",
+        "analytics"
+      ],
+      "series": "data-engineering",
+      "summary": "ETL and ELT are two ways to move data from source systems into usable analytics tables. The difference is where transformation happens, and the right choice depends on data sensitivity, warehouse power, latency, cost, and how much raw history you need to preserve.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-20-crypto-symbols-are-not-ids",
       "filename": "2026-07-20-crypto-symbols-are-not-ids.md",
       "category": "post",
