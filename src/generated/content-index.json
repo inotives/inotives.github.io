@@ -1,6 +1,45 @@
 {
   "posts": [
     {
+      "slug": "2026-07-21-agent-readable-data-pipelines",
+      "filename": "2026-07-21-agent-readable-data-pipelines.md",
+      "category": "post",
+      "title": "Agent-Readable Data Pipelines",
+      "date": "2026-07-21",
+      "tags": [
+        "ai-agents",
+        "data-engineering",
+        "pipelines",
+        "agent-rig",
+        "context-mode",
+        "codegraph",
+        "agent-pipe"
+      ],
+      "series": "data-engineering",
+      "summary": "Coding agents can debug data pipelines faster when the repo gives them stable files, structured logs, explicit contracts, and narrow commands. The trick is not more documentation. It is making the pipeline legible to software.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-21-crypto-asset-mapping-table",
+      "filename": "2026-07-21-crypto-asset-mapping-table.md",
+      "category": "post",
+      "title": "The Crypto Asset Mapping Table",
+      "date": "2026-07-21",
+      "tags": [
+        "crypto",
+        "data-engineering",
+        "asset-identity",
+        "data-quality",
+        "dbt",
+        "market-data"
+      ],
+      "series": "data-engineering",
+      "summary": "A crypto asset mapping table is the small piece of boring infrastructure that keeps symbols, provider IDs, chain IDs, contract addresses, migrations, and delistings from turning into bad joins.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-20-crypto-symbols-are-not-ids",
       "filename": "2026-07-20-crypto-symbols-are-not-ids.md",
       "category": "post",
