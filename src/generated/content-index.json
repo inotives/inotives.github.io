@@ -1,6 +1,101 @@
 {
   "posts": [
     {
+      "slug": "2026-07-22-minimum-viable-data-catalog-solo-crypto-project",
+      "filename": "2026-07-22-minimum-viable-data-catalog-solo-crypto-project.md",
+      "category": "post",
+      "title": "The Minimum Viable Data Catalog for a Solo Crypto Project",
+      "date": "2026-07-22",
+      "tags": [
+        "data-catalog",
+        "crypto",
+        "data-engineering",
+        "dbt",
+        "mcp",
+        "metadata"
+      ],
+      "series": "data-engineering",
+      "summary": "A solo crypto project does not need an enterprise data catalog. It needs a small, searchable source of truth built from dbt schema files, contracts, README notes, dbt docs, and metadata an MCP tool can expose to agents.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-22-quarantine-tables-bad-crypto-data",
+      "filename": "2026-07-22-quarantine-tables-bad-crypto-data.md",
+      "category": "post",
+      "title": "Quarantine Tables: Where Bad Crypto Data Should Go",
+      "date": "2026-07-22",
+      "tags": [
+        "crypto",
+        "data-quality",
+        "data-engineering",
+        "pipelines",
+        "dbt",
+        "market-data"
+      ],
+      "series": "data-engineering",
+      "summary": "Bad crypto data should not disappear and it should not flow into marts. Quarantine tables give failed rows a visible place to land, with the source payload, run id, failure reason, retry policy, and enough context for humans or agents to fix the pipeline.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-22-run-logs-are-data-too",
+      "filename": "2026-07-22-run-logs-are-data-too.md",
+      "category": "post",
+      "title": "Run Logs Are Data Too",
+      "date": "2026-07-22",
+      "tags": [
+        "data-engineering",
+        "observability",
+        "pipelines",
+        "jsonl",
+        "ai-agents",
+        "data-quality"
+      ],
+      "series": "data-engineering",
+      "summary": "Pipeline run logs should be queryable data, not decorative terminal output. Structured JSONL logs with run IDs, source counts, error codes, freshness status, and retry metadata give humans and agents the evidence they need to debug without guessing.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-22-when-to-fail-pipeline-vs-warn",
+      "filename": "2026-07-22-when-to-fail-pipeline-vs-warn.md",
+      "category": "post",
+      "title": "When to Fail the Pipeline vs Warn",
+      "date": "2026-07-22",
+      "tags": [
+        "data-quality",
+        "crypto",
+        "data-engineering",
+        "freshness",
+        "pipelines",
+        "ai-agents"
+      ],
+      "series": "data-engineering",
+      "summary": "Not every data quality failure should stop a pipeline, and not every warning should be allowed through. Crypto pipelines need clear severity levels, report-blocking rules, stale-data policies, and agent-facing refusal behavior.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-22-why-raw-data-should-stay-raw",
+      "filename": "2026-07-22-why-raw-data-should-stay-raw.md",
+      "category": "post",
+      "title": "Why Raw Data Should Stay Raw",
+      "date": "2026-07-22",
+      "tags": [
+        "data-engineering",
+        "crypto",
+        "elt",
+        "data-quality",
+        "pipelines",
+        "dbt"
+      ],
+      "series": "data-engineering",
+      "summary": "Raw data is evidence. If a pipeline normalizes, filters, renames, or deduplicates too early, it loses the provider truth needed for replay, debugging, audits, and agent-readable data workflows.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-21-agent-readable-data-pipelines",
       "filename": "2026-07-21-agent-readable-data-pipelines.md",
       "category": "post",
