@@ -1,6 +1,82 @@
 {
   "posts": [
     {
+      "slug": "2026-07-24-ai-agents-only-as-good-as-data-marts",
+      "filename": "2026-07-24-ai-agents-only-as-good-as-data-marts.md",
+      "category": "post",
+      "title": "AI Agents Are Only as Good as Their Data Marts",
+      "date": "2026-07-24",
+      "tags": [
+        "ai-agents",
+        "data-marts",
+        "data-quality",
+        "crypto",
+        "data-engineering",
+        "analytics"
+      ],
+      "series": "data-engineering",
+      "summary": "Better models do not fix bad analytics tables. If an agent queries ambiguous symbols, stale prices, unsafe columns, or current-only dimensions, it will produce polished answers from broken data.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-24-data-lineage-small-crypto-pipelines",
+      "filename": "2026-07-24-data-lineage-small-crypto-pipelines.md",
+      "category": "post",
+      "title": "Data Lineage for Small Crypto Pipelines",
+      "date": "2026-07-24",
+      "tags": [
+        "data-lineage",
+        "crypto",
+        "data-engineering",
+        "dbt",
+        "data-quality",
+        "pipelines"
+      ],
+      "series": "data-engineering",
+      "summary": "Small crypto pipelines still need lineage. When a report number is wrong, you need to trace it from report to mart, mart to staging, staging to raw source, and through internalized tables like assets and platforms.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-24-mcp-api-layer-internal-data",
+      "filename": "2026-07-24-mcp-api-layer-internal-data.md",
+      "category": "post",
+      "title": "MCP Is Becoming the API Layer for Internal Data",
+      "date": "2026-07-24",
+      "tags": [
+        "mcp",
+        "ai-agents",
+        "internal-tools",
+        "data-engineering",
+        "postgres",
+        "data-marts"
+      ],
+      "series": "data-engineering",
+      "summary": "MCP gives agents a practical way to use internal data without handing them the whole database. The useful pattern is curated tools over safe marts, metadata, and narrow actions.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-24-point-in-time-correctness-crypto-analytics",
+      "filename": "2026-07-24-point-in-time-correctness-crypto-analytics.md",
+      "category": "post",
+      "title": "Point-in-Time Correctness in Crypto Analytics",
+      "date": "2026-07-24",
+      "tags": [
+        "crypto",
+        "data-engineering",
+        "point-in-time",
+        "data-quality",
+        "backfills",
+        "market-data"
+      ],
+      "series": "data-engineering",
+      "summary": "Crypto reports should use the mappings, prices, metadata, and asset status that were true at the report time. Point-in-time correctness prevents backfills, delistings, token migrations, and survivorship bias from rewriting history.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-23-backfills-without-breaking-crypto-reports",
       "filename": "2026-07-23-backfills-without-breaking-crypto-reports.md",
       "category": "post",
