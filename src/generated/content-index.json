@@ -1,6 +1,63 @@
 {
   "posts": [
     {
+      "slug": "2026-07-25-auditable-database-design-financial-data",
+      "filename": "2026-07-25-auditable-database-design-financial-data.md",
+      "category": "post",
+      "title": "Auditable Database Design for Financial Data",
+      "date": "2026-07-25",
+      "tags": [
+        "postgres",
+        "database-design",
+        "audit-trails",
+        "financial-data",
+        "compliance",
+        "data-engineering"
+      ],
+      "series": "data-engineering",
+      "summary": "Financial data needs more than clean tables. It needs audit trails: created and updated metadata, soft deletes, version history, actor tracking, run IDs, and database-level guardrails that make regulatory reports explainable later.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-25-how-to-structure-data-pipelines-so-agents-can-extend-them",
+      "filename": "2026-07-25-how-to-structure-data-pipelines-so-agents-can-extend-them.md",
+      "category": "post",
+      "title": "How to Structure Data Pipelines So Agents Can Extend Them",
+      "date": "2026-07-25",
+      "tags": [
+        "ai-agents",
+        "data-engineering",
+        "pipelines",
+        "modular-design",
+        "dbt",
+        "crypto"
+      ],
+      "series": "data-engineering",
+      "summary": "Agents extend data pipelines better when each source is a small module with predictable files, explicit contracts, tests, logs, and dbt boundaries. The goal is not clever automation. It is a repo shape that gives the agent fewer chances to guess.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-25-immutable-raw-tables-financial-pipelines",
+      "filename": "2026-07-25-immutable-raw-tables-financial-pipelines.md",
+      "category": "post",
+      "title": "Immutable Raw Tables for Financial Pipelines",
+      "date": "2026-07-25",
+      "tags": [
+        "data-engineering",
+        "financial-data",
+        "audit-trails",
+        "postgres",
+        "crypto",
+        "compliance"
+      ],
+      "series": "data-engineering",
+      "summary": "Raw financial data should be append-only evidence. Immutable raw tables preserve provider payloads, hashes, run IDs, correction rows, and replay inputs so reports can be explained months later.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-24-ai-agents-only-as-good-as-data-marts",
       "filename": "2026-07-24-ai-agents-only-as-good-as-data-marts.md",
       "category": "post",
