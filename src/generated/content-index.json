@@ -58,6 +58,25 @@
       "draft": false
     },
     {
+      "slug": "2026-07-25-keep-docs-folder-for-agent-memory",
+      "filename": "2026-07-25-keep-docs-folder-for-agent-memory.md",
+      "category": "post",
+      "title": "Keep a Docs Folder for Agent Memory",
+      "date": "2026-07-25",
+      "tags": [
+        "ai-agents",
+        "documentation",
+        "agent-memory",
+        "repositories",
+        "agent-workflows",
+        "software-engineering"
+      ],
+      "series": "data-engineering",
+      "summary": "A repo-local docs folder is one of the simplest ways to give agents durable project memory. Record past decisions, constraints, runbooks, and phase notes there, then point agents to it from AGENTS.md.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-24-ai-agents-only-as-good-as-data-marts",
       "filename": "2026-07-24-ai-agents-only-as-good-as-data-marts.md",
       "category": "post",
