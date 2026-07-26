@@ -1,6 +1,82 @@
 {
   "posts": [
     {
+      "slug": "2026-07-26-corrections-are-not-deletions",
+      "filename": "2026-07-26-corrections-are-not-deletions.md",
+      "category": "post",
+      "title": "Corrections Are Not Deletions",
+      "date": "2026-07-26",
+      "tags": [
+        "financial-data",
+        "data-engineering",
+        "audit-trails",
+        "crypto",
+        "postgres",
+        "compliance"
+      ],
+      "series": "data-engineering",
+      "summary": "Financial pipelines need to distinguish corrected facts, superseded rows, provider revisions, quarantined rows, soft deletes, and true deletions. Treating every problem as a delete destroys the audit trail.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-26-what-is-a-data-lake-financial-data",
+      "filename": "2026-07-26-what-is-a-data-lake-financial-data.md",
+      "category": "post",
+      "title": "What Is a Data Lake, and Why Financial Pipelines Need One",
+      "date": "2026-07-26",
+      "tags": [
+        "data-lake",
+        "financial-data",
+        "crypto",
+        "data-engineering",
+        "pipelines",
+        "compliance"
+      ],
+      "series": "data-engineering",
+      "summary": "A data lake is a durable raw storage layer for files, payloads, snapshots, and replicated operational data. For financial and crypto pipelines, it preserves evidence, supports replay, and keeps analytics workloads away from production databases.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-26-what-is-cdc-streaming-crypto-financial-data",
+      "filename": "2026-07-26-what-is-cdc-streaming-crypto-financial-data.md",
+      "category": "post",
+      "title": "What Is CDC Streaming, and Why Financial Pipelines Need It",
+      "date": "2026-07-26",
+      "tags": [
+        "cdc",
+        "streaming",
+        "financial-data",
+        "crypto",
+        "data-engineering",
+        "postgres"
+      ],
+      "series": "data-engineering",
+      "summary": "Change data capture streams database changes from logs instead of polling tables. For financial and crypto systems, CDC keeps replicas, lakes, marts, and audit workflows current without overloading production databases.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-26-why-agents-should-propose-changes-not-apply-them",
+      "filename": "2026-07-26-why-agents-should-propose-changes-not-apply-them.md",
+      "category": "post",
+      "title": "Why Agents Should Propose Changes, Not Apply Them",
+      "date": "2026-07-26",
+      "tags": [
+        "ai-agents",
+        "mcp",
+        "financial-data",
+        "audit-trails",
+        "data-engineering",
+        "compliance"
+      ],
+      "series": "data-engineering",
+      "summary": "For financial data, agents should create correction proposals, review tasks, and backfill requests instead of directly mutating source-of-truth tables. The right workflow keeps agents useful without letting them erase evidence.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-25-auditable-database-design-financial-data",
       "filename": "2026-07-25-auditable-database-design-financial-data.md",
       "category": "post",
