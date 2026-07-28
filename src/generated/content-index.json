@@ -1,6 +1,168 @@
 {
   "posts": [
     {
+      "slug": "2026-07-28-ai-assisted-analytics-mcp-clickhouse",
+      "filename": "2026-07-28-ai-assisted-analytics-mcp-clickhouse.md",
+      "category": "post",
+      "title": "AI-Assisted Analytics with MCP and ClickHouse",
+      "date": "2026-07-28",
+      "tags": [
+        "ai",
+        "analytics",
+        "mcp",
+        "clickhouse",
+        "claude-code",
+        "data-engineering",
+        "crypto"
+      ],
+      "series": "data-engineering",
+      "summary": "Natural-language analytics can work when the LLM is connected to curated, read-only data through a guarded MCP server. A production ClickHouse setup needs strict access boundaries, query limits, audit logs, semantic metadata, and clear refusal rules.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-28-data-science-mlops-model-serving-pipelines",
+      "filename": "2026-07-28-data-science-mlops-model-serving-pipelines.md",
+      "category": "post",
+      "title": "Partnering with Data Scientists on MLOps Pipelines",
+      "date": "2026-07-28",
+      "tags": [
+        "data-engineering",
+        "mlops",
+        "feature-store",
+        "model-registry",
+        "model-serving",
+        "crypto"
+      ],
+      "series": "data-engineering",
+      "summary": "Data engineers and data scientists need a shared operating model for ML: stable features, reproducible training sets, versioned models, automated retraining, monitored serving, and clear ownership from experiment to production.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-28-elt-dbt-orchestrators-prefect-airflow-dagster-n8n",
+      "filename": "2026-07-28-elt-dbt-orchestrators-prefect-airflow-dagster-n8n.md",
+      "category": "post",
+      "title": "ELT with dbt Across Prefect, Airflow, Dagster, and n8n",
+      "date": "2026-07-28",
+      "tags": [
+        "elt",
+        "dbt",
+        "orchestration",
+        "prefect",
+        "airflow",
+        "dagster",
+        "n8n",
+        "data-engineering"
+      ],
+      "series": "data-engineering",
+      "summary": "dbt handles warehouse transformations, but an ELT pipeline still needs orchestration. Prefect, Airflow, Dagster, and n8n can all run dbt, but they fit different operating styles: Python flows, task DAGs, asset graphs, and automation workflows.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-28-lakehouse-warehouse-architectures-snowflake-bigquery-clickhouse",
+      "filename": "2026-07-28-lakehouse-warehouse-architectures-snowflake-bigquery-clickhouse.md",
+      "category": "post",
+      "title": "Lakehouse and Warehouse Architectures with Snowflake, BigQuery, and ClickHouse",
+      "date": "2026-07-28",
+      "tags": [
+        "data-engineering",
+        "lakehouse",
+        "warehouse",
+        "snowflake",
+        "bigquery",
+        "clickhouse",
+        "crypto"
+      ],
+      "series": "data-engineering",
+      "summary": "Snowflake, BigQuery, and ClickHouse can all support serious analytical systems, but they optimize for different shapes of work. A crypto data platform should choose storage, compute, partitioning, clustering, and serving layers based on freshness, cost, latency, and audit needs.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-28-monitoring-alerting-logging-crypto-pipelines",
+      "filename": "2026-07-28-monitoring-alerting-logging-crypto-pipelines.md",
+      "category": "post",
+      "title": "Monitoring, Alerting, and Logging for Crypto Data Pipelines",
+      "date": "2026-07-28",
+      "tags": [
+        "data-engineering",
+        "monitoring",
+        "alerting",
+        "logging",
+        "cloudwatch",
+        "prometheus",
+        "grafana",
+        "slack",
+        "crypto"
+      ],
+      "series": "data-engineering",
+      "summary": "Crypto data pipelines need proactive monitoring before bad data reaches reports. CloudWatch, Prometheus, Grafana, and Slack webhooks can cover infrastructure metrics, pipeline metrics, dashboards, alert routing, and operator-friendly incident messages.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-28-partitioning-indexing-caching-bigquery-clickhouse",
+      "filename": "2026-07-28-partitioning-indexing-caching-bigquery-clickhouse.md",
+      "category": "post",
+      "title": "Partitioning, Indexing, and Caching for Faster Crypto Queries",
+      "date": "2026-07-28",
+      "tags": [
+        "data-engineering",
+        "bigquery",
+        "clickhouse",
+        "partitioning",
+        "indexing",
+        "caching",
+        "crypto"
+      ],
+      "series": "data-engineering",
+      "summary": "Fast analytical queries usually come from scanning less data, reading it in a better order, and reusing expensive results. BigQuery and ClickHouse solve this differently, so partitioning, indexing, and caching choices need to match the query shape.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-28-self-healing-auto-scaling-crypto-pipelines",
+      "filename": "2026-07-28-self-healing-auto-scaling-crypto-pipelines.md",
+      "category": "post",
+      "title": "Self-Healing, Auto-Scaling Crypto Data Pipelines",
+      "date": "2026-07-28",
+      "tags": [
+        "data-engineering",
+        "crypto",
+        "orchestration",
+        "prefect",
+        "dagster",
+        "reliability",
+        "autoscaling"
+      ],
+      "series": "data-engineering",
+      "summary": "Near-zero downtime in crypto data pipelines comes from retryable ingestion, partitioned recovery, autoscaling workers, idempotent writes, freshness checks, and clear rollback paths. Prefect and Dagster give different ways to build that operating model.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-28-validation-version-control-rollback-data-engineering",
+      "filename": "2026-07-28-validation-version-control-rollback-data-engineering.md",
+      "category": "post",
+      "title": "Validation, Version Control, and Rollback in Data Engineering",
+      "date": "2026-07-28",
+      "tags": [
+        "data-engineering",
+        "validation",
+        "version-control",
+        "rollback",
+        "dbt",
+        "reliability",
+        "traceability"
+      ],
+      "series": "data-engineering",
+      "summary": "Reliable data pipelines need more than successful jobs. Validation catches bad data, version control explains what changed, and rollback mechanisms give the team a controlled way to recover without hiding the evidence.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-26-corrections-are-not-deletions",
       "filename": "2026-07-26-corrections-are-not-deletions.md",
       "category": "post",
