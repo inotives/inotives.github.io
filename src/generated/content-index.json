@@ -1,6 +1,26 @@
 {
   "posts": [
     {
+      "slug": "2026-07-29-dbt-modeling-patterns-macros-tests-elt",
+      "filename": "2026-07-29-dbt-modeling-patterns-macros-tests-elt.md",
+      "category": "post",
+      "title": "dbt Modeling Patterns, Macros, and Tests in ELT",
+      "date": "2026-07-29",
+      "tags": [
+        "dbt",
+        "elt",
+        "data-engineering",
+        "macros",
+        "data-tests",
+        "modeling",
+        "crypto"
+      ],
+      "series": "data-engineering",
+      "summary": "dbt works best when ELT projects use clear modeling layers, small reusable macros, and tests that protect the business meaning of marts. The goal is not clever SQL, but repeatable transformations that analysts, agents, and reports can trust.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-28-ai-assisted-analytics-mcp-clickhouse",
       "filename": "2026-07-28-ai-assisted-analytics-mcp-clickhouse.md",
       "category": "post",
