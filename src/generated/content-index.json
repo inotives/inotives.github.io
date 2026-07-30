@@ -1,6 +1,64 @@
 {
   "posts": [
     {
+      "slug": "2026-07-30-graph-engineering-ai-workflows",
+      "filename": "2026-07-30-graph-engineering-ai-workflows.md",
+      "category": "post",
+      "title": "From Loop Engineering to Graph Engineering",
+      "date": "2026-07-30",
+      "tags": [
+        "ai",
+        "agents",
+        "graph-engineering",
+        "langgraph",
+        "workflows",
+        "loop-engineering"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Graph engineering is the shift from one open-ended agent loop to explicit agent workflows made of nodes, edges, state, retries, and human checkpoints. It gives teams more control over AI systems without removing the parts where agents still need freedom.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-30-semantic-layers-crypto-analytics",
+      "filename": "2026-07-30-semantic-layers-crypto-analytics.md",
+      "category": "post",
+      "title": "Semantic Layers for Crypto Analytics",
+      "date": "2026-07-30",
+      "tags": [
+        "semantic-layer",
+        "dbt",
+        "metrics",
+        "analytics",
+        "crypto",
+        "ai",
+        "data-engineering"
+      ],
+      "series": "data-engineering",
+      "summary": "A semantic layer gives crypto analytics one governed place for metric definitions, entities, dimensions, freshness rules, and access controls. It keeps dashboards, notebooks, reports, and AI agents from reinventing volume, revenue, exposure, and active wallet logic on every query.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-30-state-is-the-real-agent-interface",
+      "filename": "2026-07-30-state-is-the-real-agent-interface.md",
+      "category": "post",
+      "title": "State Is the Real Agent Interface",
+      "date": "2026-07-30",
+      "tags": [
+        "ai",
+        "agents",
+        "state",
+        "langgraph",
+        "workflows",
+        "graph-engineering"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Prompts, tools, and models matter, but state is the interface that lets an agent workflow survive retries, handoffs, review, and recovery. Scalable AI systems need typed state, small node contracts, durable checkpoints, and clear rules for what each step may read and write.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-29-dbt-modeling-patterns-macros-tests-elt",
       "filename": "2026-07-29-dbt-modeling-patterns-macros-tests-elt.md",
       "category": "post",
