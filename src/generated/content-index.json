@@ -1,6 +1,44 @@
 {
   "posts": [
     {
+      "slug": "2026-07-31-cicd-in-data-stacks",
+      "filename": "2026-07-31-cicd-in-data-stacks.md",
+      "category": "post",
+      "title": "Why CI/CD Matters in Data Stacks",
+      "date": "2026-07-31",
+      "tags": [
+        "data-engineering",
+        "cicd",
+        "github-actions",
+        "dbt",
+        "elt",
+        "data-quality"
+      ],
+      "series": "data-engineering",
+      "summary": "CI/CD in data stacks protects schemas, transformations, tests, deployments, and reports before changes reach production. A good GitHub setup catches broken SQL, failing dbt models, unsafe migrations, stale docs, and bad release paths early in the development cycle.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-07-31-kubernetes-for-data-engineers",
+      "filename": "2026-07-31-kubernetes-for-data-engineers.md",
+      "category": "post",
+      "title": "Is Kubernetes a Must for Data Engineers?",
+      "date": "2026-07-31",
+      "tags": [
+        "data-engineering",
+        "kubernetes",
+        "orchestration",
+        "mlops",
+        "pipelines",
+        "crypto"
+      ],
+      "series": "data-engineering",
+      "summary": "Data engineers do not all need to become Kubernetes platform engineers, but they do need to understand the Kubernetes concepts that affect real pipelines: pods, jobs, cronjobs, resources, secrets, logs, networking, scaling, and failure behavior.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-30-graph-engineering-ai-workflows",
       "filename": "2026-07-30-graph-engineering-ai-workflows.md",
       "category": "post",
