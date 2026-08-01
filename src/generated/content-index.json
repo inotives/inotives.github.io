@@ -1,6 +1,23 @@
 {
   "posts": [
     {
+      "slug": "2026-08-01-checkpoints-are-the-real-agent-interface",
+      "filename": "2026-08-01-checkpoints-are-the-real-agent-interface.md",
+      "category": "post",
+      "title": "The Checkpoint Is the Real Agent Interface",
+      "date": "2026-08-01",
+      "tags": [
+        "ai-agents",
+        "agent-workflows",
+        "state-management",
+        "orchestration"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Agent state describes a run. A checkpoint makes that run recoverable. Durable checkpoints turn retries, reviews, and handoffs into ordinary workflow steps instead of fragile conversations.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-07-31-cicd-in-data-stacks",
       "filename": "2026-07-31-cicd-in-data-stacks.md",
       "category": "post",
