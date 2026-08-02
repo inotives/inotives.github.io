@@ -1,6 +1,57 @@
 {
   "posts": [
     {
+      "slug": "2026-08-02-a-review-return-needs-a-schema",
+      "filename": "2026-08-02-a-review-return-needs-a-schema.md",
+      "category": "post",
+      "title": "A Review Return Needs a Schema",
+      "date": "2026-08-02",
+      "tags": [
+        "ai-agents",
+        "code-review",
+        "agent-workflows",
+        "quality-assurance"
+      ],
+      "series": "building-ai-systems",
+      "summary": "A reviewer return should be a structured handoff, not a vague rejection. A small schema for evidence, root cause, fix direction, and next action lets workers recover without replaying the whole run.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-02-late-arriving-data-product-decision",
+      "filename": "2026-08-02-late-arriving-data-product-decision.md",
+      "category": "post",
+      "title": "Late-Arriving Data Is a Product Decision, Not a Scheduler Problem",
+      "date": "2026-08-02",
+      "tags": [
+        "data-engineering",
+        "crypto-data",
+        "data-quality",
+        "dbt"
+      ],
+      "series": "data-engineering",
+      "summary": "Late records are normal in financial and crypto pipelines. The hard part is deciding which reports may change, how long a mart waits, and how corrections become reproducible instead of surprising.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-02-multi-agent-graph-engineering-agent-rig",
+      "filename": "2026-08-02-multi-agent-graph-engineering-agent-rig.md",
+      "category": "post",
+      "title": "Multi-Agent Graph Engineering Is a Workflow, Not a Swarm",
+      "date": "2026-08-02",
+      "tags": [
+        "ai-agents",
+        "graph-engineering",
+        "multi-agent-systems",
+        "agent-rig"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Multi-agent graph engineering is the design of roles, transitions, and control points around real work. AgentRig applies it with a planner-worker-reviewer graph, Markdown task files, explicit returns, and lightweight loop observability.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-01-checkpoints-are-the-real-agent-interface",
       "filename": "2026-08-01-checkpoints-are-the-real-agent-interface.md",
       "category": "post",
