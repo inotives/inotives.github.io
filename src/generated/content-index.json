@@ -1,6 +1,40 @@
 {
   "posts": [
     {
+      "slug": "2026-08-03-evaluate-transitions-not-final-answers",
+      "filename": "2026-08-03-evaluate-transitions-not-final-answers.md",
+      "category": "post",
+      "title": "Evaluate Workflow Transitions, Not Final Answers",
+      "date": "2026-08-03",
+      "tags": [
+        "ai-agents",
+        "evaluation",
+        "agent-workflows",
+        "agent-rig"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Final-answer scoring misses how an agent workflow actually behaves. Evaluate the transitions between planning, work, review, returns, and approval to find the loops, missing evidence, and handoffs that create operational risk.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-03-tool-output-is-untrusted-input",
+      "filename": "2026-08-03-tool-output-is-untrusted-input.md",
+      "category": "post",
+      "title": "Tool Output Is Untrusted Input",
+      "date": "2026-08-03",
+      "tags": [
+        "ai-agents",
+        "ai-security",
+        "prompt-injection",
+        "mcp"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Web pages, issues, logs, database rows, and MCP results can all contain instructions aimed at an agent. Treat tool output as untrusted data, constrain authority in code, and require approval before consequential actions.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-02-a-review-return-needs-a-schema",
       "filename": "2026-08-02-a-review-return-needs-a-schema.md",
       "category": "post",
