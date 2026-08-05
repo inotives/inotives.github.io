@@ -1,6 +1,40 @@
 {
   "posts": [
     {
+      "slug": "2026-08-05-schema-drift-production-incident",
+      "filename": "2026-08-05-schema-drift-production-incident.md",
+      "category": "post",
+      "title": "Schema Drift Is a Production Incident, Not a Parsing Error",
+      "date": "2026-08-05",
+      "tags": [
+        "data-engineering",
+        "crypto-data",
+        "data-contracts",
+        "data-quality"
+      ],
+      "series": "data-engineering",
+      "summary": "A provider changing a field name or type can quietly corrupt a mart long before a parser crashes. Treat schema drift as a visible incident: preserve the payload, classify the change, quarantine unsafe records, and replay only after the contract changes.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-05-when-two-providers-disagree-store-disagreement",
+      "filename": "2026-08-05-when-two-providers-disagree-store-disagreement.md",
+      "category": "post",
+      "title": "When Two Providers Disagree, Store the Disagreement",
+      "date": "2026-08-05",
+      "tags": [
+        "data-engineering",
+        "crypto-data",
+        "data-quality",
+        "data-modeling"
+      ],
+      "series": "data-engineering",
+      "summary": "Two market-data providers will disagree about prices, symbols, supply, and asset status. Preserve both observations and the reconciliation decision so a mart can be useful without pretending the conflict never existed.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-03-evaluate-transitions-not-final-answers",
       "filename": "2026-08-03-evaluate-transitions-not-final-answers.md",
       "category": "post",
