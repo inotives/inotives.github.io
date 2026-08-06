@@ -1,6 +1,58 @@
 {
   "posts": [
     {
+      "slug": "2026-08-06-agent-evaluation-reusable-environments",
+      "filename": "2026-08-06-agent-evaluation-reusable-environments.md",
+      "category": "post",
+      "title": "Agent Evaluation Needs Reusable Environments, Not Another Benchmark",
+      "date": "2026-08-06",
+      "tags": [
+        "ai-agents",
+        "agent-evaluation",
+        "agent-rig",
+        "software-engineering"
+      ],
+      "series": "building-ai-systems",
+      "summary": "A final-answer benchmark cannot show whether an agent followed the workflow that makes work safe. Reusable environments capture the repository, task state, tools, verifier, and expected transitions needed to evaluate an agent inside the harness where it will actually work.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-06-mcp-stateless-core-agent-safe-data-servers",
+      "filename": "2026-08-06-mcp-stateless-core-agent-safe-data-servers.md",
+      "category": "post",
+      "title": "MCP's Stateless Core Changes How We Build Agent-Safe Data Servers",
+      "date": "2026-08-06",
+      "tags": [
+        "mcp",
+        "ai-agents",
+        "data-engineering",
+        "crypto-data"
+      ],
+      "series": "building-ai-systems",
+      "summary": "MCP 2026-07-28 removes transport sessions from the protocol core. For agent-safe data servers, that means MCP can scale as ordinary request/response infrastructure while workflow state, authorization, freshness, and provenance stay explicit and durable.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-06-okf-v02-agent-memory-trust-layer",
+      "filename": "2026-08-06-okf-v02-agent-memory-trust-layer.md",
+      "category": "post",
+      "title": "OKF v0.2 Gives Agent Memory a Trust Layer",
+      "date": "2026-08-06",
+      "tags": [
+        "okf",
+        "agent-memory",
+        "ai-agents",
+        "knowledge-management",
+        "strata-memory"
+      ],
+      "series": "building-ai-systems",
+      "summary": "OKF v0.2 adds provenance, verification, freshness, lifecycle, and attested computations to Markdown knowledge bundles. These signals suggest an additive trust layer for Strata Memory without replacing its local-first files, promotion workflow, or rebuildable SQLite index.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-05-schema-drift-production-incident",
       "filename": "2026-08-05-schema-drift-production-incident.md",
       "category": "post",
