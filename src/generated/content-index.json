@@ -1,6 +1,23 @@
 {
   "posts": [
     {
+      "slug": "2026-08-07-policy-as-code-core-ai-engineering-skill",
+      "filename": "2026-08-07-policy-as-code-core-ai-engineering-skill.md",
+      "category": "post",
+      "title": "Policy as Code Will Be the Core Skill of AI Engineering",
+      "date": "2026-08-07",
+      "tags": [
+        "ai-agents",
+        "policy-as-code",
+        "engineering",
+        "agent-workflows"
+      ],
+      "series": "building-ai-systems",
+      "summary": "As agents write more implementation code, engineers will spend more time designing the harness around that work: executable authority, verification, workflow transitions, data boundaries, and approval gates. Policy as code is how those rules stay inspectable and enforceable.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-06-agent-evaluation-reusable-environments",
       "filename": "2026-08-06-agent-evaluation-reusable-environments.md",
       "category": "post",
