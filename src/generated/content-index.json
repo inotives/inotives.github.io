@@ -1,6 +1,24 @@
 {
   "posts": [
     {
+      "slug": "2026-08-08-how-to-choose-local-llm",
+      "filename": "2026-08-08-how-to-choose-local-llm.md",
+      "category": "post",
+      "title": "How to Read an Open-Source LLM Listing and Choose a Local Model",
+      "date": "2026-08-08",
+      "tags": [
+        "llm",
+        "local-ai",
+        "ollama",
+        "hugging-face",
+        "beginner-guide"
+      ],
+      "series": null,
+      "summary": "Parameter counts, quantization labels, context windows, and model formats can make a local LLM listing look harder than it is. This beginner guide explains what each term means and gives a practical process for choosing a model that fits your hardware and job.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-07-policy-as-code-core-ai-engineering-skill",
       "filename": "2026-08-07-policy-as-code-core-ai-engineering-skill.md",
       "category": "post",
