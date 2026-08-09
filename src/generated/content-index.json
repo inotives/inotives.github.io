@@ -1,6 +1,58 @@
 {
   "posts": [
     {
+      "slug": "2026-08-09-designing-mcp-auth-stateless-servers",
+      "filename": "2026-08-09-designing-mcp-auth-stateless-servers.md",
+      "category": "post",
+      "title": "Designing MCP Authentication for Stateless Servers",
+      "date": "2026-08-09",
+      "tags": [
+        "mcp",
+        "authentication",
+        "oauth",
+        "ai-security",
+        "api-design"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Stateless MCP moves authentication and authorization onto every request. This guide presents a practical design ladder, from a local single-user server to OAuth resource-server flows and enterprise policy enforcement, with examples for an agent-safe crypto data server.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-09-postgres-19-property-graphs-sql-pgq",
+      "filename": "2026-08-09-postgres-19-property-graphs-sql-pgq.md",
+      "category": "post",
+      "title": "PostgreSQL 19 Adds Property Graphs Without Leaving SQL Behind",
+      "date": "2026-08-09",
+      "tags": [
+        "postgresql",
+        "sql",
+        "graph-databases",
+        "data-engineering"
+      ],
+      "series": "data-engineering",
+      "summary": "PostgreSQL 19 Beta brings SQL/PGQ property graphs to ordinary relational tables. Here is what the syntax looks like, where it makes connected-data queries clearer than joins, and which other v19 changes matter in production.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-09-thinkingcap-efficient-reasoning-model-tuning",
+      "filename": "2026-08-09-thinkingcap-efficient-reasoning-model-tuning.md",
+      "category": "post",
+      "title": "ThinkingCap and the Case for Training Models to Stop Thinking",
+      "date": "2026-08-09",
+      "tags": [
+        "llm",
+        "reasoning-models",
+        "model-training",
+        "ai-engineering"
+      ],
+      "series": "building-ai-systems",
+      "summary": "BottleCap AI's ThinkingCap fine-tune of Qwen3.6-27B cuts reasoning-token use sharply while retaining most measured capability. The interesting idea is not shorter chains of thought; it is treating the cost of reasoning as a training objective.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-08-how-to-choose-local-llm",
       "filename": "2026-08-08-how-to-choose-local-llm.md",
       "category": "post",
@@ -56,16 +108,17 @@
       "slug": "2026-08-06-mcp-stateless-core-agent-safe-data-servers",
       "filename": "2026-08-06-mcp-stateless-core-agent-safe-data-servers.md",
       "category": "post",
-      "title": "MCP's Stateless Core Changes How We Build Agent-Safe Data Servers",
+      "title": "MCP Goes Stateless: Load Balancers, Auth, Caching, and Multi-Round Trips",
       "date": "2026-08-06",
       "tags": [
         "mcp",
         "ai-agents",
-        "data-engineering",
-        "crypto-data"
+        "api-design",
+        "security",
+        "data-engineering"
       ],
       "series": "building-ai-systems",
-      "summary": "MCP 2026-07-28 removes transport sessions from the protocol core. For agent-safe data servers, that means MCP can scale as ordinary request/response infrastructure while workflow state, authorization, freshness, and provenance stay explicit and durable.",
+      "summary": "MCP 2026-07-28 removes protocol sessions and the initialize handshake. This guide explains why that makes load balancing simpler, how headers and cache metadata help gateways, how OAuth authorization works per request, and how Multi Round-Trip Requests replace server-initiated calls.",
       "featured_image": null,
       "draft": false
     },
