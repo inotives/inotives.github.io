@@ -89,6 +89,20 @@ export default function Home() {
             Notes on data pipelines, ELT stacks, data modeling, and infrastructure.
           </p>
         </Link>
+
+        <Link
+          to="/series/data-engineering-in-30-days"
+          className="record"
+        >
+          <div className="record-meta">
+            <span>06</span>
+            <span>Series</span>
+          </div>
+          <h2 className="record-title">Data Engineering in 30 Days</h2>
+          <p className="record-copy">
+            A guided path from SQL fundamentals to AI-ready data systems.
+          </p>
+        </Link>
       </section>
 
       {recentPosts.length > 0 && (

@@ -1,6 +1,92 @@
 {
   "posts": [
     {
+      "slug": "2026-08-10-data-engineering-day-1-2-data-systems",
+      "filename": "2026-08-10-data-engineering-day-1-2-data-systems.md",
+      "category": "post",
+      "title": "Data Engineering in 30 Days, Days 1–2: How Data Systems Actually Work",
+      "date": "2026-08-10",
+      "tags": [
+        "data-engineering",
+        "learning-path",
+        "data-systems",
+        "databases"
+      ],
+      "series": "data-engineering-in-30-days",
+      "summary": "The first two days of data engineering: understand what the job owns, distinguish operational from analytical systems, and describe data with schemas, keys, and time before building a pipeline.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-10-data-engineering-day-3-4-files-formats",
+      "filename": "2026-08-10-data-engineering-day-3-4-files-formats.md",
+      "category": "post",
+      "title": "Data Engineering in 30 Days, Days 3–4: Files, Formats, and the First Trust Checks",
+      "date": "2026-08-10",
+      "tags": [
+        "data-engineering",
+        "learning-path",
+        "csv",
+        "json",
+        "parquet"
+      ],
+      "series": "data-engineering-in-30-days",
+      "summary": "Learn how CSV, JSON, and Parquet represent data, where each format fits, and the first checks to run before loading a file into a pipeline.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-10-data-engineering-day-5-7-sql-foundations",
+      "filename": "2026-08-10-data-engineering-day-5-7-sql-foundations.md",
+      "category": "post",
+      "title": "Data Engineering in 30 Days, Days 5–7: SQL Foundations and Database Vocabulary",
+      "date": "2026-08-10",
+      "tags": [
+        "data-engineering",
+        "learning-path",
+        "sql",
+        "postgresql"
+      ],
+      "series": "data-engineering-in-30-days",
+      "summary": "Build the SQL foundation for data engineering: understand databases, schemas, tables, DDL and DML, then learn to select, join, aggregate, structure, and compare data safely.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-10-data-engineering-day-8-10-python-toolkit",
+      "filename": "2026-08-10-data-engineering-day-8-10-python-toolkit.md",
+      "category": "post",
+      "title": "Data Engineering in 30 Days, Days 8–10: The Python Toolkit for Pipelines",
+      "date": "2026-08-10",
+      "tags": [
+        "data-engineering",
+        "learning-path",
+        "python",
+        "pandas"
+      ],
+      "series": "data-engineering-in-30-days",
+      "summary": "The Python tools data engineers use every day: standard-library building blocks for files, JSON, CSV, time, decimals, iteration, logging, and database-safe glue, followed by the external packages worth learning first.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-10-data-engineering-in-30-days-learning-path",
+      "filename": "2026-08-10-data-engineering-in-30-days-learning-path.md",
+      "category": "post",
+      "title": "Data Engineering in 30 Days: A Learning Path for the AI Era",
+      "date": "2026-08-10",
+      "tags": [
+        "data-engineering",
+        "learning-path",
+        "sql",
+        "ai"
+      ],
+      "series": "data-engineering-in-30-days",
+      "summary": "A practical 30-day map for learning data engineering, from files and SQL through modelling, orchestration, quality, and AI-ready data systems. This is the index for a series that will unpack each topic later.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-09-designing-mcp-auth-stateless-servers",
       "filename": "2026-08-09-designing-mcp-auth-stateless-servers.md",
       "category": "post",

@@ -15,6 +15,12 @@ const SERIES_META = {
       'Notes on building and operating data pipelines, ELT stacks, data modeling, and the infrastructure that turns raw data into something useful.',
     label: 'data-engineering',
   },
+  'data-engineering-in-30-days': {
+    title: 'Data Engineering in 30 Days',
+    description:
+      'A practical learning path from SQL and files to reliable pipelines, warehouses, and AI-ready data systems. Each entry takes one concept far enough to build with it.',
+    label: '30-day-learning-path',
+  },
 }
 
 export default function SeriesPage() {
