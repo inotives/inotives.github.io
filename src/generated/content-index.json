@@ -1,6 +1,40 @@
 {
   "posts": [
     {
+      "slug": "2026-08-12-data-engineering-day-16-17-advanced-dbt-transformations",
+      "filename": "2026-08-12-data-engineering-day-16-17-advanced-dbt-transformations.md",
+      "category": "post",
+      "title": "Data Engineering in 30 Days, Days 16–17: Advanced dbt Transformations That Stay Maintainable",
+      "date": "2026-08-12",
+      "tags": [
+        "data-engineering",
+        "learning-path",
+        "dbt",
+        "transformations"
+      ],
+      "series": "data-engineering-in-30-days",
+      "summary": "Go beyond basic dbt models: choose materialisations, build safe incremental models, use macros sparingly, select the right scope to run, and keep tests and documentation close to transformation logic.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-12-data-engineering-day-18-20-orchestration-testing-environments",
+      "filename": "2026-08-12-data-engineering-day-18-20-orchestration-testing-environments.md",
+      "category": "post",
+      "title": "Data Engineering in 30 Days, Days 18–20: Orchestration, Testing, and Deployment Environments",
+      "date": "2026-08-12",
+      "tags": [
+        "data-engineering",
+        "learning-path",
+        "orchestration",
+        "data-quality"
+      ],
+      "series": "data-engineering-in-30-days",
+      "summary": "Why pipelines need orchestration, how Airflow, Dagster, Prefect, Argo, Step Functions, and Spark differ, and how to test code plus data across local development, staging, and production.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-11-data-engineering-day-11-12-ingestion-incremental-loads",
       "filename": "2026-08-11-data-engineering-day-11-12-ingestion-incremental-loads.md",
       "category": "post",
