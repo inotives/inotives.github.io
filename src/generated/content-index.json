@@ -1,6 +1,23 @@
 {
   "posts": [
     {
+      "slug": "2026-08-16-data-engineering-day-21-22-warehouses-query-performance",
+      "filename": "2026-08-16-data-engineering-day-21-22-warehouses-query-performance.md",
+      "category": "post",
+      "title": "Data Engineering in 30 Days, Days 21–22: Warehouses and Query Performance",
+      "date": "2026-08-16",
+      "tags": [
+        "data-engineering",
+        "learning-path",
+        "data-warehouse",
+        "query-performance"
+      ],
+      "series": "data-engineering-in-30-days",
+      "summary": "Practical warehouse and query-performance guidelines: choose the right table grain, reduce scanned data, use partitions, clustering, and indexes deliberately, read plans, and optimise from measured evidence.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-12-data-engineering-day-16-17-advanced-dbt-transformations",
       "filename": "2026-08-12-data-engineering-day-16-17-advanced-dbt-transformations.md",
       "category": "post",
