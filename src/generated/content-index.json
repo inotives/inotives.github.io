@@ -1,6 +1,40 @@
 {
   "posts": [
     {
+      "slug": "2026-08-17-data-engineering-day-23-24-data-observability-quality",
+      "filename": "2026-08-17-data-engineering-day-23-24-data-observability-quality.md",
+      "category": "post",
+      "title": "Data Engineering in 30 Days, Days 23–24: Data Observability, Quality, and Schema Drift",
+      "date": "2026-08-17",
+      "tags": [
+        "data-engineering",
+        "learning-path",
+        "data-observability",
+        "data-quality"
+      ],
+      "series": "data-engineering-in-30-days",
+      "summary": "Learn to observe data as a product: freshness, completeness, validity, plausibility, schema drift, and source disagreement—using a concrete market-data incident from raw payload to policy decision.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-17-data-engineering-day-25-26-governance-delivery",
+      "filename": "2026-08-17-data-engineering-day-25-26-governance-delivery.md",
+      "category": "post",
+      "title": "Data Engineering in 30 Days, Days 25–26: Governance, Lineage, and Safe Delivery",
+      "date": "2026-08-17",
+      "tags": [
+        "data-engineering",
+        "learning-path",
+        "data-governance",
+        "ci-cd"
+      ],
+      "series": "data-engineering-in-30-days",
+      "summary": "Make data work dependable by tracing lineage, applying least-privilege access, retaining data deliberately, handling PII safely, and delivering pipeline changes through version control and repeatable checks.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-16-data-engineering-day-21-22-warehouses-query-performance",
       "filename": "2026-08-16-data-engineering-day-21-22-warehouses-query-performance.md",
       "category": "post",
