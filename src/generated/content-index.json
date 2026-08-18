@@ -1,6 +1,40 @@
 {
   "posts": [
     {
+      "slug": "2026-08-18-data-engineering-day-27-streaming-event-thinking",
+      "filename": "2026-08-18-data-engineering-day-27-streaming-event-thinking.md",
+      "category": "post",
+      "title": "Data Engineering in 30 Days, Day 27: Streaming and Event Thinking",
+      "date": "2026-08-18",
+      "tags": [
+        "data-engineering",
+        "learning-path",
+        "streaming",
+        "event-driven"
+      ],
+      "series": "data-engineering-in-30-days",
+      "summary": "Understand streaming before choosing Kafka: batches versus unbounded events, topics, consumers, offsets, event and processing time, late and duplicate events, out-of-order delivery, and the real limits of exactly-once claims.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-18-data-engineering-day-29-data-for-ai-systems",
+      "filename": "2026-08-18-data-engineering-day-29-data-for-ai-systems.md",
+      "category": "post",
+      "title": "Data Engineering in 30 Days, Day 29: Data for AI Systems",
+      "date": "2026-08-18",
+      "tags": [
+        "data-engineering",
+        "learning-path",
+        "ai-agents",
+        "retrieval"
+      ],
+      "series": "data-engineering-in-30-days",
+      "summary": "AI systems depend on data engineering: clean retrieval inputs, chunking and metadata choices, permission-aware access, stable tool contracts, checkpoints, audit trails, and evaluations that exercise failure paths.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-17-data-engineering-day-23-24-data-observability-quality",
       "filename": "2026-08-17-data-engineering-day-23-24-data-observability-quality.md",
       "category": "post",
