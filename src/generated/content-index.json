@@ -1,6 +1,23 @@
 {
   "posts": [
     {
+      "slug": "2026-08-19-data-engineering-day-30-capstone",
+      "filename": "2026-08-19-data-engineering-day-30-capstone.md",
+      "category": "post",
+      "title": "Data Engineering in 30 Days, Day 30: Build the Capstone and Choose a Direction",
+      "date": "2026-08-19",
+      "tags": [
+        "data-engineering",
+        "learning-path",
+        "capstone-project",
+        "data-quality"
+      ],
+      "series": "data-engineering-in-30-days",
+      "summary": "Finish the 30-day data engineering path by building a complete two-provider market-price pipeline: preserve raw evidence, standardise records, surface disagreements, publish a daily mart, and report data quality.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-18-data-engineering-day-27-streaming-event-thinking",
       "filename": "2026-08-18-data-engineering-day-27-streaming-event-thinking.md",
       "category": "post",
