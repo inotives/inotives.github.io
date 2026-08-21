@@ -1,6 +1,24 @@
 {
   "posts": [
     {
+      "slug": "2026-08-21-deepseek-harness-agent-runtime-comparison",
+      "filename": "2026-08-21-deepseek-harness-agent-runtime-comparison.md",
+      "category": "post",
+      "title": "DeepSeek Harness: A Plugin-First Agent Runtime Compared with Hermes, Pi, and OpenCode",
+      "date": "2026-08-21",
+      "tags": [
+        "ai-agents",
+        "agent-harness",
+        "deepseek",
+        "coding-agents",
+        "open-source"
+      ],
+      "series": "building-ai-systems",
+      "summary": "DeepSeek Harness treats the model loop, tools, storage, sandbox, and agent teams as replaceable plugins. This article examines that design and compares it with Hermes Agent, Pi, and OpenCode across models, skills, loops, multi-agent work, safety, and deployment.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-19-data-engineering-day-30-capstone",
       "filename": "2026-08-19-data-engineering-day-30-capstone.md",
       "category": "post",
