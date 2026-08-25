@@ -1,6 +1,24 @@
 {
   "posts": [
     {
+      "slug": "2026-08-25-needle-tiny-tool-calling-model",
+      "filename": "2026-08-25-needle-tiny-tool-calling-model.md",
+      "category": "post",
+      "title": "Needle 2: A 14MB Model for Tool Calling and Structured Extraction",
+      "date": "2026-08-25",
+      "tags": [
+        "ai",
+        "small-language-models",
+        "tool-calling",
+        "on-device-ai",
+        "structured-data"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Needle 2 is a 45M-parameter open model packaged as a 14MB inference engine for tool calling, device use, and structured extraction. This article explains its constrained design, realistic uses, and how to compare it fairly with FunctionGemma and LFM2.5-230M.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-21-deepseek-harness-agent-runtime-comparison",
       "filename": "2026-08-21-deepseek-harness-agent-runtime-comparison.md",
       "category": "post",
