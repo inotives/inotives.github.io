@@ -1,6 +1,24 @@
 {
   "posts": [
     {
+      "slug": "2026-08-26-tencentdb-agent-memory-vs-strata-memory",
+      "filename": "2026-08-26-tencentdb-agent-memory-vs-strata-memory.md",
+      "category": "post",
+      "title": "TencentDB Agent Memory and Strata Memory: Two Different Takes on Long-Term Agent Context",
+      "date": "2026-08-26",
+      "tags": [
+        "ai-agents",
+        "agent-memory",
+        "knowledge-management",
+        "retrieval",
+        "strata-memory"
+      ],
+      "series": "building-ai-systems",
+      "summary": "TencentDB Agent Memory builds a governed shared memory hub from conversations, skills, documents, and code. This article examines its layered retrieval design and compares it with Strata Memory's local-first, review-driven lifecycle from draft to durable knowledge to executable intelligence.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-25-needle-tiny-tool-calling-model",
       "filename": "2026-08-25-needle-tiny-tool-calling-model.md",
       "category": "post",
