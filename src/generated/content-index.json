@@ -1,6 +1,42 @@
 {
   "posts": [
     {
+      "slug": "2026-08-29-portable-agent-memory-across-harnesses",
+      "filename": "2026-08-29-portable-agent-memory-across-harnesses.md",
+      "category": "post",
+      "title": "One Memory Core, Many Agent Harnesses: What Portability Actually Requires",
+      "date": "2026-08-29",
+      "tags": [
+        "ai-agents",
+        "agent-memory",
+        "mcp",
+        "evaluation",
+        "developer-tools"
+      ],
+      "series": "building-ai-systems",
+      "summary": "A shared MCP server is a useful starting point for portable agent memory, but it is not enough. This article designs one memory core with thin adapters for Codex, Claude Code, and OpenCode, covering context injection, lifecycle triggers, isolation, permissions, evidence, and black-box evaluation.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-08-29-tool-selection-is-a-retrieval-problem",
+      "filename": "2026-08-29-tool-selection-is-a-retrieval-problem.md",
+      "category": "post",
+      "title": "Tool Selection Is Now a Retrieval Problem, Not a Prompt Problem",
+      "date": "2026-08-29",
+      "tags": [
+        "ai-agents",
+        "tool-calling",
+        "retrieval",
+        "mcp",
+        "evaluation"
+      ],
+      "series": "building-ai-systems",
+      "summary": "As agent tool catalogues grow, listing every capability in a prompt stops working. Reliable tool use needs catalog design, candidate retrieval, constrained arguments, abstention, policy checks, and trajectory-level evaluation.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-26-tencentdb-agent-memory-vs-strata-memory",
       "filename": "2026-08-26-tencentdb-agent-memory-vs-strata-memory.md",
       "category": "post",
