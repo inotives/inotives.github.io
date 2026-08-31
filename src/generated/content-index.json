@@ -1,6 +1,24 @@
 {
   "posts": [
     {
+      "slug": "2026-08-31-archivy-data-engineering-knowledge-base",
+      "filename": "2026-08-31-archivy-data-engineering-knowledge-base.md",
+      "category": "post",
+      "title": "Archivy for Data Engineering: Turn Runbooks, Decisions, and Pipeline Evidence into a Searchable Knowledge Base",
+      "date": "2026-08-31",
+      "tags": [
+        "data-engineering",
+        "knowledge-management",
+        "documentation",
+        "archivy",
+        "operations"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Archivy is a self-hostable, file-backed wiki with bookmarks, bidirectional links, tags, full-text search, a web API, and plugins. This article explains how its durable Markdown model can support data contracts, runbooks, incidents, and lineage in a data engineering workflow.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-29-portable-agent-memory-across-harnesses",
       "filename": "2026-08-29-portable-agent-memory-across-harnesses.md",
       "category": "post",
