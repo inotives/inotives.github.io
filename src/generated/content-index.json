@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-09-01-a2a-acp-anp-mcp-agent-protocols",
+      "filename": "2026-09-01-a2a-acp-anp-mcp-agent-protocols.md",
+      "category": "post",
+      "title": "A2A, ACP, ANP, and MCP: Four Agent Protocols, Four Different Jobs",
+      "date": "2026-09-01",
+      "tags": [
+        "ai-agents",
+        "mcp",
+        "a2a",
+        "acp",
+        "anp",
+        "interoperability"
+      ],
+      "series": "building-ai-systems",
+      "summary": "A practical guide to A2A, ACP, ANP, and MCP: what boundary each protocol owns, where they overlap, and how to choose the right one for real agent systems.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-31-archivy-data-engineering-knowledge-base",
       "filename": "2026-08-31-archivy-data-engineering-knowledge-base.md",
       "category": "post",
