@@ -20,6 +20,25 @@
       "draft": false
     },
     {
+      "slug": "2026-09-01-engineering-ai-agents-real-business-context",
+      "filename": "2026-09-01-engineering-ai-agents-real-business-context.md",
+      "category": "post",
+      "title": "How to Engineer an AI Agent That Works in a Real Business",
+      "date": "2026-09-01",
+      "tags": [
+        "ai-agents",
+        "ai-engineering",
+        "llm",
+        "orchestration",
+        "evaluation",
+        "business"
+      ],
+      "series": "building-ai-systems",
+      "summary": "A practical engineering process for moving an AI agent from a promising demo to a dependable business system: scope, prompts, models, memory, tools, orchestration, interface, and evaluation.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-08-31-archivy-data-engineering-knowledge-base",
       "filename": "2026-08-31-archivy-data-engineering-knowledge-base.md",
       "category": "post",
