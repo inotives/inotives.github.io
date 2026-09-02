@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-09-02-ai-agents-expiring-permissions",
+      "filename": "2026-09-02-ai-agents-expiring-permissions.md",
+      "category": "post",
+      "title": "AI Agents Need Expiring Permissions, Not Permanent Access",
+      "date": "2026-09-02",
+      "tags": [
+        "ai-agents",
+        "security",
+        "authorization",
+        "identity",
+        "governance",
+        "ai-engineering"
+      ],
+      "series": "building-ai-systems",
+      "summary": "How to give business agents temporary, purpose-bound authority: scope every action, require approval where risk changes, record the evidence, and let access disappear when the job ends.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-01-a2a-acp-anp-mcp-agent-protocols",
       "filename": "2026-09-01-a2a-acp-anp-mcp-agent-protocols.md",
       "category": "post",
