@@ -20,6 +20,25 @@
       "draft": false
     },
     {
+      "slug": "2026-09-03-agent-incident-response-playbook",
+      "filename": "2026-09-03-agent-incident-response-playbook.md",
+      "category": "post",
+      "title": "When an AI Agent Makes a Wrong Move: An Incident Response Playbook",
+      "date": "2026-09-03",
+      "tags": [
+        "ai-agents",
+        "incident-response",
+        "security",
+        "operations",
+        "evaluation",
+        "governance"
+      ],
+      "series": "building-ai-systems",
+      "summary": "A practical incident-response playbook for agent failures: contain authority, establish what happened downstream, recover safely, communicate clearly, and convert the event into stronger evaluations and release controls.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-03-roll-out-agent-change-without-breaking-operations",
       "filename": "2026-09-03-roll-out-agent-change-without-breaking-operations.md",
       "category": "post",
