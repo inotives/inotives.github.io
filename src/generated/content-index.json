@@ -1,6 +1,44 @@
 {
   "posts": [
     {
+      "slug": "2026-09-03-agent-action-gateway",
+      "filename": "2026-09-03-agent-action-gateway.md",
+      "category": "post",
+      "title": "The Agent Action Gateway: The Missing Layer Between an LLM and a Business System",
+      "date": "2026-09-03",
+      "tags": [
+        "ai-agents",
+        "security",
+        "api-design",
+        "authorization",
+        "orchestration",
+        "ai-engineering"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Why business agents need an action gateway between the model and sensitive APIs, and how to build one with scoped requests, policy checks, approvals, idempotency, and an audit trail.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-09-03-roll-out-agent-change-without-breaking-operations",
+      "filename": "2026-09-03-roll-out-agent-change-without-breaking-operations.md",
+      "category": "post",
+      "title": "How to Roll Out an Agent Change Without Breaking Operations",
+      "date": "2026-09-03",
+      "tags": [
+        "ai-agents",
+        "evaluation",
+        "deployment",
+        "observability",
+        "operations",
+        "ai-engineering"
+      ],
+      "series": "building-ai-systems",
+      "summary": "A practical release process for agent prompts, models, tools, and workflows: version the change, replay real cases, shadow live traffic, canary by risk, measure safety and business outcomes, and roll back cleanly.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-02-ai-agents-expiring-permissions",
       "filename": "2026-09-02-ai-agents-expiring-permissions.md",
       "category": "post",
@@ -1047,7 +1085,7 @@
         "compliance"
       ],
       "series": "data-engineering",
-      "summary": "For financial data, agents should create correction proposals, review tasks, and backfill requests instead of directly mutating source-of-truth tables. The right workflow keeps agents useful without letting them erase evidence.",
+      "summary": "For financial data, agents should create correction proposals, review tasks, and backfill requests instead of directly mutating source-of-truth tables. This guide shows the proposal, validation, approval, apply, and reconciliation workflow with a real crypto-data correction.",
       "featured_image": null,
       "draft": false
     },

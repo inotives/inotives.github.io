@@ -3,7 +3,7 @@ title: "Why Agents Should Propose Changes, Not Apply Them"
 date: 2026-07-26
 tags: [ai-agents, mcp, financial-data, audit-trails, data-engineering, compliance]
 series: data-engineering
-summary: "For financial data, agents should create correction proposals, review tasks, and backfill requests instead of directly mutating source-of-truth tables. The right workflow keeps agents useful without letting them erase evidence."
+summary: "For financial data, agents should create correction proposals, review tasks, and backfill requests instead of directly mutating source-of-truth tables. This guide shows the proposal, validation, approval, apply, and reconciliation workflow with a real crypto-data correction."
 ---
 
 # Why Agents Should Propose Changes, Not Apply Them
@@ -18,7 +18,13 @@ But source-of-truth tables are not scratch space.
 
 If the table feeds reports, audits, regulatory filings, or customer-facing financial numbers, the agent's job should usually be to propose the change, not apply it directly.
 
-The repair should move through a reviewable workflow.
+The repair should move through a reviewable workflow:
+
+```text
+detect -> propose -> validate -> approve -> apply -> rebuild -> reconcile
+```
+
+Each arrow has an owner and a durable record. The agent can do the investigative work quickly. A deterministic process decides whether a source-of-truth change is valid and records the result.
 
 ## The agent is good at detection
 
@@ -161,6 +167,26 @@ delete from balances where id = 2208;
 
 The first records a decision. The second erases context.
 
+## A real case: a bridged-asset mapping is wrong
+
+Suppose a provider sends a row labelled `USDC`. The agent notices that the contract address belongs to bridged USDC on Arbitrum, while the current mapping points to native USDC. That difference changes supply, venue exposure, and potentially a portfolio report.
+
+The agent should collect evidence before proposing anything:
+
+```text
+provider record ID and source-run ID
+chain ID and contract address
+current mapping and mapping version
+candidate canonical asset ID
+number of affected rows and marts
+oldest affected observation time
+tests that failed or disagreement found
+```
+
+It then creates an `asset_mapping_correction` proposal. The proposal says the current mapping, requested mapping, effective date, and evidence. It does not say "run this UPDATE." The difference is practical: a reviewer can reject the proposed identity, narrow the effective date, or determine that the provider feed itself is wrong without trying to reconstruct what the agent did.
+
+This is where crypto data exposes a common shortcut. A ticker is not an identifier. `USDC`, `BTC`, and `ETH` appear across chains, wrapped forms, derivatives, venues, and vendor namespaces. An agent can suggest the most likely match; the canonical mapping process must still use the identity fields the business has chosen, such as chain, contract address, provider ID, and venue context.
+
 ## MCP tools should create proposals
 
 This is where MCP fits well.
@@ -200,6 +226,16 @@ Output:
 
 The agent has moved the work forward without mutating production facts.
 
+## Do not give the agent an SQL-shaped escape hatch
+
+`run_sql(sql)` looks flexible because one tool can handle every database task. It also makes authorization, validation, audit, and prompt-injection resistance much harder.
+
+An agent that receives an untrusted document, issue comment, or provider payload can be influenced to construct a query outside the original task. Even if it has good intentions, it may target the wrong table or omit a predicate. Parameterized queries reduce injection risk, but they do not solve the business problem of whether the agent should write that row at all.
+
+Keep the write boundary domain-specific. A `create_asset_mapping_proposal` function can accept a validated mapping candidate and evidence IDs. It cannot delete a raw record, update every row with a matching symbol, or run a migration. The implementation uses parameterized queries internally and restricts the service database role to proposal and queue tables.
+
+Read access should also be narrow. The agent may need a curated mart, the catalog, test failures, and lineage metadata. It rarely needs unrestricted access to customer records, credentials, raw exports, or the database system catalog.
+
 ## Applying changes should be a controlled job
 
 Once a proposal is approved, a controlled job can apply it.
@@ -220,6 +256,24 @@ This prevents stale proposals from applying blindly.
 For example, before applying an asset mapping correction, the job should check that the old mapping is still active. If another reviewer already replaced it, the proposal should fail cleanly.
 
 The apply step is still automated. It is just not an unreviewed agent write.
+
+The controlled job should use an expected-state check. If proposal `144` says mapping `42` is currently `native-usdc`, the job must confirm that condition before it applies the correction. If another approved change already modified mapping `42`, mark the proposal `stale` and send it back for review. Never let an old proposal overwrite a newer decision.
+
+For a change that affects several related records, use a database transaction. PostgreSQL transactions group steps so they succeed or fail together; a rollback removes partial work when a validation step fails. The transaction is not the approval mechanism. It is the safety mechanism for the approved apply job.
+
+A simple apply state machine is enough:
+
+```text
+open -> validated -> approved -> applying -> applied
+                  |              |            |
+                  v              v            v
+               rejected        failed     reconciled
+                                  |
+                                  v
+                               stale
+```
+
+The apply job should attach its run ID, the old and new versions, and an idempotency key to the proposal. A retry must return the first successful result rather than create a second correction or launch the same backfill twice.
 
 ## Backfills need proposals too
 
@@ -257,6 +311,22 @@ The agent can create the request. A reviewer can approve the blast radius.
 
 That matters because a backfill is not a local edit. It may change historical marts, report snapshots, freshness status, and reconciliation outputs.
 
+## Report impact is a separate decision
+
+Correcting data and deciding what to do with a report are related but different actions. A mapping correction may change a historical NAV, tax export, customer statement, or internal risk metric. The apply job should calculate the affected partitions and downstream reports, then open a `report_impact_review` when the change crosses a materiality threshold.
+
+For example:
+
+```text
+mapping proposal 144 applied
+  -> rebuild agent__portfolio_exposure from 2026-07-01
+  -> compare old and new daily NAV snapshots
+  -> delta exceeds reporting threshold on 2026-07-18
+  -> open amended-report review with evidence
+```
+
+That prevents a technically correct correction from silently rewriting a number that a customer, auditor, or regulator has already seen.
+
 ## Good refusals are part of the workflow
 
 An agent should refuse to apply direct writes when the table is source-of-truth.
@@ -276,6 +346,23 @@ I cannot help with that.
 The point is not to make the agent useless. The point is to route the action into a safer workflow.
 
 For financial data, a refusal plus a proposal is often the best answer.
+
+## Test the workflow and the proposal text
+
+The evaluation set should include cases where the agent identifies the wrong asset, a proposal uses an out-of-date row version, a reviewer rejects the correction, a backfill fails halfway through, or a duplicate retry arrives after the change was applied. The expected result is a safe workflow state and an audit record, not a confident paragraph from the agent.
+
+Test deterministic parts with ordinary checks:
+
+```text
+proposal schema rejects an unknown proposal type
+agent service role cannot update source-of-truth tables
+apply job rejects a stale expected state
+approved proposal creates one correction on repeated delivery
+dbt tests pass before a rebuild is marked complete
+report-impact review opens when a threshold is exceeded
+```
+
+dbt tests are useful early checks for identity, uniqueness, accepted values, and relationships. They do not replace review or business policy, but they give the controlled workflow concrete conditions to verify before it promotes a correction.
 
 ## The practical rule
 
@@ -308,3 +395,6 @@ Explainable fixes are better.
 - [Corrections Are Not Deletions](/posts/2026-07-26-corrections-are-not-deletions)
 - [The Data Quality Review Queue](/posts/2026-07-23-data-quality-review-queue)
 - [When Agents Should Not Touch Your Database](/posts/2026-07-20-when-agents-should-not-touch-your-database)
+- [dbt: add data tests to your DAG](https://docs.getdbt.com/docs/build/data-tests)
+- [PostgreSQL: transactions](https://www.postgresql.org/docs/current/tutorial-transactions.html)
+- [OWASP: query parameterization](https://cheatsheetseries.owasp.org/cheatsheets/Query_Parameterization_Cheat_Sheet.html)
