@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-09-05-ai-agents-need-budgets",
+      "filename": "2026-09-05-ai-agents-need-budgets.md",
+      "category": "post",
+      "title": "AI Agents Need Budgets, Not Just Rate Limits",
+      "date": "2026-09-05",
+      "tags": [
+        "ai-agents",
+        "cost-control",
+        "observability",
+        "orchestration",
+        "reliability",
+        "ai-engineering"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Rate limits protect shared services; per-task budgets protect a business case from runaway reasoning, retrieval, tool retries, latency, and cost. This guide shows how to set and operate those limits.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-03-agent-action-gateway",
       "filename": "2026-09-03-agent-action-gateway.md",
       "category": "post",
