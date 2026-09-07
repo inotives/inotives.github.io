@@ -1,6 +1,26 @@
 {
   "posts": [
     {
+      "slug": "2026-09-07-private-memory-vault-hermes-agent-fleet",
+      "filename": "2026-09-07-private-memory-vault-hermes-agent-fleet.md",
+      "category": "post",
+      "title": "A Private Memory Vault for a Hermes Agent Fleet",
+      "date": "2026-09-07",
+      "tags": [
+        "ai-agents",
+        "agent-memory",
+        "hermes-agent",
+        "strata-memory",
+        "github",
+        "mcp",
+        "privacy"
+      ],
+      "series": "building-ai-systems",
+      "summary": "A concrete design for giving multiple Hermes agents durable shared memory without sharing their session databases: Strata Markdown as the canonical vault, local indexes for retrieval, MCP tools for access, and a private GitHub workflow for review and history.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-05-ai-agents-need-budgets",
       "filename": "2026-09-05-ai-agents-need-budgets.md",
       "category": "post",
