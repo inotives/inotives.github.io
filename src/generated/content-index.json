@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-09-11-aws-databricks-lakehouse-10tb",
+      "filename": "2026-09-11-aws-databricks-lakehouse-10tb.md",
+      "category": "post",
+      "title": "Building an AWS and Databricks Lakehouse for 10 TB of Data",
+      "date": "2026-09-11",
+      "tags": [
+        "data-engineering",
+        "aws",
+        "databricks",
+        "lakehouse",
+        "delta-lake",
+        "cost-optimization"
+      ],
+      "series": "data-engineering",
+      "summary": "A practical AWS and Databricks lakehouse design for a 10 TB operational dataset: S3 landing, Auto Loader, Delta Lake, Unity Catalog, Lakeflow, SQL serving, and a cost model whose assumptions are explicit enough to change.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-07-private-memory-vault-hermes-agent-fleet",
       "filename": "2026-09-07-private-memory-vault-hermes-agent-fleet.md",
       "category": "post",
