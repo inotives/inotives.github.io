@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-09-15-crypto-exchange-closure-data-preservation",
+      "filename": "2026-09-15-crypto-exchange-closure-data-preservation.md",
+      "category": "post",
+      "title": "When a Crypto Exchange Winds Down: Liquidity Pressure and the Data You Need to Save",
+      "date": "2026-09-15",
+      "tags": [
+        "crypto",
+        "data-engineering",
+        "market-data",
+        "exchanges",
+        "liquidity",
+        "risk-management"
+      ],
+      "series": "data-engineering",
+      "summary": "CoinEx's planned wind-down is a reminder that mid-tier exchange economics and market-data durability are linked. This article explains the liquidity and compliance squeeze, why funding is a weak proxy, and how to preserve exchange data before a venue disappears.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-11-aws-databricks-lakehouse-10tb",
       "filename": "2026-09-11-aws-databricks-lakehouse-10tb.md",
       "category": "post",
