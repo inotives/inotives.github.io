@@ -20,6 +20,25 @@
       "draft": false
     },
     {
+      "slug": "2026-09-15-databricks-lakehouse-repository-structure",
+      "filename": "2026-09-15-databricks-lakehouse-repository-structure.md",
+      "category": "post",
+      "title": "How to Structure Repositories for an AWS Databricks Lakehouse",
+      "date": "2026-09-15",
+      "tags": [
+        "data-engineering",
+        "databricks",
+        "aws",
+        "terraform",
+        "ci-cd",
+        "lakehouse"
+      ],
+      "series": "data-engineering",
+      "summary": "A practical repository strategy for an AWS and Databricks lakehouse: separate privileged infrastructure from deployable data products, use a product monorepo first, and split repositories only when team ownership or release cadence demands it.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-11-aws-databricks-lakehouse-10tb",
       "filename": "2026-09-11-aws-databricks-lakehouse-10tb.md",
       "category": "post",
