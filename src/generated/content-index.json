@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-09-16-nine-databricks-platform-updates",
+      "filename": "2026-09-16-nine-databricks-platform-updates.md",
+      "category": "post",
+      "title": "9 Databricks Updates That Change How Data Teams Build on the Lakehouse",
+      "date": "2026-09-16",
+      "tags": [
+        "data-engineering",
+        "databricks",
+        "ai",
+        "governance",
+        "spark",
+        "real-time-data"
+      ],
+      "series": "data-engineering",
+      "summary": "Nine recent Databricks updates across pipelines, CDC, SQL AI, RAG, analytics agents, model serving, governance, Spark, and real-time ingestion, with the practical engineering decisions each one changes.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-15-crypto-exchange-closure-data-preservation",
       "filename": "2026-09-15-crypto-exchange-closure-data-preservation.md",
       "category": "post",
