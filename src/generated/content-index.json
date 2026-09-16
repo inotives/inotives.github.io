@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-09-16-dbt-vs-lakeflow-declarative-pipelines",
+      "filename": "2026-09-16-dbt-vs-lakeflow-declarative-pipelines.md",
+      "category": "post",
+      "title": "dbt vs Lakeflow Declarative Pipelines for a Databricks Warehouse",
+      "date": "2026-09-16",
+      "tags": [
+        "data-engineering",
+        "databricks",
+        "dbt",
+        "lakeflow",
+        "data-modeling",
+        "analytics-engineering"
+      ],
+      "series": "data-engineering",
+      "summary": "Choosing dbt, Lakeflow Declarative Pipelines, or both for Databricks transformations depends on whether the hard problem is incremental data movement or analytics-model governance. This compares the trade-offs and shows a practical hybrid boundary with LDP Python, LDP SQL, and dbt examples.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-16-nine-databricks-platform-updates",
       "filename": "2026-09-16-nine-databricks-platform-updates.md",
       "category": "post",
