@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-09-17-dense-vs-moe-local-llms-macos",
+      "filename": "2026-09-17-dense-vs-moe-local-llms-macos.md",
+      "category": "post",
+      "title": "Dense vs MoE Models: Choosing a Local LLM for macOS",
+      "date": "2026-09-17",
+      "tags": [
+        "local-llm",
+        "llm-architecture",
+        "mixture-of-experts",
+        "macos",
+        "apple-silicon",
+        "mlx"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Dense and Mixture-of-Experts models use context and generate tokens differently at the feed-forward layer. This guide explains the architecture in plain language, why MoE is not automatically faster on a Mac, and how to decode local-model names, formats, and quantization tags before downloading.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-16-dbt-vs-lakeflow-declarative-pipelines",
       "filename": "2026-09-16-dbt-vs-lakeflow-declarative-pipelines.md",
       "category": "post",
