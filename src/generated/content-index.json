@@ -20,6 +20,25 @@
       "draft": false
     },
     {
+      "slug": "2026-09-18-strata-memory-openknowledge-research-ide",
+      "filename": "2026-09-18-strata-memory-openknowledge-research-ide.md",
+      "category": "post",
+      "title": "Strata Memory + OpenKnowledge: A Research IDE for Agent Knowledge",
+      "date": "2026-09-18",
+      "tags": [
+        "agent-memory",
+        "openknowledge",
+        "open-knowledge-format",
+        "strata-memory",
+        "github",
+        "research-workflow"
+      ],
+      "series": "building-ai-systems",
+      "summary": "OpenKnowledge turns a Markdown research space into an AI-native editing and collaboration environment. Combined with Strata Memory's tiered, reviewable vault, it creates a practical path from raw research to durable agent knowledge without making an editor the source of truth.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-17-dense-vs-moe-local-llms-macos",
       "filename": "2026-09-17-dense-vs-moe-local-llms-macos.md",
       "category": "post",
