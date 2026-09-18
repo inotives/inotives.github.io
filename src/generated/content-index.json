@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-09-18-benchmarking-local-llms-apple-silicon",
+      "filename": "2026-09-18-benchmarking-local-llms-apple-silicon.md",
+      "category": "post",
+      "title": "Benchmarking Local LLMs on Apple Silicon: What Matters Beyond Parameters",
+      "date": "2026-09-18",
+      "tags": [
+        "local-llm",
+        "apple-silicon",
+        "benchmarking",
+        "mlx",
+        "llama-cpp",
+        "ai-agents"
+      ],
+      "series": "building-ai-systems",
+      "summary": "A practical method for benchmarking local LLMs on a Mac for a real agent workload. Measure cold start, prefill, generation, memory headroom, structured-output reliability, and task quality before choosing Dense or MoE models.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-17-dense-vs-moe-local-llms-macos",
       "filename": "2026-09-17-dense-vs-moe-local-llms-macos.md",
       "category": "post",
