@@ -80,6 +80,18 @@ Push to `master` → GitHub Actions runs `npm run build` → `docs/` is served b
 
 No manual build step needed for content-only changes.
 
+## Releases
+
+The site uses Semantic Versioning. `package.json` is the canonical version, and the footer links to the matching GitHub release tag.
+
+For a release:
+
+1. Update `package.json` and `package-lock.json` with `npm version patch|minor|major --no-git-tag-version`.
+2. Add a dated entry to `CHANGELOG.md` and run the relevant checks.
+3. Commit the release changes and merge them into `master`.
+4. Create an annotated tag from the merged `master` commit, for example `git tag -a v1.1.0 -m "Release v1.1.0"`.
+5. Push the tag with `git push origin v1.1.0`.
+
 ## Features
 
 - Blog with search, tag filtering, and pagination
