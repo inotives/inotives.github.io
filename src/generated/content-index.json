@@ -1,6 +1,42 @@
 {
   "posts": [
     {
+      "slug": "2026-09-19-cpu-gpu-tpu-npu-ai-system",
+      "filename": "2026-09-19-cpu-gpu-tpu-npu-ai-system.md",
+      "category": "post",
+      "title": "CPU, GPU, TPU and NPU: Where Each Processor Fits in an AI System",
+      "date": "2026-09-19",
+      "tags": [
+        "ai-infrastructure",
+        "machine-learning",
+        "gpu",
+        "tpu",
+        "npu"
+      ],
+      "series": "building-ai-systems",
+      "summary": "CPUs coordinate an AI system; GPUs and TPUs supply parallel matrix compute; NPUs run efficient local inference. This guide explains how the processors differ, how work moves between them, and how to choose them for real production workloads.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-09-19-flat-graph-tiered-lenses-agent-memory",
+      "filename": "2026-09-19-flat-graph-tiered-lenses-agent-memory.md",
+      "category": "post",
+      "title": "Flat Graph, Tiered Lenses: Rethinking Agent Memory with OKF",
+      "date": "2026-09-19",
+      "tags": [
+        "agent-memory",
+        "open-knowledge-format",
+        "knowledge-graphs",
+        "strata-memory",
+        "ai-agents"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Agent memory does not need a deep folder tree. A flat, linked Markdown graph paired with OKF metadata for trust, lifecycle, and retrieval lenses avoids categorization paralysis while preserving the controls a durable agent memory system needs.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-18-benchmarking-local-llms-apple-silicon",
       "filename": "2026-09-18-benchmarking-local-llms-apple-silicon.md",
       "category": "post",
