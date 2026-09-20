@@ -1,6 +1,42 @@
 {
   "posts": [
     {
+      "slug": "2026-09-20-jev-decision-layer-not-llm-replacement",
+      "filename": "2026-09-20-jev-decision-layer-not-llm-replacement.md",
+      "category": "post",
+      "title": "Jev is not an LLM replacement. It is a decision layer for agents.",
+      "date": "2026-09-20",
+      "tags": [
+        "ai-agents",
+        "system-one-models",
+        "llm",
+        "agent-architecture",
+        "ai-reliability"
+      ],
+      "series": "building-ai-systems",
+      "summary": "TypeSafe AI's Jev is a new model for fast, typed decisions rather than text generation. It may replace narrow LLM classification and routing calls inside an agent workflow, but it cannot replace an LLM where the system needs to write, reason openly, or create new options.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-09-20-omarchy-ai-engineering-workstation",
+      "filename": "2026-09-20-omarchy-ai-engineering-workstation.md",
+      "category": "post",
+      "title": "Omarchy: an opinionated Linux workstation for AI engineering",
+      "date": "2026-09-20",
+      "tags": [
+        "ai-engineering",
+        "developer-environment",
+        "linux",
+        "agent-harnesses",
+        "omarchy"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Omarchy is an Arch Linux and Hyprland desktop that treats coding agents as part of the workstation. This deep dive covers its package and configuration layers, agent-first workflow, security controls, and where it fits for an AI engineer.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-19-cpu-gpu-tpu-npu-ai-system",
       "filename": "2026-09-19-cpu-gpu-tpu-npu-ai-system.md",
       "category": "post",
