@@ -56,7 +56,11 @@ This is the layer that gives a team a clean recovery path when a downstream mode
 
 ### 4. Build Silver around a business entity
 
-Silver is where \`commerce.orders\` becomes a reliable entity: deduplicated on the application key, conformed timestamps and currencies, explicit null handling, and late-arrival rules that the business can understand. In a streaming design, the practical questions are not academic: what makes two order events the same record, how late can a correction arrive, and should a cancellation update yesterday's revenue?
+Silver is where \`commerce.orders\` becomes a reliable entity: deduplicated on the application key, conformed timestamps and currencies, explicit null handling, and late-arrival rules that the business can understand. The Medallion layer does not dictate a single LDP dataset type.
+
+Use a streaming table when the work is incremental and row-level: parsing, filtering, casting, or cleaning an append-heavy stream. Use a materialized view when Silver needs a dimension enrichment join, a complex aggregation, or a result that must stay consistent when upstream records can be updated or deleted. LDP can incrementally refresh a materialized view when the query supports it.
+
+For a basic append-only orders export, a streaming Silver table is still a good fit. The practical questions are not academic: what makes two order events the same record, how late can a correction arrive, and should a cancellation update yesterday's revenue?
 
 \`\`\`sql
 CREATE OR REFRESH STREAMING TABLE commerce.orders_silver
@@ -75,7 +79,7 @@ QUALIFY row_number() OVER (
 ) = 1;
 \`\`\`
 
-The exact deduplication implementation depends on the delivery semantics of the exporter. If it emits updates rather than append-only snapshots, model that explicitly; do not hide it behind a generic \`distinct\`.
+The exact deduplication implementation depends on the delivery semantics of the exporter. If it emits updates rather than append-only snapshots, model that explicitly; a materialized view or an \`AUTO CDC\` flow may be a better Silver target than a streaming table. Do not hide update semantics behind a generic \`distinct\`.
 
 ### 5. Make Gold a small set of declared data products
 

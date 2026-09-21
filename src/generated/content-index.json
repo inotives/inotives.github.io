@@ -1,6 +1,24 @@
 {
   "posts": [
     {
+      "slug": "2026-09-22-derived-tables-data-modeling-terminology",
+      "filename": "2026-09-22-derived-tables-data-modeling-terminology.md",
+      "category": "post",
+      "title": "Views, materialized views, dynamic tables, and incremental models: a data modeling field guide",
+      "date": "2026-09-22",
+      "tags": [
+        "data-engineering",
+        "data-modeling",
+        "materialized-views",
+        "dbt",
+        "data-warehousing"
+      ],
+      "series": "data-engineering",
+      "summary": "A practical guide to the overloaded table terminology that appears in modern data modeling: logical views, materialized and refreshable views, dynamic tables, streaming tables, incremental models, and persisted transformation tables.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-21-databricks-autoloader-ldp-warehouse-design",
       "filename": "2026-09-21-databricks-autoloader-ldp-warehouse-design.md",
       "category": "post",
