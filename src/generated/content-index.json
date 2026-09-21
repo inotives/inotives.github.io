@@ -1,6 +1,24 @@
 {
   "posts": [
     {
+      "slug": "2026-09-21-databricks-autoloader-ldp-warehouse-design",
+      "filename": "2026-09-21-databricks-autoloader-ldp-warehouse-design.md",
+      "category": "post",
+      "title": "Designing a Databricks warehouse with Auto Loader, Lakeflow, and a scalable monorepo",
+      "date": "2026-09-21",
+      "tags": [
+        "data-engineering",
+        "databricks",
+        "lakeflow",
+        "unity-catalog",
+        "medallion-architecture"
+      ],
+      "series": "data-engineering",
+      "summary": "A practical Databricks warehouse design for Parquet files landing in S3: Auto Loader ingestion, Lakeflow Declarative Pipelines transformations, Unity Catalog governance, a feature-oriented monorepo, and a SaaS-native delivery workflow.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-20-jev-decision-layer-not-llm-replacement",
       "filename": "2026-09-20-jev-decision-layer-not-llm-replacement.md",
       "category": "post",
@@ -15,6 +33,25 @@
       ],
       "series": "building-ai-systems",
       "summary": "TypeSafe AI's Jev is a new model for fast, typed decisions rather than text generation. It may replace narrow LLM classification and routing calls inside an agent workflow, but it cannot replace an LLM where the system needs to write, reason openly, or create new options.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-09-20-local-trino-iceberg-warehouse-poc",
+      "filename": "2026-09-20-local-trino-iceberg-warehouse-poc.md",
+      "category": "post",
+      "title": "Building a local Trino and Iceberg warehouse POC with Docker",
+      "date": "2026-09-20",
+      "tags": [
+        "data-engineering",
+        "trino",
+        "apache-iceberg",
+        "dbt",
+        "prefect",
+        "docker"
+      ],
+      "series": "data-engineering",
+      "summary": "A practical design for a local Docker POC using Trino, Apache Polaris, Iceberg, Prefect, dbt, Prometheus, and Lightdash. The goal is not laptop-scale performance; it is a repeatable engineering workflow that carries the same contracts from local development to dev and production.",
       "featured_image": null,
       "draft": false
     },
