@@ -19,6 +19,42 @@
       "draft": false
     },
     {
+      "slug": "2026-09-22-olap-vs-open-table-formats",
+      "filename": "2026-09-22-olap-vs-open-table-formats.md",
+      "category": "post",
+      "title": "OLAP vs. Iceberg and Delta Lake is the wrong warehouse question",
+      "date": "2026-09-22",
+      "tags": [
+        "data-engineering",
+        "data-warehousing",
+        "olap",
+        "apache-iceberg",
+        "delta-lake"
+      ],
+      "series": "data-engineering",
+      "summary": "OLAP engines and open table formats are different layers of a modern data warehouse. Learn how Iceberg and Delta Lake compare with managed OLAP warehouses, where each fits, and how to choose an architecture for real workloads.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-09-22-slowly-changing-dimensions-scd-types",
+      "filename": "2026-09-22-slowly-changing-dimensions-scd-types.md",
+      "category": "post",
+      "title": "Slowly changing dimensions: SCD types, Bronze-to-Gold placement, and production rules",
+      "date": "2026-09-22",
+      "tags": [
+        "data-engineering",
+        "data-modeling",
+        "slowly-changing-dimensions",
+        "dimensional-modeling",
+        "cdc"
+      ],
+      "series": "data-engineering",
+      "summary": "A practical guide to slowly changing dimensions: Types 0 through 7, why Type 1 and Type 2 dominate real warehouses, where SCD belongs in Bronze, Silver, and Gold, and the rules that keep historical reporting correct.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-21-databricks-autoloader-ldp-warehouse-design",
       "filename": "2026-09-21-databricks-autoloader-ldp-warehouse-design.md",
       "category": "post",
