@@ -161,6 +161,18 @@ LLM-wiki / RAG / GraphRAG / ontology
 
 For a small team, this may be three read-only MCP tools over a few curated views. For an enterprise, it may be a semantic metric layer, identity delegation, a policy engine, row and column controls, query observability, and review queues. The principle does not change: give the agent the smallest live-data capability that answers the question, then let the warehouse enforce the final access decision.
 
+## Turn the answer into something people will use
+
+The last step is presentation. A Markdown response is fine for a short explanation or an audit trail. It is a poor way to deliver a monthly finance pack, an exception report, or a board update. Once a report reaches hundreds or thousands of lines, it becomes an archive, not a working document.
+
+The agent can use the same governed MCP result to produce an interactive HTML report. A lightweight page with a small summary table, date range, metric definition, freshness timestamp, and source query identifier gives the reader enough context to trust the numbers. JavaScript libraries such as Chart.js can render trend and comparison charts; Mermaid can show a process or lineage diagram when the report needs to explain how a number was produced. Custom CSS does the unglamorous but important work of making dense information readable.
+
+For the four-quarter P&L question, the output might contain a revenue and margin trend, a variance table against plan, and a short list of material movements. For the top-customer question, it might show a ranked table, a concentration chart, and the filters used to define volume. The HTML is a presentation of a governed result, not a second, ungoverned data source.
+
+The same pattern can produce a presentation deck. A library such as PptxGenJS can create PowerPoint-compatible slides from the approved result: one slide per chart or decision, with the reporting period and data freshness recorded in the footer. That is useful for a scheduled executive pack, but the deck should link back to the report or query provenance. A slide copied into an email quickly loses its context.
+
+Keep the presentation tool separate from the live-data tool. It receives a scoped, already-authorised result and may choose a layout, chart type, or slide template. It must not gain the ability to query the warehouse more broadly. Sensitive fields that were masked in the warehouse remain masked in the dashboard, HTML export, and slide deck.
+
 ## What to build first
 
 Do not begin with an MCP server that mirrors the whole catalog. Begin with one answer that the business already trusts.
@@ -176,4 +188,7 @@ Then add the next high-value, low-ambiguity question. A reliable small tool cata
 - [OpenAI: build an MCP server](https://developers.openai.com/plugins/build/mcp-server)
 - [Snowflake row access policies](https://docs.snowflake.com/en/user-guide/security-row-intro)
 - [Databricks Unity Catalog row filters and column masks](https://learn.microsoft.com/en-us/azure/databricks/data-governance/unity-catalog/filters-and-masks/)
+- [Chart.js documentation](https://www.chartjs.org/docs/latest/)
+- [Mermaid documentation](https://mermaid.js.org/)
+- [PptxGenJS documentation](https://gitbrent.github.io/PptxGenJS/)
 - [RAG, GraphRAG, ontologies, and LLM-wikis: agent memory by stage and scale](/posts/2026-09-24-agentic-memory-rag-graphrag-ontology-llm-wiki)
