@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-09-25-mcp-live-data-layer-enterprise-agents",
+      "filename": "2026-09-25-mcp-live-data-layer-enterprise-agents.md",
+      "category": "post",
+      "title": "MCP as the live data layer for enterprise agents",
+      "date": "2026-09-25",
+      "tags": [
+        "ai-agents",
+        "mcp",
+        "data-warehouse",
+        "data-governance",
+        "rbac",
+        "enterprise-ai"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Why agent memory needs an MCP-connected warehouse for live facts, and how narrow data tools, warehouse RBAC, row filters, and column masks work together to protect enterprise data.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-24-agentic-memory-rag-graphrag-ontology-llm-wiki",
       "filename": "2026-09-24-agentic-memory-rag-graphrag-ontology-llm-wiki.md",
       "category": "post",
@@ -16,6 +35,25 @@
       ],
       "series": "building-ai-systems",
       "summary": "A practical guide to combining RAG, GraphRAG, ontologies, and LLM-wikis as different layers of agent memory, with deployment patterns for individuals, growing teams, and enterprises.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-09-24-jev-real-world-agent-workflows-token-savings",
+      "filename": "2026-09-24-jev-real-world-agent-workflows-token-savings.md",
+      "category": "post",
+      "title": "Jev in real agent workflows: decision layers, context compaction, and token savings",
+      "date": "2026-09-24",
+      "tags": [
+        "ai-agents",
+        "jev",
+        "system-one-models",
+        "llm",
+        "context-engineering",
+        "token-optimization"
+      ],
+      "series": "building-ai-systems",
+      "summary": "How Jev-style System One decisions can sit beside frontier LLMs in browser agents, context compaction, support routing, and pre-trade gates, with a careful look at where token savings are real.",
       "featured_image": null,
       "draft": false
     },
