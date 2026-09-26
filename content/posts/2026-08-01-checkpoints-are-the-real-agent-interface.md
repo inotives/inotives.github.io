@@ -130,7 +130,7 @@ State is the interface inside an agent system. The checkpoint is the interface b
 
 ## References
 
-- [From Loop Engineering to Graph Engineering](/posts/graph-engineering-ai-workflows)
-- [State Is the Real Agent Interface](/posts/state-is-the-real-agent-interface)
+- [From Loop Engineering to Graph Engineering](/notes/2026-07-30-graph-engineering-ai-workflows)
+- [State Is the Real Agent Interface](/notes/2026-07-30-state-is-the-real-agent-interface)
 - [LangGraph persistence documentation](https://langchain-ai.github.io/langgraph/concepts/persistence/)
 - [Temporal documentation: durable execution](https://docs.temporal.io/encyclopedia/durable-execution)

@@ -292,9 +292,9 @@ That is enough to make future sessions less wasteful.
 
 ## References
 
-- [Agent-Readable Data Pipelines](/posts/2026-07-21-agent-readable-data-pipelines)
-- [How to Structure Data Pipelines So Agents Can Extend Them](/posts/2026-07-25-how-to-structure-data-pipelines-so-agents-can-extend-them)
-- [Run Logs Are Data Too](/posts/2026-07-22-run-logs-are-data-too)
-- [MCP Is Becoming the API Layer for Internal Data](/posts/2026-07-24-mcp-api-layer-internal-data)
-- [Immutable Raw Tables for Financial Pipelines](/posts/2026-07-25-immutable-raw-tables-financial-pipelines)
-- [AgentRig: Filesystem-First Multi-Agent Workspaces](/posts/2026-07-06-agent-rig-filesystem-first-multi-agent-workspaces)
+- [Agent-Readable Data Pipelines](/notes/2026-07-21-agent-readable-data-pipelines)
+- [How to Structure Data Pipelines So Agents Can Extend Them](/notes/2026-07-25-how-to-structure-data-pipelines-so-agents-can-extend-them)
+- [Run Logs Are Data Too](/notes/2026-07-22-run-logs-are-data-too)
+- [MCP Is Becoming the API Layer for Internal Data](/notes/2026-07-24-mcp-api-layer-internal-data)
+- [Immutable Raw Tables for Financial Pipelines](/notes/2026-07-25-immutable-raw-tables-financial-pipelines)
+- [AgentRig: Filesystem-First Multi-Agent Workspaces](/notes/2026-07-06-agent-rig-filesystem-first-multi-agent-workspaces)

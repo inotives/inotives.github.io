@@ -138,5 +138,5 @@ The tools are complementary, not competing. A well-configured agentic setup has 
 ## Sources
 
 - Graphify repository: https://github.com/safishamsi/graphify
-- CodeGraph evaluation: /posts/2026-05-25-codegraph-for-agentic-codebase-work
+- CodeGraph evaluation: /notes/2026-05-20-codegraph-for-agentic-codebase-work
 - Graphify Labs: https://graphifylabs.ai

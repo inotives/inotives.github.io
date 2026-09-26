@@ -193,10 +193,10 @@ Raw data is not for everyone. It is for the moment when something looks wrong an
 
 ## References
 
-- [What Is ETL and ELT? When to Use One Over the Other](/posts/2026-07-21-what-is-etl-and-elt)
-- [Agent-Readable Data Pipelines](/posts/2026-07-21-agent-readable-data-pipelines)
-- [Run Logs Are Data Too](/posts/2026-07-22-run-logs-are-data-too)
-- [Quarantine Tables: Where Bad Crypto Data Should Go](/posts/2026-07-22-quarantine-tables-bad-crypto-data)
-- [Crypto Symbols Are Not IDs](/posts/2026-07-20-crypto-symbols-are-not-ids)
-- [The Crypto Asset Mapping Table](/posts/2026-07-21-crypto-asset-mapping-table)
-- [Why dbt Makes Sense Even for Small Crypto Projects](/posts/2026-07-20-dbt-small-crypto-projects)
+- [What Is ETL and ELT? When to Use One Over the Other](/notes/2026-07-21-what-is-etl-and-elt)
+- [Agent-Readable Data Pipelines](/notes/2026-07-21-agent-readable-data-pipelines)
+- [Run Logs Are Data Too](/notes/2026-07-22-run-logs-are-data-too)
+- [Quarantine Tables: Where Bad Crypto Data Should Go](/notes/2026-07-22-quarantine-tables-bad-crypto-data)
+- [Crypto Symbols Are Not IDs](/notes/2026-07-20-crypto-symbols-are-not-ids)
+- [The Crypto Asset Mapping Table](/notes/2026-07-21-crypto-asset-mapping-table)
+- [Why dbt Makes Sense Even for Small Crypto Projects](/notes/2026-07-20-dbt-small-crypto-projects)

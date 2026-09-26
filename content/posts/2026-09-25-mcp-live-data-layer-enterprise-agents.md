@@ -191,4 +191,4 @@ Then add the next high-value, low-ambiguity question. A reliable small tool cata
 - [Chart.js documentation](https://www.chartjs.org/docs/latest/)
 - [Mermaid documentation](https://mermaid.js.org/)
 - [PptxGenJS documentation](https://gitbrent.github.io/PptxGenJS/)
-- [RAG, GraphRAG, ontologies, and LLM-wikis: agent memory by stage and scale](/posts/2026-09-24-agentic-memory-rag-graphrag-ontology-llm-wiki)
+- [RAG, GraphRAG, ontologies, and LLM-wikis: agent memory by stage and scale](/notes/2026-09-24-agentic-memory-rag-graphrag-ontology-llm-wiki)

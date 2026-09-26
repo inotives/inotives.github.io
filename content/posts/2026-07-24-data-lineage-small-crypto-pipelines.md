@@ -204,10 +204,10 @@ If you cannot answer where the number came from, the pipeline is not finished.
 
 ## References
 
-- [The Minimum Viable Data Catalog for a Solo Crypto Project](/posts/2026-07-22-minimum-viable-data-catalog-solo-crypto-project)
-- [Run Logs Are Data Too](/posts/2026-07-22-run-logs-are-data-too)
-- [Why Raw Data Should Stay Raw](/posts/2026-07-22-why-raw-data-should-stay-raw)
-- [The Crypto Asset Mapping Table](/posts/2026-07-21-crypto-asset-mapping-table)
-- [Point-in-Time Correctness in Crypto Analytics](/posts/2026-07-24-point-in-time-correctness-crypto-analytics)
-- [Backfills Without Breaking Crypto Reports](/posts/2026-07-23-backfills-without-breaking-crypto-reports)
-- [Why dbt Makes Sense Even for Small Crypto Projects](/posts/2026-07-20-dbt-small-crypto-projects)
+- [The Minimum Viable Data Catalog for a Solo Crypto Project](/notes/2026-07-22-minimum-viable-data-catalog-solo-crypto-project)
+- [Run Logs Are Data Too](/notes/2026-07-22-run-logs-are-data-too)
+- [Why Raw Data Should Stay Raw](/notes/2026-07-22-why-raw-data-should-stay-raw)
+- [The Crypto Asset Mapping Table](/notes/2026-07-21-crypto-asset-mapping-table)
+- [Point-in-Time Correctness in Crypto Analytics](/notes/2026-07-24-point-in-time-correctness-crypto-analytics)
+- [Backfills Without Breaking Crypto Reports](/notes/2026-07-23-backfills-without-breaking-crypto-reports)
+- [Why dbt Makes Sense Even for Small Crypto Projects](/notes/2026-07-20-dbt-small-crypto-projects)

@@ -139,6 +139,6 @@ The only reason not to use it is if your agent rarely runs shell commands (e.g.,
 - RTK repository: https://github.com/rtk-ai/rtk
 - RTK website: https://www.rtk-ai.app
 - RTK architecture: https://github.com/rtk-ai/rtk/blob/develop/docs/contributing/ARCHITECTURE.md
-- Prior analysis — MCP vs CLI: /posts/2026-05-02-what-are-agent-harnesses
-- Prior evaluation — CodeGraph: /posts/2026-05-25-codegraph-for-agentic-codebase-work
-- Prior evaluation — Graphify: /posts/2026-05-20-graphify-for-agentic-knowledge-work
+- Prior analysis — MCP vs CLI: /notes/2026-05-02-what-are-agent-harnesses
+- Prior evaluation — CodeGraph: /notes/2026-05-20-codegraph-for-agentic-codebase-work
+- Prior evaluation — Graphify: /notes/2026-05-20-graphify-for-agentic-knowledge-work

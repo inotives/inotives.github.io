@@ -351,9 +351,9 @@ Use the right one.
 
 ## References
 
-- [Auditable Database Design for Financial Data](/posts/2026-07-25-auditable-database-design-financial-data)
-- [Immutable Raw Tables for Financial Pipelines](/posts/2026-07-25-immutable-raw-tables-financial-pipelines)
-- [Quarantine Tables: Where Bad Crypto Data Should Go](/posts/2026-07-22-quarantine-tables-bad-crypto-data)
-- [The Data Quality Review Queue](/posts/2026-07-23-data-quality-review-queue)
-- [Point-in-Time Correctness in Crypto Analytics](/posts/2026-07-24-point-in-time-correctness-crypto-analytics)
-- [MCP Is Becoming the API Layer for Internal Data](/posts/2026-07-24-mcp-api-layer-internal-data)
+- [Auditable Database Design for Financial Data](/notes/2026-07-25-auditable-database-design-financial-data)
+- [Immutable Raw Tables for Financial Pipelines](/notes/2026-07-25-immutable-raw-tables-financial-pipelines)
+- [Quarantine Tables: Where Bad Crypto Data Should Go](/notes/2026-07-22-quarantine-tables-bad-crypto-data)
+- [The Data Quality Review Queue](/notes/2026-07-23-data-quality-review-queue)
+- [Point-in-Time Correctness in Crypto Analytics](/notes/2026-07-24-point-in-time-correctness-crypto-analytics)
+- [MCP Is Becoming the API Layer for Internal Data](/notes/2026-07-24-mcp-api-layer-internal-data)

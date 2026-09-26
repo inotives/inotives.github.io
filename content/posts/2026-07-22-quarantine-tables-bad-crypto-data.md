@@ -244,10 +244,10 @@ Bad data is not the problem. Invisible bad data is.
 
 ## References
 
-- [Data Quality Checks: The Boring Layer That Saves Pipelines](/posts/2026-07-18-data-quality-checks-save-pipelines)
-- [Data Contracts: The API Layer Your Crypto Pipeline Is Missing](/posts/2026-07-18-data-contracts-crypto-pipelines)
-- [Freshness Is a Data Quality Dimension](/posts/2026-07-19-freshness-data-quality-dimension)
-- [Crypto Symbols Are Not IDs](/posts/2026-07-20-crypto-symbols-are-not-ids)
-- [The Crypto Asset Mapping Table](/posts/2026-07-21-crypto-asset-mapping-table)
-- [Agent-Readable Data Pipelines](/posts/2026-07-21-agent-readable-data-pipelines)
-- [Why dbt Makes Sense Even for Small Crypto Projects](/posts/2026-07-20-dbt-small-crypto-projects)
+- [Data Quality Checks: The Boring Layer That Saves Pipelines](/notes/2026-07-18-data-quality-checks-save-pipelines)
+- [Data Contracts: The API Layer Your Crypto Pipeline Is Missing](/notes/2026-07-18-data-contracts-crypto-pipelines)
+- [Freshness Is a Data Quality Dimension](/notes/2026-07-19-freshness-data-quality-dimension)
+- [Crypto Symbols Are Not IDs](/notes/2026-07-20-crypto-symbols-are-not-ids)
+- [The Crypto Asset Mapping Table](/notes/2026-07-21-crypto-asset-mapping-table)
+- [Agent-Readable Data Pipelines](/notes/2026-07-21-agent-readable-data-pipelines)
+- [Why dbt Makes Sense Even for Small Crypto Projects](/notes/2026-07-20-dbt-small-crypto-projects)

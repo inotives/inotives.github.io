@@ -205,9 +205,9 @@ The goal is not a green pipeline. The goal is honest output.
 
 ## References
 
-- [Data Quality Checks: The Boring Layer That Saves Pipelines](/posts/2026-07-18-data-quality-checks-save-pipelines)
-- [Freshness Is a Data Quality Dimension](/posts/2026-07-19-freshness-data-quality-dimension)
-- [Quarantine Tables: Where Bad Crypto Data Should Go](/posts/2026-07-22-quarantine-tables-bad-crypto-data)
-- [Run Logs Are Data Too](/posts/2026-07-22-run-logs-are-data-too)
-- [The Minimum Viable Data Catalog for a Solo Crypto Project](/posts/2026-07-22-minimum-viable-data-catalog-solo-crypto-project)
-- [When Agents Should Not Touch Your Database](/posts/2026-07-20-when-agents-should-not-touch-your-database)
+- [Data Quality Checks: The Boring Layer That Saves Pipelines](/notes/2026-07-18-data-quality-checks-save-pipelines)
+- [Freshness Is a Data Quality Dimension](/notes/2026-07-19-freshness-data-quality-dimension)
+- [Quarantine Tables: Where Bad Crypto Data Should Go](/notes/2026-07-22-quarantine-tables-bad-crypto-data)
+- [Run Logs Are Data Too](/notes/2026-07-22-run-logs-are-data-too)
+- [The Minimum Viable Data Catalog for a Solo Crypto Project](/notes/2026-07-22-minimum-viable-data-catalog-solo-crypto-project)
+- [When Agents Should Not Touch Your Database](/notes/2026-07-20-when-agents-should-not-touch-your-database)

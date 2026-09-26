@@ -252,5 +252,5 @@ The goal is not an agent that remembers everything. It is a private fleet that c
 - [Hermes Agent MCP documentation](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp)
 - [GitHub: protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)
 - [GitHub: authenticating as a GitHub App installation](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation)
-- [One Memory Core, Many Agent Harnesses: What Portability Actually Requires](/posts/2026-08-29-portable-agent-memory-across-harnesses)
-- [TencentDB Agent Memory and Strata Memory: Two Different Takes on Long-Term Agent Context](/posts/2026-08-26-tencentdb-agent-memory-vs-strata-memory)
+- [One Memory Core, Many Agent Harnesses: What Portability Actually Requires](/notes/2026-08-29-portable-agent-memory-across-harnesses)
+- [TencentDB Agent Memory and Strata Memory: Two Different Takes on Long-Term Agent Context](/notes/2026-08-26-tencentdb-agent-memory-vs-strata-memory)

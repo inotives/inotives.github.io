@@ -258,9 +258,9 @@ It improves when someone works the queue.
 
 ## References
 
-- [Quarantine Tables: Where Bad Crypto Data Should Go](/posts/2026-07-22-quarantine-tables-bad-crypto-data)
-- [When to Fail the Pipeline vs Warn](/posts/2026-07-22-when-to-fail-pipeline-vs-warn)
-- [Run Logs Are Data Too](/posts/2026-07-22-run-logs-are-data-too)
-- [The Crypto Asset Mapping Table](/posts/2026-07-21-crypto-asset-mapping-table)
-- [Backfills Without Breaking Crypto Reports](/posts/2026-07-23-backfills-without-breaking-crypto-reports)
-- [Agent-Readable Data Pipelines](/posts/2026-07-21-agent-readable-data-pipelines)
+- [Quarantine Tables: Where Bad Crypto Data Should Go](/notes/2026-07-22-quarantine-tables-bad-crypto-data)
+- [When to Fail the Pipeline vs Warn](/notes/2026-07-22-when-to-fail-pipeline-vs-warn)
+- [Run Logs Are Data Too](/notes/2026-07-22-run-logs-are-data-too)
+- [The Crypto Asset Mapping Table](/notes/2026-07-21-crypto-asset-mapping-table)
+- [Backfills Without Breaking Crypto Reports](/notes/2026-07-23-backfills-without-breaking-crypto-reports)
+- [Agent-Readable Data Pipelines](/notes/2026-07-21-agent-readable-data-pipelines)

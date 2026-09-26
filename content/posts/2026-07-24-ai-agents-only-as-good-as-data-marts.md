@@ -416,10 +416,10 @@ Fix the ground first.
 
 ## References
 
-- [What Makes a Mart Agent-Safe](/posts/2026-07-23-what-makes-a-mart-agent-safe)
-- [When Agents Should Not Touch Your Database](/posts/2026-07-20-when-agents-should-not-touch-your-database)
-- [Crypto Symbols Are Not IDs](/posts/2026-07-20-crypto-symbols-are-not-ids)
-- [Freshness Is a Data Quality Dimension](/posts/2026-07-19-freshness-data-quality-dimension)
-- [Point-in-Time Correctness in Crypto Analytics](/posts/2026-07-24-point-in-time-correctness-crypto-analytics)
-- [The Minimum Viable Data Catalog for a Solo Crypto Project](/posts/2026-07-22-minimum-viable-data-catalog-solo-crypto-project)
-- [Data Lineage for Small Crypto Pipelines](/posts/2026-07-24-data-lineage-small-crypto-pipelines)
+- [What Makes a Mart Agent-Safe](/notes/2026-07-23-what-makes-a-mart-agent-safe)
+- [When Agents Should Not Touch Your Database](/notes/2026-07-20-when-agents-should-not-touch-your-database)
+- [Crypto Symbols Are Not IDs](/notes/2026-07-20-crypto-symbols-are-not-ids)
+- [Freshness Is a Data Quality Dimension](/notes/2026-07-19-freshness-data-quality-dimension)
+- [Point-in-Time Correctness in Crypto Analytics](/notes/2026-07-24-point-in-time-correctness-crypto-analytics)
+- [The Minimum Viable Data Catalog for a Solo Crypto Project](/notes/2026-07-22-minimum-viable-data-catalog-solo-crypto-project)
+- [Data Lineage for Small Crypto Pipelines](/notes/2026-07-24-data-lineage-small-crypto-pipelines)

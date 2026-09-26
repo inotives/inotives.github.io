@@ -260,10 +260,10 @@ That gives you traceability without giving every consumer the raw mess.
 ## References
 
 - [dbt documentation](https://docs.getdbt.com/docs/introduction)
-- [Apache Airflow: The Workflow Orchestrator That 80% of the Data Stack Still Runs On](/posts/2026-07-03-apache-airflow-deep-dive)
-- [Apache Spark in 2026: The Compute Engine That 80% of Fortune 500 Still Runs On](/posts/2026-07-03-apache-spark-deep-dive)
-- [Why dbt Makes Sense Even for Small Crypto Projects](/posts/2026-07-20-dbt-small-crypto-projects)
-- [Data Quality Checks: The Boring Layer That Saves Pipelines](/posts/2026-07-18-data-quality-checks-save-pipelines)
-- [Freshness Is a Data Quality Dimension](/posts/2026-07-19-freshness-data-quality-dimension)
-- [Crypto Symbols Are Not IDs](/posts/2026-07-20-crypto-symbols-are-not-ids)
-- [Agent-Readable Data Pipelines](/posts/2026-07-21-agent-readable-data-pipelines)
+- [Apache Airflow: The Workflow Orchestrator That 80% of the Data Stack Still Runs On](/notes/2026-07-03-apache-airflow-deep-dive)
+- [Apache Spark in 2026: The Compute Engine That 80% of Fortune 500 Still Runs On](/notes/2026-07-03-apache-spark-deep-dive)
+- [Why dbt Makes Sense Even for Small Crypto Projects](/notes/2026-07-20-dbt-small-crypto-projects)
+- [Data Quality Checks: The Boring Layer That Saves Pipelines](/notes/2026-07-18-data-quality-checks-save-pipelines)
+- [Freshness Is a Data Quality Dimension](/notes/2026-07-19-freshness-data-quality-dimension)
+- [Crypto Symbols Are Not IDs](/notes/2026-07-20-crypto-symbols-are-not-ids)
+- [Agent-Readable Data Pipelines](/notes/2026-07-21-agent-readable-data-pipelines)

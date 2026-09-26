@@ -251,10 +251,10 @@ Do that carefully.
 
 ## References
 
-- [Why Raw Data Should Stay Raw](/posts/2026-07-22-why-raw-data-should-stay-raw)
-- [Run Logs Are Data Too](/posts/2026-07-22-run-logs-are-data-too)
-- [The Crypto Asset Mapping Table](/posts/2026-07-21-crypto-asset-mapping-table)
-- [Quarantine Tables: Where Bad Crypto Data Should Go](/posts/2026-07-22-quarantine-tables-bad-crypto-data)
-- [When to Fail the Pipeline vs Warn](/posts/2026-07-22-when-to-fail-pipeline-vs-warn)
-- [Agent-Readable Data Pipelines](/posts/2026-07-21-agent-readable-data-pipelines)
-- [Why dbt Makes Sense Even for Small Crypto Projects](/posts/2026-07-20-dbt-small-crypto-projects)
+- [Why Raw Data Should Stay Raw](/notes/2026-07-22-why-raw-data-should-stay-raw)
+- [Run Logs Are Data Too](/notes/2026-07-22-run-logs-are-data-too)
+- [The Crypto Asset Mapping Table](/notes/2026-07-21-crypto-asset-mapping-table)
+- [Quarantine Tables: Where Bad Crypto Data Should Go](/notes/2026-07-22-quarantine-tables-bad-crypto-data)
+- [When to Fail the Pipeline vs Warn](/notes/2026-07-22-when-to-fail-pipeline-vs-warn)
+- [Agent-Readable Data Pipelines](/notes/2026-07-21-agent-readable-data-pipelines)
+- [Why dbt Makes Sense Even for Small Crypto Projects](/notes/2026-07-20-dbt-small-crypto-projects)

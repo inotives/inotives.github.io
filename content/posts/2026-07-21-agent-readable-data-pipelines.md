@@ -241,11 +241,11 @@ Agent-readable data pipelines are not fancy. They are ordinary pipelines with fe
 
 ## References
 
-- [Agent-Rig: Filesystem-First Multi-Agent Workspaces That Actually Catch Bugs](/posts/2026-07-06-agent-rig-filesystem-first-multi-agent-workspaces)
-- [The Right Tools at the Right Time: Why Context Matters More Than Capability](/posts/2026-07-06-right-tools-right-time-context-over-capability)
-- [CodeGraph for Agentic Codebase Work](/posts/2026-05-20-codegraph-for-agentic-codebase-work)
-- [Data Contracts: The API Layer Your Crypto Pipeline Is Missing](/posts/2026-07-18-data-contracts-crypto-pipelines)
-- [Data Quality Checks: The Boring Layer That Saves Pipelines](/posts/2026-07-18-data-quality-checks-save-pipelines)
-- [Freshness Is a Data Quality Dimension](/posts/2026-07-19-freshness-data-quality-dimension)
-- [Crypto Symbols Are Not IDs](/posts/2026-07-20-crypto-symbols-are-not-ids)
-- [When Agents Should Not Touch Your Database](/posts/2026-07-20-when-agents-should-not-touch-your-database)
+- [Agent-Rig: Filesystem-First Multi-Agent Workspaces That Actually Catch Bugs](/notes/2026-07-06-agent-rig-filesystem-first-multi-agent-workspaces)
+- [The Right Tools at the Right Time: Why Context Matters More Than Capability](/notes/2026-07-06-right-tools-right-time-context-over-capability)
+- [CodeGraph for Agentic Codebase Work](/notes/2026-05-20-codegraph-for-agentic-codebase-work)
+- [Data Contracts: The API Layer Your Crypto Pipeline Is Missing](/notes/2026-07-18-data-contracts-crypto-pipelines)
+- [Data Quality Checks: The Boring Layer That Saves Pipelines](/notes/2026-07-18-data-quality-checks-save-pipelines)
+- [Freshness Is a Data Quality Dimension](/notes/2026-07-19-freshness-data-quality-dimension)
+- [Crypto Symbols Are Not IDs](/notes/2026-07-20-crypto-symbols-are-not-ids)
+- [When Agents Should Not Touch Your Database](/notes/2026-07-20-when-agents-should-not-touch-your-database)

@@ -247,4 +247,4 @@ Huge pages don't make PostgreSQL write faster. They make PostgreSQL spend less C
 - [JusDB — PostgreSQL Huge Pages: Linux Configuration](https://www.jusdb.com/blog/postgresql-huge-pages-linux-configuration)
 - [Kernel Internals — Databases: Linux Kernel Internals](https://kernel-internals.org/mm/tuning-databases/)
 - [Percona — Benchmark PostgreSQL With Linux HugePages](https://www.percona.com/blog/benchmark-postgresql-with-linux-hugepages/)
-- [Postgres Is the Engine of Agentic Workflows](https://inotives.github.io/posts/2026-05-21-postgres-in-agentic-workflows) — Using pgvector, pgmq, pg_cron for agent memory and task queues
+- [Postgres Is the Engine of Agentic Workflows](https://inotives.github.io/notes/2026-05-21-postgres-in-agentic-workflows) — Using pgvector, pgmq, pg_cron for agent memory and task queues

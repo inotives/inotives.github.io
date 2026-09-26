@@ -49,7 +49,7 @@ You'll see `posts/` and `pages/` folders — notes go in `posts/`.
 
 ## 2. Create a New Note
 
-Create a new `.md` file in `content/posts/`. Use the naming convention:
+Create a new `.md` file in `content/notes/`. Use the naming convention:
 
 ```
 YYYY-MM-DD-your-post-slug.md
@@ -151,7 +151,7 @@ Avoid Obsidian-only embeds and wiki links unless the site renderer has been upda
 Once your note is ready:
 
 ```bash
-git add content/posts/your-new-post.md
+git add content/notes/your-new-post.md
 git commit -m "post: your post title"
 git push
 ```

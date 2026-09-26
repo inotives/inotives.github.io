@@ -217,7 +217,7 @@ Non-negotiable human-in-the-loop triggers: orders exceeding dollar threshold, po
 2. Andrew Ng — "Four AI Agent Strategies That Improve GPT-4 and GPT-3.5 Performance": https://www.deeplearning.ai/the-batch/how-agents-can-improve-llm-performance/
 3. Andrew Ng — "Agentic Design Patterns Part 2: Reflection": https://www.deeplearning.ai/the-batch/agentic-design-patterns-part-2-reflection/
 4. Anthropic Engineering — "Claude SWE-Bench Performance": https://www.anthropic.com/engineering/swe-bench-sonnet
-5. Lilian Weng — "LLM Powered Autonomous Agents": https://lilianweng.github.io/posts/2023-06-23-agent/
+5. Lilian Weng — "LLM Powered Autonomous Agents": https://lilianweng.github.io/notes/2023-06-23-agent/
 6. Xi et al. — "The Rise and Potential of Large Language Model Based Agents: A Survey": arXiv:2309.07864
 7. Jatin Bansal — "Agent Budgets and Runaway Prevention": https://jatinbansal.com/ai-engineering/agent-budgets-and-runaway-prevention/
 8. Google Cloud Architecture Center — "Choose a Design Pattern for Your Agentic AI System": https://docs.cloud.google.com/architecture/choose-design-pattern-agentic-ai-system

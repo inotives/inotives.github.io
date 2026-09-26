@@ -160,5 +160,5 @@ One narrower tool is more valuable than a longer system prompt. Agent security i
 - [OWASP LLM01:2025 Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/)
 - [NIST AI Risk Management Framework](https://www.nist.gov/itl/ai-risk-management-framework)
 - [AgentRig](https://github.com/inotives/agent-rig)
-- [The Checkpoint Is the Real Agent Interface](/posts/checkpoints-are-the-real-agent-interface)
-- [A Review Return Needs a Schema](/posts/a-review-return-needs-a-schema)
+- [The Checkpoint Is the Real Agent Interface](/notes/2026-08-01-checkpoints-are-the-real-agent-interface)
+- [A Review Return Needs a Schema](/notes/2026-08-02-a-review-return-needs-a-schema)

@@ -339,5 +339,5 @@ For data-agentic workflows, the mature patterns are: incident response automatio
 - Grafana Cloud MCP Server: https://grafana.com/docs/grafana-cloud/machine-learning/assistant/configure/cloud-mcp/
 - GrafanaCON 2026 announcements: https://grafana.com/press/2026/04/21/grafana-labs-targets-the-ai-blind-spot/
 - mcp-grafana repo: https://github.com/grafana/mcp-grafana
-- Prior note — Postgres in agentic workflows: /notes/postgres-in-agentic-workflows
-- Prior note — prompt engineering: /notes/prompt-optimizer-and-llm-tokens
+- Prior note — Postgres in agentic workflows: /notes/2026-05-21-postgres-in-agentic-workflows
+- Prior note — prompt engineering: /notes/2026-05-13-prompt-optimizer-and-llm-tokens

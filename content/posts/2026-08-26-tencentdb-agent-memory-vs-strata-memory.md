@@ -186,5 +186,5 @@ That turns agent memory from a collection of clever prompts into an auditable in
 - [Strata Memory repository](https://github.com/inotives/strata-memory)
 - [Strata Memory project specification](https://github.com/inotives/strata-memory/blob/main/docs/project_spec.md)
 - [Strata Memory architecture decisions](https://github.com/inotives/strata-memory/tree/main/docs/adr)
-- [Data Engineering in 30 Days, Day 29: Data for AI systems](/posts/2026-08-18-data-engineering-day-29-data-for-ai-systems)
-- [DeepSeek Harness: a plugin-first agent runtime](/posts/2026-08-21-deepseek-harness-agent-runtime-comparison)
+- [Data Engineering in 30 Days, Day 29: Data for AI systems](/notes/2026-08-18-data-engineering-day-29-data-for-ai-systems)
+- [DeepSeek Harness: a plugin-first agent runtime](/notes/2026-08-21-deepseek-harness-agent-runtime-comparison)

@@ -211,10 +211,10 @@ If the agent has to guess whether the data is safe, the mart is not agent-safe.
 
 ## References
 
-- [When Agents Should Not Touch Your Database](/posts/2026-07-20-when-agents-should-not-touch-your-database)
-- [The Minimum Viable Data Catalog for a Solo Crypto Project](/posts/2026-07-22-minimum-viable-data-catalog-solo-crypto-project)
-- [Crypto Symbols Are Not IDs](/posts/2026-07-20-crypto-symbols-are-not-ids)
-- [Freshness Is a Data Quality Dimension](/posts/2026-07-19-freshness-data-quality-dimension)
-- [When to Fail the Pipeline vs Warn](/posts/2026-07-22-when-to-fail-pipeline-vs-warn)
-- [The Data Quality Review Queue](/posts/2026-07-23-data-quality-review-queue)
-- [Agent-Readable Data Pipelines](/posts/2026-07-21-agent-readable-data-pipelines)
+- [When Agents Should Not Touch Your Database](/notes/2026-07-20-when-agents-should-not-touch-your-database)
+- [The Minimum Viable Data Catalog for a Solo Crypto Project](/notes/2026-07-22-minimum-viable-data-catalog-solo-crypto-project)
+- [Crypto Symbols Are Not IDs](/notes/2026-07-20-crypto-symbols-are-not-ids)
+- [Freshness Is a Data Quality Dimension](/notes/2026-07-19-freshness-data-quality-dimension)
+- [When to Fail the Pipeline vs Warn](/notes/2026-07-22-when-to-fail-pipeline-vs-warn)
+- [The Data Quality Review Queue](/notes/2026-07-23-data-quality-review-queue)
+- [Agent-Readable Data Pipelines](/notes/2026-07-21-agent-readable-data-pipelines)

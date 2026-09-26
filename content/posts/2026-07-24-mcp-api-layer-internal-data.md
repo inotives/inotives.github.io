@@ -310,9 +310,9 @@ MCP is useful because it gives that shape a place to live.
 ## References
 
 - [Model Context Protocol](https://modelcontextprotocol.io/)
-- [When Agents Should Not Touch Your Database](/posts/2026-07-20-when-agents-should-not-touch-your-database)
-- [What Makes a Mart Agent-Safe](/posts/2026-07-23-what-makes-a-mart-agent-safe)
-- [AI Agents Are Only as Good as Their Data Marts](/posts/2026-07-24-ai-agents-only-as-good-as-data-marts)
-- [Agent-Readable Data Pipelines](/posts/2026-07-21-agent-readable-data-pipelines)
-- [Run Logs Are Data Too](/posts/2026-07-22-run-logs-are-data-too)
-- [Data Lineage for Small Crypto Pipelines](/posts/2026-07-24-data-lineage-small-crypto-pipelines)
+- [When Agents Should Not Touch Your Database](/notes/2026-07-20-when-agents-should-not-touch-your-database)
+- [What Makes a Mart Agent-Safe](/notes/2026-07-23-what-makes-a-mart-agent-safe)
+- [AI Agents Are Only as Good as Their Data Marts](/notes/2026-07-24-ai-agents-only-as-good-as-data-marts)
+- [Agent-Readable Data Pipelines](/notes/2026-07-21-agent-readable-data-pipelines)
+- [Run Logs Are Data Too](/notes/2026-07-22-run-logs-are-data-too)
+- [Data Lineage for Small Crypto Pipelines](/notes/2026-07-24-data-lineage-small-crypto-pipelines)

@@ -250,5 +250,5 @@ Use these prompts to deepen the parts you choose next:
 - [dbt documentation: data tests](https://docs.getdbt.com/docs/build/data-tests)
 - [dbt documentation: incremental models](https://docs.getdbt.com/docs/build/incremental-models)
 - [OpenLineage documentation](https://openlineage.io/docs/)
-- [Data Engineering in 30 Days, Day 23-24: Observability and data quality](/posts/2026-08-17-data-engineering-day-23-24-data-observability-quality)
-- [Data Engineering in 30 Days, Day 29: Data for AI systems](/posts/2026-08-18-data-engineering-day-29-data-for-ai-systems)
+- [Data Engineering in 30 Days, Day 23-24: Observability and data quality](/notes/2026-08-17-data-engineering-day-23-24-data-observability-quality)
+- [Data Engineering in 30 Days, Day 29: Data for AI systems](/notes/2026-08-18-data-engineering-day-29-data-for-ai-systems)

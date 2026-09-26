@@ -109,7 +109,7 @@ Time 3: Coder pushes feature-a
 
 ## Integration with Our Agentic Stack
 
-In [My Agentic Development Stack](/posts/2026-06-19-my-agentic-development-stack), I outlined the seven-tool stack. Git worktrees fit between the orchestration layer and the agent layer:
+In [My Agentic Development Stack](/notes/2026-06-19-my-agentic-development-stack), I outlined the seven-tool stack. Git worktrees fit between the orchestration layer and the agent layer:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -227,6 +227,6 @@ It's all native git. No new dependencies. Just `git worktree add` and go.
 ## References
 
 - [Git Worktree Documentation](https://git-scm.com/docs/git-worktree) — Official git worktree documentation
-- [My Agentic Development Stack](https://inotives.github.io/posts/2026-06-19-my-agentic-development-stack) — The seven-tool stack this integrates with
-- [Ponytail: The Lazy Senior Dev Skill](https://inotives.github.io/posts/2026-06-20-ponytail-lazy-senior-dev-skill) — Code minimization discipline that runs in each worktree
+- [My Agentic Development Stack](https://inotives.github.io/notes/2026-06-19-my-agentic-development-stack) — The seven-tool stack this integrates with
+- [Ponytail: The Lazy Senior Dev Skill](https://inotives.github.io/notes/2026-06-20-ponytail-lazy-senior-dev-skill) — Code minimization discipline that runs in each worktree
 - [git-conveyor](https://github.com/inotives/git-conveyor) — Multi-agent orchestration with SQLite Kanban

@@ -7,7 +7,7 @@ summary: "Agent identity standards are shipping fast — SAID, SAS, Entra Agent 
 
 ## Who Revokes the Rogue Agent? The Revocation Gap in AI Agent Identity
 
-[Last month I wrote about why blockchain-anchored identity is the missing layer for agentic commerce](/posts/2026-06-09-crypto-agent-identity-blockchain-anchored). The core argument: in 2-3 years, everyone's agent will need a verifiable passport, and blockchain is the right foundation for cross-organisational agent trust.
+[Last month I wrote about why blockchain-anchored identity is the missing layer for agentic commerce](/notes/2026-06-09-crypto-agent-identity-blockchain-anchored). The core argument: in 2-3 years, everyone's agent will need a verifiable passport, and blockchain is the right foundation for cross-organisational agent trust.
 
 A reader pushed back with the sharpest question I've gotten on the topic:
 

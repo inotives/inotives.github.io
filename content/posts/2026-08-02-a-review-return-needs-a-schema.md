@@ -141,7 +141,7 @@ Checkpoints make an agent run recoverable. Review returns make the recovery dire
 
 ## References
 
-- [The Checkpoint Is the Real Agent Interface](/posts/checkpoints-are-the-real-agent-interface)
-- [Agent-Rig: Filesystem-First Multi-Agent Workspaces That Actually Catch Bugs](/posts/agent-rig-filesystem-first-multi-agent-workspaces)
-- [The Data Quality Review Queue](/posts/data-quality-review-queue)
+- [The Checkpoint Is the Real Agent Interface](/notes/2026-08-01-checkpoints-are-the-real-agent-interface)
+- [Agent-Rig: Filesystem-First Multi-Agent Workspaces That Actually Catch Bugs](/notes/2026-07-06-agent-rig-filesystem-first-multi-agent-workspaces)
+- [The Data Quality Review Queue](/notes/2026-07-23-data-quality-review-queue)
 - [Google Engineering Practices: Code Review Developer Guide](https://google.github.io/eng-practices/review/developer/)

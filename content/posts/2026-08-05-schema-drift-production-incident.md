@@ -144,7 +144,7 @@ That small boundary changes the failure mode. A provider change becomes a review
 
 ## References
 
-- [Data Contracts: The API Layer Your Crypto Pipeline Is Missing](/posts/data-contracts-crypto-pipelines)
-- [Quarantine Tables: Where Bad Crypto Data Should Go](/posts/quarantine-tables-bad-crypto-data)
-- [Data Quality Checks: The Boring Layer That Saves Pipelines](/posts/data-quality-checks-save-pipelines)
-- [Late-Arriving Data Is a Product Decision, Not a Scheduler Problem](/posts/late-arriving-data-product-decision)
+- [Data Contracts: The API Layer Your Crypto Pipeline Is Missing](/notes/2026-07-18-data-contracts-crypto-pipelines)
+- [Quarantine Tables: Where Bad Crypto Data Should Go](/notes/2026-07-22-quarantine-tables-bad-crypto-data)
+- [Data Quality Checks: The Boring Layer That Saves Pipelines](/notes/2026-07-18-data-quality-checks-save-pipelines)
+- [Late-Arriving Data Is a Product Decision, Not a Scheduler Problem](/notes/2026-08-02-late-arriving-data-product-decision)

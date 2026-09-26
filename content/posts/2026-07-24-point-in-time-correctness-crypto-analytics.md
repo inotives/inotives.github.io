@@ -212,9 +212,9 @@ It is not a substitute for the truth that was valid then.
 
 ## References
 
-- [Backfills Without Breaking Crypto Reports](/posts/2026-07-23-backfills-without-breaking-crypto-reports)
-- [The Crypto Asset Mapping Table](/posts/2026-07-21-crypto-asset-mapping-table)
-- [Why Raw Data Should Stay Raw](/posts/2026-07-22-why-raw-data-should-stay-raw)
-- [What Makes a Mart Agent-Safe](/posts/2026-07-23-what-makes-a-mart-agent-safe)
-- [Crypto Symbols Are Not IDs](/posts/2026-07-20-crypto-symbols-are-not-ids)
-- [Freshness Is a Data Quality Dimension](/posts/2026-07-19-freshness-data-quality-dimension)
+- [Backfills Without Breaking Crypto Reports](/notes/2026-07-23-backfills-without-breaking-crypto-reports)
+- [The Crypto Asset Mapping Table](/notes/2026-07-21-crypto-asset-mapping-table)
+- [Why Raw Data Should Stay Raw](/notes/2026-07-22-why-raw-data-should-stay-raw)
+- [What Makes a Mart Agent-Safe](/notes/2026-07-23-what-makes-a-mart-agent-safe)
+- [Crypto Symbols Are Not IDs](/notes/2026-07-20-crypto-symbols-are-not-ids)
+- [Freshness Is a Data Quality Dimension](/notes/2026-07-19-freshness-data-quality-dimension)

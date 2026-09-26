@@ -161,7 +161,7 @@ Good agent systems do not merely produce answers. They leave a trail of permitte
 ## References
 
 - [AgentRig](https://github.com/inotives/agent-rig)
-- [A Review Return Needs a Schema](/posts/a-review-return-needs-a-schema)
-- [Multi-Agent Graph Engineering Is a Workflow, Not a Swarm](/posts/multi-agent-graph-engineering-agent-rig)
-- [The Checkpoint Is the Real Agent Interface](/posts/checkpoints-are-the-real-agent-interface)
-- [Scalable Agentic Systems: Seven Loop Types, Layered Guardrails, and When Humans Should Pull the Plug](/posts/scalable-agentic-systems-loop-prevention)
+- [A Review Return Needs a Schema](/notes/2026-08-02-a-review-return-needs-a-schema)
+- [Multi-Agent Graph Engineering Is a Workflow, Not a Swarm](/notes/2026-08-02-multi-agent-graph-engineering-agent-rig)
+- [The Checkpoint Is the Real Agent Interface](/notes/2026-08-01-checkpoints-are-the-real-agent-interface)
+- [Scalable Agentic Systems: Seven Loop Types, Layered Guardrails, and When Humans Should Pull the Plug](/notes/2026-07-03-scalable-agentic-systems-loop-prevention)

@@ -324,7 +324,7 @@ The agent-to-agent market is a reputation market. Agents remember which applicat
 
 ## References
 
-- [My Agentic Development Stack](https://inotives.github.io/posts/2026-06-19-my-agentic-development-stack) — The seven-tool stack for agentic workflows
-- [AISO: Agent Search Optimization](https://inotives.github.io/posts/2026-06-21-aiso-agent-search-optimization) — Making your app discoverable to agents
-- [The Future of Application Design: Dual-Flow](https://inotives.github.io/posts/2026-06-21-future-of-application-design-dual-flow) — Why every app needs an agent interface
-- [Your AI Agent Needs a Passport](https://inotives.github.io/posts/2026-06-09-crypto-agent-identity-blockchain-anchored) — Agent identity for trusted transactions
+- [My Agentic Development Stack](https://inotives.github.io/notes/2026-06-19-my-agentic-development-stack) — The seven-tool stack for agentic workflows
+- [AISO: Agent Search Optimization](https://inotives.github.io/notes/2026-06-21-aiso-agent-search-optimization) — Making your app discoverable to agents
+- [The Future of Application Design: Dual-Flow](https://inotives.github.io/notes/2026-06-21-future-of-application-design-dual-flow) — Why every app needs an agent interface
+- [Your AI Agent Needs a Passport](https://inotives.github.io/notes/2026-06-09-crypto-agent-identity-blockchain-anchored) — Agent identity for trusted transactions

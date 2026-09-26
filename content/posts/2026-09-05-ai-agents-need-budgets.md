@@ -186,5 +186,5 @@ Rate limits keep shared systems available. Budgets keep individual cases bounded
 - [OpenAI: rate limits](https://platform.openai.com/docs/guides/rate-limits)
 - [AWS Builders' Library: timeouts, retries, and backoff with jitter](https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/)
 - [Google SRE: error budget policy](https://sre.google/workbook/error-budget-policy/)
-- [How to Roll Out an Agent Change Without Breaking Operations](/posts/2026-09-03-roll-out-agent-change-without-breaking-operations)
-- [When an AI Agent Makes a Wrong Move: An Incident Response Playbook](/posts/2026-09-03-agent-incident-response-playbook)
+- [How to Roll Out an Agent Change Without Breaking Operations](/notes/2026-09-03-roll-out-agent-change-without-breaking-operations)
+- [When an AI Agent Makes a Wrong Move: An Incident Response Playbook](/notes/2026-09-03-agent-incident-response-playbook)

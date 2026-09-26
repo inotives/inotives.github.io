@@ -457,9 +457,9 @@ And guessing is the expensive part.
 
 ## References
 
-- [Agent-Readable Data Pipelines](/posts/2026-07-21-agent-readable-data-pipelines)
-- [Run Logs Are Data Too](/posts/2026-07-22-run-logs-are-data-too)
-- [Data Lineage for Small Crypto Pipelines](/posts/2026-07-24-data-lineage-small-crypto-pipelines)
-- [MCP Is Becoming the API Layer for Internal Data](/posts/2026-07-24-mcp-api-layer-internal-data)
-- [Why Raw Data Should Stay Raw](/posts/2026-07-22-why-raw-data-should-stay-raw)
-- [Why dbt Makes Sense Even for Small Crypto Projects](/posts/2026-07-20-dbt-small-crypto-projects)
+- [Agent-Readable Data Pipelines](/notes/2026-07-21-agent-readable-data-pipelines)
+- [Run Logs Are Data Too](/notes/2026-07-22-run-logs-are-data-too)
+- [Data Lineage for Small Crypto Pipelines](/notes/2026-07-24-data-lineage-small-crypto-pipelines)
+- [MCP Is Becoming the API Layer for Internal Data](/notes/2026-07-24-mcp-api-layer-internal-data)
+- [Why Raw Data Should Stay Raw](/notes/2026-07-22-why-raw-data-should-stay-raw)
+- [Why dbt Makes Sense Even for Small Crypto Projects](/notes/2026-07-20-dbt-small-crypto-projects)

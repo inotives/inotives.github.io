@@ -249,5 +249,5 @@ That fits the same pattern as a durable agent-memory system: raw evidence stays 
 - [Archivy usage documentation](https://github.com/archivy/archivy/blob/master/docs/usage.md)
 - [Archivy plugins documentation](https://github.com/archivy/archivy/blob/master/docs/plugins.md)
 - [dbt documentation](https://docs.getdbt.com/)
-- [Data Engineering in 30 Days, Day 23-24: Observability and data quality](/posts/2026-08-17-data-engineering-day-23-24-data-observability-quality)
-- [TencentDB Agent Memory and Strata Memory](/posts/2026-08-26-tencentdb-agent-memory-vs-strata-memory)
+- [Data Engineering in 30 Days, Day 23-24: Observability and data quality](/notes/2026-08-17-data-engineering-day-23-24-data-observability-quality)
+- [TencentDB Agent Memory and Strata Memory](/notes/2026-08-26-tencentdb-agent-memory-vs-strata-memory)

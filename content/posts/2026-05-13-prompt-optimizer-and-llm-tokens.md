@@ -312,5 +312,5 @@ Tokens are the currency of LLM interaction. Every prompt competes for space in a
 - prompt-optimizer: https://github.com/linshenkx/prompt-optimizer
 - MCP Server Guide: https://github.com/linshenkx/prompt-optimizer/blob/develop/docs/user/mcp-server_en.md
 - Prompt Garden: https://garden.always200.com
-- Prior evaluation — RTK (token compression): /posts/2026-05-19-rtk-token-killer-for-agentic-workflows
-- Prior evaluation — playwright-cli (CLI vs MCP token efficiency): /posts/2026-05-25-playwright-cli-for-data-work
+- Prior evaluation — RTK (token compression): /notes/2026-05-19-rtk-token-killer-for-agentic-workflows
+- Prior evaluation — playwright-cli (CLI vs MCP token efficiency): /notes/2026-05-25-playwright-cli-for-data-work

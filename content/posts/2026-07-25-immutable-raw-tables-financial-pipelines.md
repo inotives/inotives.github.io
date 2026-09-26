@@ -347,10 +347,10 @@ Raw data is what lets you prove how the clean data was made.
 
 ## References
 
-- [Why Raw Data Should Stay Raw](/posts/2026-07-22-why-raw-data-should-stay-raw)
-- [Auditable Database Design for Financial Data](/posts/2026-07-25-auditable-database-design-financial-data)
-- [Point-in-Time Correctness in Crypto Analytics](/posts/2026-07-24-point-in-time-correctness-crypto-analytics)
-- [Backfills Without Breaking Crypto Reports](/posts/2026-07-23-backfills-without-breaking-crypto-reports)
-- [Data Lineage for Small Crypto Pipelines](/posts/2026-07-24-data-lineage-small-crypto-pipelines)
+- [Why Raw Data Should Stay Raw](/notes/2026-07-22-why-raw-data-should-stay-raw)
+- [Auditable Database Design for Financial Data](/notes/2026-07-25-auditable-database-design-financial-data)
+- [Point-in-Time Correctness in Crypto Analytics](/notes/2026-07-24-point-in-time-correctness-crypto-analytics)
+- [Backfills Without Breaking Crypto Reports](/notes/2026-07-23-backfills-without-breaking-crypto-reports)
+- [Data Lineage for Small Crypto Pipelines](/notes/2026-07-24-data-lineage-small-crypto-pipelines)
 - [PostgreSQL pgcrypto documentation](https://www.postgresql.org/docs/current/pgcrypto.html)
 - [PostgreSQL CREATE TRIGGER documentation](https://www.postgresql.org/docs/current/sql-createtrigger.html)

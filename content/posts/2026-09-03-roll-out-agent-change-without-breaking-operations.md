@@ -179,4 +179,4 @@ The goal is not to freeze agent development. It is to make changes routine. When
 - [Google SRE: canarying releases](https://sre.google/workbook/canarying-releases/)
 - [GitHub: deployment protection rules](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments)
 - [dbt: defer to production state](https://docs.getdbt.com/reference/node-selection/defer)
-- [The Agent Action Gateway: The Missing Layer Between an LLM and a Business System](/posts/2026-09-03-agent-action-gateway)
+- [The Agent Action Gateway: The Missing Layer Between an LLM and a Business System](/notes/2026-09-03-agent-action-gateway)

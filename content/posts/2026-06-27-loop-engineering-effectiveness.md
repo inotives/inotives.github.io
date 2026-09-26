@@ -135,6 +135,6 @@ The loop is a tool. Like any tool, its effectiveness depends on knowing when to 
 - Pan 2026 — "The Token Economy of Multi-Turn Tool Use" (https://tianpan.co/blog/2026-04-20-token-economy-multi-turn-tool-use-agent-cost)
 - Anthropic 2025 — "Effective Context Engineering for AI Agents" (https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
 - Kinney 2026 — "The Anatomy of an Agent Loop" (https://stevekinney.com/writing/agent-loops)
-- Delaney 2026 — "Inside the ReAct loop: how agents actually iterate" (https://mickdelaney.com/posts/inside-the-react-loop/)
+- Delaney 2026 — "Inside the ReAct loop: how agents actually iterate" (https://mickdelaney.com/notes/inside-the-react-loop/)
 - LOOP SKILL ENGINE 2026 — "Good to Go: 99% Success and 99% Token Reduction via One-Shot Recording" (https://arxiv.org/abs/2605.14237)
 - awesome-loop-engineering — Token economics documentation (https://github.com/invincible04/awesome-loop-engineering)

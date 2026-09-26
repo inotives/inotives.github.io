@@ -199,6 +199,6 @@ If those answers are missing, the table is only pretending to be production-read
 
 - [dbt source freshness](https://docs.getdbt.com/docs/deploy/source-freshness)
 - [dbt data tests](https://docs.getdbt.com/docs/build/data-tests)
-- [Data Contracts: The API Layer Your Crypto Pipeline Is Missing](/posts/2026-07-18-data-contracts-crypto-pipelines)
-- [Data Quality Checks: The Boring Layer That Saves Pipelines](/posts/2026-07-18-data-quality-checks-save-pipelines)
-- [Crypto asset data cleanup in agentic spaces](/posts/2026-06-08-crypto-asset-data-cleanup-agentic-spaces)
+- [Data Contracts: The API Layer Your Crypto Pipeline Is Missing](/notes/2026-07-18-data-contracts-crypto-pipelines)
+- [Data Quality Checks: The Boring Layer That Saves Pipelines](/notes/2026-07-18-data-quality-checks-save-pipelines)
+- [Crypto asset data cleanup in agentic spaces](/notes/2026-06-08-crypto-asset-data-cleanup-agentic-spaces)

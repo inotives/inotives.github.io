@@ -173,5 +173,5 @@ The incident playbook is not evidence that agents are too dangerous to deploy. I
 - [OWASP: LLM prompt injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/)
 - [Google SRE: managing incidents](https://sre.google/sre-book/managing-incidents/)
 - [Google SRE: blameless postmortem culture](https://sre.google/sre-book/postmortem-culture/)
-- [The Agent Action Gateway: The Missing Layer Between an LLM and a Business System](/posts/2026-09-03-agent-action-gateway)
-- [How to Roll Out an Agent Change Without Breaking Operations](/posts/2026-09-03-roll-out-agent-change-without-breaking-operations)
+- [The Agent Action Gateway: The Missing Layer Between an LLM and a Business System](/notes/2026-09-03-agent-action-gateway)
+- [How to Roll Out an Agent Change Without Breaking Operations](/notes/2026-09-03-roll-out-agent-change-without-breaking-operations)

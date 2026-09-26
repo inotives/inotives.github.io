@@ -186,8 +186,8 @@ That is policy as code in its useful form. It is also the kind of harness work t
 
 ## References
 
-- [Stop Chasing Models, Start Building Harnesses](/posts/stop-chasing-models-start-building-harnesses)
-- [Tool Output Is Untrusted Input](/posts/tool-output-is-untrusted-input)
-- [Agent Evaluation Needs Reusable Environments, Not Another Benchmark](/posts/agent-evaluation-reusable-environments)
-- [MCP's Stateless Core Changes How We Build Agent-Safe Data Servers](/posts/mcp-stateless-core-agent-safe-data-servers)
-- [OKF v0.2 Gives Agent Memory a Trust Layer](/posts/okf-v02-agent-memory-trust-layer)
+- [Stop Chasing Models, Start Building Harnesses](/notes/2026-06-19-stop-chasing-models-start-building-harnesses)
+- [Tool Output Is Untrusted Input](/notes/2026-08-03-tool-output-is-untrusted-input)
+- [Agent Evaluation Needs Reusable Environments, Not Another Benchmark](/notes/2026-08-06-agent-evaluation-reusable-environments)
+- [MCP's Stateless Core Changes How We Build Agent-Safe Data Servers](/notes/2026-08-06-mcp-stateless-core-agent-safe-data-servers)
+- [OKF v0.2 Gives Agent Memory a Trust Layer](/notes/2026-08-06-okf-v02-agent-memory-trust-layer)

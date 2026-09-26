@@ -246,5 +246,5 @@ An agent with two tools needs good descriptions. An agent with two hundred tools
 - [Needle 2](https://github.com/cactus-compute/needle)
 - [Needle tool retrieval API](https://github.com/cactus-compute/needle/blob/main/doc/apis.md#tool-retrieval)
 - [Model Context Protocol tools specification](https://modelcontextprotocol.io/specification/2025-06-18/server/tools)
-- [Right tools, right time: context over capability](/posts/2026-07-06-right-tools-right-time-context-over-capability)
-- [Needle 2: a 14MB model for tool calling](/posts/2026-08-25-needle-tiny-tool-calling-model)
+- [Right tools, right time: context over capability](/notes/2026-07-06-right-tools-right-time-context-over-capability)
+- [Needle 2: a 14MB model for tool calling](/notes/2026-08-25-needle-tiny-tool-calling-model)

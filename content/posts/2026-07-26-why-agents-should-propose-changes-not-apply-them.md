@@ -389,12 +389,12 @@ Explainable fixes are better.
 
 ## References
 
-- [MCP Is Becoming the API Layer for Internal Data](/posts/2026-07-24-mcp-api-layer-internal-data)
-- [Auditable Database Design for Financial Data](/posts/2026-07-25-auditable-database-design-financial-data)
-- [Immutable Raw Tables for Financial Pipelines](/posts/2026-07-25-immutable-raw-tables-financial-pipelines)
-- [Corrections Are Not Deletions](/posts/2026-07-26-corrections-are-not-deletions)
-- [The Data Quality Review Queue](/posts/2026-07-23-data-quality-review-queue)
-- [When Agents Should Not Touch Your Database](/posts/2026-07-20-when-agents-should-not-touch-your-database)
+- [MCP Is Becoming the API Layer for Internal Data](/notes/2026-07-24-mcp-api-layer-internal-data)
+- [Auditable Database Design for Financial Data](/notes/2026-07-25-auditable-database-design-financial-data)
+- [Immutable Raw Tables for Financial Pipelines](/notes/2026-07-25-immutable-raw-tables-financial-pipelines)
+- [Corrections Are Not Deletions](/notes/2026-07-26-corrections-are-not-deletions)
+- [The Data Quality Review Queue](/notes/2026-07-23-data-quality-review-queue)
+- [When Agents Should Not Touch Your Database](/notes/2026-07-20-when-agents-should-not-touch-your-database)
 - [dbt: add data tests to your DAG](https://docs.getdbt.com/docs/build/data-tests)
 - [PostgreSQL: transactions](https://www.postgresql.org/docs/current/tutorial-transactions.html)
 - [OWASP: query parameterization](https://cheatsheetseries.owasp.org/cheatsheets/Query_Parameterization_Cheat_Sheet.html)

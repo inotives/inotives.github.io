@@ -199,7 +199,7 @@ Humans still browse and impulse-buy through visual UIs. Agents optimize and exec
 
 There's a problem in the coffee example: your agent just sent money to Dunkin's agent. How does Dunkin's agent know your agent is real? How do you know Dunkin's agent isn't a phishing scam?
 
-I wrote about this in [Your AI Agent Needs a Passport](/posts/2026-06-09-crypto-agent-identity-blockchain-anchored). In the agent-to-agent market, trust is everything.
+I wrote about this in [Your AI Agent Needs a Passport](/notes/2026-06-09-crypto-agent-identity-blockchain-anchored). In the agent-to-agent market, trust is everything.
 
 **The scenario**:
 ```
@@ -236,7 +236,7 @@ Your Agent
 - **Reputation**: Your agent builds a track record of successful orders
 - **Accountability**: If something goes wrong, there's a trail
 
-I go deeper on this in [Why Blockchain Identity is the Missing Layer for Agentic Commerce](/posts/2026-06-09-crypto-agent-identity-blockchain-anchored) — the cryptographic primitives, the identity standards (SAID, SAS, IETF AIR), and why blockchain is the right foundation for agent trust.
+I go deeper on this in [Why Blockchain Identity is the Missing Layer for Agentic Commerce](/notes/2026-06-09-crypto-agent-identity-blockchain-anchored) — the cryptographic primitives, the identity standards (SAID, SAS, IETF AIR), and why blockchain is the right foundation for agent trust.
 
 ## The Discovery Problem
 
@@ -290,4 +290,4 @@ Your app needs an agent interface. Build it.
 - [Anthropic: Building Effective Agents](https://www.anthropic.com/research/building-effective-agents) — Agent-Computer Interface (ACI) concept
 - [A2A Protocol Specification](https://a2a-protocol.org/latest/specification/) — Agent-to-agent communication standard
 - [Model Context Protocol](https://modelcontextprotocol.io/introduction) — Standardized agent-tool integration
-- [Your AI Agent Needs a Passport](https://inotives.github.io/posts/2026-06-09-crypto-agent-identity-blockchain-anchored) — Blockchain-anchored agent identity for agentic commerce
+- [Your AI Agent Needs a Passport](https://inotives.github.io/notes/2026-06-09-crypto-agent-identity-blockchain-anchored) — Blockchain-anchored agent identity for agentic commerce

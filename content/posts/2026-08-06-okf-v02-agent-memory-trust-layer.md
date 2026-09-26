@@ -167,5 +167,5 @@ That is the trust layer agent memory needs. Keep the local files. Keep the rebui
 - [Open Knowledge Format v0.2 specification](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)
 - [OKF v0.2 migration pull request](https://github.com/GoogleCloudPlatform/knowledge-catalog/pull/227)
 - [Strata Memory](https://github.com/inotives/strata-memory)
-- [Google's OKF: The Knowledge Format We've Been Building Toward](/posts/okf-open-knowledge-format)
-- [Tool Output Is Untrusted Input](/posts/tool-output-is-untrusted-input)
+- [Google's OKF: The Knowledge Format We've Been Building Toward](/notes/2026-06-23-okf-open-knowledge-format)
+- [Tool Output Is Untrusted Input](/notes/2026-08-03-tool-output-is-untrusted-input)

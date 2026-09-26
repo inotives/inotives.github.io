@@ -119,7 +119,7 @@ For developers, the cost ceiling has dropped. DeepSeek V4-Flash at $0.28/M outpu
 
 ## References
 
-1. BenchLM -- "DeepSeek V4 Pro vs Claude Opus 4.7 vs GPT-5.5: The Frontier in April 2026" (Apr 2026): https://benchlm.ai/blog/posts/deepseek-v4-vs-claude-opus-4-7-vs-gpt-5-5
+1. BenchLM -- "DeepSeek V4 Pro vs Claude Opus 4.7 vs GPT-5.5: The Frontier in April 2026" (Apr 2026): https://benchlm.ai/blog/notes/deepseek-v4-vs-claude-opus-4-7-vs-gpt-5-5
 2. Wing Venture Capital -- "China's Open-Weight Takeover" (Jun 2026): https://www.wing.vc/content/chinas-open-weight-takeover
 3. OpenRouter -- "State of AI 2025: 100T Token LLM Usage Study" (Jan 2026): https://openrouter.ai/state-of-ai
 4. Hugging Face -- "State of Open Source on Hugging Face: Spring 2026" (Mar 2026): https://huggingface.co/blog/huggingface/state-of-os-hf-spring-2026
@@ -130,7 +130,7 @@ For developers, the cost ceiling has dropped. DeepSeek V4-Flash at $0.28/M outpu
 9. Greyhound Research -- "Why CIOs Are Cautious About Chinese Open LLMs" (Jun 2025): https://greyhoundresearch.com/from-rednote-to-red-flags-why-cios-are-cautious-about-chinese-open-llms/
 10. Empirium -- "Self-Hosted LLMs in 2026: Is It Time?" (May 2026): https://empirium.io/blog/self-hosted-llm-2026
 11. Particula Tech -- "Self-Host LLM vs API: When the Break-Even Math Flips in 2026" (May 2026): https://particula.tech/blog/self-host-llm-vs-api-break-even-math-2026
-12. Dasroot -- "The Economics of Local AI" (May 2026): https://dasroot.net/posts/2026/05/economics-of-local-ai-deepseek-v4-public-api/
+12. Dasroot -- "The Economics of Local AI" (May 2026): https://dasroot.net/notes/2026/05/economics-of-local-ai-deepseek-v4-public-api/
 13. AI Stack Hub -- "AI Stack Shift 2026: Enterprise Contracts & Open-Source" (May 2026): https://aistackhub.ai/research/ai-stack-shift
 14. CSIS -- "The Department of Commerce Restricted Access to Anthropic's Latest Models. What Comes Next?" (Jun 2026): https://www.csis.org/analysis/department-commerce-restricted-access-anthropics-latest-models-what-comes-next
 15. New York Times -- "U.S. Loosens Restrictions on Anthropic's Mythos A.I. Model" (Jun 2026): https://www.nytimes.com/2026/06/26/technology/anthropic-mythos-government-restrictions.html

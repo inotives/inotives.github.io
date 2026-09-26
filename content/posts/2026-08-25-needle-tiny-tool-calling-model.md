@@ -154,4 +154,4 @@ That boundary is where the model becomes useful. A 14MB engine is small enough t
 - [FunctionGemma cookbook](https://github.com/google-gemini/gemma-cookbook/tree/main/FunctionGemma)
 - [LFM2.5-230M documentation](https://docs.liquid.ai/lfm/models/lfm25-230m)
 - [Apple Foundation Models documentation](https://developer.apple.com/documentation/FoundationModels)
-- [Data Engineering in 30 Days, Day 29: Data for AI systems](/posts/2026-08-18-data-engineering-day-29-data-for-ai-systems)
+- [Data Engineering in 30 Days, Day 29: Data for AI systems](/notes/2026-08-18-data-engineering-day-29-data-for-ai-systems)

@@ -290,6 +290,6 @@ That is enough to make a stateless server behave like a trustworthy API. The ent
 
 - [MCP authorization specification](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization)
 - [MCP authorization security considerations](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/security-considerations)
-- [MCP Goes Stateless: Load Balancers, Auth, Caching, and Multi-Round Trips](/posts/mcp-stateless-core-agent-safe-data-servers)
-- [Tool Output Is Untrusted Input](/posts/tool-output-is-untrusted-input)
-- [Policy as Code Will Be the Core Skill of AI Engineering](/posts/policy-as-code-core-ai-engineering-skill)
+- [MCP Goes Stateless: Load Balancers, Auth, Caching, and Multi-Round Trips](/notes/2026-08-06-mcp-stateless-core-agent-safe-data-servers)
+- [Tool Output Is Untrusted Input](/notes/2026-08-03-tool-output-is-untrusted-input)
+- [Policy as Code Will Be the Core Skill of AI Engineering](/notes/2026-08-07-policy-as-code-core-ai-engineering-skill)

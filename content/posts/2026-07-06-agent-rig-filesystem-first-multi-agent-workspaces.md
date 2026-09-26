@@ -102,4 +102,4 @@ Agent-rig doesn't replace your AI tools. It gives them a shared workspace that m
 - [v0.1.3 Release](https://github.com/inotives/agent-rig/releases/tag/v0.1.3) — Planning skills, handoff improvements, shared findings notes
 - [agent-pipe](https://github.com/inotives/agent-pipe) — Data pipeline CLI with 25 tasks across 5 phases using planner-worker-reviewer
 - [market-pipe](https://github.com/inotives/market-pipe) — Market data ingestion with 23 tasks across 4 phases using planner-worker-reviewer
-- [My Agentic Development Stack](https://inotives.github.io/posts/2026-06-19-my-agentic-development-stack) — Full seven-tool stack overview
+- [My Agentic Development Stack](https://inotives.github.io/notes/2026-06-19-my-agentic-development-stack) — Full seven-tool stack overview

@@ -426,5 +426,5 @@ It is replayable change history for the financial pipeline.
 - [PostgreSQL logical replication](https://www.postgresql.org/docs/current/logical-replication.html)
 - [Apache Kafka Connect documentation](https://kafka.apache.org/documentation/#connect)
 - [AWS DMS ongoing replication and CDC](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Task.CDC.html)
-- [What Is a Data Lake, and Why Financial Pipelines Need One](/posts/2026-07-26-what-is-a-data-lake-financial-data)
-- [Why Agents Should Propose Changes, Not Apply Them](/posts/2026-07-26-why-agents-should-propose-changes-not-apply-them)
+- [What Is a Data Lake, and Why Financial Pipelines Need One](/notes/2026-07-26-what-is-a-data-lake-financial-data)
+- [Why Agents Should Propose Changes, Not Apply Them](/notes/2026-07-26-why-agents-should-propose-changes-not-apply-them)

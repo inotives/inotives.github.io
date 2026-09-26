@@ -14,7 +14,7 @@ They are the small assertions that stop a pipeline from quietly lying.
 
 That matters more in crypto than in most domains. Crypto data has reused symbols, chain-specific contract addresses, stale price feeds, token migrations, exchange-specific tickers, missing metadata, and providers that disagree about the same asset. If those problems reach the mart layer, everything downstream gets more expensive: dashboards, compliance reports, trading summaries, and AI agents all start reasoning from bad facts.
 
-I wrote about [data contracts](/posts/2026-07-18-data-contracts-crypto-pipelines) as the API layer for data. Quality checks are the enforcement layer. A contract says what a dataset promises. A check proves whether today's batch kept that promise.
+I wrote about [data contracts](/notes/2026-07-18-data-contracts-crypto-pipelines) as the API layer for data. Quality checks are the enforcement layer. A contract says what a dataset promises. A check proves whether today's batch kept that promise.
 
 ## The first useful checks are boring
 
@@ -210,7 +210,7 @@ freshness failure: block agent/reporting use
 
 The important part is blocking agent use. An AI agent will happily explain stale data with fresh confidence. If a price mart is stale, the agent should not get to query it for client-facing output. The failure should be machine-readable, not just a Slack message.
 
-This is where the [data contracts post](/posts/2026-07-18-data-contracts-crypto-pipelines) and this one meet. Contracts define who can rely on what. Checks decide whether the contract is currently valid.
+This is where the [data contracts post](/notes/2026-07-18-data-contracts-crypto-pipelines) and this one meet. Contracts define who can rely on what. Checks decide whether the contract is currently valid.
 
 ## A small testing ladder
 
@@ -243,6 +243,6 @@ The layer is boring. Good. Boring things are easier to run every day.
 - [Soda data testing](https://docs.soda.io/data-testing)
 - [Data Contract CLI documentation](https://docs.datacontract.com/)
 - [AWS Deequ data quality at scale](https://aws.amazon.com/blogs/big-data/test-data-quality-at-scale-with-deequ/)
-- [Data contracts: the API layer your crypto pipeline is missing](/posts/2026-07-18-data-contracts-crypto-pipelines)
-- [Crypto asset data cleanup in agentic spaces](/posts/2026-06-08-crypto-asset-data-cleanup-agentic-spaces)
-- [dbt Fusion and Core v2.0](/posts/2026-07-04-dbt-fusion-core-v2-rust-rewrite)
+- [Data contracts: the API layer your crypto pipeline is missing](/notes/2026-07-18-data-contracts-crypto-pipelines)
+- [Crypto asset data cleanup in agentic spaces](/notes/2026-06-08-crypto-asset-data-cleanup-agentic-spaces)
+- [dbt Fusion and Core v2.0](/notes/2026-07-04-dbt-fusion-core-v2-rust-rewrite)

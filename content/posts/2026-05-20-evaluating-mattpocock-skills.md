@@ -167,5 +167,5 @@ The skills are free, MIT-licensed, and composable. There is no lock-in — each 
 - mattpocock/skills: https://github.com/mattpocock/skills
 - AI Hero newsletter: https://www.aihero.dev/s/skills-newsletter
 - Skills installer: https://skills.sh/mattpocock/skills
-- Prior evaluation — CodeGraph: /posts/2026-05-25-codegraph-for-agentic-codebase-work
-- Prior evaluation — Graphify: /posts/2026-05-20-graphify-for-agentic-knowledge-work
+- Prior evaluation — CodeGraph: /notes/2026-05-20-codegraph-for-agentic-codebase-work
+- Prior evaluation — Graphify: /notes/2026-05-20-graphify-for-agentic-knowledge-work

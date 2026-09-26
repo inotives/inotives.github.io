@@ -261,4 +261,4 @@ That is the useful division of labour: one core owns what memory means; each har
 - [Claude Code hooks documentation](https://code.claude.com/docs/en/hooks)
 - [Claude Code plugins documentation](https://code.claude.com/docs/en/plugins)
 - [Strata Memory](https://github.com/inotives/strata-memory)
-- [TencentDB Agent Memory and Strata Memory comparison](/posts/2026-08-26-tencentdb-agent-memory-vs-strata-memory)
+- [TencentDB Agent Memory and Strata Memory comparison](/notes/2026-08-26-tencentdb-agent-memory-vs-strata-memory)

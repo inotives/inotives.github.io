@@ -156,6 +156,6 @@ Graph engineering is not the art of building a large agent organization. It is t
 
 - [Graph Engineering for Multi-Agent Systems: Architecture, Governance, and Observability](https://www.truefoundry.com/blog/graph-engineering-enterprise-guide)
 - [AgentRig](https://github.com/inotives/agent-rig)
-- [From Loop Engineering to Graph Engineering](/posts/graph-engineering-ai-workflows)
-- [The Checkpoint Is the Real Agent Interface](/posts/checkpoints-are-the-real-agent-interface)
-- [A Review Return Needs a Schema](/posts/a-review-return-needs-a-schema)
+- [From Loop Engineering to Graph Engineering](/notes/2026-07-30-graph-engineering-ai-workflows)
+- [The Checkpoint Is the Real Agent Interface](/notes/2026-08-01-checkpoints-are-the-real-agent-interface)
+- [A Review Return Needs a Schema](/notes/2026-08-02-a-review-return-needs-a-schema)

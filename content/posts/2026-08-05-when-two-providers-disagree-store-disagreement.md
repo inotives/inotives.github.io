@@ -171,7 +171,7 @@ That gives the mart a useful answer and keeps the evidence for the day the answe
 
 ## References
 
-- [The Crypto Asset Mapping Table](/posts/crypto-asset-mapping-table)
-- [Data Quality Checks: The Boring Layer That Saves Pipelines](/posts/data-quality-checks-save-pipelines)
-- [Quarantine Tables: Where Bad Crypto Data Should Go](/posts/quarantine-tables-bad-crypto-data)
-- [Point-in-Time Correctness in Crypto Analytics](/posts/point-in-time-correctness-crypto-analytics)
+- [The Crypto Asset Mapping Table](/notes/2026-07-21-crypto-asset-mapping-table)
+- [Data Quality Checks: The Boring Layer That Saves Pipelines](/notes/2026-07-18-data-quality-checks-save-pipelines)
+- [Quarantine Tables: Where Bad Crypto Data Should Go](/notes/2026-07-22-quarantine-tables-bad-crypto-data)
+- [Point-in-Time Correctness in Crypto Analytics](/notes/2026-07-24-point-in-time-correctness-crypto-analytics)

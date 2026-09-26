@@ -228,4 +228,4 @@ But for a solo developer working with agents daily, this stack covers 90% of wha
 - [Playwright](https://github.com/microsoft/playwright) — Cross-browser automation framework (includes playwright-mcp)
 - [strata-memory](https://github.com/inotives/strata-memory) — Local-first 3-tier persistent memory for agentic work
 - [git-conveyor](https://github.com/inotives/git-conveyor) — Multi-agent task orchestration with SQLite Kanban
-- [Loop Engineering: Stop Prompting Agents, Start Building Systems That Prompt Them](https://inotives.github.io/posts/2026-06-12-loop-engineering-patterns) — Background on the loop engineering pattern git-conveyor implements
+- [Loop Engineering: Stop Prompting Agents, Start Building Systems That Prompt Them](https://inotives.github.io/notes/2026-06-12-loop-engineering-patterns) — Background on the loop engineering pattern git-conveyor implements

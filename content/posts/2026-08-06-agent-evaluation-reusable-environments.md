@@ -201,7 +201,7 @@ That one environment becomes a regression test for the whole agent workflow. It 
 ## References
 
 - [Orchard: An open framework for scalable agentic AI](https://www.microsoft.com/en-us/research/blog/orchard-an-open-framework-for-scalable-agentic-ai/)
-- [Evaluate Workflow Transitions, Not Final Answers](/posts/evaluate-transitions-not-final-answers)
-- [Multi-Agent Graph Engineering Is a Workflow, Not a Swarm](/posts/multi-agent-graph-engineering-agent-rig)
-- [A Review Return Needs a Schema](/posts/a-review-return-needs-a-schema)
+- [Evaluate Workflow Transitions, Not Final Answers](/notes/2026-08-03-evaluate-transitions-not-final-answers)
+- [Multi-Agent Graph Engineering Is a Workflow, Not a Swarm](/notes/2026-08-02-multi-agent-graph-engineering-agent-rig)
+- [A Review Return Needs a Schema](/notes/2026-08-02-a-review-return-needs-a-schema)
 - [AgentRig](https://github.com/inotives/agent-rig)

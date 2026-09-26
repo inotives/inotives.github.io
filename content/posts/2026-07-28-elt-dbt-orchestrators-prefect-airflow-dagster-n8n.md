@@ -450,5 +450,5 @@ That is the real goal. The orchestrator is there to make the pipeline observable
 - [Dagster software-defined assets](https://docs.dagster.io/guides/build/assets/defining-assets)
 - [Dagster dbt integration reference](https://docs.dagster.io/integrations/libraries/dbt/reference)
 - [n8n core concepts](https://docs.n8n.io/workflows/)
-- [Why dbt Makes Sense Even for Small Crypto Projects](/posts/2026-07-20-dbt-small-crypto-projects)
-- [What Is ELT and ETL](/posts/2026-07-21-what-is-etl-and-elt)
+- [Why dbt Makes Sense Even for Small Crypto Projects](/notes/2026-07-20-dbt-small-crypto-projects)
+- [What Is ELT and ETL](/notes/2026-07-21-what-is-etl-and-elt)

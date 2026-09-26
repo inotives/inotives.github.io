@@ -412,5 +412,5 @@ The art is knowing where the threshold is. For most teams building agents today,
 - Why Postgres Is Becoming the Default AI Database in 2026: https://www.softwareseni.com/why-postgres-is-becoming-the-default-ai-database-in-2026/
 - LLM Agents and PostgreSQL in 2026: https://postgresqlhtx.com/llm-agents-and-postgresql-in-2026-building-intelligent-data-driven-ai-systems/
 - StackForge Postgres: https://github.com/amafjarkasi/stackforge-postgres
-- Prior evaluation — RTK (token compression): /posts/2026-05-19-rtk-token-killer-for-agentic-workflows
-- Prior note — prompt engineering: /posts/2026-05-31-prompt-optimizer-and-llm-tokens
+- Prior evaluation — RTK (token compression): /notes/2026-05-19-rtk-token-killer-for-agentic-workflows
+- Prior note — prompt engineering: /notes/2026-05-13-prompt-optimizer-and-llm-tokens

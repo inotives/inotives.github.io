@@ -139,5 +139,5 @@ The model is the foundation. The harness is the building. Build the building.
 - [Agent-Reach](https://github.com/Panniantong/Agent-Reach) — Multi-platform internet access for AI agents
 - [strata-memory](https://github.com/inotives/strata-memory) — Local-first persistent memory for agentic work
 - [git-conveyor](https://github.com/inotives/git-conveyor) — Multi-agent task orchestration
-- [Loop Engineering: Stop Prompting Agents, Start Building Systems That Prompt Them](https://inotives.github.io/posts/2026-06-12-loop-engineering-patterns) — The loop engineering pattern
-- [My Agentic Development Stack](https://inotives.github.io/posts/2026-06-19-my-agentic-development-stack) — The seven-tool stack that implements this philosophy
+- [Loop Engineering: Stop Prompting Agents, Start Building Systems That Prompt Them](https://inotives.github.io/notes/2026-06-12-loop-engineering-patterns) — The loop engineering pattern
+- [My Agentic Development Stack](https://inotives.github.io/notes/2026-06-19-my-agentic-development-stack) — The seven-tool stack that implements this philosophy

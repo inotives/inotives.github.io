@@ -337,9 +337,9 @@ Reports should depend on the second without endangering the first.
 
 ## References
 
-- [Why Raw Data Should Stay Raw](/posts/2026-07-22-why-raw-data-should-stay-raw)
-- [Immutable Raw Tables for Financial Pipelines](/posts/2026-07-25-immutable-raw-tables-financial-pipelines)
-- [Auditable Database Design for Financial Data](/posts/2026-07-25-auditable-database-design-financial-data)
-- [Data Lineage for Small Crypto Pipelines](/posts/2026-07-24-data-lineage-small-crypto-pipelines)
-- [AI Agents Are Only as Good as Their Data Marts](/posts/2026-07-24-ai-agents-only-as-good-as-data-marts)
-- [Why Agents Should Propose Changes, Not Apply Them](/posts/2026-07-26-why-agents-should-propose-changes-not-apply-them)
+- [Why Raw Data Should Stay Raw](/notes/2026-07-22-why-raw-data-should-stay-raw)
+- [Immutable Raw Tables for Financial Pipelines](/notes/2026-07-25-immutable-raw-tables-financial-pipelines)
+- [Auditable Database Design for Financial Data](/notes/2026-07-25-auditable-database-design-financial-data)
+- [Data Lineage for Small Crypto Pipelines](/notes/2026-07-24-data-lineage-small-crypto-pipelines)
+- [AI Agents Are Only as Good as Their Data Marts](/notes/2026-07-24-ai-agents-only-as-good-as-data-marts)
+- [Why Agents Should Propose Changes, Not Apply Them](/notes/2026-07-26-why-agents-should-propose-changes-not-apply-them)

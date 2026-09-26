@@ -90,7 +90,7 @@ The best agent setup isn't the biggest one. It's the one where every tool earns 
 - [codegraph](https://github.com/colbymchenry/codegraph) — Pre-indexed code knowledge graph for AI agents
 - [Agent-Reach](https://github.com/Panniantong/Agent-Reach) — AI agent capability layer for multi-platform internet access
 - [strata-memory](https://github.com/inotives/strata-memory) — Local-first 3-tier persistent memory for agentic work
-- [OKF: Open Knowledge Format](https://inotives.github.io/posts/2026-06-23-okf-open-knowledge-format) — Google's markdown-based standard for agent-readable knowledge
+- [OKF: Open Knowledge Format](https://inotives.github.io/notes/2026-06-23-okf-open-knowledge-format) — Google's markdown-based standard for agent-readable knowledge
 - [Karpathy's LLM-wiki pattern](https://x.com/karpathy/status/1913611129773903173) — The wikia structure that inspired strata-memory
-- [My Agentic Development Stack](https://inotives.github.io/posts/2026-06-19-my-agentic-development-stack) — Overview of the full seven-tool stack
-- [Context Degradation in AI Coding Sessions](https://inotives.github.io/posts/2026-05-23-context-degradation-in-coding-sessions) — Background on context management challenges
+- [My Agentic Development Stack](https://inotives.github.io/notes/2026-06-19-my-agentic-development-stack) — Overview of the full seven-tool stack
+- [Context Degradation in AI Coding Sessions](https://inotives.github.io/notes/2026-05-23-context-degradation-in-coding-sessions) — Background on context management challenges

@@ -61,7 +61,7 @@ For me, surrender doesn't happen on the obvious stuff. I don't blindly accept fa
 
 Addy Osmani nails the mechanism: *"Cognitive surrender is how you take on cognitive debt. Comprehension debt is the bill, denominated in lost mental model."*
 
-I wrote about this before in [Context Degradation in AI Coding Sessions](/posts/2026-05-23-context-degradation-in-coding-sessions) — the U-shaped curve where models lose mid-context information and start making stranger choices. The practical mitigation there (session segmentation, checkpoints, context budgeting) addresses the technical symptom. Intent debt is the deeper disease. Even a perfectly fresh session produces wrong output if the agent doesn't know *why* the system exists.
+I wrote about this before in [Context Degradation in AI Coding Sessions](/notes/2026-05-23-context-degradation-in-coding-sessions) — the U-shaped curve where models lose mid-context information and start making stranger choices. The practical mitigation there (session segmentation, checkpoints, context budgeting) addresses the technical symptom. Intent debt is the deeper disease. Even a perfectly fresh session produces wrong output if the agent doesn't know *why* the system exists.
 
 ---
 
@@ -75,7 +75,7 @@ Surface correctness is not systemic correctness. AI output compiles, passes lint
 
 Anthropic's skill-formation study confirms the mechanism: engineers who used AI for **code generation delegation** scored below 40% on comprehension tests; those who used AI for **conceptual inquiry** scored above 65%. The tool doesn't destroy understanding. How you use it does.
 
-This is why I insist on writing [skill chains](/posts/2026-06-04-skill-chaining-stock-trading-pipeline) with explicit interface contracts and prerequisite enforcement. Not because the agent can't figure it out — it can — but because *I* need to understand the chain well enough to intervene when it breaks. The skill authoring process forces comprehension that passive consumption would erode.
+This is why I insist on writing [skill chains](/notes/2026-06-04-skill-chaining-stock-trading-pipeline) with explicit interface contracts and prerequisite enforcement. Not because the agent can't figure it out — it can — but because *I* need to understand the chain well enough to intervene when it breaks. The skill authoring process forces comprehension that passive consumption would erode.
 
 ---
 
@@ -108,7 +108,7 @@ This is the part no agent can do. Intent originates with the human. Every time I
 
 Before proposing solutions, diagnose the actual problem. The agent will happily generate a solution for the wrong problem if given a vague prompt.
 
-In my stock trading pipeline, this meant asking: is the problem that predictions are inaccurate, or that the data pipeline feeding them is inconsistent? The agent was ready to build a more complex prediction model. The actual issue was [dirty asset data from multiple providers](/posts/2026-06-08-crypto-asset-data-cleanup-agentic-spaces) — the fix was a canonical asset glossary with a bridge table, not a smarter LLM.
+In my stock trading pipeline, this meant asking: is the problem that predictions are inaccurate, or that the data pipeline feeding them is inconsistent? The agent was ready to build a more complex prediction model. The actual issue was [dirty asset data from multiple providers](/notes/2026-06-08-crypto-asset-data-cleanup-agentic-spaces) — the fix was a canonical asset glossary with a bridge table, not a smarter LLM.
 
 The engineer decides which problems are worth solving. The agent accelerates diagnosis by surfacing relevant code paths and past commits.
 
@@ -120,7 +120,7 @@ The engineer brings system context: architectural boundaries, load-bearing decis
 
 Osmani's principle: *"The unit of review is the unit of comprehension. Make the unit small enough to actually comprehend."*
 
-In [skill chaining](/posts/2026-06-04-skill-chaining-stock-trading-pipeline), each skill in the chain is a decomposed step with a typed interface contract. The close summary skill produces a deterministic output path. The prediction skill reads from that path and adds delta-only output. The decomposition is embedded in the architecture — not a planning artifact that drifts from implementation.
+In [skill chaining](/notes/2026-06-04-skill-chaining-stock-trading-pipeline), each skill in the chain is a decomposed step with a typed interface contract. The close summary skill produces a deterministic output path. The prediction skill reads from that path and adds delta-only output. The decomposition is embedded in the architecture — not a planning artifact that drifts from implementation.
 
 ### Phase 4: Set Evaluation Criteria (Human)
 
@@ -210,7 +210,7 @@ The loop runs itself now. Your job is to make sure it's running toward something
 
 **Related posts on this site:**
 
-- [Context Degradation in AI Coding Sessions](/posts/2026-05-23-context-degradation-in-coding-sessions) — the technical symptoms of comprehension debt in practice
-- [Skill Chaining: Building Connected AI Workflows](/posts/2026-06-04-skill-chaining-stock-trading-pipeline) — decomposed pipeline with interface contracts and prerequisite enforcement
-- [Loop Engineering: Stop Prompting Agents, Start Building Systems](/posts/2026-06-13-loop-engineering-patterns) — the system design layer above this workflow
-- [Crypto Asset Data: Why Clean Data Matters for Agentic Workflows](/posts/2026-06-08-crypto-asset-data-cleanup-agentic-spaces) — diagnosis-before-solution in practice
+- [Context Degradation in AI Coding Sessions](/notes/2026-05-23-context-degradation-in-coding-sessions) — the technical symptoms of comprehension debt in practice
+- [Skill Chaining: Building Connected AI Workflows](/notes/2026-06-04-skill-chaining-stock-trading-pipeline) — decomposed pipeline with interface contracts and prerequisite enforcement
+- [Loop Engineering: Stop Prompting Agents, Start Building Systems](/notes/2026-06-12-loop-engineering-patterns) — the system design layer above this workflow
+- [Crypto Asset Data: Why Clean Data Matters for Agentic Workflows](/notes/2026-06-08-crypto-asset-data-cleanup-agentic-spaces) — diagnosis-before-solution in practice

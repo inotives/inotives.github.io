@@ -170,8 +170,8 @@ The first version does not need a streaming engine or an elaborate temporal data
 
 ## References
 
-- [Point-in-Time Correctness in Crypto Analytics](/posts/point-in-time-correctness-crypto-analytics)
-- [Backfills Without Breaking Crypto Reports](/posts/backfills-without-breaking-crypto-reports)
-- [Corrections Are Not Deletions](/posts/corrections-are-not-deletions)
+- [Point-in-Time Correctness in Crypto Analytics](/notes/2026-07-24-point-in-time-correctness-crypto-analytics)
+- [Backfills Without Breaking Crypto Reports](/notes/2026-07-23-backfills-without-breaking-crypto-reports)
+- [Corrections Are Not Deletions](/notes/2026-07-26-corrections-are-not-deletions)
 - [dbt documentation: incremental models](https://docs.getdbt.com/docs/build/incremental-models)
 - [Apache Beam programming guide: event time and watermarks](https://beam.apache.org/documentation/programming-guide/#watermarks-and-late-data)

@@ -209,5 +209,5 @@ That is enough to change the culture. The pipeline stops being a chain of assump
 - [dbt model contracts](https://docs.getdbt.com/docs/mesh/govern/model-contracts)
 - [OpenMetadata data contracts guide](https://docs.open-metadata.org/v1.12.x/how-to-guides/data-contracts/spec)
 - [Great Expectations documentation](https://legacy.017.docs.greatexpectations.io/docs/)
-- [Crypto asset data cleanup in agentic spaces](/posts/2026-06-08-crypto-asset-data-cleanup-agentic-spaces)
-- [dbt Fusion and Core v2.0](/posts/2026-07-04-dbt-fusion-core-v2-rust-rewrite)
+- [Crypto asset data cleanup in agentic spaces](/notes/2026-06-08-crypto-asset-data-cleanup-agentic-spaces)
+- [dbt Fusion and Core v2.0](/notes/2026-07-04-dbt-fusion-core-v2-rust-rewrite)

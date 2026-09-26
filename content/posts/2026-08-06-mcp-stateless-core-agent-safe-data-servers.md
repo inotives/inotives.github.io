@@ -275,10 +275,10 @@ For agent systems, that is a healthy trade. Keep the protocol stateless. Keep th
 
 ## References
 
-- [MCP 2026-07-28 specification release](https://blog.modelcontextprotocol.io/posts/2026-07-28/)
+- [MCP 2026-07-28 specification release](https://blog.modelcontextprotocol.io/notes/2026-07-28/)
 - [MCP 2026-07-28 changelog](https://modelcontextprotocol.io/specification/2026-07-28/changelog)
 - [MCP authorization specification](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization)
 - [MCP Multi Round-Trip Requests](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr)
-- [MCP Is Becoming the API Layer for Internal Data](/posts/mcp-api-layer-internal-data)
-- [What Makes a Mart Agent-Safe](/posts/what-makes-a-mart-agent-safe)
-- [Tool Output Is Untrusted Input](/posts/tool-output-is-untrusted-input)
+- [MCP Is Becoming the API Layer for Internal Data](/notes/2026-07-24-mcp-api-layer-internal-data)
+- [What Makes a Mart Agent-Safe](/notes/2026-07-23-what-makes-a-mart-agent-safe)
+- [Tool Output Is Untrusted Input](/notes/2026-08-03-tool-output-is-untrusted-input)
