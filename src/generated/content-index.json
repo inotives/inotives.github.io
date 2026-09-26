@@ -1,6 +1,26 @@
 {
   "posts": [
     {
+      "slug": "2026-09-26-motherduck-warehouse-poc-local-scaffold",
+      "filename": "2026-09-26-motherduck-warehouse-poc-local-scaffold.md",
+      "category": "post",
+      "title": "Building a MotherDuck warehouse: the local-first POC and dev scaffold",
+      "date": "2026-09-26",
+      "tags": [
+        "data-engineering",
+        "motherduck",
+        "duckdb",
+        "dbt",
+        "prefect",
+        "aws",
+        "data-warehouse"
+      ],
+      "series": "building-motherduck-warehouse",
+      "summary": "The first article in a practical MotherDuck warehouse series: why start local-first, how S3, Prefect, dbt, and MotherDuck fit together, what the POC account actually includes, and how to scaffold a Mac development environment.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-25-mcp-live-data-layer-enterprise-agents",
       "filename": "2026-09-25-mcp-live-data-layer-enterprise-agents.md",
       "category": "post",

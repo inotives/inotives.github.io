@@ -21,6 +21,12 @@ const SERIES_META = {
       'A practical learning path from SQL and files to reliable pipelines, warehouses, and AI-ready data systems. Each entry takes one concept far enough to build with it.',
     label: '30-day-learning-path',
   },
+  'building-motherduck-warehouse': {
+    title: 'Building a MotherDuck Data Warehouse',
+    description:
+      'A practical series on taking a local DuckDB proof of concept to a governed MotherDuck warehouse with S3, Prefect, dbt, and a deliberate path to larger-scale storage.',
+    label: 'motherduck-warehouse',
+  },
 }
 
 export default function SeriesPage() {
