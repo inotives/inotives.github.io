@@ -90,17 +90,14 @@ export default function Home() {
           </p>
         </Link>
 
-        <Link
-          to="/series/data-engineering-in-30-days"
-          className="record"
-        >
+        <Link to="/certification-guides" className="record">
           <div className="record-meta">
             <span>06</span>
-            <span>Series</span>
+            <span>Learning</span>
           </div>
-          <h2 className="record-title">Data Engineering in 30 Days</h2>
+          <h2 className="record-title">Certification Guides</h2>
           <p className="record-copy">
-            A guided path from SQL fundamentals to AI-ready data systems.
+            Study guides and reference material for technology certifications.
           </p>
         </Link>
       </section>

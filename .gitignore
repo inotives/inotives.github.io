@@ -40,5 +40,7 @@ node_modules/
 
 # Custom exclude folders
 learnings/
+!public/learnings/
+!public/learnings/*.html
 .notes/
 .playwright-cli/

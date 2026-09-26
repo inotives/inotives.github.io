@@ -11,6 +11,7 @@ import StockPreOpenProject from './pages/StockPreOpenProject'
 import StockWeeklyReportsProject from './pages/StockWeeklyReportsProject'
 import Resume from './pages/Resume'
 import SeriesPage from './pages/SeriesPage'
+import CertificationGuides from './pages/CertificationGuides'
 import NotFound from './pages/NotFound'
 import Analytics from './components/Analytics'
 
@@ -24,6 +25,7 @@ function App() {
           <Route path="/notes" element={<Notes />} />
           <Route path="/notes/:slug" element={<Note />} />
           <Route path="/series/:slug" element={<SeriesPage />} />
+          <Route path="/certification-guides" element={<CertificationGuides />} />
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/about" element={<About />} />
           <Route path="/projects" element={<Projects />} />
