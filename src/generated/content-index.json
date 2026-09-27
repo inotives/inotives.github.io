@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-09-27-motherduck-market-data-bronze-ingestion",
+      "filename": "2026-09-27-motherduck-market-data-bronze-ingestion.md",
+      "category": "post",
+      "title": "From a data dump to Bronze: a guarded local market-data ingestion path",
+      "date": "2026-09-27",
+      "tags": [
+        "data-engineering",
+        "duckdb",
+        "motherduck",
+        "parquet",
+        "dbt",
+        "crypto-data"
+      ],
+      "series": "building-motherduck-warehouse",
+      "summary": "Build the first guarded warehouse slice locally: land a versioned market-data dump, validate its contract, quarantine bad batches, and retain provenance in Bronze.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-26-motherduck-warehouse-poc-local-scaffold",
       "filename": "2026-09-26-motherduck-warehouse-poc-local-scaffold.md",
       "category": "post",

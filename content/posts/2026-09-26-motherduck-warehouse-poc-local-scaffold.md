@@ -41,7 +41,7 @@ application export
 
 The gatekeeper should fail closed. A file with zero rows, a missing required column, or a type change should not quietly join an analytics table. Move it to a quarantine prefix, retain the original path and failure reason, and alert the operator. This is much cheaper than explaining a broken executive dashboard after the fact.
 
-Bronze stays close to what arrived. Silver is where duplicate records, timestamp conventions, null handling, and schema drift become explicit. Gold is where business questions get stable names: daily revenue, active customer, order volume, or a finance-ready fact table with dimensions. A dashboard should read Gold, not a raw landing table.
+Bronze stays close to what arrived. Silver is where duplicate records, timestamp conventions, null handling, and schema drift become explicit. For this POC, Gold can start with a daily coin market-data mart: open, high, low, close, volume, market cap, and circulating supply at a declared time grain. A dashboard should read Gold, not a raw landing table.
 
 ## Start with the free POC account, not a production contract
 
@@ -76,9 +76,9 @@ MotherDuck can be used from DuckDB through an `md:` connection string. That make
 
 ## Scaffold the repository before building flows
 
-Make this decision before the second department arrives: organise the repository by feature, never by Bronze, Silver, and Gold folders. Here, “feature” means a cohesive unit of code and models that changes, runs, and is tested together. That unit can be a business domain such as orders, or it can be a data source such as CoinGecko, an internal company application, or blockchain data. Bronze, Silver, and Gold remain warehouse schemas and dbt materialisation targets; they are not the top-level map of the codebase.
+Make this decision before the second data source arrives: organise the repository by feature, never by Bronze, Silver, and Gold folders. Here, “feature” means a cohesive unit of code and models that changes, runs, and is tested together. This POC's first feature is market data: a `coins` reference dataset plus time-varying `market_data` observations. Bronze, Silver, and Gold remain warehouse schemas and dbt materialisation targets; they are not the top-level map of the codebase.
 
-This matters when the warehouse grows beyond one application. Finance may add an ERP extract, product may add event streams, and a client-facing platform may need separate source mappings or policies for each tenant. A layer-based tree splits one change across `bronze/`, `silver/`, `gold/`, and a generic flows directory. An engineer investigating an Acme order-volume issue then has to reconstruct the feature from scattered files. Put the feature first, then place sources and tenant-specific configuration beneath it.
+This matters when the warehouse grows beyond one application. You may add on-chain data, an exchange feed, or a second market-data provider. A layer-based tree splits one change across `bronze/`, `silver/`, `gold/`, and a generic flows directory. An engineer investigating a missing BTC candle then has to reconstruct the feature from scattered files. Put the feature first, then place source-specific configuration beneath it.
 
 ![Source-oriented feature folders keep the CoinGecko, internal application, and blockchain-data implementations separate while sharing reusable S3 and quality-gate code, then loading MotherDuck Bronze, Silver, and Gold schemas.](/assets/images/motherduck-feature-based-repository-structure.png)
 
@@ -92,34 +92,22 @@ motherduck-warehouse/
 │   ├── profiles.yml.example
 │   └── packages.yml
 ├── features/
-│   └── orders/
+│   └── market_data/
 │       ├── contracts/
-│       │   └── orders.md
+│       │   ├── coins.md
+│       │   └── market_data.md
 │       ├── sources/
-│       │   ├── application_export.yml
-│       │   └── partner_sftp.yml
-│       ├── tenants/
-│       │   └── acme.yml
+│       │   └── market_data_export.yml
 │       ├── ingestion.py
 │       ├── models/
 │       │   ├── sources.yml
-│       │   ├── stg_orders.sql
-│       │   ├── int_orders_deduplicated.sql
-│       │   └── mart_order_volume.sql
+│       │   ├── stg_coins.sql
+│       │   ├── stg_market_data.sql
+│       │   ├── int_market_data_deduplicated.sql
+│       │   └── mart_daily_market_data.sql
 │       └── tests/
-│           └── fixtures/orders.parquet
-│   ├── coingecko/
-│   │   ├── ingestion.py
-│   │   ├── models/
-│   │   └── tests/
-│   ├── internal-company-app/
-│   │   ├── ingestion.py
-│   │   ├── models/
-│   │   └── tests/
-│   └── blockchain-data/
-│       ├── ingestion.py
-│       ├── models/
-│       └── tests/
+│           ├── fixtures/coins.parquet
+│           └── fixtures/market_data.parquet
 ├── shared/
 │   ├── s3.py
 │   └── quality_gate.py
@@ -131,7 +119,9 @@ motherduck-warehouse/
 
 The names `stg`, `int`, and `mart` describe the model's job, not a separate deployment layer. dbt still materialises the tables in the appropriate Bronze, Silver, or Gold schema. Configure dbt's `model-paths` to include `../features`, then keep every feature's model lineage beside its operational code.
 
-`tenants/acme.yml` should contain configuration such as source prefixes, allowed regions, or a client identifier. It should not fork the whole orders model by default. Add a narrowly scoped tenant override only when its business rules genuinely differ. This keeps shared logic shared while retaining a single obvious place to inspect what varies by customer or source.
+`sources/market_data_export.yml` should contain configuration such as landing prefixes, quote currency, and the source identifier. It should not fork the whole market-data model by default. Add a narrowly scoped source override only when its business rules genuinely differ. This keeps shared logic shared while retaining a single obvious place to inspect what varies by provider.
+
+The first contracts are deliberately small. `coins` has `id` (int), `uniq_key` (string), and `name` (string). `market_data` has `coin_uniq_key` (string); `time_open`, `time_close`, `time_high`, `time_low`, and `timestamp` (timestamp); `name` (string); and `open`, `high`, `low`, `close`, `volume`, `market_cap`, and `circulating_supply` (decimal). The next article will state which timestamp defines the observation grain and enforce that `coin_uniq_key` resolves to `coins.uniq_key`.
 
 When a new source arrives, copy the smallest source-folder template, then change the contract, credentials reference, ingestion adapter, models, and fixtures for that source. That is intentionally mechanical. It gives every source the same operational shape without forcing unrelated sources into one oversized pipeline. Promote genuinely repeated code, such as S3 handling, retry policy, or the health gate, into `shared/`; leave source-specific logic with the source.
 
@@ -143,7 +133,7 @@ Install DuckDB, Docker Desktop, Python 3.12 or later, and `uv`. Then create the 
 uv init motherduck-warehouse
 cd motherduck-warehouse
 uv add duckdb dbt-duckdb prefect boto3 python-dotenv
-mkdir -p features/orders/{contracts,sources,tenants,models,tests/fixtures} shared infra/terraform deployments
+mkdir -p features/market_data/{contracts,sources,models,tests/fixtures} shared infra/terraform deployments
 ```
 
 Create `.env` from `.env.example` and keep real values local:
@@ -178,7 +168,7 @@ The first useful local command sequence is boring on purpose:
 ```bash
 uv run dbt deps --project-dir dbt
 uv run dbt build --project-dir dbt --target local
-uv run python prefect/flows/orders_ingestion.py
+uv run python prefect/flows/market_data_ingestion.py
 ```
 
 Make that work against one fixture before Dockerising a worker, provisioning ECS Fargate, or building a dashboard. The flow should validate one file, load a Bronze table, run dbt, and leave evidence of what it processed. If that loop is flaky on a Mac, it will be harder to diagnose in AWS.
