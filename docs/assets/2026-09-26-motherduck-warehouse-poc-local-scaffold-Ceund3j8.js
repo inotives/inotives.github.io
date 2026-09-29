@@ -177,17 +177,17 @@ Make that work against one fixture before Dockerising a worker, provisioning ECS
 
 The intended evolution is gradual, not a forklift migration.
 
-![A three-stage roadmap moves from local DuckDB development to a shared MotherDuck warehouse, then shows a BYOB S3 deployment choosing between DuckLake and Apache Iceberg.](/assets/images/motherduck-warehouse-scaling-roadmap.png)
+![A three-stage roadmap moves from local DuckDB development to a shared MotherDuck warehouse, then shows a BYOB deployment using DuckLake with data and compute kept within the controlled boundary.](/assets/images/motherduck-warehouse-scaling-roadmap.png)
 
 Stage one is local fixtures plus a small MotherDuck database. Stage two moves scheduled Prefect flows into ECS Fargate, uses a production MotherDuck database for curated marts, and puts secrets in AWS Secrets Manager. S3 becomes the durable source and archive. Terraform then owns the bucket policies, IAM roles, task definitions, and alarms.
 
-Some data policies require the data files to remain in an AWS account or other infrastructure the team controls. In that case, use a bring-your-own-bucket (BYOB) design: keep the Parquet data in your S3 bucket and choose an open table format to manage snapshots, schema changes, and table metadata. S3 is the storage layer; it does not choose the table format for you.
+Some data policies require data to stay in an AWS account or other infrastructure the team controls. For this series' BYOB setup, we will keep the Parquet files in our own S3 bucket and use DuckLake to manage table metadata, snapshots, and schema changes. S3 is the storage layer; DuckLake is the table format.
 
 BYOB describes where the bucket lives, not where every part of the system lives. A DuckLake deployment also has a catalog database; an Iceberg deployment has catalog and metadata services. Compute may be managed separately too. If policy requires all data and metadata to stay within the controlled boundary, place the catalog and compute there as well, and verify network paths, logs, backups, encryption keys, and support access against the policy. Keeping Parquet in your S3 bucket alone does not prove that the whole control plane is in your account.
 
 ### DuckLake
 
-DuckLake stores table data as Parquet in object storage and keeps table metadata in a transactional SQL catalog. A DuckDB extension reads and writes the format, so it fits the local-first SQL workflow in this POC.
+DuckLake stores table data as Parquet in object storage and keeps table metadata in a transactional SQL catalog. A DuckDB extension reads and writes the format, so it fits the local-first SQL workflow in this POC. This is the format we will use for the series' BYOB path.
 
 Pros:
 
@@ -217,7 +217,7 @@ Cons:
 - File cleanup, snapshot expiration, compaction, and catalog health become regular operational work.
 - "Iceberg support" varies by engine and catalog. Validate the particular operations you need, such as deletes, schema changes, and snapshot reads, across every engine in the design.
 
-For this POC, keep the local DuckDB file and MotherDuck integration path simple. If a later deployment must keep data in your own S3, start with DuckLake when DuckDB is the main engine and its current interoperability meets the requirement. Choose Iceberg when several engines must share the tables or your platform already operates an Iceberg catalog. In either case, test access boundaries and recovery before moving sensitive data.
+For this series, the BYOB setup uses DuckLake because DuckDB is the main engine in this workflow. Iceberg remains a reasonable alternative when several engines must share the tables or the platform already operates an Iceberg catalog, but we will not build that setup here. Whichever format a team chooses, test access boundaries and recovery before moving sensitive data.
 
 The SQL models, data contracts, quality gate, and S3 layout are the assets that should survive every stage. If they are clear, the compute and catalog choice can change without rewriting the business logic.
 
