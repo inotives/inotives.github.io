@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-09-29-motherduck-prefect-dbt-market-data-flow",
+      "filename": "2026-09-29-motherduck-prefect-dbt-market-data-flow.md",
+      "category": "post",
+      "title": "Running the market-data pipeline with Prefect, DuckDB, and dbt",
+      "date": "2026-09-29",
+      "tags": [
+        "data-engineering",
+        "motherduck",
+        "duckdb",
+        "prefect",
+        "dbt",
+        "crypto-data"
+      ],
+      "series": "building-motherduck-warehouse",
+      "summary": "Turn the local coins and market_data Parquet contract into a repeatable Prefect flow, load valid batches into Bronze, build tested dbt staging models, and select either local DuckDB or MotherDuck development.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-27-motherduck-market-data-bronze-ingestion",
       "filename": "2026-09-27-motherduck-market-data-bronze-ingestion.md",
       "category": "post",

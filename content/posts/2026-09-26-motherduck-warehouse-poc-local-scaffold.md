@@ -167,21 +167,57 @@ The first useful local command sequence is boring on purpose:
 
 ```bash
 uv run dbt deps --project-dir dbt
-uv run dbt build --project-dir dbt --target local
-uv run python prefect/flows/market_data_ingestion.py
+uv run dbt build --project-dir dbt --profiles-dir dbt --target local
+uv run python features/market_data/ingestion.py --batch 2026-09-26T090000Z --target local
 ```
 
-Make that work against one fixture before Dockerising a worker, provisioning ECS Fargate, or building a dashboard. The flow should validate one file, load a Bronze table, run dbt, and leave evidence of what it processed. If that loop is flaky on a Mac, it will be harder to diagnose in AWS.
+Make that work against one fixture before Dockerising a worker, provisioning ECS Fargate, or building a dashboard. The flow should validate the paired `coins` and `market_data` dump, load both Bronze tables, run dbt, and leave evidence of what it processed. If that loop is flaky on a Mac, it will be harder to diagnose in AWS.
 
 ## How this grows without a rewrite
 
 The intended evolution is gradual, not a forklift migration.
 
-![A three-stage roadmap moves from local DuckDB development to a shared MotherDuck warehouse and then to DuckLake only when larger-scale storage and multi-engine needs justify it.](/assets/images/motherduck-warehouse-scaling-roadmap.png)
+![A three-stage roadmap moves from local DuckDB development to a shared MotherDuck warehouse, then shows a BYOB S3 deployment choosing between DuckLake and Apache Iceberg.](/assets/images/motherduck-warehouse-scaling-roadmap.png)
 
 Stage one is local fixtures plus a small MotherDuck database. Stage two moves scheduled Prefect flows into ECS Fargate, uses a production MotherDuck database for curated marts, and puts secrets in AWS Secrets Manager. S3 becomes the durable source and archive. Terraform then owns the bucket policies, IAM roles, task definitions, and alarms.
 
-DuckLake is a later architectural option when retained data, partition management, concurrency, or the need for multiple compute engines outgrows the simple shared-warehouse model. Its value is an open lakehouse layout: Parquet files remain in object storage while transactional metadata coordinates tables. Do not introduce it because the name sounds more scalable. Introduce it after measuring an actual constraint, then validate catalog compatibility, maintenance operations, recovery procedures, and the effect on every reader.
+Some data policies require the data files to remain in an AWS account or other infrastructure the team controls. In that case, use a bring-your-own-bucket (BYOB) design: keep the Parquet data in your S3 bucket and choose an open table format to manage snapshots, schema changes, and table metadata. S3 is the storage layer; it does not choose the table format for you.
+
+BYOB describes where the bucket lives, not where every part of the system lives. A DuckLake deployment also has a catalog database; an Iceberg deployment has catalog and metadata services. Compute may be managed separately too. If policy requires all data and metadata to stay within the controlled boundary, place the catalog and compute there as well, and verify network paths, logs, backups, encryption keys, and support access against the policy. Keeping Parquet in your S3 bucket alone does not prove that the whole control plane is in your account.
+
+### DuckLake
+
+DuckLake stores table data as Parquet in object storage and keeps table metadata in a transactional SQL catalog. A DuckDB extension reads and writes the format, so it fits the local-first SQL workflow in this POC.
+
+Pros:
+
+- Direct fit with DuckDB and familiar SQL for creating and querying tables.
+- Data files can live in your own S3 bucket while the catalog runs on a SQL database you choose.
+- Catalog transactions, snapshots, schema evolution, and partitioning are part of the format.
+
+Cons:
+
+- The SQL catalog is another stateful service to secure, back up, monitor, and recover. Its location must meet the same data policy as the Parquet files.
+- The engine ecosystem is narrower than Iceberg's today. Check that every required reader and writer supports the DuckLake features and versions you plan to use.
+- The catalog can become a throughput constraint, so test your write concurrency and metadata workload rather than assuming S3 scale alone determines capacity.
+
+### Apache Iceberg
+
+Iceberg is an open table format designed for use across analytic engines. It stores table metadata alongside data files and uses a catalog to locate and update table state. Your bucket can remain in your account, with a catalog such as AWS Glue or a self-managed catalog deployed inside the boundary.
+
+Pros:
+
+- Broad engine support, including Spark, Trino, Flink, Hive, and Impala, gives teams more choice about how they read and write the same tables.
+- A widely adopted specification and catalog integrations make it easier to connect existing lakehouse tools and services.
+- Snapshots, schema and partition evolution, and time travel support long-lived analytical tables without tying the data to one query engine.
+
+Cons:
+
+- The ecosystem brings more components and configuration: choose and operate a catalog, align engine versions, and manage permissions across writers and readers.
+- File cleanup, snapshot expiration, compaction, and catalog health become regular operational work.
+- "Iceberg support" varies by engine and catalog. Validate the particular operations you need, such as deletes, schema changes, and snapshot reads, across every engine in the design.
+
+For this POC, keep the local DuckDB file and MotherDuck integration path simple. If a later deployment must keep data in your own S3, start with DuckLake when DuckDB is the main engine and its current interoperability meets the requirement. Choose Iceberg when several engines must share the tables or your platform already operates an Iceberg catalog. In either case, test access boundaries and recovery before moving sensitive data.
 
 The SQL models, data contracts, quality gate, and S3 layout are the assets that should survive every stage. If they are clear, the compute and catalog choice can change without rewriting the business logic.
 
@@ -194,6 +230,9 @@ The next article will turn this scaffold into a working ingestion path: S3 prefi
 - [MotherDuck pricing](https://motherduck.com/pricing/)
 - [MotherDuck authentication and access tokens](https://motherduck.com/docs/key-tasks/authenticating-to-motherduck/)
 - [DuckDB documentation](https://duckdb.org/docs/)
+- [DuckDB lakehouse format support](https://duckdb.org/docs/current/lakehouse_formats)
 - [dbt-duckdb adapter](https://github.com/duckdb/dbt-duckdb)
 - [Prefect documentation](https://docs.prefect.io/)
 - [DuckLake documentation](https://ducklake.select/)
+- [DuckLake storage choices](https://ducklake.select/docs/stable/duckdb/usage/choosing_storage.html)
+- [Apache Iceberg documentation](https://iceberg.apache.org/docs/latest/)
