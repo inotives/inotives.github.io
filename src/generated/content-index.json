@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-10-01-motherduck-prefect-aws-connection-spike",
+      "filename": "2026-10-01-motherduck-prefect-aws-connection-spike.md",
+      "category": "post",
+      "title": "Testing the AWS, Prefect, and MotherDuck connection before ECS",
+      "date": "2026-10-01",
+      "tags": [
+        "data-engineering",
+        "motherduck",
+        "aws",
+        "prefect",
+        "ducklake",
+        "crypto-data"
+      ],
+      "series": "building-motherduck-warehouse",
+      "summary": "Generate a dummy coins and market_data Parquet pair in AWS CloudShell, give MotherDuck scoped S3 access, and run the ingest through Prefect Cloud before building the ECS deployment.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-09-30-motherduck-aws-prefect-cloud-deployment",
       "filename": "2026-09-30-motherduck-aws-prefect-cloud-deployment.md",
       "category": "post",
@@ -16,7 +35,7 @@
         "crypto-data"
       ],
       "series": "building-motherduck-warehouse",
-      "summary": "Connect the paired market-data Parquet dump in S3 to an ECS flow managed by Prefect Cloud and a MotherDuck database, with separate AWS roles, secret handling, access checks, and a DuckLake BYOB path for restricted data.",
+      "summary": "Plan the ECS deployment of the paired market-data Parquet dump with Prefect Cloud and MotherDuck, including AWS roles, secrets, access checks, and a self-hosted DuckLake path for restricted data.",
       "featured_image": null,
       "draft": false
     },

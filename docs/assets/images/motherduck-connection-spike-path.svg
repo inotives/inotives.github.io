@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 900" role="img" aria-labelledby="title desc">
+  <title id="title">The connection spike from Prefect to MotherDuck and S3</title>
+  <desc id="desc">A Prefect Serverless flow pulls code from a private repository and sends SQL to MotherDuck. MotherDuck reads a source Parquet object from S3 and writes DuckLake data to another S3 prefix. Prefect does not read the object or hold AWS credentials.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M1 1 9 5 1 9" fill="none" stroke="#53dfdc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect width="720" height="900" rx="32" fill="#101b27"/>
+  <text x="48" y="68" fill="#f5f8fc" font-family="Arial, sans-serif" font-size="32" font-weight="700">What the spike ran</text>
+  <text x="48" y="106" fill="#b8c9d8" font-family="Arial, sans-serif" font-size="20">One file, one ingest, two storage prefixes</text>
+
+  <rect x="48" y="142" width="624" height="116" rx="20" fill="#1c2d40" stroke="#537ba4" stroke-width="2"/>
+  <circle cx="90" cy="200" r="21" fill="#9aafff"/>
+  <path d="M80 195h20m-20 10h14" stroke="#142238" stroke-width="3" stroke-linecap="round"/>
+  <text x="130" y="194" fill="#f5f8fc" font-family="Arial, sans-serif" font-size="25" font-weight="700">Private Git repository</text>
+  <text x="130" y="228" fill="#c2d0df" font-family="Arial, sans-serif" font-size="20">Flow code pulled at run time</text>
+
+  <path d="M360 258v52" stroke="#53dfdc" stroke-width="4" marker-end="url(#arrow)"/>
+  <rect x="48" y="322" width="624" height="126" rx="20" fill="#162d44" stroke="#4b93f0" stroke-width="2"/>
+  <circle cx="90" cy="386" r="22" fill="#4b93f0"/>
+  <path d="m81 386 7 7 13-16" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="130" y="376" fill="#f5f8fc" font-family="Arial, sans-serif" font-size="25" font-weight="700">Prefect Serverless</text>
+  <text x="130" y="410" fill="#c2d0df" font-family="Arial, sans-serif" font-size="20">Runs flow · uses MotherDuck token</text>
+
+  <path d="M360 448v52" stroke="#53dfdc" stroke-width="4" marker-end="url(#arrow)"/>
+  <text x="384" y="487" fill="#69e3df" font-family="Arial, sans-serif" font-size="18" font-weight="700">SQL only</text>
+  <rect x="48" y="512" width="624" height="126" rx="20" fill="#332714" stroke="#efae54" stroke-width="2"/>
+  <circle cx="90" cy="576" r="22" fill="#f3a342"/>
+  <path d="M77 576c8-12 21-12 27 0-8 12-21 12-27 0Z" fill="#35240f"/>
+  <text x="130" y="566" fill="#fff8eb" font-family="Arial, sans-serif" font-size="25" font-weight="700">MotherDuck</text>
+  <text x="130" y="600" fill="#f5d5a7" font-family="Arial, sans-serif" font-size="20">Queries S3 · manages DuckLake catalog</text>
+
+  <path d="M270 638v56" stroke="#53dfdc" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M450 638v56" stroke="#53dfdc" stroke-width="4" marker-end="url(#arrow)"/>
+  <text x="174" y="680" fill="#69e3df" font-family="Arial, sans-serif" font-size="18" font-weight="700">READ</text>
+  <text x="484" y="680" fill="#69e3df" font-family="Arial, sans-serif" font-size="18" font-weight="700">WRITE</text>
+  <rect x="48" y="708" width="300" height="116" rx="20" fill="#193b35" stroke="#55c69b" stroke-width="2"/>
+  <rect x="372" y="708" width="300" height="116" rx="20" fill="#193b35" stroke="#55c69b" stroke-width="2"/>
+  <text x="76" y="758" fill="#eafff4" font-family="Arial, sans-serif" font-size="24" font-weight="700">S3 source</text>
+  <text x="76" y="792" fill="#bde9d6" font-family="Arial, sans-serif" font-size="19">Parquet object</text>
+  <text x="400" y="758" fill="#eafff4" font-family="Arial, sans-serif" font-size="24" font-weight="700">S3 DuckLake</text>
+  <text x="400" y="792" fill="#bde9d6" font-family="Arial, sans-serif" font-size="19">Data objects</text>
+  <text x="48" y="867" fill="#b8c9d8" font-family="Arial, sans-serif" font-size="18">MotherDuck holds S3 credentials; AWS IAM defines access.</text>
+</svg>

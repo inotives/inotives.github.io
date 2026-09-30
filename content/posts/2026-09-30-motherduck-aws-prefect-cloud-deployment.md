@@ -2,11 +2,11 @@
 title: "Deploying the market-data flow with AWS, Prefect Cloud, and MotherDuck"
 date: 2026-09-30
 tags: [data-engineering, motherduck, aws, prefect, duckdb, ducklake, crypto-data]
-summary: "Connect the paired market-data Parquet dump in S3 to an ECS flow managed by Prefect Cloud and a MotherDuck database, with separate AWS roles, secret handling, access checks, and a DuckLake BYOB path for restricted data."
+summary: "Plan the ECS deployment of the paired market-data Parquet dump with Prefect Cloud and MotherDuck, including AWS roles, secrets, access checks, and a self-hosted DuckLake path for restricted data."
 series: building-motherduck-warehouse
 ---
 
-The last article ran our paired `coins.parquet` and `market_data.parquet` dump through Prefect and dbt. It worked locally and could target a MotherDuck development database. This article connects that flow to AWS and Prefect Cloud, then runs it against MotherDuck from an ECS task.
+The last article ran our paired `coins.parquet` and `market_data.parquet` dump through Prefect and dbt. It worked locally and could target a MotherDuck development database. This article maps the AWS and Prefect Cloud deployment for an ECS task; the [connection spike](/notes/2026-10-01-motherduck-prefect-aws-connection-spike) tests the first cloud hops before ECS is provisioned.
 
 There are two data destinations in this series. MotherDuck is the managed warehouse for data allowed to leave our AWS account. When policy requires the table data to stay on infrastructure we control, the BYOB path uses DuckLake with Parquet in our S3 bucket and its SQL catalog inside AWS. They are separate targets; this setup does not write the same restricted data to both.
 
@@ -128,7 +128,7 @@ Keep the same batch-level validation and provenance rules from the local flow. M
 
 For a data-residency requirement, keep the flow task and DuckLake catalog inside AWS, store DuckLake's Parquet files in the reserved S3 prefix, and grant the task role access only to that prefix and catalog. The AWS security group and route table must allow the task to reach the catalog. The flow still validates the same pair before writing.
 
-This is the DuckLake BYOB path selected for the series. It keeps the table files and catalog under our control, but it does not automatically keep orchestration metadata there: Prefect Cloud still receives run state and logs, and an ECS push pool stores AWS launcher credentials in Prefect Cloud. Check those boundaries against the actual policy. If either is prohibited, stop before sending the restricted workload through this design.
+This is the self-hosted DuckLake BYOB path described for the series. It keeps the table files and catalog under our control. The connection spike uses a different setup: MotherDuck manages the DuckLake catalog while table data goes to our S3 bucket. Neither setup automatically keeps orchestration metadata in AWS: Prefect Cloud still receives run state and logs, and an ECS push pool stores AWS launcher credentials in Prefect Cloud. Check those boundaries against the actual policy. If either is prohibited, stop before sending the restricted workload through this design.
 
 MotherDuck and DuckLake are therefore two deliberate destinations, not a replication pair. We can run the same contract and quality gate against either target, but the policy decision determines where the batch is written.
 
