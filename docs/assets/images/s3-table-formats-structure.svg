@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 940" role="img" aria-labelledby="title desc">
+  <title id="title">How DuckLake, Delta Lake, and Iceberg organize tables in S3</title>
+  <desc id="desc">Three dark panels compare each table format's catalog and metadata structures above S3 Parquet data. A bottom band shows that authorization is supplied by catalogs, query engines, and cloud storage controls rather than by the table format alone.</desc>
+  <defs>
+    <marker id="cyanArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 9 5 1 9" fill="none" stroke="#53dfdc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <style>
+      text{font-family:Arial,sans-serif;fill:#f5f8fc}.heading{font-size:29px;font-weight:700}.sub{font-size:17px;fill:#b8c9d8}.name{font-size:23px;font-weight:700}.label{font-size:16px;font-weight:700}.body{font-size:14px;fill:#c2d0df}.tiny{font-size:13px;fill:#69e3df}.panel{fill:#162d44;stroke:#537ba4;stroke-width:2}.duck{fill:#332714;stroke:#efae54;stroke-width:2}.delta{fill:#162d44;stroke:#4b93f0;stroke-width:2}.ice{fill:#1b2340;stroke:#9aafff;stroke-width:2}.storage{fill:#193b35;stroke:#55c69b;stroke-width:2}.neutral{fill:#1c2d40;stroke:#537ba4;stroke-width:1.5}.line{fill:none;stroke:#53dfdc;stroke-width:2.5;marker-end:url(#cyanArrow)}
+    </style>
+  </defs>
+  <rect width="1200" height="940" rx="30" fill="#101b27"/>
+  <text x="48" y="58" class="heading">Three formats, three ways to track table state</text>
+  <text x="48" y="88" class="sub">All can keep columnar data files in S3. The catalog and metadata layout differ.</text>
+
+  <rect x="40" y="122" width="350" height="470" rx="22" class="duck"/>
+  <text x="64" y="163" class="name" fill="#fff8eb">DuckLake</text>
+  <rect x="64" y="187" width="302" height="104" rx="15" class="neutral"/>
+  <text x="84" y="220" class="label">SQL metadata catalog</text>
+  <text x="84" y="247" class="body">DuckDB file, PostgreSQL, or</text>
+  <text x="84" y="270" class="body">a managed catalog service</text>
+  <path d="M215 292v52" class="line"/>
+  <text x="235" y="326" class="tiny">tracks</text>
+  <rect x="64" y="353" width="302" height="88" rx="15" class="neutral"/>
+  <text x="84" y="388" class="label">Snapshots and table metadata</text>
+  <text x="84" y="416" class="body">Catalog rows describe current state</text>
+  <path d="M215 442v49" class="line"/>
+  <rect x="64" y="500" width="302" height="68" rx="15" class="storage"/>
+  <text x="84" y="530" class="label" fill="#eafff4">S3 · Parquet data files</text>
+  <text x="84" y="552" class="body" fill="#bde9d6">Catalog can live elsewhere</text>
+
+  <rect x="425" y="122" width="350" height="470" rx="22" class="delta"/>
+  <text x="449" y="163" class="name">Delta Lake</text>
+  <rect x="449" y="187" width="302" height="104" rx="15" class="neutral"/>
+  <text x="469" y="220" class="label">_delta_log/</text>
+  <text x="469" y="247" class="body">Versioned JSON commits</text>
+  <text x="469" y="270" class="body">and Parquet checkpoints</text>
+  <path d="M600 292v52" class="line"/>
+  <text x="620" y="326" class="tiny">lists files</text>
+  <rect x="449" y="353" width="302" height="88" rx="15" class="neutral"/>
+  <text x="469" y="388" class="label">Transaction log</text>
+  <text x="469" y="416" class="body">Adds, removes, schema, protocol</text>
+  <path d="M600 442v49" class="line"/>
+  <rect x="449" y="500" width="302" height="68" rx="15" class="storage"/>
+  <text x="469" y="530" class="label" fill="#eafff4">S3 · Parquet data files</text>
+  <text x="469" y="552" class="body" fill="#bde9d6">Log stored beside the table</text>
+
+  <rect x="810" y="122" width="350" height="470" rx="22" class="ice"/>
+  <text x="834" y="163" class="name">Apache Iceberg</text>
+  <rect x="834" y="187" width="302" height="82" rx="15" class="neutral"/>
+  <text x="854" y="220" class="label">Catalog pointer</text>
+  <text x="854" y="247" class="body">Glue, REST, Hive, and others</text>
+  <path d="M985 270v36" class="line"/>
+  <rect x="834" y="315" width="302" height="79" rx="15" class="neutral"/>
+  <text x="854" y="347" class="label">Metadata JSON · snapshots</text>
+  <text x="854" y="374" class="body">Schema, partition specs, history</text>
+  <path d="M985 395v32" class="line"/>
+  <rect x="834" y="435" width="302" height="56" rx="15" class="neutral"/>
+  <text x="854" y="470" class="label">Manifest lists → manifests</text>
+  <path d="M985 492v34" class="line"/>
+  <rect x="834" y="533" width="302" height="40" rx="14" class="storage"/>
+  <text x="854" y="559" class="label" fill="#eafff4">S3 · data and delete files</text>
+
+  <rect x="40" y="625" width="1120" height="270" rx="22" fill="#1c2d40" stroke="#537ba4" stroke-width="2"/>
+  <text x="68" y="670" class="heading" style="font-size:23px">Authorization sits around the format</text>
+  <text x="68" y="700" class="sub">A table format tracks data state. The platform decides who can discover, query, or fetch it.</text>
+
+  <rect x="68" y="733" width="310" height="118" rx="16" class="neutral"/>
+  <text x="91" y="767" class="label">1 · Identity and catalog</text>
+  <text x="91" y="795" class="body">Account, namespace, database,</text>
+  <text x="91" y="820" class="body">table and view grants</text>
+  <path d="M379 792h48" class="line"/>
+
+  <rect x="438" y="733" width="310" height="118" rx="16" class="neutral"/>
+  <text x="461" y="767" class="label">2 · Query engine</text>
+  <text x="461" y="795" class="body">Row filters and column masks</text>
+  <text x="461" y="820" class="body">only where the engine supports them</text>
+  <path d="M749 792h48" class="line"/>
+
+  <rect x="808" y="733" width="324" height="118" rx="16" class="storage"/>
+  <text x="831" y="767" class="label" fill="#eafff4">3 · S3 and credentials</text>
+  <text x="831" y="795" class="body" fill="#bde9d6">IAM, Lake Formation, or</text>
+  <text x="831" y="820" class="body" fill="#bde9d6">credential vending protects objects</text>
+</svg>

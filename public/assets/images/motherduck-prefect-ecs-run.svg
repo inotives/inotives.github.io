@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+  <title id="title">Prefect Cloud, ECS, MotherDuck, and S3 run path</title>
+  <desc id="desc">Prefect Cloud launches an ECS task using AWS credentials. ECS injects the Prefect API key and MotherDuck token from Secrets Manager. The flow sends SQL to MotherDuck, which reads source Parquet and writes DuckLake data in separate S3 prefixes using its own scoped S3 secret.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#526277"/></marker>
+    <marker id="greenArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#18805e"/></marker>
+    <style>
+      text{font-family:Arial,sans-serif;fill:#f5f8fc}.title{font-size:25px;font-weight:700}.label{font-size:18px;font-weight:700}.small{font-size:14px;fill:#b8c9d8}.tiny{font-size:12px;fill:#69e3df}.box{stroke-width:2;rx:18}.line{fill:none;stroke:#53dfdc;stroke-width:2.5;marker-end:url(#arrow)}.secure{fill:none;stroke:#55c69b;stroke-width:2.5;marker-end:url(#greenArrow)}.s3title{fill:#eafff4}.s3small{fill:#bde9d6}
+    </style>
+  </defs>
+  <rect width="1200" height="650" rx="26" fill="#101b27"/>
+  <text x="48" y="52" class="title">One flow run, four credential boundaries</text>
+  <text x="48" y="79" class="small">The ECS task calls MotherDuck. MotherDuck reads and writes its own S3 paths.</text>
+
+  <rect x="55" y="125" width="255" height="135" class="box" fill="#162d44" stroke="#4b93f0"/>
+  <text x="82" y="165" class="label">Prefect Cloud</text>
+  <text x="82" y="194" class="small">Deployment and run state</text>
+  <text x="82" y="220" class="small">AWS credentials start ECS task</text>
+
+  <rect x="405" y="125" width="330" height="135" class="box" fill="#1c2d40" stroke="#537ba4"/>
+  <text x="432" y="165" class="label">Amazon ECS task</text>
+  <text x="432" y="194" class="small">Pinned image: flow + DuckDB + Prefect</text>
+  <text x="432" y="220" class="small">Task role: no S3 access for this flow</text>
+
+  <rect x="850" y="125" width="290" height="135" class="box" fill="#142238" stroke="#9aafff"/>
+  <text x="878" y="165" class="label">AWS Secrets Manager</text>
+  <text x="878" y="194" class="small">PREFECT_API_KEY</text>
+  <text x="878" y="220" class="small">MOTHERDUCK_TOKEN</text>
+
+  <path d="M310 190H398" class="line"/>
+  <text x="324" y="174" class="tiny">launch</text>
+  <path d="M850 235C810 300 760 300 710 260" class="secure"/>
+  <text x="741" y="306" class="tiny">execution role retrieves secrets</text>
+
+  <rect x="405" y="355" width="330" height="115" class="box" fill="#332714" stroke="#efae54"/>
+  <text x="432" y="398" class="label">MotherDuck</text>
+  <text x="432" y="427" class="small">SQL session uses service token</text>
+  <path d="M570 260V347" class="line"/>
+  <text x="585" y="315" class="tiny">SQL + run checks</text>
+
+  <rect x="55" y="515" width="450" height="95" class="box" fill="#193b35" stroke="#55c69b"/>
+  <text x="82" y="552" class="label s3title">S3 source prefix</text>
+  <text x="82" y="580" class="small s3small">raw/&lt;batch-id&gt;/coins.parquet + market_data.parquet</text>
+
+  <rect x="695" y="515" width="445" height="95" class="box" fill="#193b35" stroke="#55c69b"/>
+  <text x="722" y="552" class="label s3title">S3 DuckLake prefix</text>
+  <text x="722" y="580" class="small s3small">warehouse data, isolated from the source prefix</text>
+
+  <path d="M470 470C410 495 315 500 280 508" class="secure"/>
+  <text x="302" y="492" class="tiny">MotherDuck scoped S3 secret: read</text>
+  <path d="M670 470C740 493 835 499 875 508" class="secure"/>
+  <text x="748" y="492" class="tiny">MotherDuck scoped S3 secret: write</text>
+</svg>

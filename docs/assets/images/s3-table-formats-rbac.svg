@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 490" role="img" aria-labelledby="title desc">
+  <title id="title">RBAC and data filtering layers for S3 table formats</title>
+  <desc id="desc">Four layers show identity, catalog grants, query-time row and column filters, and S3 object permissions. The table format itself does not define user roles, grants, row filters, or column masks.</desc>
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M1 1 9 5 1 9" fill="none" stroke="#53dfdc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <style>
+      text{font-family:Arial,sans-serif;fill:#f5f8fc}.title{font-size:26px;font-weight:700}.head{font-size:18px;font-weight:700}.body{font-size:14px;fill:#b8c9d8}.muted{font-size:13px;fill:#c2d0df}.line{stroke:#53dfdc;stroke-width:2.5;marker-end:url(#arr)}
+    </style>
+  </defs>
+  <rect width="1100" height="490" rx="28" fill="#101b27"/>
+  <text x="44" y="56" class="title">Four layers decide what a reader can see</text>
+  <text x="44" y="84" class="body">The same Iceberg table can have different permissions in different catalogs and engines.</text>
+
+  <rect x="55" y="125" width="990" height="76" rx="16" fill="#162d44" stroke="#4b93f0" stroke-width="2"/>
+  <text x="82" y="157" class="head">Identity provider</text>
+  <text x="82" y="182" class="body">Users, groups, service identities, and account roles</text>
+  <line x1="550" y1="203" x2="550" y2="220" class="line"/>
+
+  <rect x="55" y="227" width="990" height="76" rx="16" fill="#1c2d40" stroke="#537ba4" stroke-width="2"/>
+  <text x="82" y="259" class="head">Catalog and database service</text>
+  <text x="82" y="284" class="body">Catalog/schema/table discovery and read/write grants</text>
+  <line x1="550" y1="305" x2="550" y2="322" class="line"/>
+
+  <rect x="55" y="329" width="485" height="94" rx="16" fill="#332714" stroke="#efae54" stroke-width="2"/>
+  <text x="82" y="362" class="head" fill="#fff8eb">Query engine policy</text>
+  <text x="82" y="389" class="body">Row filters, column masks, views, ABAC</text>
+  <text x="82" y="411" class="muted">Example: Unity Catalog policy</text>
+
+  <rect x="560" y="329" width="485" height="94" rx="16" fill="#193b35" stroke="#55c69b" stroke-width="2"/>
+  <text x="587" y="362" class="head" fill="#eafff4">Object storage policy</text>
+  <text x="587" y="389" class="body">S3 bucket, prefix, and encryption access</text>
+  <text x="587" y="411" class="muted">Example: IAM or Lake Formation</text>
+
+  <text x="55" y="462" class="muted">Direct S3 access can bypass query-time row and column rules; control who can obtain object credentials.</text>
+</svg>

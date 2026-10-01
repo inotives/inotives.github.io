@@ -1,6 +1,42 @@
 {
   "posts": [
     {
+      "slug": "2026-10-02-motherduck-prefect-ecs-first-run",
+      "filename": "2026-10-02-motherduck-prefect-ecs-first-run.md",
+      "category": "post",
+      "title": "Taking the MotherDuck connection spike to ECS",
+      "date": "2026-10-02",
+      "tags": [
+        "motherduck",
+        "prefect",
+        "aws",
+        "duckdb",
+        "data-engineering"
+      ],
+      "series": "building-ai-systems",
+      "summary": "A practical runbook for moving the Prefect and MotherDuck connection check onto ECS, wiring credentials through the right roles, and proving both an accepted and rejected market-data batch.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-10-02-s3-table-formats-ducklake-delta-iceberg",
+      "filename": "2026-10-02-s3-table-formats-ducklake-delta-iceberg.md",
+      "category": "post",
+      "title": "DuckLake, Delta Lake, or Iceberg for S3?",
+      "date": "2026-10-02",
+      "tags": [
+        "ducklake",
+        "delta-lake",
+        "iceberg",
+        "s3",
+        "data-engineering"
+      ],
+      "series": "building-ai-systems",
+      "summary": "A practical comparison of DuckLake, Delta Lake, and Apache Iceberg: how their metadata works, what they cost to operate, how engines open them, and where database, table, row, and column permissions actually live.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-01-motherduck-prefect-aws-connection-spike",
       "filename": "2026-10-01-motherduck-prefect-aws-connection-spike.md",
       "category": "post",
