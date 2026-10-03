@@ -1,6 +1,26 @@
 {
   "posts": [
     {
+      "slug": "2026-10-03-mage-iceberg-athena-lakehouse-architecture",
+      "filename": "2026-10-03-mage-iceberg-athena-lakehouse-architecture.md",
+      "category": "post",
+      "title": "Designing an S3 Iceberg lakehouse with Mage, Athena, dbt, and Terraform",
+      "date": "2026-10-03",
+      "tags": [
+        "data-engineering",
+        "mage-ai",
+        "apache-iceberg",
+        "aws-athena",
+        "dbt",
+        "terraform",
+        "data-lakehouse"
+      ],
+      "series": "data-engineering",
+      "summary": "A high-level design for an S3 lakehouse where Mage ingests and validates Parquet, Iceberg provides the Raw-to-Gold table layers, dbt-athena transforms the data, and Terraform with GitHub Actions promotes the same infrastructure from dev to prod.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-02-motherduck-prefect-ecs-first-run",
       "filename": "2026-10-02-motherduck-prefect-ecs-first-run.md",
       "category": "post",
