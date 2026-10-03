@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="700" viewBox="0 0 1600 700" role="img" aria-labelledby="title desc">
+  <title id="title">Data flow from source Parquet to Iceberg gold tables</title>
+  <desc id="desc">A dark data flow diagram showing Mage moving source Parquet through raw, health checks, quarantine or bronze, then dbt-athena transforming Bronze into Silver and Gold Iceberg tables before Athena, Metabase, and QuickSight consumption.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#8aa4bf"/></marker>
+    <style>
+      .bg{fill:#0b1220}.box{fill:#17263b;stroke:#587692;stroke-width:2}.check{fill:#203247;stroke:#e2b866;stroke-width:2}.ice{fill:#13283a;stroke:#2c9c9c;stroke-width:2}.transform{fill:#111c2e;stroke:#8877c9;stroke-width:2}.out{fill:#2a2038;stroke:#ba79c7;stroke-width:2}.text{fill:#e7eef6;font:24px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.small{fill:#9eb1c5;font:18px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.label{fill:#7ee0d1;font:17px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:700}.line{stroke:#8aa4bf;stroke-width:3;fill:none;marker-end:url(#arrow)}.fail{stroke:#df7b86;stroke-width:3;fill:none;marker-end:url(#arrow)}.dash{stroke:#7d6fae;stroke-width:2;fill:none;stroke-dasharray:8 8;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect class="bg" width="1600" height="700"/>
+  <text class="text" x="65" y="70" font-size="36" font-weight="700">Data path: Parquet to trusted Iceberg tables</text>
+  <text class="small" x="65" y="105">A batch only moves forward after the health gate accepts its shape and contents.</text>
+  <rect class="box" x="65" y="260" width="190" height="130" rx="16"/><text class="label" x="95" y="300">SOURCE</text><text class="text" x="95" y="340">S3 Parquet</text><text class="small" x="95" y="370">batch files</text>
+  <rect class="box" x="315" y="260" width="190" height="130" rx="16"/><text class="label" x="345" y="300">MAGE</text><text class="text" x="345" y="340">Ingest</text><text class="small" x="345" y="370">copy and register</text>
+  <rect class="box" x="575" y="260" width="190" height="130" rx="16"/><text class="label" x="605" y="300">RAW</text><text class="text" x="605" y="340">Landing</text><text class="small" x="605" y="370">immutable source</text>
+  <rect class="check" x="825" y="225" width="245" height="200" rx="16"/><text class="label" x="855" y="265">HEALTH GATE</text><text class="text" x="855" y="305">Validate batch</text><text class="small" x="855" y="340">schema and types</text><text class="small" x="855" y="368">row counts and keys</text><text class="small" x="855" y="396">nulls and freshness</text>
+  <rect class="ice" x="1130" y="260" width="190" height="130" rx="16"/><text class="label" x="1160" y="300">TRUSTED</text><text class="text" x="1160" y="340">Bronze</text><text class="small" x="1160" y="370">Iceberg table</text>
+  <rect class="transform" x="1070" y="475" width="390" height="170" rx="18"/><text class="label" x="1100" y="515">DBT-ATHENA TRANSFORMATIONS</text>
+  <rect class="ice" x="1100" y="545" width="145" height="72" rx="12"/><text class="text" x="1130" y="590">Silver</text>
+  <rect class="ice" x="1285" y="545" width="145" height="72" rx="12"/><text class="text" x="1315" y="590">Gold</text>
+  <text class="small" x="1125" y="670">Iceberg models executed by Athena</text>
+  <rect class="out" x="1350" y="260" width="190" height="130" rx="16"/><text class="label" x="1380" y="300">CONSUME</text><text class="text" x="1380" y="340">BI tools</text><text class="small" x="1380" y="370">Metabase · QuickSight</text>
+  <rect class="box" x="825" y="535" width="180" height="80" rx="16"/><text class="text" x="855" y="585">Quarantine</text>
+  <path class="line" d="M255 325 L315 325"/><path class="line" d="M505 325 L575 325"/><path class="line" d="M765 325 L825 325"/><path class="line" d="M1070 325 L1130 325"/>
+  <path class="line" d="M1225 390 L1170 475"/><path class="line" d="M1245 581 L1285 581"/><path class="line" d="M1430 545 L1430 390"/>
+  <path class="fail" d="M950 425 L915 535"/><text class="small" x="850" y="510" fill="#df7b86">rejected with evidence</text>
+  <path class="dash" d="M825 575 C700 650 650 620 650 390"/><text class="small" x="520" y="650">reprocess after correction</text>
+</svg>
