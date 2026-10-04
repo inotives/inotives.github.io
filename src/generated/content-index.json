@@ -20,6 +20,25 @@
       "draft": false
     },
     {
+      "slug": "2026-10-04-terraform-cloud-infrastructure-iac",
+      "filename": "2026-10-04-terraform-cloud-infrastructure-iac.md",
+      "category": "post",
+      "title": "Terraform as the control plane for enterprise cloud infrastructure",
+      "date": "2026-10-04",
+      "tags": [
+        "terraform",
+        "infrastructure-as-code",
+        "aws",
+        "cloud-infrastructure",
+        "devops",
+        "data-engineering"
+      ],
+      "series": "data-engineering",
+      "summary": "A practical introduction to Terraform as an infrastructure control plane, using an S3 Iceberg market-data platform to explain modules, state, repository structure, environment isolation, and dev-to-production promotion.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-03-mage-iceberg-athena-lakehouse-architecture",
       "filename": "2026-10-03-mage-iceberg-athena-lakehouse-architecture.md",
       "category": "post",
