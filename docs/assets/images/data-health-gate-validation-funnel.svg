@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="840" viewBox="0 0 1600 840" role="img" aria-labelledby="title desc">
+  <title id="title">Data health validation funnel</title>
+  <desc id="desc">A dark validation funnel showing file, schema, type, content, volume, key, time, and cross-batch checks leading to accept, warn, quarantine, or reject decisions.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#8aa4bf"/></marker>
+    <style>.bg{fill:#0b1220}.stage{fill:#17263b;stroke:#587692;stroke-width:2}.gate{fill:#332b1d;stroke:#e2b866;stroke-width:2}.ok{fill:#13283a;stroke:#2c9c9c;stroke-width:2}.bad{fill:#30202b;stroke:#df7b86;stroke-width:2}.warn{fill:#2d2a20;stroke:#e2b866;stroke-width:2}.text{fill:#e7eef6;font:24px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.small{fill:#9eb1c5;font:18px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.label{fill:#7ee0d1;font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:700}.line{stroke:#8aa4bf;stroke-width:3;fill:none;marker-end:url(#arrow)}.fail{stroke:#df7b86;stroke-width:3;fill:none;marker-end:url(#arrow)}.yellow{stroke:#e2b866;stroke-width:3;fill:none;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect class="bg" width="1600" height="840"/><text class="text" x="65" y="68" font-size="36" font-weight="700">The validation funnel</text><text class="small" x="65" y="103">Cheap structural checks should fail fast. Expensive content and history checks come after the file is readable.</text>
+  <rect class="stage" x="65" y="180" width="200" height="120" rx="16"/><text class="label" x="95" y="220">1 · FILE</text><text class="text" x="95" y="260">Can it be read?</text><text class="small" x="95" y="288">size · format · checksum</text>
+  <rect class="stage" x="310" y="180" width="200" height="120" rx="16"/><text class="label" x="340" y="220">2 · SCHEMA</text><text class="text" x="340" y="260">Is the shape expected?</text><text class="small" x="340" y="288">columns · nesting · version</text>
+  <rect class="stage" x="555" y="180" width="200" height="120" rx="16"/><text class="label" x="585" y="220">3 · TYPES</text><text class="text" x="585" y="260">Are types compatible?</text><text class="small" x="585" y="288">decimal · timestamp · cast</text>
+  <rect class="stage" x="800" y="180" width="200" height="120" rx="16"/><text class="label" x="830" y="220">4 · CONTENT</text><text class="text" x="830" y="260">Are values valid?</text><text class="small" x="830" y="288">nulls · ranges · formats</text>
+  <rect class="stage" x="1045" y="180" width="200" height="120" rx="16"/><text class="label" x="1075" y="220">5 · HISTORY</text><text class="text" x="1075" y="260">Does it fit history?</text><text class="small" x="1075" y="288">volume · freshness · drift</text>
+  <rect class="stage" x="1290" y="180" width="200" height="120" rx="16"/><text class="label" x="1320" y="220">6 · RELATIONSHIPS</text><text class="text" x="1320" y="260">Do keys hold?</text><text class="small" x="1320" y="288">unique · referential</text>
+  <path class="line" d="M265 240 L310 240"/><path class="line" d="M510 240 L555 240"/><path class="line" d="M755 240 L800 240"/><path class="line" d="M1000 240 L1045 240"/><path class="line" d="M1245 240 L1290 240"/>
+
+  <rect class="gate" x="515" y="440" width="570" height="145" rx="18"/><text class="label" x="555" y="480">DECISION POLICY</text><text class="text" x="555" y="520">Hard failures block promotion</text><text class="small" x="555" y="552">Warnings are accepted only with an owner, threshold, and audit record.</text>
+  <path class="line" d="M1390 300 C1390 380 800 390 800 440"/>
+  <rect class="ok" x="220" y="650" width="260" height="105" rx="16"/><text class="label" x="250" y="690">PASS</text><text class="text" x="250" y="730">Promote to trusted data</text>
+  <rect class="warn" x="560" y="650" width="260" height="105" rx="16"/><text class="label" x="590" y="690">WARN</text><text class="text" x="590" y="730">Accept with exception</text>
+  <rect class="bad" x="900" y="650" width="260" height="105" rx="16"/><text class="label" x="930" y="690">QUARANTINE</text><text class="text" x="930" y="730">Investigate and replay</text>
+  <rect class="bad" x="1240" y="650" width="260" height="105" rx="16"/><text class="label" x="1270" y="690">REJECT</text><text class="text" x="1270" y="730">Stop and alert</text>
+  <path class="line" d="M700 585 L350 650"/><path class="yellow" d="M800 585 L690 650"/><path class="fail" d="M900 585 L1030 650"/><path class="fail" d="M980 585 L1370 650"/>
+</svg>

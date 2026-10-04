@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="820" viewBox="0 0 1600 820" role="img" aria-labelledby="title desc">
+  <title id="title">Reusable data health gate architecture</title>
+  <desc id="desc">A dark architecture diagram showing source systems entering immutable landing storage, a reusable health gate using data contracts and validation rules, quarantine or trusted storage, and downstream transformations and consumers. Mage, Prefect, Airflow, or custom runners can invoke the gate.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#8aa4bf"/></marker>
+    <style>
+      .bg{fill:#0b1220}.panel{fill:#111c2e;stroke:#2a3b54;stroke-width:2}.source{fill:#17263b;stroke:#587692;stroke-width:2}.gate{fill:#332b1d;stroke:#e2b866;stroke-width:2}.trusted{fill:#13283a;stroke:#2c9c9c;stroke-width:2}.bad{fill:#30202b;stroke:#df7b86;stroke-width:2}.consumer{fill:#2a2038;stroke:#ba79c7;stroke-width:2}.text{fill:#e7eef6;font:24px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.small{fill:#9eb1c5;font:18px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.label{fill:#7ee0d1;font:17px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:700}.line{stroke:#8aa4bf;stroke-width:3;fill:none;marker-end:url(#arrow)}.warn{stroke:#e2b866;stroke-width:3;fill:none;marker-end:url(#arrow)}.fail{stroke:#df7b86;stroke-width:3;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect class="bg" width="1600" height="820"/>
+  <text class="text" x="65" y="68" font-size="36" font-weight="700">A reusable data health gate</text>
+  <text class="small" x="65" y="103">The validator is a shared control point. The scheduler that calls it can change.</text>
+
+  <rect class="source" x="65" y="205" width="260" height="150" rx="16"/><text class="label" x="95" y="245">INPUTS</text><text class="text" x="95" y="285">Source systems</text><text class="small" x="95" y="318">APIs · files · events · databases</text>
+  <rect class="source" x="65" y="430" width="260" height="150" rx="16"/><text class="label" x="95" y="470">RUNNER</text><text class="text" x="95" y="510">Any orchestrator</text><text class="small" x="95" y="543">Mage · Prefect · Airflow · custom</text>
+  <path class="line" d="M325 280 L415 280"/><path class="line" d="M325 505 L415 505"/>
+
+  <rect class="panel" x="415" y="160" width="650" height="470" rx="22"/><text class="label" x="450" y="205">CONTROL POINT</text><text class="text" x="450" y="245">Reusable health gate</text>
+  <rect class="gate" x="450" y="280" width="270" height="120" rx="14"/><text class="label" x="480" y="320">CONTRACTS</text><text class="text" x="480" y="360">Expected shape</text><text class="small" x="480" y="387">columns · types · rules</text>
+  <rect class="gate" x="760" y="280" width="270" height="120" rx="14"/><text class="label" x="790" y="320">VALIDATORS</text><text class="text" x="790" y="360">Checks and thresholds</text><text class="small" x="790" y="387">hard fail · warn · profile</text>
+  <rect class="gate" x="450" y="450" width="270" height="120" rx="14"/><text class="label" x="480" y="490">MANIFEST</text><text class="text" x="480" y="530">Batch evidence</text><text class="small" x="480" y="557">status · counts · lineage</text>
+  <rect class="gate" x="760" y="450" width="270" height="120" rx="14"/><text class="label" x="790" y="490">DECISION</text><text class="text" x="790" y="530">Promote or reject</text><text class="small" x="790" y="557">repeatable state change</text>
+  <path class="line" d="M720 340 L760 340"/><path class="line" d="M895 400 L895 450"/><path class="line" d="M720 510 L760 510"/>
+
+  <rect class="bad" x="1170" y="185" width="300" height="145" rx="16"/><text class="label" x="1200" y="225">FAILED OR SUSPICIOUS</text><text class="text" x="1200" y="265">Quarantine</text><text class="small" x="1200" y="298">retain files and errors</text>
+  <rect class="trusted" x="1170" y="390" width="300" height="145" rx="16"/><text class="label" x="1200" y="430">ACCEPTED</text><text class="text" x="1200" y="470">Trusted landing</text><text class="small" x="1200" y="503">Bronze · warehouse · table</text>
+  <path class="fail" d="M1065 330 L1170 258"/><path class="line" d="M1065 510 L1170 462"/>
+  <rect class="consumer" x="1170" y="600" width="300" height="120" rx="16"/><text class="label" x="1200" y="640">DOWNSTREAM</text><text class="text" x="1200" y="680">Transforms and BI</text><text class="small" x="1200" y="707">Silver · Gold · reports</text>
+  <path class="line" d="M1320 535 L1320 600"/>
+  <rect class="panel" x="65" y="675" width="1005" height="70" rx="14"/><text class="small" x="95" y="718">The gate should be callable as a library, service, SQL test set, or pipeline stage without coupling its rules to one scheduler.</text>
+</svg>

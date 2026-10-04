@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-10-04-data-health-gate-safe-ingestion",
+      "filename": "2026-10-04-data-health-gate-safe-ingestion.md",
+      "category": "post",
+      "title": "Before Bronze: Designing a Reusable Data Health Gate for Safe Ingestion",
+      "date": "2026-10-04",
+      "tags": [
+        "data-engineering",
+        "data-quality",
+        "data-contracts",
+        "data-ingestion",
+        "schema-drift",
+        "data-lakehouse"
+      ],
+      "series": "data-engineering",
+      "summary": "A general design for validating incoming data before it reaches a trusted landing zone: contracts, schema and type checks, content rules, anomaly detection, quarantine, audit records, replay, and idempotent promotion.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-03-mage-iceberg-athena-lakehouse-architecture",
       "filename": "2026-10-03-mage-iceberg-athena-lakehouse-architecture.md",
       "category": "post",
