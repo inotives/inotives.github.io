@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-10-06-personal-agent-memory-shared-wiki",
+      "filename": "2026-10-06-personal-agent-memory-shared-wiki.md",
+      "category": "post",
+      "title": "From personal agent memory to a shared company wiki",
+      "date": "2026-10-06",
+      "tags": [
+        "ai-agents",
+        "agentic-memory",
+        "knowledge-management",
+        "collaboration",
+        "governance",
+        "software-architecture"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Personal agent memory is easy to manage because one person owns the context. A shared agent wiki needs identity, ownership, review, lifecycle, and trust controls before a team can safely reuse it.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-04-data-health-gate-safe-ingestion",
       "filename": "2026-10-04-data-health-gate-safe-ingestion.md",
       "category": "post",
