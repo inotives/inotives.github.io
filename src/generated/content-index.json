@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-10-07-rag-graphrag-agent-wiki",
+      "filename": "2026-10-07-rag-graphrag-agent-wiki.md",
+      "category": "post",
+      "title": "RAG, GraphRAG, and the enterprise agent wiki",
+      "date": "2026-10-07",
+      "tags": [
+        "ai-agents",
+        "agentic-memory",
+        "rag",
+        "graphrag",
+        "knowledge-graphs",
+        "enterprise-architecture"
+      ],
+      "series": "building-ai-systems",
+      "summary": "How a shared agent wiki can remain the canonical source while vector search and graph search provide complementary retrieval paths for precise facts, relationships, and multi-hop reasoning.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-06-personal-agent-memory-shared-wiki",
       "filename": "2026-10-06-personal-agent-memory-shared-wiki.md",
       "category": "post",
