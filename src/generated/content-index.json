@@ -1,6 +1,26 @@
 {
   "posts": [
     {
+      "slug": "2026-10-10-docker-agent-and-agentrig",
+      "filename": "2026-10-10-docker-agent-and-agentrig.md",
+      "category": "post",
+      "title": "Docker Agent and AgentRig: from local agent loops to deployable teams",
+      "date": "2026-10-10",
+      "tags": [
+        "ai-agents",
+        "docker-agent",
+        "agent-rig",
+        "a2a",
+        "mcp",
+        "multi-agent-systems",
+        "developer-tools"
+      ],
+      "series": "building-ai-systems",
+      "summary": "What Docker Agent provides, how it compares with our filesystem-first AgentRig, where an adapter could improve the rig, and how A2A could connect specialist agent teams across project boundaries.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-07-rag-graphrag-agent-wiki",
       "filename": "2026-10-07-rag-graphrag-agent-wiki.md",
       "category": "post",
