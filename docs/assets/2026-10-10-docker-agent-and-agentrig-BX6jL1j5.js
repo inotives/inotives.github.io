@@ -42,6 +42,66 @@ The important design choice is the team boundary. A root agent can delegate to f
 
 Docker Agent also supports external tools through MCP toolsets. That gives an agent access to capabilities without putting every tool implementation inside the agent configuration.
 
+## A small Docker Agent team in YAML
+
+The smallest useful example for our AgentRig comparison is an investigator, a fixer, and a reviewer. The root agent receives the task and delegates to the specialists.
+
+\`\`\`yaml
+agents:
+  root:
+    model: openai/gpt-5-mini
+    description: Engineering task coordinator
+    instruction: |
+      Understand the task, delegate investigation and implementation,
+      then ask the reviewer to check the result before reporting back.
+    sub_agents: [investigator, fixer, reviewer]
+
+  investigator:
+    model: openai/gpt-5-mini
+    description: Root-cause investigator
+    instruction: |
+      Inspect the available project context, identify the likely root cause,
+      and return concise findings with evidence. Do not edit files.
+    toolsets:
+      - type: filesystem
+
+  fixer:
+    model: openai/gpt-5-mini
+    description: Minimal fix implementer
+    instruction: |
+      Implement only the approved fix. Keep the change narrow and report
+      which files changed and which checks were run.
+    toolsets:
+      - type: filesystem
+      - type: shell
+
+  reviewer:
+    model: openai/gpt-5-mini
+    description: Change reviewer
+    instruction: |
+      Review the proposed result against the task. Look for regressions,
+      missing checks, and scope creep. Return approval or concrete findings.
+    toolsets:
+      - type: filesystem
+\`\`\`
+
+Save it as \`agent-rig-debugger.yaml\`, then run it with the Docker Agent CLI:
+
+\`\`\`shell
+docker agent run agent-rig-debugger.yaml
+\`\`\`
+
+This configuration describes the Docker Agent team. It does not create an AgentRig task, write a handoff record, or decide whether a project change is accepted. AgentRig can remain the outer workflow that supplies the brief and records the result.
+
+The team can also be shared as an OCI artifact, using the workflow documented by Docker:
+
+\`\`\`shell
+docker agent share push ./agent-rig-debugger.yaml example/agent-rig-debugger
+docker agent run example/agent-rig-debugger:latest
+\`\`\`
+
+Treat the YAML as a versioned team definition. Keep project-specific context, task history, and approval records in the AgentRig workspace rather than baking them into the shared artifact.
+
 ## How Docker Agent compares with AgentRig
 
 AgentRig is a TypeScript CLI for scaffolding a filesystem-first agent workspace into a project. It creates a project-local \`.agent-rig/\` area for agents, shared context, workflow records, findings, handoffs, and launch instructions. Its central unit is the project task and the loop around that task.
