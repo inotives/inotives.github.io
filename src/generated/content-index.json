@@ -1,6 +1,26 @@
 {
   "posts": [
     {
+      "slug": "2026-10-11-opc-orca-openknowledge-agent-memory",
+      "filename": "2026-10-11-opc-orca-openknowledge-agent-memory.md",
+      "category": "post",
+      "title": "Building a one-person company with Orca, OpenKnowledge, and agent memory",
+      "date": "2026-10-11",
+      "tags": [
+        "ai-agents",
+        "agentic-memory",
+        "openknowledge",
+        "orca",
+        "one-person-company",
+        "multi-agent-systems",
+        "agent-rig"
+      ],
+      "series": "building-ai-systems",
+      "summary": "A practical design for a one-person company that uses Orca to coordinate role-based agents, OpenKnowledge to store durable company memory, and Claude, Codex, OpenCode, or other CLI agents to execute the work.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-10-docker-agent-and-agentrig",
       "filename": "2026-10-10-docker-agent-and-agentrig.md",
       "category": "post",
