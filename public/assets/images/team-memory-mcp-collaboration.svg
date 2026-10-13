@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">Agents collaborating through MCP memory</title>
+  <desc id="desc">An animated signal travels from one agent through MCP to shared memory and back to another agent.</desc>
+  <style>
+    .pulse { animation: pulse 2.8s ease-in-out infinite; }
+    .flow { animation: flow 3.6s linear infinite; }
+    @keyframes pulse { 0%,100% { opacity:.55; } 50% { opacity:1; } }
+    @keyframes flow { from { stroke-dashoffset:48; } to { stroke-dashoffset:0; } }
+  </style>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1"><stop stop-color="#07111e"/><stop offset="1" stop-color="#172033"/></linearGradient>
+    <linearGradient id="card" x1="0" x2="1"><stop stop-color="#1e293b"/><stop offset="1" stop-color="#293b59"/></linearGradient>
+    <linearGradient id="center" x1="0" x2="1"><stop stop-color="#0e7490"/><stop offset="1" stop-color="#155e75"/></linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0 0L10 3L0 6Z" fill="#67e8f9"/></marker>
+  </defs>
+  <rect width="1200" height="620" rx="28" fill="url(#bg)"/>
+  <text x="70" y="72" fill="#f8fafc" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700">Memory turns separate agents into a team</text>
+  <text x="70" y="105" fill="#94a3b8" font-family="Inter,Arial,sans-serif" font-size="16">The shared page is the handoff. MCP carries the request and applies the rules.</text>
+  <path d="M282 300H438M762 300H918" fill="none" stroke="#164e63" stroke-width="14" stroke-linecap="round"/>
+  <path class="flow" d="M282 300H438M762 300H918" fill="none" stroke="#67e8f9" stroke-width="4" stroke-dasharray="12 12" marker-end="url(#arrow)"/>
+  <g font-family="Inter,Arial,sans-serif" text-anchor="middle">
+    <rect x="70" y="190" width="212" height="220" rx="20" fill="url(#card)" stroke="#60a5fa"/>
+    <text x="176" y="245" fill="#f8fafc" font-size="21" font-weight="700">Agent A</text>
+    <text x="176" y="285" fill="#bfdbfe" font-size="15">Researches</text>
+    <text x="176" y="315" fill="#bfdbfe" font-size="15">Writes a finding</text>
+    <text x="176" y="345" fill="#bfdbfe" font-size="15">Adds source</text>
+    <rect x="438" y="170" width="324" height="260" rx="20" fill="url(#center)" stroke="#a5f3fc"/>
+    <text x="600" y="238" fill="#f8fafc" font-size="22" font-weight="700">MCP memory tools</text>
+    <text x="600" y="278" fill="#cffafe" font-size="15">create_page</text>
+    <text x="600" y="308" fill="#cffafe" font-size="15">hybrid_search</text>
+    <text x="600" y="338" fill="#cffafe" font-size="15">version check</text>
+    <text x="600" y="368" fill="#cffafe" font-size="15">audit event</text>
+    <rect x="918" y="190" width="212" height="220" rx="20" fill="url(#card)" stroke="#c084fc"/>
+    <text x="1024" y="245" fill="#f8fafc" font-size="21" font-weight="700">Agent B</text>
+    <text x="1024" y="285" fill="#e9d5ff" font-size="15">Searches</text>
+    <text x="1024" y="315" fill="#e9d5ff" font-size="15">Reads evidence</text>
+    <text x="1024" y="345" fill="#e9d5ff" font-size="15">Builds next step</text>
+  </g>
+  <circle class="pulse" cx="600" cy="490" r="31" fill="#22d3ee" opacity=".8"/>
+  <text x="600" y="496" fill="#082f49" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle">DB</text>
+  <path d="M600 430V458" stroke="#67e8f9" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="600" y="555" fill="#64748b" font-family="Inter,Arial,sans-serif" font-size="14" text-anchor="middle">A durable handoff survives the end of either agent session.</text>
+</svg>

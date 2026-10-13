@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">Team agent memory architecture</title>
+  <desc id="desc">Agent clients connect to an MCP service, which validates and searches shared PostgreSQL memory.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#08111f"/><stop offset="1" stop-color="#101b2f"/></linearGradient>
+    <linearGradient id="agent" x1="0" x2="1"><stop stop-color="#233b65"/><stop offset="1" stop-color="#1a2a4a"/></linearGradient>
+    <linearGradient id="mcp" x1="0" x2="1"><stop stop-color="#075985"/><stop offset="1" stop-color="#0e7490"/></linearGradient>
+    <linearGradient id="db" x1="0" x2="1"><stop stop-color="#3b2461"/><stop offset="1" stop-color="#5b2a86"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#000" flood-opacity=".35"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0 0L10 3L0 6Z" fill="#7dd3fc"/></marker>
+  </defs>
+  <rect width="1200" height="620" rx="28" fill="url(#bg)"/>
+  <text x="70" y="72" fill="#f8fafc" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700">A governed memory boundary</text>
+  <text x="70" y="105" fill="#94a3b8" font-family="Inter,Arial,sans-serif" font-size="16">Agents reason. MCP applies the contract. PostgreSQL remembers.</text>
+  <g filter="url(#shadow)">
+    <rect x="70" y="175" width="265" height="310" rx="20" fill="url(#agent)" stroke="#4f77b4"/>
+    <rect x="468" y="145" width="270" height="370" rx="20" fill="url(#mcp)" stroke="#67e8f9"/>
+    <rect x="870" y="175" width="265" height="310" rx="20" fill="url(#db)" stroke="#c084fc"/>
+  </g>
+  <g fill="#f8fafc" font-family="Inter,Arial,sans-serif">
+    <text x="105" y="220" font-size="22" font-weight="700">Agent clients</text>
+    <text x="105" y="258" font-size="16">Claude</text><text x="105" y="291" font-size="16">Codex</text><text x="105" y="324" font-size="16">OpenCode</text><text x="105" y="357" font-size="16">Chat or web UI</text>
+    <text x="105" y="414" fill="#bfdbfe" font-size="14">Reasoning + tool choice</text>
+    <text x="503" y="196" font-size="22" font-weight="700">MCP service</text>
+    <text x="503" y="240" font-size="16">Validate input</text><text x="503" y="273" font-size="16">Identify caller</text><text x="503" y="306" font-size="16">Search and rank</text><text x="503" y="339" font-size="16">Check page version</text><text x="503" y="372" font-size="16">Write audit event</text><text x="503" y="436" fill="#cffafe" font-size="14">Small, stable tool contract</text>
+    <text x="905" y="220" font-size="22" font-weight="700">PostgreSQL</text>
+    <text x="905" y="258" font-size="16">Pages + metadata</text><text x="905" y="291" font-size="16">Full-text index</text><text x="905" y="324" font-size="16">pgvector index</text><text x="905" y="357" font-size="16">Versions + audit</text>
+    <text x="905" y="414" fill="#e9d5ff" font-size="14">Durable source of truth</text>
+  </g>
+  <path d="M335 330H458" stroke="#7dd3fc" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M748 330H860" stroke="#7dd3fc" stroke-width="4" marker-end="url(#arrow)"/>
+  <text x="355" y="307" fill="#bae6fd" font-family="Inter,Arial,sans-serif" font-size="14">MCP</text>
+  <text x="770" y="307" fill="#bae6fd" font-family="Inter,Arial,sans-serif" font-size="14">SQL + indexes</text>
+  <text x="70" y="565" fill="#64748b" font-family="Inter,Arial,sans-serif" font-size="14">The database is never exposed directly to agent prompts.</text>
+</svg>

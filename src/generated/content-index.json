@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-10-14-postgres-mcp-team-agent-memory",
+      "filename": "2026-10-14-postgres-mcp-team-agent-memory.md",
+      "category": "post",
+      "title": "Durable Team Agent Memory with PostgreSQL and MCP",
+      "date": "2026-10-14",
+      "tags": [
+        "ai-agents",
+        "agentic-memory",
+        "postgresql",
+        "mcp",
+        "team-knowledge",
+        "multi-agent-systems"
+      ],
+      "series": "building-ai-systems",
+      "summary": "A practical architecture for shared agent memory using PostgreSQL and the Model Context Protocol, designed for teams that want durable knowledge without making every user learn Git.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-11-opc-orca-openknowledge-agent-memory",
       "filename": "2026-10-11-opc-orca-openknowledge-agent-memory.md",
       "category": "post",

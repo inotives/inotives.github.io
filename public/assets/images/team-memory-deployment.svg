@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+  <title id="title">Team memory deployment</title>
+  <desc id="desc">Local and remote agent clients access a private PostgreSQL database only through an authenticated MCP service.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1"><stop stop-color="#08111f"/><stop offset="1" stop-color="#17152b"/></linearGradient>
+    <linearGradient id="box" x1="0" x2="1"><stop stop-color="#172554"/><stop offset="1" stop-color="#1e3a8a"/></linearGradient>
+    <linearGradient id="service" x1="0" x2="1"><stop stop-color="#115e59"/><stop offset="1" stop-color="#0f766e"/></linearGradient>
+    <linearGradient id="database" x1="0" x2="1"><stop stop-color="#4c1d95"/><stop offset="1" stop-color="#581c87"/></linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0 0L10 3L0 6Z" fill="#5eead4"/></marker>
+  </defs>
+  <rect width="1200" height="650" rx="28" fill="url(#bg)"/>
+  <text x="68" y="72" fill="#f8fafc" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700">Deploy the boundary, not the database password</text>
+  <text x="68" y="105" fill="#94a3b8" font-family="Inter,Arial,sans-serif" font-size="16">Local clients can use stdio. Remote clients use an authenticated endpoint.</text>
+  <rect x="55" y="150" width="330" height="405" rx="22" fill="#111827" stroke="#334155" stroke-width="2"/>
+  <text x="85" y="198" fill="#f8fafc" font-family="Inter,Arial,sans-serif" font-size="21" font-weight="700">Team clients</text>
+  <rect x="85" y="230" width="270" height="72" rx="14" fill="url(#box)"/><text x="220" y="274" fill="#dbeafe" font-family="Inter,Arial,sans-serif" font-size="16" text-anchor="middle">Claude / Codex / OpenCode</text>
+  <rect x="85" y="325" width="270" height="72" rx="14" fill="url(#box)"/><text x="220" y="369" fill="#dbeafe" font-family="Inter,Arial,sans-serif" font-size="16" text-anchor="middle">Web or chat interface</text>
+  <rect x="85" y="420" width="270" height="72" rx="14" fill="url(#box)"/><text x="220" y="464" fill="#dbeafe" font-family="Inter,Arial,sans-serif" font-size="16" text-anchor="middle">Local MCP over stdio</text>
+  <rect x="472" y="150" width="300" height="405" rx="22" fill="url(#service)" stroke="#5eead4" stroke-width="2"/>
+  <text x="622" y="198" fill="#f0fdfa" font-family="Inter,Arial,sans-serif" font-size="21" font-weight="700" text-anchor="middle">MCP service</text>
+  <text x="622" y="244" fill="#ccfbf1" font-family="Inter,Arial,sans-serif" font-size="16" text-anchor="middle">Auth gateway</text>
+  <text x="622" y="280" fill="#ccfbf1" font-family="Inter,Arial,sans-serif" font-size="16" text-anchor="middle">Validation</text>
+  <text x="622" y="316" fill="#ccfbf1" font-family="Inter,Arial,sans-serif" font-size="16" text-anchor="middle">Identity + audit</text>
+  <text x="622" y="352" fill="#ccfbf1" font-family="Inter,Arial,sans-serif" font-size="16" text-anchor="middle">Search + writes</text>
+  <text x="622" y="415" fill="#99f6e4" font-family="Inter,Arial,sans-serif" font-size="14" text-anchor="middle">Private network boundary</text>
+  <rect x="860" y="150" width="285" height="405" rx="22" fill="url(#database)" stroke="#d8b4fe" stroke-width="2"/>
+  <text x="1002" y="198" fill="#faf5ff" font-family="Inter,Arial,sans-serif" font-size="21" font-weight="700" text-anchor="middle">PostgreSQL</text>
+  <text x="1002" y="250" fill="#f3e8ff" font-family="Inter,Arial,sans-serif" font-size="16" text-anchor="middle">Pages + metadata</text>
+  <text x="1002" y="286" fill="#f3e8ff" font-family="Inter,Arial,sans-serif" font-size="16" text-anchor="middle">Full-text search</text>
+  <text x="1002" y="322" fill="#f3e8ff" font-family="Inter,Arial,sans-serif" font-size="16" text-anchor="middle">pgvector</text>
+  <text x="1002" y="358" fill="#f3e8ff" font-family="Inter,Arial,sans-serif" font-size="16" text-anchor="middle">Backups + migrations</text>
+  <text x="1002" y="415" fill="#e9d5ff" font-family="Inter,Arial,sans-serif" font-size="14" text-anchor="middle">No direct agent access</text>
+  <path d="M385 270H460M385 365H460M385 460H460" fill="none" stroke="#5eead4" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M772 350H848" fill="none" stroke="#5eead4" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="68" y="605" fill="#64748b" font-family="Inter,Arial,sans-serif" font-size="14">Git remains useful for code, migrations, policy, and optional exports.</text>
+</svg>
