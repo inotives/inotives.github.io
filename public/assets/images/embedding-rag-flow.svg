@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 610" role="img" aria-labelledby="title desc">
+  <title id="title">Embedding based retrieval augmented generation flow</title>
+  <desc id="desc">A user question is embedded, matched against indexed text chunks, and relevant source passages are passed to a language model for an answer.</desc>
+  <style>
+    .signal { stroke-dasharray: 12 12; animation: travel 3s linear infinite; }
+    .node { animation: breathe 2.5s ease-in-out infinite; }
+    @keyframes travel { to { stroke-dashoffset: -48; } }
+    @keyframes breathe { 0%,100% { opacity:.78; } 50% { opacity:1; } }
+  </style>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1"><stop stop-color="#07111f"/><stop offset="1" stop-color="#17152c"/></linearGradient>
+    <linearGradient id="cyan" x1="0" x2="1"><stop stop-color="#0e7490"/><stop offset="1" stop-color="#155e75"/></linearGradient>
+    <linearGradient id="violet" x1="0" x2="1"><stop stop-color="#4c1d95"/><stop offset="1" stop-color="#6b21a8"/></linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0 0L10 3L0 6Z" fill="#67e8f9"/></marker>
+  </defs>
+  <rect width="1200" height="610" rx="28" fill="url(#bg)"/>
+  <text x="68" y="68" fill="#f8fafc" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700">RAG: retrieve first, then generate with sources</text>
+  <text x="68" y="102" fill="#94a3b8" font-family="Inter,Arial,sans-serif" font-size="16">The moving line shows the query path; stored text stays attached to its vector.</text>
+  <g font-family="Inter,Arial,sans-serif" text-anchor="middle">
+    <rect class="node" x="55" y="235" width="190" height="150" rx="18" fill="#172554" stroke="#60a5fa"/>
+    <text x="150" y="285" fill="#eff6ff" font-size="19" font-weight="700">Question</text><text x="150" y="323" fill="#bfdbfe" font-size="14">“How do returns work?”</text>
+    <rect class="node" x="295" y="235" width="190" height="150" rx="18" fill="url(#cyan)" stroke="#67e8f9"/>
+    <text x="390" y="285" fill="#ecfeff" font-size="19" font-weight="700">Embed query</text><text x="390" y="323" fill="#cffafe" font-size="14">compatible model</text>
+    <rect class="node" x="535" y="210" width="250" height="200" rx="18" fill="#102a43" stroke="#38bdf8"/>
+    <text x="660" y="260" fill="#f0f9ff" font-size="19" font-weight="700">Retrieve candidates</text><text x="660" y="300" fill="#bae6fd" font-size="14">vector + keyword search</text><text x="660" y="334" fill="#bae6fd" font-size="14">rank + access filters</text><text x="660" y="368" fill="#7dd3fc" font-size="13">return text + provenance</text>
+    <rect class="node" x="835" y="235" width="160" height="150" rx="18" fill="#334155" stroke="#cbd5e1"/>
+    <text x="915" y="285" fill="#f8fafc" font-size="19" font-weight="700">Context</text><text x="915" y="323" fill="#cbd5e1" font-size="14">selected passages</text>
+    <rect class="node" x="1040" y="235" width="120" height="150" rx="18" fill="url(#violet)" stroke="#c084fc"/>
+    <text x="1100" y="285" fill="#faf5ff" font-size="19" font-weight="700">LLM</text><text x="1100" y="323" fill="#e9d5ff" font-size="14">answer</text>
+  </g>
+  <path d="M245 310H285M485 310H525M785 310H825M995 310H1030" fill="none" stroke="#164e63" stroke-width="10" stroke-linecap="round"/>
+  <path class="signal" d="M245 310H285M485 310H525M785 310H825M995 310H1030" fill="none" stroke="#67e8f9" stroke-width="3" marker-end="url(#arrow)"/>
+  <rect x="300" y="455" width="580" height="78" rx="16" fill="#111827" stroke="#334155"/>
+  <text x="590" y="485" fill="#e2e8f0" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="700" text-anchor="middle">Indexed earlier</text>
+  <text x="590" y="511" fill="#94a3b8" font-family="Inter,Arial,sans-serif" font-size="14" text-anchor="middle">source → extracted text → chunks → embeddings + metadata</text>
+  <path d="M660 410V445" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="68" y="570" fill="#64748b" font-family="Inter,Arial,sans-serif" font-size="14">RAG grounds generation in retrieved context; it cannot guarantee the source or answer is correct.</text>
+</svg>

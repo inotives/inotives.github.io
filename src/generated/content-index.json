@@ -20,6 +20,26 @@
       "draft": false
     },
     {
+      "slug": "2026-10-14-vector-embeddings-agentic-memory",
+      "filename": "2026-10-14-vector-embeddings-agentic-memory.md",
+      "category": "post",
+      "title": "From Words to Vectors: Embeddings in Agentic Memory",
+      "date": "2026-10-14",
+      "tags": [
+        "ai-agents",
+        "embeddings",
+        "vector-search",
+        "postgresql",
+        "pgvector",
+        "rag",
+        "agentic-memory"
+      ],
+      "series": "building-ai-systems",
+      "summary": "A practical explanation of vector embeddings, semantic similarity, RAG, and hybrid search, with a PostgreSQL and pgvector pipeline for turning team knowledge into searchable agent memory.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-11-opc-orca-openknowledge-agent-memory",
       "filename": "2026-10-11-opc-orca-openknowledge-agent-memory.md",
       "category": "post",
