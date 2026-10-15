@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 980" role="img" aria-labelledby="title desc">
+  <title id="title">How Git branches map to worktree directories</title>
+  <desc id="desc">A dark diagram showing a feature branch forked from main, commits and a merge in the Git history graph, then two separate worktree folders connected to one shared Git object database. Callouts explain commits, branch pointers, the fork, merge, local edits, and shared history.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#91a7c6"/></marker>
+    <marker id="cyanArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#42d6d0"/></marker>
+    <style>
+      text{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;fill:#e8eef8}
+      .muted{fill:#9aabc4}.small{font-size:16px}.label{font-size:18px;font-weight:650}.title{font-size:29px;font-weight:750}.sub{font-size:17px;fill:#aab8ce}
+      .panel{fill:#111a2b;stroke:#273650;stroke-width:2}.call{fill:#18243a;stroke:#344761;stroke-width:1.5}.commit{fill:#18243a;stroke:#54a8ff;stroke-width:5}.feat{fill:#201b36;stroke:#bd9cff;stroke-width:5}.merge{fill:#183332;stroke:#42d6d0;stroke-width:5}
+      .mainline{stroke:#54a8ff;stroke-width:6;fill:none}.featline{stroke:#bd9cff;stroke-width:6;fill:none}.shared{stroke:#657895;stroke-width:2;fill:none;stroke-dasharray:8 8}.local{stroke:#42d6d0;stroke-width:3;fill:none}
+    </style>
+  </defs>
+  <rect width="1400" height="980" rx="28" fill="#0b1020"/>
+  <text x="52" y="62" class="title">Branches describe history. Worktrees are the folders you edit.</text>
+  <text x="52" y="94" class="sub">One repository can hold several checkouts at once; each checkout has its own working files.</text>
+
+  <rect x="42" y="122" width="1316" height="446" rx="20" class="panel"/>
+  <text x="72" y="164" class="label">1 · Git history: commits form a directed graph</text>
+  <text x="74" y="223" class="small muted">older</text><path d="M130 217H1260" stroke="#71829d" stroke-width="2" marker-end="url(#arrow)"/><text x="1273" y="223" class="small muted">newer</text>
+
+  <path d="M190 320H472M472 320H760M760 320H1080" class="mainline"/>
+  <path d="M472 320C510 320 510 435 550 435H840C950 435 950 320 1080 320" class="featline"/>
+  <circle cx="190" cy="320" r="19" class="commit"/><circle cx="472" cy="320" r="19" class="commit"/><circle cx="760" cy="320" r="19" class="commit"/><circle cx="1080" cy="320" r="22" class="merge"/>
+  <circle cx="550" cy="435" r="19" class="feat"/><circle cx="695" cy="435" r="19" class="feat"/><circle cx="840" cy="435" r="19" class="feat"/>
+  <text x="165" y="275" class="small">C1</text><text x="447" y="275" class="small">C2</text><text x="735" y="275" class="small">C3</text><text x="1055" y="275" class="small">M</text>
+  <text x="527" y="483" class="small">F1</text><text x="672" y="483" class="small">F2</text><text x="817" y="483" class="small">F3</text>
+  <rect x="1000" y="186" width="136" height="38" rx="19" fill="#15304b" stroke="#54a8ff"/><text x="1020" y="212" class="small">main → M</text>
+  <rect x="720" y="490" width="214" height="38" rx="19" fill="#2a2145" stroke="#bd9cff"/><text x="740" y="516" class="small">feature/search → F3</text>
+  <path d="M472 292V250H340" stroke="#91a7c6" stroke-width="2" fill="none" marker-end="url(#arrow)"/><text x="128" y="245" class="small">Fork: feature starts from C2</text>
+  <path d="M1080 345V387H1178" stroke="#91a7c6" stroke-width="2" fill="none" marker-end="url(#arrow)"/><text x="1188" y="383" class="small">Merge commit M</text><text x="1188" y="406" class="small muted">has 2 parents</text>
+  <rect x="74" y="505" width="430" height="42" rx="10" class="call"/><circle cx="98" cy="526" r="10" class="commit"/><text x="118" y="532" class="small">Commit = saved snapshot; branch name = movable tip pointer</text>
+
+  <rect x="42" y="590" width="1316" height="340" rx="20" class="panel"/>
+  <text x="72" y="632" class="label">2 · Worktrees: separate directories checked out from that history</text>
+  <rect x="82" y="666" width="420" height="190" rx="16" fill="#121f33" stroke="#54a8ff" stroke-width="2"/>
+  <text x="108" y="705" class="label">Directory: project/</text><text x="108" y="735" class="small" fill="#8ec5ff">HEAD → main at M</text>
+  <text x="108" y="775" class="small">├─ working files</text><text x="108" y="805" class="small">├─ index (staging area)</text><text x="108" y="835" class="small">└─ local edits stay here until committed</text>
+  <rect x="540" y="666" width="420" height="190" rx="16" fill="#1b1830" stroke="#bd9cff" stroke-width="2"/>
+  <text x="566" y="705" class="label">Directory: project-feature/</text><text x="566" y="735" class="small" fill="#c7adff">HEAD → feature/search at F3</text>
+  <text x="566" y="775" class="small">├─ its own working files</text><text x="566" y="805" class="small">├─ its own index (staging area)</text><text x="566" y="835" class="small">└─ edits isolated from project/</text>
+  <rect x="1040" y="690" width="272" height="132" rx="16" fill="#132c2d" stroke="#42d6d0" stroke-width="2"/>
+  <text x="1064" y="730" class="label">Shared Git data</text><text x="1064" y="762" class="small">commit objects + history</text><text x="1064" y="790" class="small">one repository, not two clones</text>
+  <path d="M502 760H1035M960 760H1035" class="local" marker-end="url(#cyanArrow)"/>
+  <text x="80" y="898" class="small muted">A worktree isolates the checkout; it does not save changes. Commit to create a durable snapshot.</text>
+</svg>

@@ -12,7 +12,19 @@ At first, I used a worktree in AgentRig in a simple way: as a safe place to hold
 
 The short answer: a worktree gives a branch its own working directory. That lets several pieces of work happen side by side without making agents edit the same checkout.
 
-![Dark diagram showing a Git repository with multiple independent worktrees and branches](/assets/images/git-worktree-multiple-sessions.svg)
+![Dark diagram connecting Git commit and branch history to two separate worktree directories](/assets/images/git-branches-and-worktrees.svg)
+
+## Read the branch graph and worktree map
+
+The diagram separates two ideas that are easy to mix up: Git history and the folders where people or agents edit files.
+
+- **A circle is a commit.** It records a snapshot and points back to its parent commit or commits. The merge commit has two parents because it joins the feature history with the main history.
+- **A line is ancestry, not a folder.** The feature line forks from an existing main commit. Its new commits do not move `main`; the `main` name advances only when a commit is made on `main` or a merge is completed there.
+- **A branch name points to a tip commit.** As commits are added on that branch, the pointer moves forward. It is a convenient name for a history tip, not a separate copy of the files.
+- **A worktree is a directory checked out at a branch or commit.** In the example, `project/` is checked out on `main`, while `project-feature/` is checked out on `feature/search`. They have separate files, `HEAD`, and index, so edits in one checkout do not alter the other checkout’s working files.
+- **The repository data is shared.** Both worktrees use the same Git object database and commit history. Uncommitted edits exist only in their worktree’s files and index; committing turns those edits into a durable snapshot in the shared history.
+
+That last distinction matters for agent workflows: a new worktree gives an agent an isolated place to work, but it does not save the agent’s changes. The commit is the savepoint.
 
 ## What is a Git worktree?
 
