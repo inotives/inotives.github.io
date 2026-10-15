@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-10-15-git-worktrees-agent-loops",
+      "filename": "2026-10-15-git-worktrees-agent-loops.md",
+      "category": "post",
+      "title": "Git Worktrees for Agent Loops: Isolation, Savepoints, and Parallel Work",
+      "date": "2026-10-15",
+      "tags": [
+        "git",
+        "git-worktree",
+        "ai-agents",
+        "agent-rig",
+        "agentic-workflows",
+        "software-development"
+      ],
+      "series": "building-ai-systems",
+      "summary": "What Git worktrees are, how they help agent loops work safely, and practical ways to use them for parallel features, reviews, hotfixes, experiments, and resumable tasks.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-14-postgres-mcp-team-agent-memory",
       "filename": "2026-10-14-postgres-mcp-team-agent-memory.md",
       "category": "post",

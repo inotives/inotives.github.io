@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+  <title id="title">Multiple Git worktrees for parallel agent sessions</title>
+  <desc id="desc">Three isolated working directories use separate branches and share one Git repository object store.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1"><stop stop-color="#07111f"/><stop offset="1" stop-color="#161a30"/></linearGradient>
+    <linearGradient id="tree" x1="0" x2="1"><stop stop-color="#172554"/><stop offset="1" stop-color="#1e3a8a"/></linearGradient>
+    <linearGradient id="repo" x1="0" x2="1"><stop stop-color="#0e7490"/><stop offset="1" stop-color="#155e75"/></linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0 0L10 3L0 6Z" fill="#67e8f9"/></marker>
+  </defs>
+  <rect width="1200" height="650" rx="28" fill="url(#bg)"/>
+  <text x="68" y="68" fill="#f8fafc" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700">One repository, several working directories</text>
+  <text x="68" y="102" fill="#94a3b8" font-family="Inter,Arial,sans-serif" font-size="16">Each task can edit its own checkout while Git history and objects are shared.</text>
+  <g font-family="Inter,Arial,sans-serif">
+    <rect x="64" y="160" width="324" height="116" rx="18" fill="url(#tree)" stroke="#60a5fa"/>
+    <text x="94" y="201" fill="#dbeafe" font-size="18" font-weight="700">Worktree A</text><text x="94" y="234" fill="#bfdbfe" font-size="15">feature/search · Agent worker</text>
+    <rect x="64" y="302" width="324" height="116" rx="18" fill="url(#tree)" stroke="#a78bfa"/>
+    <text x="94" y="343" fill="#ede9fe" font-size="18" font-weight="700">Worktree B</text><text x="94" y="376" fill="#ddd6fe" font-size="15">fix/timeout · Hotfix</text>
+    <rect x="64" y="444" width="324" height="116" rx="18" fill="url(#tree)" stroke="#34d399"/>
+    <text x="94" y="485" fill="#d1fae5" font-size="18" font-weight="700">Worktree C</text><text x="94" y="518" fill="#a7f3d0" font-size="15">main · Coordinator / integration</text>
+    <rect x="735" y="225" width="394" height="260" rx="22" fill="url(#repo)" stroke="#67e8f9" stroke-width="2"/>
+    <text x="932" y="276" fill="#ecfeff" font-size="23" font-weight="700" text-anchor="middle">Shared Git repository</text>
+    <text x="932" y="326" fill="#cffafe" font-size="16" text-anchor="middle">object database</text>
+    <text x="932" y="362" fill="#cffafe" font-size="16" text-anchor="middle">branches + tags</text>
+    <text x="932" y="398" fill="#cffafe" font-size="16" text-anchor="middle">worktree administration</text>
+    <text x="932" y="445" fill="#a5f3fc" font-size="14" text-anchor="middle">Each checkout keeps its own HEAD and index</text>
+  </g>
+  <path d="M388 218C520 218 580 275 720 290M388 360H720M388 502C520 502 580 445 720 420" fill="none" stroke="#164e63" stroke-width="9" stroke-linecap="round"/>
+  <path d="M388 218C520 218 580 275 720 290M388 360H720M388 502C520 502 580 445 720 420" fill="none" stroke="#67e8f9" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="68" y="610" fill="#64748b" font-family="Inter,Arial,sans-serif" font-size="14">Separate worktrees isolate files; they do not isolate databases, ports, credentials, or external services.</text>
+</svg>
