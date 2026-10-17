@@ -1,6 +1,24 @@
 {
   "posts": [
     {
+      "slug": "2026-10-17-mcp-vs-api",
+      "filename": "2026-10-17-mcp-vs-api.md",
+      "category": "post",
+      "title": "MCP vs API: two ways software systems connect",
+      "date": "2026-10-17",
+      "tags": [
+        "mcp",
+        "api",
+        "ai-agents",
+        "software-architecture",
+        "integrations"
+      ],
+      "series": "building-ai-systems",
+      "summary": "APIs expose operations and data between software systems. MCP standardizes how AI applications discover and use tools and context. A practical order-management example shows how they differ, and how they fit together.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-15-git-worktrees-agent-loops",
       "filename": "2026-10-15-git-worktrees-agent-loops.md",
       "category": "post",

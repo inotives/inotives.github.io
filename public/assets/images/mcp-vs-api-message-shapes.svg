@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 740" role="img" aria-labelledby="title desc">
+  <title id="title">Technical structure of an API request compared with an MCP tool call</title>
+  <desc id="desc">A dark-theme comparison. An HTTP API request is shaped by a verb, path, headers, body, and HTTP response. An MCP tool call uses JSON-RPC, a protocol method, a server tool name, schema-described arguments, and an MCP result, carried over stdio or Streamable HTTP.</desc>
+  <style>
+    text{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;fill:#edf3fb}.title{font-size:30px;font-weight:750}.sub{font-size:17px;fill:#a9bad0}.head{font-size:21px;font-weight:700}.label{font-size:16px;font-weight:700}.code{font:15px ui-monospace,SFMono-Regular,Menlo,monospace;fill:#d8e5f4}.small{font-size:15px;fill:#bfccdd}.muted{font-size:14px;fill:#97a9c0}.panel{fill:#101827;stroke:#27374e;stroke-width:2}.api{fill:#172b44;stroke:#68a8ff;stroke-width:2}.mcp{fill:#22203a;stroke:#b899ff;stroke-width:2}.line{stroke:#69d8d2;stroke-width:3}.chip{fill:#18283b;stroke:#3a526f;stroke-width:1.5}
+  </style>
+  <rect width="1400" height="740" rx="28" fill="#0b1120"/>
+  <text x="52" y="58" class="title">The wire format reflects the caller’s contract</text>
+  <text x="52" y="89" class="sub">HTTP can carry an API or MCP. The transport alone does not tell you which contract you are speaking.</text>
+  <rect x="42" y="122" width="638" height="520" rx="20" class="panel"/>
+  <rect x="720" y="122" width="638" height="520" rx="20" class="panel"/>
+  <text x="76" y="169" class="head">HTTP API</text><text x="76" y="199" class="small">Caller targets a route defined by the service</text>
+  <rect x="76" y="227" width="570" height="274" rx="14" class="api"/>
+  <text x="102" y="269" class="label">Request</text>
+  <text x="102" y="307" class="code">POST /v1/orders/A-1041/cancel</text>
+  <text x="102" y="338" class="code">Authorization: Bearer …</text>
+  <text x="102" y="382" class="code">Content-Type: application/json</text>
+  <text x="102" y="426" class="code">{"reason":"customer_request"}</text>
+  <line x1="102" y1="453" x2="610" y2="453" class="line"/>
+  <text x="102" y="482" class="code">HTTP 200 / 4xx / 5xx + response body</text>
+  <text x="76" y="547" class="small">Contract often documents method, path, auth, inputs,</text><text x="76" y="574" class="small">status codes, and output schema (for example, OpenAPI).</text>
+  <rect x="76" y="596" width="266" height="30" rx="15" class="chip"/><text x="94" y="617" class="muted">caller knows the endpoint</text>
+
+  <text x="754" y="169" class="head">MCP tool call</text><text x="754" y="199" class="small">Host targets a capability advertised by a server</text>
+  <rect x="754" y="227" width="570" height="274" rx="14" class="mcp"/>
+  <text x="780" y="269" class="label">JSON-RPC request (core fields)</text>
+  <text x="780" y="307" class="code">{"jsonrpc":"2.0", "id":7,</text>
+  <text x="780" y="338" class="code"> "method":"tools/call",</text>
+  <text x="780" y="369" class="code"> "params":{"name":"request_order_cancellation",</text>
+  <text x="780" y="400" class="code"> "arguments":{"order_id":"A-1041",</text>
+  <text x="780" y="431" class="code"> "reason":"customer_request"}}}</text>
+  <line x1="780" y1="453" x2="1288" y2="453" class="line"/>
+  <text x="780" y="482" class="code">result: content and optional structured data</text>
+  <text x="754" y="547" class="small">Contract includes method, tool name, description,</text><text x="754" y="574" class="small">JSON Schema arguments, and a protocol result.</text>
+  <rect x="754" y="596" width="245" height="30" rx="15" class="chip"/><text x="772" y="617" class="muted">tool can be discovered</text>
+
+  <text x="52" y="690" class="small">MCP messages travel over stdio locally or Streamable HTTP remotely. Modern HTTP MCP adds protocol metadata and routing headers.</text>
+</svg>
