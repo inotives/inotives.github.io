@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-10-20-from-agent-rig-to-trinary-agents",
+      "filename": "2026-10-20-from-agent-rig-to-trinary-agents.md",
+      "category": "post",
+      "title": "From AgentRig to Trinary Agents: moving my workflow into a skill",
+      "date": "2026-10-20",
+      "tags": [
+        "ai-agents",
+        "agent-rig",
+        "trinary-agents",
+        "subagents",
+        "agentic-workflows",
+        "developer-tools"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Why I extracted my planner-worker-reviewer workflow from an installed CLI into a portable agent skill, replaced live SQLite workflow state with Markdown records, and added a read-only dashboard.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-17-mcp-vs-api",
       "filename": "2026-10-17-mcp-vs-api.md",
       "category": "post",
