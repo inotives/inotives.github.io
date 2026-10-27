@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-10-27-duckdb-parquet-elt-local-aws",
+      "filename": "2026-10-27-duckdb-parquet-elt-local-aws.md",
+      "category": "post",
+      "title": "One Parquet ELT pipeline from a laptop to AWS with DuckDB, dlt, and dbt",
+      "date": "2026-10-27",
+      "tags": [
+        "data-engineering",
+        "duckdb",
+        "parquet",
+        "dlt",
+        "dbt",
+        "aws"
+      ],
+      "series": "data-engineering",
+      "summary": "A practical local-to-S3 ELT design: dlt lands market data, a health gate checks drift before Bronze, dbt builds Parquet Silver and Gold models through DuckDB, and an API serves only published Gold data.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-20-from-agent-rig-to-trinary-agents",
       "filename": "2026-10-20-from-agent-rig-to-trinary-agents.md",
       "category": "post",

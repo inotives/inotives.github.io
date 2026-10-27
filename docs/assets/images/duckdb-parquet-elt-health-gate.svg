@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 390" role="img" aria-labelledby="title desc">
+  <title id="title">Health gate between Raw and Bronze</title>
+  <desc id="desc">An immutable Raw batch and manifest enter schema, value, and freshness checks. Accepted batches are promoted into Bronze. Rejected batches are recorded in quarantine and can be replayed after review.</desc>
+  <defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#15233a"/><stop offset="1" stop-color="#0b1220"/></linearGradient><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#9cb0c9" stroke-width="1.6"/></marker></defs>
+  <rect width="1200" height="390" rx="24" fill="url(#bg)"/>
+  <text x="47" y="55" fill="#fff" font-family="system-ui,sans-serif" font-size="27" font-weight="700">A healthy load is not yet healthy data</text>
+  <text x="47" y="83" fill="#a9bad0" font-family="system-ui,sans-serif" font-size="16">The batch decision is recorded before any trusted file is published.</text>
+  <g font-family="system-ui,sans-serif">
+    <rect x="50" y="142" width="222" height="119" rx="16" fill="#1e4b55" stroke="#4ca7a7"/>
+    <text x="76" y="180" fill="#fff" font-size="20" font-weight="700">Raw batch</text><text x="76" y="211" fill="#bce5e4" font-size="15">source snapshot + manifest</text><text x="76" y="235" fill="#bce5e4" font-size="15">immutable batch ID</text>
+    <rect x="359" y="118" width="370" height="168" rx="18" fill="#293c54" stroke="#6c8cb0"/>
+    <text x="387" y="157" fill="#fff" font-size="20" font-weight="700">Contract checks</text>
+    <text x="387" y="189" fill="#c8d8e9" font-size="16">Schema and type drift</text><text x="387" y="217" fill="#c8d8e9" font-size="16">Nulls, keys, price and volume</text><text x="387" y="245" fill="#c8d8e9" font-size="16">Freshness and row-count change</text>
+    <rect x="826" y="111" width="304" height="95" rx="16" fill="#284d43" stroke="#64bb91"/>
+    <text x="853" y="149" fill="#fff" font-size="20" font-weight="700">Accepted → Bronze</text><text x="853" y="179" fill="#c0edd8" font-size="15">typed Parquet + batch ID</text>
+    <rect x="826" y="232" width="304" height="95" rx="16" fill="#513b3d" stroke="#d48388"/>
+    <text x="853" y="270" fill="#fff" font-size="20" font-weight="700">Rejected → Quarantine</text><text x="853" y="300" fill="#f3c9cc" font-size="15">reason, review, replay</text>
+  </g>
+  <g stroke="#9cb0c9" stroke-width="2.5" fill="none" marker-end="url(#arrow)"><path d="M274 202h76"/><path d="M731 167h86"/><path d="M731 239h86"/></g>
+  <text x="756" y="151" fill="#a5dfbd" font-family="system-ui,sans-serif" font-size="14">pass</text><text x="756" y="264" fill="#efb9bd" font-family="system-ui,sans-serif" font-size="14">fail</text>
+</svg>
