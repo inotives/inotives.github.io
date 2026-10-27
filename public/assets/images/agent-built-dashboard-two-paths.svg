@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">Two ways to publish an analytical mart</title>
+  <desc id="desc">One governed Gold mart can feed a BI platform or an agent-built dashboard. MCP connects a coding agent to approved data during construction. The deployed dashboard uses its own API.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#86a8bf" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="520" rx="24" fill="url(#bg)"/>
+  <text x="48" y="56" fill="#f6f9fc" font-family="system-ui,sans-serif" font-size="28" font-weight="700">The same data, two dashboard paths</text>
+  <text x="48" y="85" fill="#a9bdd0" font-family="system-ui,sans-serif" font-size="16">Choose the interface workflow that fits the people who will use and maintain it.</text>
+  <g font-family="system-ui,sans-serif">
+    <rect x="43" y="174" width="222" height="170" rx="18" fill="#1c3943" stroke="#53dfdc" stroke-width="2"/>
+    <text x="72" y="218" fill="#fff" font-size="21" font-weight="700">Analytical DB</text>
+    <text x="72" y="251" fill="#c3e8e8" font-size="16">Governed Gold mart</text>
+    <text x="72" y="281" fill="#b1ccd0" font-size="15">Metrics · grain · freshness</text>
+    <text x="72" y="311" fill="#b1ccd0" font-size="15">Read-only access</text>
+    <rect x="370" y="137" width="278" height="128" rx="18" fill="#243f59" stroke="#6197c6"/>
+    <text x="399" y="180" fill="#fff" font-size="20" font-weight="700">BI platform</text>
+    <text x="399" y="211" fill="#c2d8ed" font-size="15">Model, tiles, sharing controls</text>
+    <text x="399" y="238" fill="#c2d8ed" font-size="15">Analysts maintain reports</text>
+    <rect x="746" y="137" width="407" height="128" rx="18" fill="#233d55" stroke="#6197c6"/>
+    <text x="775" y="180" fill="#fff" font-size="20" font-weight="700">BI dashboard</text>
+    <text x="775" y="212" fill="#c2d8ed" font-size="15">Standard charts and report workflows</text>
+    <text x="775" y="239" fill="#c2d8ed" font-size="15">Shared inside the BI platform</text>
+    <rect x="370" y="310" width="278" height="146" rx="18" fill="#4a3c2b" stroke="#e3ad5a"/>
+    <text x="399" y="352" fill="#fff" font-size="20" font-weight="700">MCP + coding agent</text>
+    <text x="399" y="383" fill="#f5d9ab" font-size="15">Inspect approved data</text>
+    <text x="399" y="411" fill="#f5d9ab" font-size="15">Write and review app code</text>
+    <rect x="746" y="310" width="407" height="146" rx="18" fill="#284b42" stroke="#65c29a"/>
+    <text x="775" y="352" fill="#fff" font-size="20" font-weight="700">Custom dashboard</text>
+    <text x="775" y="383" fill="#c2e9d8" font-size="15">Browser → authenticated API → Gold mart</text>
+    <text x="775" y="411" fill="#c2e9d8" font-size="15">HTML · Chart.js · D3 · optional WebGL</text>
+  </g>
+  <g stroke="#86a8bf" stroke-width="2.5" fill="none" marker-end="url(#arrow)"><path d="M266 218h95"/><path d="M266 307h62q30 0 30 29v47h3"/><path d="M650 201h86"/><path d="M650 383h86"/></g>
+  <text x="289" y="190" fill="#9fbbcc" font-family="system-ui,sans-serif" font-size="14">report path</text>
+  <text x="281" y="370" fill="#d8bd8c" font-family="system-ui,sans-serif" font-size="14">build path</text>
+</svg>

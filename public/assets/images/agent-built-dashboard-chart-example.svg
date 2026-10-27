@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 710" role="img" aria-labelledby="title desc">
+  <title id="title">Illustrative market dashboard with line and bar charts</title>
+  <desc id="desc">A dark sample dashboard shows a 30-day daily trading volume trend, market-share bars for BTC, ETH, and SOL, and a BTC detail panel. All values are illustrative, not live market data.</desc>
+  <rect width="1200" height="710" rx="24" fill="#0c1624"/>
+  <rect x="26" y="24" width="1148" height="662" rx="20" fill="#132237" stroke="#34495f"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="55" y="70" fill="#f7fafc" font-size="27" font-weight="700">Market overview</text>
+    <text x="55" y="99" fill="#a9bdd0" font-size="15">Illustrative data · Last 30 complete days · UTC</text>
+    <rect x="905" y="48" width="231" height="46" rx="10" fill="#213b48" stroke="#53dfdc"/>
+    <circle cx="928" cy="71" r="5" fill="#53dfdc"/><text x="945" y="77" fill="#c9e8e7" font-size="14">As of 27 Oct, 00:00 UTC</text>
+    <rect x="55" y="132" width="714" height="361" rx="15" fill="#192a40" stroke="#39516b"/>
+    <text x="79" y="168" fill="#f4f7fa" font-size="19" font-weight="700">Daily trading volume</text>
+    <text x="79" y="194" fill="#a8bfd2" font-size="14">USD millions · all tracked markets</text>
+    <g stroke="#3c5267" stroke-width="1"><path d="M118 225h611M118 285h611M118 345h611M118 405h611"/></g>
+    <g fill="#a9bdd0" font-size="13" text-anchor="end"><text x="104" y="230">24</text><text x="104" y="290">20</text><text x="104" y="350">16</text><text x="104" y="410">12</text></g>
+    <path d="M120 351L141 335L162 344L183 314L204 326L225 301L246 290L267 305L288 274L309 286L330 255L351 267L372 278L393 239L414 252L435 249L456 261L477 237L498 253L519 245L540 264L561 252L582 267L603 238L624 249L645 227L666 242L687 230L708 244L729 232" fill="none" stroke="#53dfdc" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M120 351L141 335L162 344L183 314L204 326L225 301L246 290L267 305L288 274L309 286L330 255L351 267L372 278L393 239L414 252L435 249L456 261L477 237L498 253L519 245L540 264L561 252L582 267L603 238L624 249L645 227L666 242L687 230L708 244L729 232L729 405L120 405Z" fill="#53dfdc" opacity=".08"/>
+    <circle cx="729" cy="232" r="6" fill="#53dfdc" stroke="#132237" stroke-width="3"/>
+    <g fill="#a9bdd0" font-size="13" text-anchor="middle"><text x="121" y="436">27 Sep</text><text x="326" y="436">7 Oct</text><text x="531" y="436">17 Oct</text><text x="725" y="436">26 Oct</text></g>
+    <text x="79" y="467" fill="#7f9bb1" font-size="13">Illustrative values; verify against the Gold mart before publishing.</text>
+    <rect x="791" y="132" width="354" height="361" rx="15" fill="#192a40" stroke="#39516b"/>
+    <text x="817" y="168" fill="#f4f7fa" font-size="19" font-weight="700">Volume by market</text>
+    <text x="817" y="194" fill="#a8bfd2" font-size="14">Share of latest complete day</text>
+    <g font-size="16" fill="#dce8f0"><text x="817" y="246">BTC</text><text x="817" y="318">ETH</text><text x="817" y="390">SOL</text></g>
+    <g fill="#23394d"><rect x="874" y="225" width="218" height="28" rx="6"/><rect x="874" y="297" width="218" height="28" rx="6"/><rect x="874" y="369" width="218" height="28" rx="6"/></g>
+    <rect x="874" y="225" width="139" height="28" rx="6" fill="#53dfdc"/><rect x="874" y="297" width="57" height="28" rx="6" fill="#75a8d5"/><rect x="874" y="369" width="22" height="28" rx="6" fill="#e3ad5a"/>
+    <g fill="#dce8f0" font-size="15" text-anchor="end"><text x="1122" y="246">64%</text><text x="1122" y="318">26%</text><text x="1122" y="390">10%</text></g>
+    <text x="817" y="462" fill="#7f9bb1" font-size="13">Share sums to 100% of included markets.</text>
+    <rect x="55" y="516" width="1090" height="132" rx="15" fill="#192a40" stroke="#39516b"/>
+    <text x="80" y="553" fill="#f4f7fa" font-size="19" font-weight="700">Selected symbol: BTC</text>
+    <text x="80" y="583" fill="#b8cddd" font-size="15">Latest price</text><text x="80" y="617" fill="#fff" font-size="28" font-weight="700">$68,250</text>
+    <text x="359" y="583" fill="#b8cddd" font-size="15">24h change</text><text x="359" y="617" fill="#83d6a5" font-size="28" font-weight="700">+1.8%</text>
+    <text x="637" y="583" fill="#b8cddd" font-size="15">Observation time</text><text x="637" y="617" fill="#fff" font-size="20" font-weight="600">26 Oct · 23:59 UTC</text>
+    <text x="925" y="583" fill="#b8cddd" font-size="15">Data status</text><text x="925" y="617" fill="#83d6a5" font-size="20" font-weight="600">Complete</text>
+  </g>
+</svg>
