@@ -12,7 +12,7 @@ const SCENE_CAPTIONS = {
   network: 'Five enterprise data sources behind one AI endpoint',
   coins: 'Five stablecoin launches: PAXG, USDP, BUSD, PYUSD, USDL',
   grid: 'A web page drawn as a grid of components',
-  clusters: 'Three open-source projects: OpenVAIA, agent-rig, strata-memory',
+  clusters: 'Five projects in progress: three open source, two private',
   agents: 'A planner handing work to agents and back',
   lattice: 'Warehouse tables: rows, columns and models',
   notes: 'Every note on this site, one column per day',
@@ -103,14 +103,17 @@ function formation(name, posts) {
       set(i, x, y, gaussian(i + 6) * 0.06, edge ? SIGNAL : FOG)
     }
   } else if (name === 'clusters') {
+    // the projects I'm building: three open source (cyan), two private (amber)
     const centers = [
-      [-2.2, 0.8, 0, 0.75, AMBER],
-      [1.9, 1.1, -0.4, 0.5, SIGNAL],
-      [0.4, -1.5, 0.5, 0.45, SIGNAL],
+      [-2.6, 0.9, 0, 0.5, SIGNAL],
+      [-0.3, 1.4, -0.4, 0.45, SIGNAL],
+      [2.2, 0.8, 0, 0.45, SIGNAL],
+      [-1.4, -1.3, 0.4, 0.5, AMBER],
+      [1.3, -1.2, 0.3, 0.5, AMBER],
     ]
     for (let i = 0; i < POINT_COUNT; i++) {
-      if (i < 3200) {
-        const c = centers[i % 3]
+      if (i < 3400) {
+        const c = centers[i % centers.length]
         set(i, c[0] + gaussian(i) * c[3], c[1] + gaussian(i + 2) * c[3], c[2] + gaussian(i + 4) * c[3], c[4])
       } else {
         set(i, (random(i) - 0.5) * 9, (random(i + 1) - 0.5) * 6, (random(i + 2) - 0.5) * 4, FOG)

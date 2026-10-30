@@ -79,18 +79,17 @@ Before focusing on crypto data systems, I worked as a software engineer and web 
 - Created automation and quality-testing scripts at Autodesk using Python and Sikuli
 - Worked on energy visualization and building-management prototypes at NTU
 
-## Open source projects
+## Projects I'm building
 
-I build tools that solve problems I have actually encountered in production.
+I build tools that solve problems I have actually encountered in production. Most of them are open source.
 
-**[OpenVAIA](https://github.com/inotives/openvaia) — Multi-Agent AI Platform**
-Python, TypeScript, Postgres, pgvector. Production-grade agentic platform with custom async runtime, hybrid FTS + pgvector memory, 100+ skill library, multi-channel inbox (Discord, Slack, Telegram), and pluggable LLM backends (Anthropic, OpenAI, Google, Groq).
+- **[Agent Rig](https://github.com/inotives/agent-rig)** — Filesystem-first agent workspaces. A TypeScript CLI that scaffolds a \`.agent-rig/\` workspace into any project, so a planner, worker and reviewer loop runs on the AI subscriptions you already have, with workflow state in SQLite or Markdown.
+- **[Trinary Agents](https://github.com/inotives/trinary-agents)** — A project-manager, worker and reviewer workflow packaged as agent skills. Feature ideas become dependency-aware tasks that workers build, reviewers verify and you approve, with durable Markdown handoffs. It grew out of Agent Rig.
+- **[InoAI](https://github.com/inotives/inoai)** — A local Discord bridge to your own signed-in coding-agent CLI (Codex, Claude Code or OpenCode), keeping conversations, shared memory and scheduled tasks in local SQLite.
+- **Sparkling** (private) — A gamified learning app for kids, where a tiny voxel robot helps them learn Math, Science, English and Chinese.
+- **AgentOS** (private) — My personal agentic OS and second brain, organised into Apps, Routines, Memory and Skills in plain Markdown.
 
-**[agent-rig](https://github.com/inotives/agent-rig) — Multi-Agent Workspace CLI**
-TypeScript. Filesystem-first CLI scaffolding auditable, version-controlled multi-agent workspaces with zero API lock-in. Supports solo, swarm, supervisor-worker, and coder-reviewer agent patterns. Published on npm.
-
-**[strata-memory](https://github.com/inotives/strata-memory) — Agentic Memory System**
-Rust, SQLite. Local-first three-tier memory system (draft → knowledge → intelligence) with SQLite FTS5 indexing and semantic search for long-running agentic workflows.
+Earlier open-source work, such as OpenVAIA, strata-memory and barebone-agents, is listed on the [Projects](/projects) page, along with the study guides and training material I've written.
 
 ## AI workflow design
 

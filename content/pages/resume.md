@@ -144,11 +144,14 @@ Singapore | May 2009 - May 2010
 - Developed research prototypes using Zigbee, Arduino, C#, and MS SQL for wireless sensing, smart aquarium monitoring, and indoor positioning tests.
 - Supported wireless charging experiments, final-year student projects, testing workflows, and research documentation.
 
-## Open Source Projects
+## Projects
 
-- **[OpenVAIA](https://github.com/inotives/openvaia)** — Multi-Agent AI Platform. Production-grade agentic platform with custom async runtime, hybrid FTS + pgvector memory, 100+ skill library, multi-channel inbox (Discord, Slack, Telegram), and pluggable LLM backends. Python, TypeScript, Postgres, pgvector.
-- **[agent-rig](https://github.com/inotives/agent-rig)** — Multi-Agent Workspace CLI. Filesystem-first CLI scaffolding auditable, version-controlled multi-agent workspaces with zero API lock-in. Supports solo, swarm, supervisor-worker, and coder-reviewer agent patterns. Published on npm. TypeScript.
-- **[strata-memory](https://github.com/inotives/strata-memory)** — Agentic Memory System. Local-first three-tier memory system (draft → knowledge → intelligence) with SQLite FTS5 indexing and semantic search for long-running agentic workflows. Rust, SQLite.
+- **[Agent Rig](https://github.com/inotives/agent-rig)** — Filesystem-first agent workspaces. A CLI that scaffolds a `.agent-rig/` workspace into any project so a planner, worker and reviewer loop runs on existing Claude, Codex or OpenCode subscriptions, with workflow state in SQLite or Markdown. Published on npm. TypeScript, Node.js, SQLite.
+- **[Trinary Agents](https://github.com/inotives/trinary-agents)** — Project-manager, worker and reviewer workflow packaged as agent skills. Turns feature ideas into dependency-aware tasks that workers build, reviewers verify and a human approves, with durable Markdown handoffs and a live dashboard. Agent skills, Python, Markdown.
+- **[InoAI](https://github.com/inotives/inoai)** — Local Discord bridge to a signed-in coding-agent CLI (Codex, Claude Code or OpenCode). Keeps conversations, shared memory and owner-only scheduled tasks in local SQLite, with a local UI to manage them. TypeScript, Node.js, SQLite.
+- **Sparkling** (private) — Gamified learning app for kids: a voxel robot companion, four school subjects, and a parent portal for accounts, content and rewards. TypeScript, three.js, Hono, Postgres, Docker.
+- **AgentOS** (private) — Personal agentic OS and second brain organised into Apps, Routines, Memory and Skills, in plain Markdown with a local dashboard. Claude Code, Markdown, Node.js.
+- **[inoTives](https://inotives.github.io)** — This personal site and technical notebook: a React, Vite and three.js static site built from Markdown and deployed to GitHub Pages by GitHub Actions.
 
 ## Technical Skills
 
