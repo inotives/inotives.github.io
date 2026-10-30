@@ -12,8 +12,7 @@ export default function CertificationGuides() {
   return (
     <div className="page-stack">
       <section className="manual-section">
-        <p className="label">Index / learning guides</p>
-        <h1 className="page-title">Certification Guides</h1>
+        <h1 className="page-title">Certification guides</h1>
         <p className="section-copy">
           Study guides and practical reference material for technology certifications.
         </p>

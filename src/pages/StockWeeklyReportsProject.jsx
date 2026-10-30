@@ -41,10 +41,9 @@ export default function StockWeeklyReportsProject() {
     <div className="page-stack">
       <section className="manual-section">
         <Link to="/projects" className="back-link">
-          &larr; Back to projects
+          All projects
         </Link>
-        <p className="label">Projects / research reports</p>
-        <h1 className="page-title">Weekly Stock Market Summary</h1>
+        <h1 className="page-title">Weekly stock market summary</h1>
         <p className="section-copy">
           A weekly research archive where stock analysis agents summarize broad
           market context, sector rotation, notable stock moves, risk signals,
@@ -53,8 +52,7 @@ export default function StockWeeklyReportsProject() {
       </section>
 
       <section className="manual-section">
-        <p className="label">Report activity</p>
-        <h2 className="section-title">Weekly Reports</h2>
+        <h2 className="section-title">Weekly reports</h2>
         <p className="section-copy">
           Weekly report files added under the stock weekly reports directory
           will appear here after the site content index is rebuilt.

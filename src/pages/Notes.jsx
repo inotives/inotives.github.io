@@ -1,185 +1,149 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getAllPosts } from '../utils/content'
+import { formatMonth } from '../utils/dates'
 import PostCard from '../components/PostCard'
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 30
+const TOP_TAG_COUNT = 14
+
+function countTags(posts) {
+  const counts = {}
+  posts.forEach((post) => post.tags.forEach((tag) => (counts[tag] = (counts[tag] || 0) + 1)))
+  return Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+}
+
+function groupByMonth(posts) {
+  const groups = []
+  posts.forEach((post) => {
+    const month = post.date?.slice(0, 7) || 'undated'
+    const last = groups[groups.length - 1]
+    if (last && last.month === month) last.posts.push(post)
+    else groups.push({ month, posts: [post] })
+  })
+  return groups
+}
 
 export default function Notes() {
   const posts = getAllPosts()
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTag = searchParams.get('tag')
   const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
-  const [tagsOpen, setTagsOpen] = useState(Boolean(activeTag))
+  const [limit, setLimit] = useState(PAGE_SIZE)
+  const [showAllTags, setShowAllTags] = useState(false)
 
-  const allTags = [...new Set(posts.flatMap((p) => p.tags))].sort()
+  const tagCounts = countTags(posts)
+  const visibleTags = showAllTags ? tagCounts : tagCounts.slice(0, TOP_TAG_COUNT)
+  // Keep a tag chosen from a note visible even when it isn't a top tag
+  if (activeTag && !visibleTags.some(([tag]) => tag === activeTag)) {
+    const match = tagCounts.find(([tag]) => tag === activeTag)
+    if (match) visibleTags.push(match)
+  }
 
+  const query = search.trim().toLowerCase()
   const filtered = posts.filter((post) => {
     if (activeTag && !post.tags.includes(activeTag)) return false
-    if (search) {
-      const q = search.toLowerCase()
-      return (
-        post.title.toLowerCase().includes(q) ||
-        post.summary.toLowerCase().includes(q) ||
-        post.tags.some((t) => t.toLowerCase().includes(q))
-      )
-    }
-    return true
+    if (!query) return true
+    return (
+      post.title.toLowerCase().includes(query) ||
+      post.summary.toLowerCase().includes(query) ||
+      post.tags.some((t) => t.toLowerCase().includes(query))
+    )
   })
+  const shown = filtered.slice(0, limit)
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const currentPage = Math.min(page, totalPages)
-  const start = (currentPage - 1) * PAGE_SIZE
-  const shown = filtered.slice(start, start + PAGE_SIZE)
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setPage(1)
-  }, [search, activeTag])
+  function handleSearch(value) {
+    setSearch(value)
+    setLimit(PAGE_SIZE)
+  }
 
   function handleTagClick(tag) {
-    if (tag === activeTag) {
-      setSearchParams({})
-    } else {
-      setSearchParams({ tag })
-    }
-  }
-
-  function goTo(p) {
-    setPage(p)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  function renderPagination() {
-    if (totalPages <= 1) return null
-
-    const pages = []
-    const maxVisible = 5
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2))
-    let endPage = Math.min(totalPages, startPage + maxVisible - 1)
-    if (endPage - startPage + 1 < maxVisible) {
-      startPage = Math.max(1, endPage - maxVisible + 1)
-    }
-
-    if (currentPage > 1) {
-      pages.push(
-        <button key="prev" className="page-btn" onClick={() => goTo(currentPage - 1)}>
-          ← Prev
-        </button>
-      )
-    }
-
-    if (startPage > 1) {
-      pages.push(
-        <button key={1} className="page-btn" onClick={() => goTo(1)}>1</button>
-      )
-      if (startPage > 2) pages.push(<span key="dots-s" className="page-dots">…</span>)
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(
-        <button
-          key={i}
-          className={`page-btn ${i === currentPage ? 'page-btn-active' : ''}`}
-          onClick={() => goTo(i)}
-        >
-          {i}
-        </button>
-      )
-    }
-
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) pages.push(<span key="dots-e" className="page-dots">…</span>)
-      pages.push(
-        <button key={totalPages} className="page-btn" onClick={() => goTo(totalPages)}>
-          {totalPages}
-        </button>
-      )
-    }
-
-    if (currentPage < totalPages) {
-      pages.push(
-        <button key="next" className="page-btn" onClick={() => goTo(currentPage + 1)}>
-          Next →
-        </button>
-      )
-    }
-
-    return <div className="pagination">{pages}</div>
+    setLimit(PAGE_SIZE)
+    if (!tag || tag === activeTag) setSearchParams({})
+    else setSearchParams({ tag })
   }
 
   return (
     <div className="page-stack">
-      <section className="manual-section">
-        <p className="label">Index / notes</p>
+      <header>
         <h1 className="page-title">Notes</h1>
         <p className="section-copy">
-          Notes, tutorials, and operating records from the inoTives workspace.
+          Everything I&apos;ve written, newest first. Search, or narrow the list by tag.
+        </p>
+      </header>
+
+      <section className="notes-filters" aria-label="Filter notes">
+        <input
+          type="search"
+          aria-label="Search notes"
+          placeholder="Search titles, summaries and tags"
+          value={search}
+          onChange={(e) => handleSearch(e.target.value)}
+          className="input"
+        />
+        <div className="tag-row">
+          <button
+            type="button"
+            className={`tag ${!activeTag ? 'tag-active' : ''}`}
+            aria-pressed={!activeTag}
+            onClick={() => handleTagClick(null)}
+          >
+            All
+          </button>
+          {visibleTags.map(([tag, count]) => (
+            <button
+              key={tag}
+              type="button"
+              className={`tag ${tag === activeTag ? 'tag-active' : ''}`}
+              aria-pressed={tag === activeTag}
+              onClick={() => handleTagClick(tag)}
+            >
+              {tag}
+              <small>{count}</small>
+            </button>
+          ))}
+          {tagCounts.length > TOP_TAG_COUNT && (
+            <button type="button" className="tag" onClick={() => setShowAllTags((open) => !open)}>
+              {showAllTags ? 'Fewer tags' : `All ${tagCounts.length} tags`}
+            </button>
+          )}
+        </div>
+        <p className="notes-count">
+          {filtered.length} {filtered.length === 1 ? 'note' : 'notes'}
+          {activeTag && <> tagged {activeTag}</>}
+          {query && <> matching &ldquo;{search.trim()}&rdquo;</>}
         </p>
       </section>
 
       <section>
-        <input
-          type="text"
-          placeholder="Search notes..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="input notes-search"
-        />
-
-        {allTags.length > 0 && (
-          <div className="notes-filter-panel">
-            <button
-              type="button"
-              className="notes-filter-toggle"
-              aria-expanded={tagsOpen}
-              aria-controls="notes-tags"
-              onClick={() => setTagsOpen((open) => !open)}
-            >
-              <span>Tags</span>
-              <span className="notes-filter-meta">
-                {activeTag ? activeTag : `${allTags.length} available`}
-              </span>
-              <span className="notes-filter-icon">{tagsOpen ? '-' : '+'}</span>
-            </button>
-
-            {tagsOpen && (
-              <div id="notes-tags" className="notes-tag-list">
-                {allTags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => handleTagClick(tag)}
-                    className={`tag ${tag === activeTag ? 'tag-active' : ''}`}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="notes-layout">
-          <div className="notes-main">
-            {filtered.length === 0 ? (
-              <p className="empty-state">No notes found.</p>
-            ) : (
-              <>
-                <p className="notes-count">
-                  {filtered.length} {filtered.length === 1 ? 'note' : 'notes'}
-                  {activeTag && <> tagged <span className="tag tag-active tag-static">{activeTag}</span></>}
-                </p>
-                <div className="record-list">
-                  {shown.map((post) => (
+        {filtered.length === 0 ? (
+          <p className="empty-state">
+            No notes match. Clear the search or pick another tag.
+          </p>
+        ) : (
+          <>
+            {groupByMonth(shown).map(({ month, posts: monthPosts }) => (
+              <section key={month} className="notes-month">
+                <div className="notes-month-head">
+                  <h2>{month === 'undated' ? 'Undated' : formatMonth(month)}</h2>
+                  <span>
+                    {monthPosts.length} {monthPosts.length === 1 ? 'note' : 'notes'}
+                  </span>
+                </div>
+                <ol className="ledger">
+                  {monthPosts.map((post) => (
                     <PostCard key={post.slug} post={post} />
                   ))}
-                </div>
-                {renderPagination()}
-              </>
+                </ol>
+              </section>
+            ))}
+            {filtered.length > shown.length && (
+              <button type="button" className="show-more" onClick={() => setLimit((n) => n + PAGE_SIZE)}>
+                Show {Math.min(PAGE_SIZE, filtered.length - shown.length)} more notes
+              </button>
             )}
-          </div>
-        </div>
+          </>
+        )}
       </section>
     </div>
   )

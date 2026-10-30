@@ -1,9 +1,8 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import Notes from './pages/Notes'
 import Note from './pages/Note'
-import Portfolio from './pages/Portfolio'
 import About from './pages/About'
 import Projects from './pages/Projects'
 import AdhocResearchesProject from './pages/AdhocResearchesProject'
@@ -24,9 +23,10 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/notes" element={<Notes />} />
           <Route path="/notes/:slug" element={<Note />} />
+          <Route path="/series" element={<SeriesPage />} />
           <Route path="/series/:slug" element={<SeriesPage />} />
           <Route path="/certification-guides" element={<CertificationGuides />} />
-          <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/portfolio" element={<Navigate to="/about" replace />} />
           <Route path="/about" element={<About />} />
           <Route path="/projects" element={<Projects />} />
           <Route

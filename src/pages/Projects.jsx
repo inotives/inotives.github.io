@@ -96,7 +96,6 @@ export default function Projects() {
   return (
     <div className="page-stack">
       <section className="manual-section">
-        <p className="label">Index / projects</p>
         <h1 className="page-title">Projects</h1>
         <p className="section-copy">
           Project records, experiments, and build notes from my data, AI, and
@@ -105,8 +104,7 @@ export default function Projects() {
       </section>
 
       <section className="manual-section">
-        <p className="label">Projects / public repos</p>
-        <h2 className="section-title">Public Repos</h2>
+        <h2 className="section-title">Public repos</h2>
         <div className="record-grid record-grid-two">
           {publicRepos.map((project) => (
             <a
@@ -135,8 +133,7 @@ export default function Projects() {
       </section>
 
       <section className="manual-section">
-        <p className="label">Projects / research reports</p>
-        <h2 className="section-title">Research Reports</h2>
+        <h2 className="section-title">Research reports</h2>
         <p className="section-copy">
           Agent-generated market research covering stocks, crypto markets,
           macroeconomic context, FX pricing, gold, and other cross-asset signals
@@ -152,7 +149,7 @@ export default function Projects() {
               <span>Stocks / Pre-open / Agent research</span>
             </div>
             <h3 className="record-title">
-              Stock Market Pre-Opening Price Estimation
+              Stock market pre-opening price estimation
             </h3>
             <p className="record-copy">
               A dated collection of pre-market stock research reports generated
@@ -171,7 +168,7 @@ export default function Projects() {
               <span>{weeklyReports.length} reports</span>
               <span>Stocks / Weekly / Agent research</span>
             </div>
-            <h3 className="record-title">Weekly Stock Market Summary</h3>
+            <h3 className="record-title">Weekly stock market summary</h3>
             <p className="record-copy">
               A week-by-week archive of generated stock market summaries
               covering broad market context, sector movement, notable names, and
@@ -190,7 +187,7 @@ export default function Projects() {
               <span>{adhocReports.length} reports</span>
               <span>Adhoc / Research / Agent research</span>
             </div>
-            <h3 className="record-title">Adhoc Researches</h3>
+            <h3 className="record-title">Ad hoc research</h3>
             <p className="record-copy">
               A general archive of generated research HTML reports that are not
               part of the scheduled stock pre-open or weekly summary streams.

@@ -1,90 +1,86 @@
 import { Link, useParams } from 'react-router-dom'
 import { getPostsBySeries } from '../utils/content'
+import { formatShort } from '../utils/dates'
+import { SERIES_META } from '../utils/series'
 import PostCard from '../components/PostCard'
 
-const SERIES_META = {
-  'building-ai-systems': {
-    title: 'Building AI Systems That Scale',
-    description:
-      'Notes on designing, operating, and cost-controlling agentic AI systems in production. Covers loop prevention, token budgeting, human-in-the-loop design, and the architectural patterns that separate working deployments from expensive failures.',
-    label: 'ai-systems',
-  },
-  'data-engineering': {
-    title: 'Data Engineering',
-    description:
-      'Notes on building and operating data pipelines, ELT stacks, data modeling, and the infrastructure that turns raw data into something useful.',
-    label: 'data-engineering',
-  },
-  'data-engineering-in-30-days': {
-    title: 'Data Engineering in 30 Days',
-    description:
-      'A practical learning path from SQL and files to reliable pipelines, warehouses, and AI-ready data systems. Each entry takes one concept far enough to build with it.',
-    label: '30-day-learning-path',
-  },
-  'building-motherduck-warehouse': {
-    title: 'Building a MotherDuck Data Warehouse',
-    description:
-      'A practical series on taking a local DuckDB proof of concept to a governed MotherDuck warehouse with S3, Prefect, dbt, and a deliberate path to larger-scale storage.',
-    label: 'motherduck-warehouse',
-  },
+function SeriesIndex() {
+  return (
+    <div className="page-stack">
+      <header>
+        <h1 className="page-title">Series</h1>
+        <p className="section-copy">Notes that build on each other. Read them in order.</p>
+      </header>
+      <ol className="ledger">
+        {Object.entries(SERIES_META).map(([slug, meta]) => {
+          const count = getPostsBySeries(slug).length
+          return (
+            <li key={slug} className="ledger-row">
+              <div className="ledger-date">{count} notes</div>
+              <div>
+                <h2 className="ledger-title">
+                  <Link to={`/series/${slug}`}>{meta.title}</Link>
+                </h2>
+                <p className="ledger-summary">{meta.description}</p>
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+    </div>
+  )
 }
 
 export default function SeriesPage() {
   const { slug } = useParams()
+  if (!slug) return <SeriesIndex />
+
   const meta = SERIES_META[slug]
-  const posts = getPostsBySeries(slug)
+  // Series read in publishing order, oldest first
+  const posts = getPostsBySeries(slug).slice().reverse()
 
   if (!meta) {
     return (
       <div className="page-stack">
-        <section className="manual-section">
-          <Link to="/notes" className="back-link">
-            &larr; Back to notes
+        <header>
+          <Link to="/series" className="back-link">
+            All series
           </Link>
           <h1 className="page-title">Series not found</h1>
           <p className="empty-state">
-            Unknown series slug: <code>{slug}</code>
+            There is no series called <code>{slug}</code>. Pick one from the series list.
           </p>
-        </section>
+        </header>
       </div>
     )
   }
 
   return (
     <div className="page-stack">
-      <section className="manual-section">
-        <Link to="/notes" className="back-link">
-          &larr; Back to notes
+      <header>
+        <Link to="/series" className="back-link">
+          All series
         </Link>
-        <p className="label">Series / {meta.label}</p>
         <h1 className="page-title">{meta.title}</h1>
-        {meta.description && (
-          <p className="section-copy">{meta.description}</p>
-        )}
-      </section>
+        <p className="section-copy">
+          {meta.description}
+          {posts.length > 0 &&
+            ` ${posts.length} ${posts.length === 1 ? 'note' : 'notes'}, from ${formatShort(posts[0].date)} to ${formatShort(posts[posts.length - 1].date)}.`}
+        </p>
+      </header>
 
-      <section className="manual-section">
-        <p className="label">Series / entries</p>
-        <h2 className="section-title">Articles</h2>
-
-        {posts.length === 0 ? (
-          <p className="empty-state">
-            No articles in this series yet. Articles with{' '}
-            <code>series: {slug}</code> in their frontmatter will appear here.
-          </p>
-        ) : (
-          <>
-            <p className="notes-count">
-              {posts.length} {posts.length === 1 ? 'article' : 'articles'}
-            </p>
-            <div className="record-list">
-              {posts.map((post) => (
-                <PostCard key={post.slug} post={post} />
-              ))}
-            </div>
-          </>
-        )}
-      </section>
+      {posts.length === 0 ? (
+        <p className="empty-state">
+          No notes in this series yet. Notes with <code>series: {slug}</code> in their
+          frontmatter will appear here.
+        </p>
+      ) : (
+        <ol className="ledger ledger-numbered">
+          {posts.map((post) => (
+            <PostCard key={post.slug} post={post} />
+          ))}
+        </ol>
+      )}
     </div>
   )
 }

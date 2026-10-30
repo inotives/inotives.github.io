@@ -1,10 +1,22 @@
----
-title: "Portfolio"
+var e=`---
+title: "About me"
 ---
 
-# Portfolio
+# About me
+
+I'm Toni Lim, an AI and data lead working across crypto, fintech, operations, compliance, and product.
 
 Applied AI Engineer and Data Operations Lead with over a decade of experience in regulated fintech and web3. I design and deliver end-to-end AI-powered solutions: from multi-agent architectures and LLM-orchestrated workflows to production data infrastructure, for enterprise clients operating under strict compliance regimes.
+
+View my [resume](/resume), or find me on [LinkedIn](https://www.linkedin.com/in/inotives) and [GitHub](https://github.com/inotives).
+
+## What I do
+
+I build clean data systems for messy operational problems. My work spans data pipelines, analytics models, compliance reporting, internal dashboards, onchain risk monitoring, and decision-support tools for regulated crypto platforms.
+
+I started as a software developer in Singapore, moved into crypto after discovering Bitcoin, and spent nine years at itBit/Paxos across technical support, tech operations, data analysis, and senior data analyst roles. More recently at Flowdesk, I led data operations work across crypto operations, vendor integrations, regulatory reporting, and internal data platform initiatives.
+
+I use AI tools daily to speed up SQL and Python development, debugging, research, documentation, knowledge management, and reusable workflow design.
 
 ## Flowdesk — Lead Data Operations
 
@@ -58,7 +70,16 @@ Across nine years at Paxos (and its predecessor itBit), I moved from technical o
 - Optimized token withdrawal workflows, reducing blockchain gas and network fees by approximately 30%
 - Managed private keys and hardware wallets, executing secure offline multi-sig operations
 
-## Open Source Projects
+## Before crypto — Web and data visualization
+
+Before focusing on crypto data systems, I worked as a software engineer and web application developer across ERP, CMS, CRM, e-commerce, inventory, mobile, API, and data visualization projects.
+
+- Built web applications with JavaScript, AngularJS, Node.js, PHP, Python, MySQL, and MongoDB
+- Developed 3D and data visualization prototypes using Three.js, WebGL, D3.js, and Highstock.js
+- Created automation and quality-testing scripts at Autodesk using Python and Sikuli
+- Worked on energy visualization and building-management prototypes at NTU
+
+## Open source projects
 
 I build tools that solve problems I have actually encountered in production.
 
@@ -71,7 +92,7 @@ TypeScript. Filesystem-first CLI scaffolding auditable, version-controlled multi
 **[strata-memory](https://github.com/inotives/strata-memory) — Agentic Memory System**
 Rust, SQLite. Local-first three-tier memory system (draft → knowledge → intelligence) with SQLite FTS5 indexing and semantic search for long-running agentic workflows.
 
-## AI Workflow Design
+## AI workflow design
 
 I use AI tools as part of my regular operating model, not as a side experiment. My workflow focuses on making analysis, engineering, and documentation faster without losing context or quality.
 
@@ -81,15 +102,26 @@ I use AI tools as part of my regular operating model, not as a side experiment. 
 - MCP server design for unifying fragmented enterprise data sources
 - Agent memory systems for preserving context across sessions and team members
 
-## Web and Data Visualization
+## Focus areas
 
-Before focusing on crypto data systems, I worked as a software engineer and web application developer across ERP, CMS, CRM, e-commerce, inventory, mobile, API, and data visualization projects.
+- **Crypto operations:** Wallets, assets, addresses, exchange activity, stablecoins, token launches, and onchain transaction analysis
+- **Compliance data:** KYT efficiency, Travel Rule readiness, regulatory reporting, risk monitoring, and investigation workflows
+- **Data platforms:** Pipelines, dbt models, dashboards, internal admin tools, and trusted datasets for operations and leadership
+- **AI workflows:** Claude Code skills, Codex workflows, agent knowledge bases, documentation systems, and analysis harnesses
+- **Market research:** Crypto-currency, fintech, and traditional stock market monitoring
 
-- Built web applications with JavaScript, AngularJS, Node.js, PHP, Python, MySQL, and MongoDB
-- Developed 3D and data visualization prototypes using Three.js, WebGL, D3.js, and Highstock.js
-- Created automation and quality-testing scripts at Autodesk using Python and Sikuli
-- Worked on energy visualization and building-management prototypes at NTU
+## Tech stack
 
-## inoTives Site
+- **Data engineering:** Python, Dagster, Prefect, Airbyte, dbt, SQL, Pandas, Polars, NumPy
+- **Warehouses and databases:** BigQuery, ClickHouse, Snowflake, PostgreSQL, Cloud SQL, MySQL, MongoDB, SQLite, DuckDB
+- **Analytics and dashboards:** Looker, Grafana, Streamlit, Sisense, Dune Analytics, FlipsideCrypto, Kibana
+- **Crypto and compliance data:** Fireblocks, Salesforce, Dotfile, Chainalysis, Elliptic, TRM Labs, CoinMarketCap, CoinGecko
+- **Frontend and tooling:** React, Vite, Tailwind CSS, Node.js, D3.js, Three.js
+- **AI and knowledge workflows:** Claude, Codex, OpenCode, Obsidian, Markdown, GitHub Pages
 
-This site itself is a small project: a React SPA with Markdown-based content authoring, build-time content indexing, notes search and filtering, and static GitHub Pages deployment. All content — articles, notes, portfolio — lives as Markdown files that get indexed at build time.
+## This site
+
+inoTives is my personal workspace for data systems, AI-assisted workflows, crypto-currency research, fintech notes, and market tooling. I use it as a public notebook for technical write-ups, personal research, project records, and AI/data workflow experiments.
+
+It is a React SPA with Markdown-based content authoring, build-time content indexing, notes search and filtering, and static GitHub Pages deployment. All content lives as Markdown files that get indexed at build time. The source code is available on [GitHub](https://github.com/inotives/inotives.github.io).
+`;export{e as default};

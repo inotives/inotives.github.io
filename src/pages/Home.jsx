@@ -1,125 +1,128 @@
 import { Link } from 'react-router-dom'
-import { getAllPosts } from '../utils/content'
+import { getAllPosts, getPostsBySeries } from '../utils/content'
+import { formatShort } from '../utils/dates'
+import { SERIES_META } from '../utils/series'
 import PostCard from '../components/PostCard'
+import PublishingHeatmap from '../components/PublishingHeatmap'
+
+const PROJECT_LINKS = [
+  {
+    to: '/projects/research-stocks-pro-open-price',
+    name: 'Stock pre-open estimates',
+    note: 'Pre-market research from my stock analysis agents',
+  },
+  {
+    to: '/projects/research-stocks-weekly-summary',
+    name: 'Weekly market summary',
+    note: 'Sector movement, notable names, next-week watchpoints',
+  },
+  {
+    to: '/projects/researches-adhoc',
+    name: 'Ad hoc research',
+    note: 'One-off agent research reports',
+  },
+]
+
+const OTHER_LINKS = [
+  { to: '/about', name: 'About me', note: 'Work experience, open source and tech stack' },
+  { to: '/certification-guides', name: 'Certification guides', note: 'Study notes for technology certifications' },
+]
 
 export default function Home() {
-  const recentPosts = getAllPosts().slice(0, 5)
+  const posts = getAllPosts()
+  const recentPosts = posts.slice(0, 7)
+  const firstDate = posts[posts.length - 1]?.date
 
   return (
     <div className="page-stack">
-      <section className="hero-manual">
-        <p className="label">Data · AI (Harnesses | Skills | Workflows) · Crypto-Currencies · Stocks · Fintech </p>
-        <h1 className="page-title">inoTives</h1>
-        <p className="dek">
-          My personal sites that host and store my own understanding to 
-          Data systems, AI harnesses, skills, and workflows for crypto-currency,
-          fintech, and traditional stock market research, monitoring, and
-          automation.
-        </p>
-        <div className="ascii-rule" />
+      <section className="home-hero">
+        <div>
+          <h1 className="wordmark">inoTives</h1>
+          <p className="dek">
+            Working notes on data engineering, AI agent workflows, and research
+            tools for crypto and stock markets.
+          </p>
+        </div>
+        {firstDate && (
+          <p className="hero-stat">
+            <strong>{posts.length}</strong>
+            notes since {formatShort(firstDate)}
+          </p>
+        )}
       </section>
 
-      <section className="record-grid">
-        <Link
-          to="/projects"
-          className="record"
-        >
-          <div className="record-meta">
-            <span>01</span>
-            <span>Project index</span>
-          </div>
-          <h2 className="record-title">Projects</h2>
-          <p className="record-copy">
-            Project records, experiments, and build notes.
-          </p>
-        </Link>
+      <PublishingHeatmap posts={posts} />
 
-        <Link
-          to="/notes"
-          className="record"
-        >
-          <div className="record-meta">
-            <span>02</span>
-            <span>Notes</span>
-          </div>
-          <h2 className="record-title">Notes</h2>
-          <p className="record-copy">
-            Notes, tutorials, and write-ups.
-          </p>
-        </Link>
-
-        <Link
-          to="/portfolio"
-          className="record"
-        >
-          <div className="record-meta">
-            <span>03</span>
-            <span>Build log</span>
-          </div>
-          <h2 className="record-title">Portfolio</h2>
-          <p className="record-copy">
-            Projects and things I've built.
-          </p>
-        </Link>
-
-        <Link
-          to="/series/building-ai-systems"
-          className="record"
-        >
-          <div className="record-meta">
-            <span>04</span>
-            <span>Series</span>
-          </div>
-          <h2 className="record-title">Building AI Systems That Scale</h2>
-          <p className="record-copy">
-            Notes on designing, operating, and cost-controlling agentic AI systems.
-          </p>
-        </Link>
-
-        <Link
-          to="/series/data-engineering"
-          className="record"
-        >
-          <div className="record-meta">
-            <span>05</span>
-            <span>Series</span>
-          </div>
-          <h2 className="record-title">Data Engineering</h2>
-          <p className="record-copy">
-            Notes on data pipelines, ELT stacks, data modeling, and infrastructure.
-          </p>
-        </Link>
-
-        <Link to="/certification-guides" className="record">
-          <div className="record-meta">
-            <span>06</span>
-            <span>Learning</span>
-          </div>
-          <h2 className="record-title">Certification Guides</h2>
-          <p className="record-copy">
-            Study guides and reference material for technology certifications.
-          </p>
-        </Link>
-      </section>
-
-      {recentPosts.length > 0 && (
-        <section className="manual-section">
-          <div className="flex items-end justify-between gap-4 mb-6">
-            <div>
-              <p className="label">Latest entries</p>
-              <h2 className="section-title">Recent Notes</h2>
-            </div>
-            <Link to="/notes" className="button-link">
-              View all
+      <div className="home-split">
+        <section>
+          <div className="section-head">
+            <h2 className="section-title">Latest notes</h2>
+            <Link to="/notes" className="text-link">
+              All {posts.length} notes
             </Link>
           </div>
-          <div className="record-list">
+          <ol className="ledger">
             {recentPosts.map((post) => (
               <PostCard key={post.slug} post={post} />
             ))}
-          </div>
+          </ol>
         </section>
-      )}
+
+        <aside className="rail">
+          <section>
+            <h2 className="section-title">Series</h2>
+            <ul>
+              {Object.entries(SERIES_META).map(([slug, meta]) => {
+                const seriesPosts = getPostsBySeries(slug)
+                return (
+                  <li key={slug}>
+                    <Link to={`/series/${slug}`} className="rail-item">
+                      <b>{meta.title}</b>
+                      <span>
+                        {seriesPosts.length} notes
+                        {seriesPosts[0] && `, latest ${formatShort(seriesPosts[0].date)}`}
+                      </span>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+
+          <section>
+            <div className="section-head">
+              <h2 className="section-title">Projects</h2>
+              <Link to="/projects" className="text-link">
+                All projects
+              </Link>
+            </div>
+            <ul>
+              {PROJECT_LINKS.map((item) => (
+                <li key={item.to}>
+                  <Link to={item.to} className="rail-item">
+                    <b>{item.name}</b>
+                    <span>{item.note}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="section-title">Also here</h2>
+            <ul>
+              {OTHER_LINKS.map((item) => (
+                <li key={item.to}>
+                  <Link to={item.to} className="rail-item">
+                    <b>{item.name}</b>
+                    <span>{item.note}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </aside>
+      </div>
     </div>
   )
 }
