@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatLong, formatShort, parseDate, toIsoDate } from '../utils/dates'
+import Heatmap3D from './Heatmap3D'
 
 const WEEKDAY_LABELS = ['', 'Tue', '', 'Thu', '', 'Sat', '']
 
@@ -19,6 +20,9 @@ export default function PublishingHeatmap({ posts }) {
   }, [posts])
 
   const [selectedDay, setSelectedDay] = useState(posts[0]?.date)
+  // Falls back to the flat grid when WebGL or the three.js CDN is unavailable
+  const [flat, setFlat] = useState(false)
+  const showFlat = useCallback(() => setFlat(true), [])
 
   const { cells, months } = useMemo(() => {
     const dates = Object.keys(byDay).sort()
@@ -54,45 +58,59 @@ export default function PublishingHeatmap({ posts }) {
 
   return (
     <section className="heatmap" aria-label="Publishing history">
-      <div className="heatmap-scroll">
-        <div className="heatmap-grid">
-          <span />
-          <div className="heatmap-months">
-            {months.map(({ week, label }) => (
-              <span key={`${week}-${label}`} style={{ gridColumn: `${week + 1} / span 4` }}>
-                {label}
-              </span>
-            ))}
-          </div>
-          <div className="heatmap-days">
-            {WEEKDAY_LABELS.map((label, i) => (
-              <span key={i}>{label}</span>
-            ))}
-          </div>
-          <div className="heatmap-cells">
-            {cells.map(({ iso, count, future }) => {
-              if (future) return <span key={iso} className="heat-cell is-future" />
-              if (!count) {
-                return <span key={iso} className="heat-cell" title={`${formatShort(iso)}: no notes`} />
-              }
-              return (
-                <button
-                  key={iso}
-                  type="button"
-                  className="heat-cell"
-                  data-level={Math.min(count, 3)}
-                  aria-pressed={iso === selectedDay}
-                  aria-label={`${formatLong(iso)}, ${count} ${count === 1 ? 'note' : 'notes'}`}
-                  onClick={() => setSelectedDay(iso)}
-                />
-              )
-            })}
+      {!flat ? (
+        <Heatmap3D
+          cells={cells}
+          months={months}
+          selectedDay={selectedDay}
+          onSelect={setSelectedDay}
+          onFail={showFlat}
+        />
+      ) : (
+        <div className="heatmap-scroll">
+          <div className="heatmap-grid">
+            <span />
+            <div className="heatmap-months">
+              {months.map(({ week, label }) => (
+                <span key={`${week}-${label}`} style={{ gridColumn: `${week + 1} / span 4` }}>
+                  {label}
+                </span>
+              ))}
+            </div>
+            <div className="heatmap-days">
+              {WEEKDAY_LABELS.map((label, i) => (
+                <span key={i}>{label}</span>
+              ))}
+            </div>
+            <div className="heatmap-cells">
+              {cells.map(({ iso, count, future }) => {
+                if (future) return <span key={iso} className="heat-cell is-future" />
+                if (!count) {
+                  return <span key={iso} className="heat-cell" title={`${formatShort(iso)}: no notes`} />
+                }
+                return (
+                  <button
+                    key={iso}
+                    type="button"
+                    className="heat-cell"
+                    data-level={Math.min(count, 3)}
+                    aria-pressed={iso === selectedDay}
+                    aria-label={`${formatLong(iso)}, ${count} ${count === 1 ? 'note' : 'notes'}`}
+                    onClick={() => setSelectedDay(iso)}
+                  />
+                )
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="heatmap-foot">
-        <span>Each square is a day. Pick one to see what I wrote.</span>
+        <span>
+          {flat
+            ? 'Each square is a day. Pick one to see what I wrote.'
+            : 'Each bar is a day, taller with more notes. Pick one to see what I wrote.'}
+        </span>
         <span className="heatmap-legend" aria-hidden="true">
           Fewer
           <i className="heat-cell" />

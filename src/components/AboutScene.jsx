@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { parseDate, toIsoDate } from '../utils/dates'
-
-// Loaded from the CDN at runtime so three.js only downloads on the About page
-const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js'
+import { loadThree, prefersReducedMotion } from '../utils/three'
 const POINT_COUNT = 4096
 
 const SIGNAL = [0.122, 0.937, 0.843]
@@ -208,10 +206,10 @@ export default function AboutScene({ scene, posts }) {
     let disposed = false
     let cleanup = () => {}
 
-    import(/* @vite-ignore */ THREE_URL)
+    loadThree()
       .then((THREE) => {
         if (disposed) return
-        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        const reduceMotion = prefersReducedMotion()
 
         let renderer
         try {

@@ -1,9 +1,13 @@
 import { Link } from 'react-router-dom'
 import { formatShort, isRecent } from '../utils/dates'
 
-export default function PostCard({ post }) {
+export default function PostCard({ post, highlighted = false, onHover }) {
   return (
-    <li className="ledger-row">
+    <li
+      className={`ledger-row ${highlighted ? 'is-highlighted' : ''}`}
+      onMouseEnter={onHover && (() => onHover(post.slug))}
+      onMouseLeave={onHover && (() => onHover(null))}
+    >
       <div className="ledger-date">
         {post.date && <time dateTime={post.date}>{formatShort(post.date)}</time>}
         {post.date && isRecent(post.date) && (
