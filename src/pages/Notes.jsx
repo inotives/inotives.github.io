@@ -1,17 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getAllPosts } from '../utils/content'
 import { formatMonth } from '../utils/dates'
+import { TOPICS, getTagCounts, normalizeTag, postTags, postTopics } from '../utils/tags'
 import PostCard from '../components/PostCard'
 
 const PAGE_SIZE = 30
-const TOP_TAG_COUNT = 14
-
-function countTags(posts) {
-  const counts = {}
-  posts.forEach((post) => post.tags.forEach((tag) => (counts[tag] = (counts[tag] || 0) + 1)))
-  return Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-}
+const TAG_SUGGESTIONS = 8
 
 function groupByMonth(posts) {
   const groups = []
@@ -27,98 +22,145 @@ function groupByMonth(posts) {
 export default function Notes() {
   const posts = getAllPosts()
   const [searchParams, setSearchParams] = useSearchParams()
-  const activeTag = searchParams.get('tag')
+  const activeTopic = TOPICS.some((t) => t.id === searchParams.get('topic')) ? searchParams.get('topic') : null
+  const rawTag = searchParams.get('tag')
+  const activeTag = rawTag ? normalizeTag(rawTag) : null
   const [search, setSearch] = useState('')
   const [limit, setLimit] = useState(PAGE_SIZE)
-  const [showAllTags, setShowAllTags] = useState(false)
 
-  const tagCounts = countTags(posts)
-  const visibleTags = showAllTags ? tagCounts : tagCounts.slice(0, TOP_TAG_COUNT)
-  // Keep a tag chosen from a note visible even when it isn't a top tag
-  if (activeTag && !visibleTags.some(([tag]) => tag === activeTag)) {
-    const match = tagCounts.find(([tag]) => tag === activeTag)
-    if (match) visibleTags.push(match)
-  }
+  const tagCounts = getTagCounts()
+  const topicsBySlug = useMemo(() => Object.fromEntries(posts.map((p) => [p.slug, postTopics(p)])), [posts])
+  const topicCounts = useMemo(() => {
+    const counts = {}
+    Object.values(topicsBySlug).forEach((ids) => ids.forEach((id) => (counts[id] = (counts[id] || 0) + 1)))
+    return counts
+  }, [topicsBySlug])
 
   const query = search.trim().toLowerCase()
+
+  // Tags whose name matches the search, most used first, offered as one-click filters
+  const tagMatches = useMemo(() => {
+    if (query.length < 2) return []
+    return Object.entries(tagCounts)
+      .filter(([tag]) => tag.includes(query.replace(/\s+/g, '-')) && tag !== activeTag)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, TAG_SUGGESTIONS)
+  }, [query, tagCounts, activeTag])
+
   const filtered = posts.filter((post) => {
-    if (activeTag && !post.tags.includes(activeTag)) return false
+    if (activeTopic && !topicsBySlug[post.slug].includes(activeTopic)) return false
+    if (activeTag && !postTags(post).includes(activeTag)) return false
     if (!query) return true
     return (
       post.title.toLowerCase().includes(query) ||
       post.summary.toLowerCase().includes(query) ||
-      post.tags.some((t) => t.toLowerCase().includes(query))
+      postTags(post).some((t) => t.includes(query))
     )
   })
   const shown = filtered.slice(0, limit)
 
-  function handleSearch(value) {
-    setSearch(value)
+  function updateFilters(next) {
     setLimit(PAGE_SIZE)
+    const params = {}
+    const topic = 'topic' in next ? next.topic : activeTopic
+    const tag = 'tag' in next ? next.tag : activeTag
+    if (topic) params.topic = topic
+    if (tag) params.tag = tag
+    setSearchParams(params)
   }
 
-  function handleTagClick(tag) {
-    setLimit(PAGE_SIZE)
-    if (!tag || tag === activeTag) setSearchParams({})
-    else setSearchParams({ tag })
+  function chooseTag(tag) {
+    setSearch('')
+    updateFilters({ tag })
   }
+
+  const topicLabel = TOPICS.find((t) => t.id === activeTopic)?.label
 
   return (
     <div className="page-stack">
       <header>
         <h1 className="page-title">Notes</h1>
         <p className="section-copy">
-          Everything I&apos;ve written, newest first. Search, or narrow the list by tag.
+          Everything I&apos;ve written, newest first. Browse by topic, or search for any tag.
         </p>
       </header>
 
       <section className="notes-filters" aria-label="Filter notes">
-        <input
-          type="search"
-          aria-label="Search notes"
-          placeholder="Search titles, summaries and tags"
-          value={search}
-          onChange={(e) => handleSearch(e.target.value)}
-          className="input"
-        />
-        <div className="tag-row">
+        <div className="topic-row" role="group" aria-label="Topics">
           <button
             type="button"
-            className={`tag ${!activeTag ? 'tag-active' : ''}`}
-            aria-pressed={!activeTag}
-            onClick={() => handleTagClick(null)}
+            className={`topic-button ${!activeTopic ? 'is-active' : ''}`}
+            aria-pressed={!activeTopic}
+            onClick={() => updateFilters({ topic: null })}
           >
-            All
+            All topics
+            <small>{posts.length}</small>
           </button>
-          {visibleTags.map(([tag, count]) => (
+          {TOPICS.map((topic) => (
             <button
-              key={tag}
+              key={topic.id}
               type="button"
-              className={`tag ${tag === activeTag ? 'tag-active' : ''}`}
-              aria-pressed={tag === activeTag}
-              onClick={() => handleTagClick(tag)}
+              className={`topic-button ${topic.id === activeTopic ? 'is-active' : ''}`}
+              aria-pressed={topic.id === activeTopic}
+              onClick={() => updateFilters({ topic: topic.id === activeTopic ? null : topic.id })}
             >
-              {tag}
-              <small>{count}</small>
+              {topic.label}
+              <small>{topicCounts[topic.id] || 0}</small>
             </button>
           ))}
-          {tagCounts.length > TOP_TAG_COUNT && (
-            <button type="button" className="tag" onClick={() => setShowAllTags((open) => !open)}>
-              {showAllTags ? 'Fewer tags' : `All ${tagCounts.length} tags`}
+        </div>
+
+        <div className="notes-search">
+          <input
+            type="search"
+            aria-label="Search notes and tags"
+            placeholder="Search titles, summaries and tags"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value)
+              setLimit(PAGE_SIZE)
+            }}
+            className="input"
+          />
+          {tagMatches.length > 0 && (
+            <div className="tag-suggestions" aria-label="Matching tags">
+              <span>Filter by tag</span>
+              {tagMatches.map(([tag, count]) => (
+                <button key={tag} type="button" className="tag" onClick={() => chooseTag(tag)}>
+                  {tag}
+                  <small>{count}</small>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="notes-active">
+          <p className="notes-count">
+            {filtered.length} {filtered.length === 1 ? 'note' : 'notes'}
+            {topicLabel && <> in {topicLabel}</>}
+            {query && <> matching &ldquo;{search.trim()}&rdquo;</>}
+          </p>
+          {activeTag && (
+            <button
+              type="button"
+              className="tag tag-active"
+              onClick={() => updateFilters({ tag: null })}
+              aria-label={`Remove tag filter ${activeTag}`}
+            >
+              Tag: {activeTag}
+              <span aria-hidden="true" className="tag-remove">
+                ×
+              </span>
             </button>
           )}
         </div>
-        <p className="notes-count">
-          {filtered.length} {filtered.length === 1 ? 'note' : 'notes'}
-          {activeTag && <> tagged {activeTag}</>}
-          {query && <> matching &ldquo;{search.trim()}&rdquo;</>}
-        </p>
       </section>
 
       <section>
         {filtered.length === 0 ? (
           <p className="empty-state">
-            No notes match. Clear the search or pick another tag.
+            No notes match. Clear the search, remove the tag or pick another topic.
           </p>
         ) : (
           <>

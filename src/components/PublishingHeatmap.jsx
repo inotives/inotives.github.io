@@ -19,19 +19,29 @@ export default function PublishingHeatmap({ posts }) {
     return map
   }, [posts])
 
+  // Years that have notes, newest first; each shows as a full Jan–Dec calendar
+  const years = useMemo(
+    () => [...new Set(Object.keys(byDay).map((d) => Number(d.slice(0, 4))))].sort((a, b) => b - a),
+    [byDay]
+  )
+  const yearCounts = useMemo(() => {
+    const counts = {}
+    posts.forEach((p) => p.date && (counts[p.date.slice(0, 4)] = (counts[p.date.slice(0, 4)] || 0) + 1))
+    return counts
+  }, [posts])
+  const [year, setYear] = useState(years[0])
   const [selectedDay, setSelectedDay] = useState(posts[0]?.date)
   // Falls back to the flat grid when WebGL or the three.js CDN is unavailable
   const [flat, setFlat] = useState(false)
   const showFlat = useCallback(() => setFlat(true), [])
 
   const { cells, months } = useMemo(() => {
-    const dates = Object.keys(byDay).sort()
-    if (dates.length === 0) return { cells: [], months: [] }
+    if (!year) return { cells: [], months: [] }
 
     const today = parseDate(toIsoDate(new Date()))
-    const start = parseDate(dates[0])
+    const start = parseDate(`${year}-01-01`)
     start.setDate(start.getDate() - weekday(start))
-    const end = new Date(today)
+    const end = parseDate(`${year}-12-31`)
     end.setDate(end.getDate() + (6 - weekday(end)))
 
     const cells = []
@@ -40,17 +50,29 @@ export default function PublishingHeatmap({ posts }) {
     let lastMonth = -1
     for (const day = new Date(start); day <= end; day.setDate(day.getDate() + 1)) {
       if (weekday(day) === 0) {
-        if (day.getMonth() !== lastMonth && day.getDate() <= 7) {
+        if (day.getMonth() !== lastMonth && day.getDate() <= 7 && day.getFullYear() === year) {
           months.push({ week, label: day.toLocaleDateString('en-GB', { month: 'short' }) })
           lastMonth = day.getMonth()
         }
         week++
       }
       const iso = toIsoDate(day)
-      cells.push({ iso, count: byDay[iso]?.length || 0, future: day > today })
+      // padding days outside the year, and days still to come, draw as empty slots
+      const blank = day > today || day.getFullYear() !== year
+      cells.push({ iso, count: blank ? 0 : byDay[iso]?.length || 0, future: blank })
     }
     return { cells, months }
-  }, [byDay])
+  }, [byDay, year])
+
+  function chooseYear(next) {
+    setYear(next)
+    // jump to the latest day with notes in that year
+    const latest = Object.keys(byDay)
+      .filter((d) => d.startsWith(String(next)))
+      .sort()
+      .pop()
+    if (latest) setSelectedDay(latest)
+  }
 
   if (cells.length === 0) return null
 
@@ -58,6 +80,20 @@ export default function PublishingHeatmap({ posts }) {
 
   return (
     <section className="heatmap" aria-label="Publishing history">
+      <div className="heatmap-years" role="group" aria-label="Show year">
+        {years.map((y) => (
+          <button
+            key={y}
+            type="button"
+            className={`tag ${y === year ? 'tag-active' : ''}`}
+            aria-pressed={y === year}
+            onClick={() => chooseYear(y)}
+          >
+            {y}
+            <small>{yearCounts[y]} notes</small>
+          </button>
+        ))}
+      </div>
       {!flat ? (
         <Heatmap3D
           cells={cells}

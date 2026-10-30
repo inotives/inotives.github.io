@@ -6,6 +6,14 @@ const guides = [
     provider: 'AWS',
     code: 'CLF-C02',
   },
+  {
+    title: 'Claude certifications (CCAO-F to CCAR-P)',
+    description:
+      "A local study hub for Anthropic's four Claude certifications, with a 21-day plan, domain guides, cheat sheets and mock exams for each.",
+    href: 'https://github.com/inotives/cc-certified-guides',
+    provider: 'Anthropic',
+    code: 'GitHub',
+  },
 ]
 
 export default function CertificationGuides() {
@@ -25,7 +33,12 @@ export default function CertificationGuides() {
           </p>
           <div className="record-list">
             {guides.map((guide) => (
-              <a key={guide.href} href={guide.href} className="record">
+              <a
+                key={guide.href}
+                href={guide.href}
+                className="record"
+                {...(guide.href.startsWith('http') && { target: '_blank', rel: 'noopener noreferrer' })}
+              >
                 <div className="record-meta">
                   <span>{guide.provider}</span>
                   <span>{guide.code}</span>
