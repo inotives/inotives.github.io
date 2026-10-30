@@ -42,10 +42,9 @@ export default function AdhocResearchesProject() {
     <div className="page-stack">
       <section className="manual-section">
         <Link to="/projects" className="back-link">
-          &larr; Back to projects
+          All projects
         </Link>
-        <p className="label">Projects / research reports</p>
-        <h1 className="page-title">Adhoc Researches</h1>
+        <h1 className="page-title">Ad hoc research</h1>
         <p className="section-copy">
           A collection of generated research reports that sit outside the
           scheduled stock daily and weekly research streams. Files added under
@@ -55,8 +54,7 @@ export default function AdhocResearchesProject() {
       </section>
 
       <section className="manual-section">
-        <p className="label">Report activity</p>
-        <h2 className="section-title">Adhoc Research Reports</h2>
+        <h2 className="section-title">Ad hoc research reports</h2>
         <p className="section-copy">
           These HTML reports are served directly from the static reports
           archive and listed from the generated content index.

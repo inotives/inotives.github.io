@@ -1,90 +1,108 @@
+import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getPostsBySeries } from '../utils/content'
+import { formatShort } from '../utils/dates'
+import { SERIES_META } from '../utils/series'
 import PostCard from '../components/PostCard'
+import SeriesModel from '../components/SeriesModel'
 
-const SERIES_META = {
-  'building-ai-systems': {
-    title: 'Building AI Systems That Scale',
-    description:
-      'Notes on designing, operating, and cost-controlling agentic AI systems in production. Covers loop prevention, token budgeting, human-in-the-loop design, and the architectural patterns that separate working deployments from expensive failures.',
-    label: 'ai-systems',
-  },
-  'data-engineering': {
-    title: 'Data Engineering',
-    description:
-      'Notes on building and operating data pipelines, ELT stacks, data modeling, and the infrastructure that turns raw data into something useful.',
-    label: 'data-engineering',
-  },
-  'data-engineering-in-30-days': {
-    title: 'Data Engineering in 30 Days',
-    description:
-      'A practical learning path from SQL and files to reliable pipelines, warehouses, and AI-ready data systems. Each entry takes one concept far enough to build with it.',
-    label: '30-day-learning-path',
-  },
-  'building-motherduck-warehouse': {
-    title: 'Building a MotherDuck Data Warehouse',
-    description:
-      'A practical series on taking a local DuckDB proof of concept to a governed MotherDuck warehouse with S3, Prefect, dbt, and a deliberate path to larger-scale storage.',
-    label: 'motherduck-warehouse',
-  },
+function SeriesIndex() {
+  const stacks = useMemo(
+    () =>
+      Object.entries(SERIES_META).map(([slug, meta]) => ({
+        key: slug,
+        label: meta.title,
+        posts: getPostsBySeries(slug).slice().reverse(),
+      })),
+    []
+  )
+
+  return (
+    <div className="page-stack">
+      <header>
+        <h1 className="page-title">Series</h1>
+        <p className="section-copy">Notes that build on each other. Read them in order.</p>
+      </header>
+      <SeriesModel stacks={stacks} className="series-model-wide" />
+      <ol className="ledger">
+        {stacks.map(({ key, label, posts }) => (
+          <li key={key} className="ledger-row">
+            <div className="ledger-date">{posts.length} notes</div>
+            <div>
+              <h2 className="ledger-title">
+                <Link to={`/series/${key}`}>{label}</Link>
+              </h2>
+              <p className="ledger-summary">{SERIES_META[key].description}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
 }
 
 export default function SeriesPage() {
   const { slug } = useParams()
+  const [hoveredSlug, setHoveredSlug] = useState(null)
   const meta = SERIES_META[slug]
-  const posts = getPostsBySeries(slug)
+  // Series read in publishing order, oldest first
+  const posts = useMemo(() => getPostsBySeries(slug).slice().reverse(), [slug])
+  const stacks = useMemo(() => [{ key: slug, label: meta?.title, posts }], [slug, meta, posts])
+
+  if (!slug) return <SeriesIndex />
 
   if (!meta) {
     return (
       <div className="page-stack">
-        <section className="manual-section">
-          <Link to="/notes" className="back-link">
-            &larr; Back to notes
+        <header>
+          <Link to="/series" className="back-link">
+            All series
           </Link>
           <h1 className="page-title">Series not found</h1>
           <p className="empty-state">
-            Unknown series slug: <code>{slug}</code>
+            There is no series called <code>{slug}</code>. Pick one from the series list.
           </p>
-        </section>
+        </header>
       </div>
     )
   }
 
   return (
     <div className="page-stack">
-      <section className="manual-section">
-        <Link to="/notes" className="back-link">
-          &larr; Back to notes
-        </Link>
-        <p className="label">Series / {meta.label}</p>
-        <h1 className="page-title">{meta.title}</h1>
-        {meta.description && (
-          <p className="section-copy">{meta.description}</p>
-        )}
-      </section>
-
-      <section className="manual-section">
-        <p className="label">Series / entries</p>
-        <h2 className="section-title">Articles</h2>
-
-        {posts.length === 0 ? (
-          <p className="empty-state">
-            No articles in this series yet. Articles with{' '}
-            <code>series: {slug}</code> in their frontmatter will appear here.
+      <header className="series-hero">
+        <div>
+          <Link to="/series" className="back-link">
+            All series
+          </Link>
+          <h1 className="page-title">{meta.title}</h1>
+          <p className="section-copy">
+            {meta.description}
+            {posts.length > 0 &&
+              ` ${posts.length} ${posts.length === 1 ? 'note' : 'notes'}, from ${formatShort(posts[0].date)} to ${formatShort(posts[posts.length - 1].date)}.`}
           </p>
-        ) : (
-          <>
-            <p className="notes-count">
-              {posts.length} {posts.length === 1 ? 'article' : 'articles'}
-            </p>
-            <div className="record-list">
-              {posts.map((post) => (
-                <PostCard key={post.slug} post={post} />
-              ))}
-            </div>
-          </>
+        </div>
+        {posts.length > 0 && (
+          <SeriesModel stacks={stacks} highlightSlug={hoveredSlug} onHoverSlug={setHoveredSlug} />
         )}
-      </section>
+      </header>
+
+      {posts.length === 0 ? (
+        <p className="empty-state">
+          No notes in this series yet. Notes with <code>series: {slug}</code> in their
+          frontmatter will appear here.
+        </p>
+      ) : (
+        <ol className="ledger ledger-numbered">
+          {posts.map((post) => (
+            <PostCard
+              key={post.slug}
+              post={post}
+              highlighted={post.slug === hoveredSlug}
+              onHover={setHoveredSlug}
+            />
+          ))}
+        </ol>
+      )}
     </div>
   )
 }

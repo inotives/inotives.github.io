@@ -109,10 +109,9 @@ export default function StockPreOpenProject() {
     <div className="page-stack">
       <section className="manual-section">
         <Link to="/projects" className="back-link">
-          &larr; Back to projects
+          All projects
         </Link>
-        <p className="label">Projects / research reports</p>
-        <h1 className="page-title">Stock Pre-Open Price Research</h1>
+        <h1 className="page-title">Stock pre-open price research</h1>
         <p className="section-copy">
           A research workflow where stock analysis agents prepare pre-market
           reports before the opening bell. The reports estimate possible opening
@@ -122,8 +121,7 @@ export default function StockPreOpenProject() {
       </section>
 
       <section className="manual-section">
-        <p className="label">Workflow</p>
-        <h2 className="section-title">How Reports Are Computed</h2>
+        <h2 className="section-title">How reports are computed</h2>
         <div className="record-grid record-grid-two">
           <div className="record">
             <h3 className="record-title">Market Setup</h3>
@@ -177,8 +175,7 @@ export default function StockPreOpenProject() {
       </section>
 
       <section className="manual-section">
-        <p className="label">Report activity</p>
-        <h2 className="section-title">Research Reports</h2>
+        <h2 className="section-title">Research reports</h2>
         <p className="section-copy">
           Each highlighted square links to a generated pre-market research
           report. New report files added under the stock research directory will
