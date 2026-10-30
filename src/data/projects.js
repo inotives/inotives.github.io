@@ -95,6 +95,43 @@ export const ACTIVE_PROJECTS = [
   },
 ]
 
+// Study guides and training material I've written for others to learn from
+export const TEACHING_PROJECTS = [
+  {
+    id: 'aws-clf-c02',
+    name: 'AWS Cloud Practitioner guide',
+    kind: 'Study guide',
+    emblem: 'cloud',
+    href: '/learnings/aws-clf-c02-study-guides.html',
+    linkLabel: 'Open the guide',
+    description:
+      'A single-page study guide for the AWS Certified Cloud Practitioner (CLF-C02) exam: ten topic chapters, the exam domains and their weights, confusion pairs, a quick-recall cheat sheet and practice questions.',
+    facts: ['CLF-C02', '4 exam domains', 'Cheat sheet'],
+  },
+  {
+    id: 'cc-certified-guides',
+    name: 'Claude certification prep',
+    kind: 'Study hub',
+    emblem: 'path',
+    href: 'https://github.com/inotives/cc-certified-guides',
+    linkLabel: 'View on GitHub',
+    description:
+      "A local study hub for Anthropic's Claude certifications, from Associate to Architect Professional. Each exam gets a 21-day plan, a domain guide, a cheat sheet, practice drills and full mock exams, with progress tracked per exam.",
+    facts: ['4 exams', '21-day plans', 'Mock exams'],
+  },
+  {
+    id: 'ai-future-training',
+    name: 'AI Future Training',
+    kind: 'Training series',
+    emblem: 'build',
+    href: 'https://github.com/inotives/ai-future-training',
+    linkLabel: 'View on GitHub',
+    description:
+      'Hands-on learning series for people starting to code with Claude Code or Codex. Each series teaches a topic by building a real project you can run, inspect and extend, from installing the tools onwards.',
+    facts: ['Claude Code', 'Codex', 'Learn by building'],
+  },
+]
+
 export const EARLIER_PROJECTS = [
   {
     id: 'strata-memory',

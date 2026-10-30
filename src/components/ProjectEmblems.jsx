@@ -313,7 +313,113 @@ function buildSite(THREE) {
   }
 }
 
-const BUILDERS = { loop: buildLoop, dag: buildDag, bridge: buildBridge, robot: buildRobot, layers: buildLayers, site: buildSite }
+// AWS guide: a cloud with services orbiting it
+function buildCloud(THREE) {
+  const { scene, camera } = baseScene(THREE, 6.4)
+  const group = new THREE.Group()
+  scene.add(group)
+  const puff = mat(THREE, BONE, { roughness: 0.8 })
+  ;[
+    [0, 0.2, 0, 0.85],
+    [-0.85, -0.05, 0.1, 0.6],
+    [0.85, -0.05, 0.1, 0.62],
+    [-0.4, 0.55, -0.1, 0.55],
+    [0.45, 0.6, -0.1, 0.5],
+  ].forEach(([x, y, z, r]) => {
+    const sphere = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), puff)
+    sphere.position.set(x, y, z)
+    group.add(sphere)
+  })
+  const services = [SIGNAL, AMBER, SIGNAL, 0x16b8a6].map((color, i) => {
+    const cube = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.22), mat(THREE, color))
+    group.add(cube)
+    return { cube, offset: (i / 4) * Math.PI * 2 }
+  })
+  let orbit = 0
+  return {
+    scene,
+    camera,
+    update(t, dt, active) {
+      orbit += dt * (active ? 2.2 : 0.6)
+      services.forEach(({ cube, offset }, i) => {
+        const a = orbit + offset
+        cube.position.set(Math.cos(a) * 1.75, Math.sin(a * 2) * 0.25 - 0.1, Math.sin(a) * 1.1)
+        cube.rotation.set(t + i, t * 1.2, 0)
+      })
+      group.position.y = Math.sin(t * 0.8) * 0.08
+      group.rotation.y = Math.sin(t * 0.3) * 0.3
+    },
+  }
+}
+
+// Claude certifications: four rising steps, one per exam, with a badge on top
+function buildPath(THREE) {
+  const { scene, camera } = baseScene(THREE, 6.6)
+  const group = new THREE.Group()
+  group.position.set(0.1, -0.6, 0)
+  scene.add(group)
+  const steps = [0.35, 0.7, 1.05, 1.4].map((height, i) => {
+    const color = new THREE.Color(SLATE).lerp(new THREE.Color(SIGNAL), 0.35 + i * 0.2)
+    const step = new THREE.Mesh(new THREE.BoxGeometry(0.75, height, 0.9), mat(THREE, color))
+    step.position.set(-1.2 + i * 0.8, height / 2, 0)
+    group.add(step)
+    return step
+  })
+  const badge = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.07, 12, 32), mat(THREE, AMBER, { emissive: AMBER, emissiveIntensity: 0.4 }))
+  group.add(badge)
+  let climb = 0
+  return {
+    scene,
+    camera,
+    update(t, dt, active) {
+      // on hover the badge climbs the steps exam by exam; at rest it sits on the top step
+      climb = active ? (climb + dt * 0.9) % 4 : 0
+      const top = steps[active ? Math.floor(climb) : 3]
+      badge.position.set(top.position.x, top.geometry.parameters.height + 0.45 + Math.sin(t * 2) * 0.06, 0)
+      badge.rotation.y = t * (active ? 3 : 1.2)
+      group.rotation.y = -0.35 + Math.sin(t * 0.4) * 0.15
+    },
+  }
+}
+
+// AI Future Training: blocks assembling into a structure, learn by building
+function buildBuild(THREE) {
+  const { scene, camera } = baseScene(THREE, 6.4)
+  const group = new THREE.Group()
+  group.position.y = -0.7
+  scene.add(group)
+  const slots = []
+  for (let y = 0; y < 4; y++)
+    for (let x = 0; x < 4 - y; x++) slots.push([(x - (3 - y) / 2) * 0.62, y * 0.5 + 0.25])
+  const blocks = slots.map(([x, y], i) => {
+    const color = i % 5 === 0 ? AMBER : i % 2 ? SIGNAL : 0x16b8a6
+    const block = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.44, 0.56), mat(THREE, color))
+    block.userData.target = new THREE.Vector3(x, y, 0)
+    group.add(block)
+    return block
+  })
+  let built = blocks.length
+  return {
+    scene,
+    camera,
+    update(t, dt, active) {
+      // on hover the structure is taken down and rebuilt, one block at a time
+      built = active ? (built + dt * 3.5) % (blocks.length + 3) : Math.min(blocks.length, built + dt * 6)
+      blocks.forEach((block, i) => {
+        const placed = i < built
+        const target = block.userData.target
+        const goal = placed ? target.y : target.y + 2.2
+        block.position.x = target.x
+        block.position.y += (goal - block.position.y) * Math.min(1, dt * 10)
+        block.visible = placed || block.position.y < target.y + 2
+        block.scale.setScalar(placed ? 1 : 0.6)
+      })
+      group.rotation.y = Math.sin(t * 0.35) * 0.4
+    },
+  }
+}
+
+const BUILDERS = { loop: buildLoop, dag: buildDag, bridge: buildBridge, robot: buildRobot, layers: buildLayers, site: buildSite, cloud: buildCloud, path: buildPath, build: buildBuild }
 
 export default function ProjectEmblems() {
   const canvasRef = useRef(null)

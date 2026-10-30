@@ -442,6 +442,13 @@ button.tag-active:hover {
   gap: 14px;
 }
 
+.heatmap-years {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
 .heatmap-scroll {
   overflow-x: auto;
   padding-bottom: 6px;
@@ -967,6 +974,39 @@ button.heat-cell[aria-pressed="true"] {
   font-size: 0.95rem;
 }
 
+.teaching-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.teaching-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.teaching-card .record-title,
+.teaching-card .project-status {
+  margin: 0;
+}
+
+.teaching-card .text-link {
+  margin-top: auto;
+}
+
+.teaching-emblem {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  margin-bottom: 4px;
+}
+
+.teaching-card:hover .project-emblem {
+  border-color: color-mix(in oklab, var(--signal) 45%, var(--line));
+}
+
 .earlier-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1109,22 +1149,36 @@ button.heat-cell[aria-pressed="true"] {
 
 .article-layout {
   display: grid;
-  grid-template-columns: minmax(0, 68ch) 230px;
+  grid-template-columns: minmax(0, 1fr) 190px;
   align-items: start;
-  justify-content: space-between;
-  gap: 64px;
+  gap: 48px;
+}
+
+/* In an article the column is wide: running text keeps a readable measure,
+   while figures, code and tables use the full width so diagrams stay legible */
+.article-layout .manual-prose {
+  max-width: none;
+}
+
+/* markdown wraps images in <p>, so paragraphs holding an image are exempt */
+.article-layout .manual-prose > :is(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6):not(:has(img)) {
+  max-width: 70ch;
+}
+
+.article-layout .manual-prose img[src$=".svg"] {
+  width: 100%;
 }
 
 .article-toc {
   position: sticky;
   top: 84px;
-  font-size: 0.95rem;
+  font-size: 0.86rem;
 }
 
 .article-toc h2 {
   margin: 0 0 10px;
   color: var(--fog);
-  font-size: 0.95rem;
+  font-size: 0.86rem;
   font-weight: 600;
 }
 
@@ -1138,7 +1192,7 @@ button.heat-cell[aria-pressed="true"] {
 .article-toc-link {
   margin-left: -1px;
   border-left: 2px solid transparent;
-  padding-left: 14px;
+  padding-left: 12px;
   color: var(--ink-2);
   line-height: 1.3;
   text-decoration: none;
@@ -1154,8 +1208,8 @@ button.heat-cell[aria-pressed="true"] {
 }
 
 .article-toc-link.is-nested {
-  padding-left: 28px;
-  font-size: 0.88rem;
+  padding-left: 24px;
+  font-size: 0.8rem;
 }
 
 .article-nav {
@@ -1912,6 +1966,7 @@ a.contribution-cell.has-report:hover {
   }
 
   .project-steps,
+  .teaching-grid,
   .earlier-list {
     grid-template-columns: minmax(0, 1fr);
   }

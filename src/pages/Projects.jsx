@@ -5,7 +5,7 @@ import {
   getStockPreOpenReports,
   getStockWeeklyReports,
 } from '../utils/content'
-import { ACTIVE_PROJECTS, EARLIER_PROJECTS } from '../data/projects'
+import { ACTIVE_PROJECTS, EARLIER_PROJECTS, TEACHING_PROJECTS } from '../data/projects'
 import { formatShort, toIsoDate } from '../utils/dates'
 import ProjectEmblems from '../components/ProjectEmblems'
 
@@ -111,7 +111,40 @@ export default function Projects() {
             />
           ))}
         </div>
-        <ProjectEmblems />
+      </section>
+
+      <section>
+        <div className="section-head">
+          <h2 className="section-title">Teaching</h2>
+          <span className="notes-count">Guides and training I&apos;ve written for others</span>
+        </div>
+        <div className="teaching-grid">
+          {TEACHING_PROJECTS.map((item) => {
+            const external = item.href.startsWith('http')
+            return (
+              <article key={item.id} className="teaching-card" data-project={item.id}>
+                <div className="project-emblem teaching-emblem" data-emblem={item.emblem} />
+                <p className="project-status">{item.kind}</p>
+                <h3 className="record-title">{item.name}</h3>
+                <p className="record-copy">{item.description}</p>
+                <div className="tag-row">
+                  {item.facts.map((fact) => (
+                    <span key={fact} className="tag">
+                      {fact}
+                    </span>
+                  ))}
+                </div>
+                <a
+                  href={item.href}
+                  className="text-link"
+                  {...(external && { target: '_blank', rel: 'noopener noreferrer' })}
+                >
+                  {item.linkLabel}
+                </a>
+              </article>
+            )
+          })}
+        </div>
       </section>
 
       <section>
@@ -173,6 +206,9 @@ export default function Projects() {
           </Link>
         </div>
       </section>
+
+      {/* one shared canvas draws every [data-emblem] on the page */}
+      <ProjectEmblems />
     </div>
   )
 }

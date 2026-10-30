@@ -70,8 +70,12 @@ export default function Heatmap3D({ cells, months, selectedDay, onSelect, onFail
         sun.position.set(-4, 8, 6)
         scene.add(sun)
 
-        const days = cells.filter((c) => !c.future)
+        // Every slot is drawn; days to come and padding outside the year are faint tiles
+        const days = cells
         const weeks = Math.ceil(cells.length / 7)
+        // a full year is long and thin, so bars grow with its width to keep their presence
+        const perNote = PER_NOTE * Math.max(1, weeks / 30)
+        const blankColor = new THREE.Color(RAISE).lerp(new THREE.Color(0x15171b), 0.6)
         const offsetX = ((weeks - 1) * CELL) / 2
         const offsetZ = (6 * CELL) / 2
 
@@ -94,8 +98,8 @@ export default function Heatmap3D({ cells, months, selectedDay, onSelect, onFail
             cell,
             x: Math.floor(index / 7) * CELL - offsetX,
             z: (index % 7) * CELL - offsetZ,
-            height: BASE + cell.count * PER_NOTE,
-            color: levelColor[Math.min(cell.count, 3)],
+            height: cell.future ? BASE * 0.5 : BASE + cell.count * perNote,
+            color: cell.future ? blankColor : levelColor[Math.min(cell.count, 3)],
           }
         })
 
@@ -144,7 +148,7 @@ export default function Heatmap3D({ cells, months, selectedDay, onSelect, onFail
           pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
           raycaster.setFromCamera(pointer, camera)
           const hit = raycaster.intersectObject(mesh)[0]
-          const next = hit ? hit.instanceId : -1
+          const next = hit && !bars[hit.instanceId].cell.future ? hit.instanceId : -1
           if (next !== hoverIndex) {
             hoverIndex = next
             const bar = bars[next]
