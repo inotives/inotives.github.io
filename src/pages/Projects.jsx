@@ -1,172 +1,158 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   getAdhocResearchReports,
   getStockPreOpenReports,
   getStockWeeklyReports,
 } from '../utils/content'
+import { ACTIVE_PROJECTS, EARLIER_PROJECTS } from '../data/projects'
+import { formatShort, toIsoDate } from '../utils/dates'
+import ProjectEmblems from '../components/ProjectEmblems'
+
+// Last push date for each public repo, read live from the GitHub API.
+// Missing dates (rate limit, offline) simply aren't shown.
+function useLastPushed(repos) {
+  const [pushed, setPushed] = useState({})
+
+  useEffect(() => {
+    let cancelled = false
+    repos.forEach((repo) => {
+      fetch(`https://api.github.com/repos/${repo}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!cancelled && data?.pushed_at) {
+            setPushed((prev) => ({ ...prev, [repo]: toIsoDate(new Date(data.pushed_at)) }))
+          }
+        })
+        .catch(() => {})
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [repos])
+
+  return pushed
+}
+
+const PUBLIC_REPOS = ACTIVE_PROJECTS.filter((p) => p.repo).map((p) => p.repo)
+
+function ActiveProject({ project, pushed }) {
+  const url = project.repo && `https://github.com/${project.repo}`
+  return (
+    <article className="project-card" data-project={project.id}>
+      <div className="project-emblem" data-emblem={project.emblem} />
+      <div className="project-body">
+        <header className="project-head">
+          <h3 className="project-name">{project.name}</h3>
+          <p className="project-status">
+            <span className="project-live">Building now</span>
+            <span>{project.private ? 'Private repo' : 'Public repo'}</span>
+            {pushed && <span>Updated {formatShort(pushed)}</span>}
+            {project.buildsOn && <span>Builds on {project.buildsOn}</span>}
+          </p>
+        </header>
+        <p className="project-tagline">{project.tagline}</p>
+        <p className="record-copy">{project.description}</p>
+
+        <ol className="project-steps" aria-label={`How ${project.name} works`}>
+          {project.steps.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
+
+        <div className="project-foot">
+          <div className="tag-row">
+            {project.stack.map((tech) => (
+              <span key={tech} className="tag">
+                {tech}
+              </span>
+            ))}
+          </div>
+          {url ? (
+            <a href={url} className="text-link" target="_blank" rel="noopener noreferrer">
+              View on GitHub
+            </a>
+          ) : (
+            <span className="project-private-note">Source is private</span>
+          )}
+        </div>
+      </div>
+    </article>
+  )
+}
 
 export default function Projects() {
-  const publicRepos = [
-    {
-      id: 'strata-memory',
-      name: 'Strata Memory',
-      url: 'https://github.com/inotives/strata-memory',
-      tags: ['AI agents', 'memory', 'markdown', 'SQLite', 'CLI'],
-      description:
-        'A 3-tier wiki-like memory system for AI agents. Markdown files are canonical, SQLite is a rebuildable derived index for FTS5 search. Supports draft → knowledge → intelligence lifecycle with safe promotion via CLI.',
-    },
-    {
-      id: 'agent-rig',
-      name: 'agent-rig',
-      url: 'https://github.com/inotives/agent-rig',
-      tags: ['TypeScript', 'multi-agent', 'CLI', 'workspace'],
-      description:
-        'Filesystem-first CLI scaffolding auditable, version-controlled multi-agent workspaces with zero API lock-in. Supports solo, swarm, supervisor-worker, and coder-reviewer agent patterns. Published on npm.',
-    },
-    {
-      id: 'market-pipe',
-      name: 'market-pipe',
-      url: 'https://github.com/inotives/market-pipe',
-      tags: ['Python', 'market-data', 'stocks', 'crypto', 'ingestion'],
-      description:
-        'Makes ingestion and retrieval of market data like stocks and crypto easier for AI agents. Standardizes data access so agents can pull market data without writing custom integrations for each source.',
-    },
-    {
-      id: 'agent-pipe',
-      name: 'agent-pipe',
-      url: 'https://github.com/inotives/agent-pipe',
-      tags: ['Python', 'data-pipeline', 'CLI', 'SQLite', 'scheduler'],
-      description:
-        'A local data pipeline CLI with SQLite-backed job scheduling and run history. Built with agent-rig using the planner-worker-reviewer pattern across 5 phases with 25 tasks.',
-    },
-    {
-      id: 'barebone-agents',
-      name: 'barebone-agents',
-      url: 'https://github.com/inotives/barebone-agents',
-      tags: ['Rust', 'AI agents', 'MCP', 'Discord'],
-      description:
-        'A local-first, LLM-agnostic AI agent harness written in Rust. It runs multiple agents with personas, skills, tools, task scheduling, MCP integrations, CLI and Discord channels, and SQLite-backed conversation and task persistence.',
-    },
-    {
-      id: 'agent-scheduler',
-      name: 'agent-scheduler',
-      url: 'https://github.com/inotives/agent-scheduler',
-      tags: ['Python', 'AI agents', 'scheduler', 'orchestration'],
-      description:
-        'A Python-based scheduler for agentic workflows. It coordinates queued agent jobs, tracks execution state, and gives AI agents a more structured way to run recurring or deferred work.',
-    },
-    {
-      id: 'openvaia',
-      name: 'OpenVAIA',
-      url: 'https://github.com/inotives/openvaia',
-      tags: ['AI agents', 'Docker', 'Postgres', 'trading'],
-      description:
-        'A dockerized multi-agent AI platform powered by the custom async Python inotagent runtime. It supports persona-based agents, DB-driven skills, hybrid Postgres and pgvector memory search, multi-channel messaging, an admin UI, and crypto trading workflows.',
-    },
-    {
-      id: 'agentic-workflows',
-      name: 'Agentic Workflows',
-      url: 'https://github.com/inotives/agentic-workflows',
-      tags: ['AI workflows', 'data engineering', 'skills', 'scripts'],
-      description:
-        'My day-to-day collection of scripts, workflows, and skills for agentic development as a data engineer and data analyst. It captures practical patterns for working with AI agents across data, automation, and analysis tasks.',
-    },
-    {
-      id: 'felts',
-      name: 'Felts',
-      url: 'https://github.com/inotives/felts',
-      tags: ['Python', 'dbt', 'Postgres', 'Prefect', 'financial-data'],
-      description:
-        'Financial ELT Stacks — a Python, dbt, Postgres, and Prefect project for extracting financial data (crypto, stocks, macro), landing it as raw evidence, and transforming it into source-owned analytical models.',
-    },
-    {
-      id: 'inotives-github-pages',
-      name: 'inoTives GitHub Pages',
-      url: 'https://github.com/inotives/inotives.github.io',
-      tags: ['GitHub Pages', 'Markdown', 'Obsidian', 'CI/CD'],
-      description:
-        'This personal site, built as a React and Vite static app with Markdown content authored through Obsidian. GitHub Actions rebuilds the site and deploys the generated Pages artifact whenever content or app changes are pushed.',
-    },
-  ]
-
+  const pushed = useLastPushed(PUBLIC_REPOS)
   const adhocReports = getAdhocResearchReports()
   const researchReports = getStockPreOpenReports()
   const weeklyReports = getStockWeeklyReports()
 
   return (
     <div className="page-stack">
-      <section className="manual-section">
+      <header>
         <h1 className="page-title">Projects</h1>
         <p className="section-copy">
-          Project records, experiments, and build notes from my data, AI, and
-          crypto workflow experiments.
+          What I&apos;m building now, earlier experiments, and the research my market agents
+          publish. Hover a project to see it work.
         </p>
-      </section>
+      </header>
 
-      <section className="manual-section">
-        <h2 className="section-title">Public repos</h2>
-        <div className="record-grid record-grid-two">
-          {publicRepos.map((project) => (
-            <a
+      <section>
+        <div className="section-head">
+          <h2 className="section-title">Building now</h2>
+          <span className="notes-count">{ACTIVE_PROJECTS.length} projects</span>
+        </div>
+        <div className="project-list">
+          {ACTIVE_PROJECTS.map((project) => (
+            <ActiveProject
               key={project.id}
-              href={project.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="record"
-            >
-              <div className="record-meta">
-                <span>{project.id}</span>
-                <span>{project.tags.join(' / ')}</span>
-              </div>
-              <h3 className="record-title">{project.name}</h3>
-              <p className="record-copy">{project.description}</p>
-              <div className="tag-row mt-4">
-                {project.tags.map((tag) => (
-                  <span key={tag} className="tag">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </a>
+              project={project}
+              pushed={project.repo ? pushed[project.repo] : null}
+            />
           ))}
         </div>
+        <ProjectEmblems />
       </section>
 
-      <section className="manual-section">
+      <section>
+        <div className="section-head">
+          <h2 className="section-title">Earlier projects</h2>
+          <span className="notes-count">No longer actively developed</span>
+        </div>
+        <ul className="earlier-list">
+          {EARLIER_PROJECTS.map((project) => (
+            <li key={project.id}>
+              <a href={project.url} target="_blank" rel="noopener noreferrer">
+                {project.name}
+              </a>
+              <p>{project.description}</p>
+              <span>{project.tags.join(', ')}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section>
         <h2 className="section-title">Research reports</h2>
         <p className="section-copy">
           Agent-generated market research covering stocks, crypto markets,
           macroeconomic context, FX pricing, gold, and other cross-asset signals
           used for monitoring, analysis, and decision support.
         </p>
-        <div className="record-grid record-grid-two">
-          <Link
-            to="/projects/research-stocks-pro-open-price"
-            className="record"
-          >
+        <div className="record-grid">
+          <Link to="/projects/research-stocks-pro-open-price" className="record">
             <div className="record-meta">
               <span>{researchReports.length} reports</span>
-              <span>Stocks / Pre-open / Agent research</span>
             </div>
-            <h3 className="record-title">
-              Stock market pre-opening price estimation
-            </h3>
+            <h3 className="record-title">Stock market pre-opening price estimation</h3>
             <p className="record-copy">
               A dated collection of pre-market stock research reports generated
               by my stock analysis agents before the market opens.
             </p>
-            <div className="tag-row mt-4">
-              {['Stocks', 'Pre-open', 'Agent research'].map((tag) => (
-                <span key={tag} className="tag">
-                  {tag}
-                </span>
-              ))}
-            </div>
           </Link>
           <Link to="/projects/research-stocks-weekly-summary" className="record">
             <div className="record-meta">
               <span>{weeklyReports.length} reports</span>
-              <span>Stocks / Weekly / Agent research</span>
             </div>
             <h3 className="record-title">Weekly stock market summary</h3>
             <p className="record-copy">
@@ -174,31 +160,16 @@ export default function Projects() {
               covering broad market context, sector movement, notable names, and
               next-week watchpoints.
             </p>
-            <div className="tag-row mt-4">
-              {['Stocks', 'Weekly', 'Agent research'].map((tag) => (
-                <span key={tag} className="tag">
-                  {tag}
-                </span>
-              ))}
-            </div>
           </Link>
           <Link to="/projects/researches-adhoc" className="record">
             <div className="record-meta">
               <span>{adhocReports.length} reports</span>
-              <span>Adhoc / Research / Agent research</span>
             </div>
             <h3 className="record-title">Ad hoc research</h3>
             <p className="record-copy">
               A general archive of generated research HTML reports that are not
               part of the scheduled stock pre-open or weekly summary streams.
             </p>
-            <div className="tag-row mt-4">
-              {['Adhoc', 'Research', 'Agent research'].map((tag) => (
-                <span key={tag} className="tag">
-                  {tag}
-                </span>
-              ))}
-            </div>
           </Link>
         </div>
       </section>

@@ -815,6 +815,196 @@ button.heat-cell[aria-pressed="true"] {
   font-size: 0.85rem;
 }
 
+/* Projects: active work with 3D emblems, earlier work as a quiet list */
+.project-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.project-card {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  align-items: start;
+  gap: 32px;
+  border-top: 1px solid var(--line);
+  padding-block: 32px;
+}
+
+.project-card:first-child {
+  border-top: 0;
+  padding-top: 8px;
+}
+
+/* The shared canvas draws into this box; the panel shows if WebGL is unavailable */
+.project-emblem {
+  aspect-ratio: 1;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: radial-gradient(circle at 50% 40%, color-mix(in oklab, var(--signal) 7%, var(--raise)), var(--bg) 75%);
+  transition: border-color 0.2s;
+}
+
+.project-card:hover .project-emblem {
+  border-color: color-mix(in oklab, var(--signal) 45%, var(--line));
+}
+
+.project-emblems-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+.project-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.project-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 18px;
+}
+
+.project-name {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.project-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  color: var(--fog);
+  font-size: 0.9rem;
+}
+
+.project-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--amber);
+}
+
+.project-live::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  animation: project-live-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes project-live-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.project-tagline {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.12rem;
+  line-height: 1.4;
+}
+
+.project-body .record-copy {
+  max-width: 68ch;
+}
+
+/* How it works: a real three-step sequence, so it is numbered */
+.project-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.project-steps li {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 10px 12px 10px 38px;
+  color: var(--ink-2);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.project-steps li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  top: 6px;
+  left: 12px;
+  color: var(--signal);
+  font-family: var(--font-brand);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.project-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-top: 4px;
+}
+
+.project-private-note {
+  color: var(--fog);
+  font-size: 0.95rem;
+}
+
+.earlier-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px 32px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.earlier-list li {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.earlier-list a {
+  color: var(--ink);
+  font-size: 1.08rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.earlier-list a:hover {
+  color: var(--signal);
+}
+
+.earlier-list p {
+  margin: 4px 0 6px;
+  color: var(--ink-2);
+  font-family: var(--font-read);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.earlier-list span {
+  color: var(--fog);
+  font-size: 0.85rem;
+}
+
 /* Notes index */
 .notes-filters {
   display: flex;
@@ -1716,6 +1906,16 @@ a.contribution-cell.has-report:hover {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .project-card {
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .project-steps,
+  .earlier-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .series-model-canvas {
     height: 300px;
   }
@@ -1825,6 +2025,14 @@ a.contribution-cell.has-report:hover {
     grid-template-columns: 2.4rem minmax(0, 1fr);
   }
 
+  .project-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .project-emblem {
+    max-width: 220px;
+  }
+
   .ledger-numbered .ledger-date {
     display: none;
   }
@@ -1854,6 +2062,10 @@ a.contribution-cell.has-report:hover {
     --ink-2: #374151;
     --fog: #4b5563;
     --signal: #0f766e;
+    /* dark amber stays readable on white paper */
+    --amber: #92600a;
+    /* the site is dark-first; paper is not, including the page margins */
+    color-scheme: light;
   }
 
   @page {
@@ -1892,16 +2104,45 @@ a.contribution-cell.has-report:hover {
     display: block;
   }
 
+  /* Roles may split across pages (keeping them whole left half-empty pages);
+     headings stay with the content that follows them */
   .resume-role,
   .resume-role.is-dim {
     opacity: 1;
     border-left: 0;
     padding-left: 0;
+  }
+
+  .resume-section-title,
+  .resume-company > h3,
+  .resume-role header,
+  .resume-main .manual-prose h4 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .resume-main .manual-prose li {
     break-inside: avoid;
+  }
+
+  .resume-role + .resume-role,
+  .resume-company + .resume-company {
+    margin-top: 12pt;
   }
 
   .resume-role header p {
     color: var(--fog);
+  }
+
+  /* One body size and rhythm for every section, experience included */
+  .resume-main .manual-prose,
+  .resume-role .manual-prose {
+    font-size: 10.5pt;
+    line-height: 1.45;
+  }
+
+  .resume-contact .manual-prose {
+    font-size: 9.5pt;
   }
 
   .site-shell {

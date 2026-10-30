@@ -107,7 +107,13 @@ export default function Resume() {
         </div>
         {info && (
           <div className="resume-contact">
-            <MarkdownRenderer content={info.body} />
+            {/* the name is already the page title, so its line is left out here */}
+            <MarkdownRenderer
+              content={info.body
+                .split('\n')
+                .filter((line) => !/full name/i.test(line))
+                .join('\n')}
+            />
           </div>
         )}
         <div className="resume-actions">
