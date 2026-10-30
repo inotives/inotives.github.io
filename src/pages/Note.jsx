@@ -4,6 +4,7 @@ import { usePost } from '../hooks/useMarkdown'
 import { getAllPosts, getPostMeta } from '../utils/content'
 import { formatLong } from '../utils/dates'
 import { SERIES_META } from '../utils/series'
+import { postTags } from '../utils/tags'
 import MarkdownRenderer from '../components/MarkdownRenderer'
 
 const WORDS_PER_MINUTE = 220
@@ -46,14 +47,16 @@ function getReadingMinutes(content) {
 
 // Highlights the table-of-contents entry for the section being read
 function useCurrentHeading(headings) {
-  const [currentId, setCurrentId] = useState(null)
+  // remember which article's headings the id belongs to, so moving to another
+  // note never carries over a highlight from the previous one
+  const [current, setCurrent] = useState({ headings: null, id: null })
 
   useEffect(() => {
     if (headings.length === 0 || !('IntersectionObserver' in window)) return
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) setCurrentId(entry.target.id)
+          if (entry.isIntersecting) setCurrent({ headings, id: entry.target.id })
         })
       },
       { rootMargin: '-80px 0px -70% 0px' }
@@ -65,7 +68,7 @@ function useCurrentHeading(headings) {
     return () => observer.disconnect()
   }, [headings])
 
-  return currentId
+  return current.headings === headings ? current.id : null
 }
 
 export default function Note() {
@@ -148,7 +151,7 @@ export default function Note() {
           {readingMinutes && <span>{readingMinutes} min read</span>}
           {meta.tags.length > 0 && (
             <span>
-              {meta.tags.map((tag, i) => (
+              {postTags(meta).map((tag, i) => (
                 <span key={tag}>
                   {i > 0 && ', '}
                   <Link to={`/notes?tag=${encodeURIComponent(tag)}`}>{tag}</Link>

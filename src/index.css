@@ -1052,6 +1052,77 @@ button.heat-cell[aria-pressed="true"] {
   gap: 14px;
 }
 
+.topic-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.topic-button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 7px 14px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.topic-button small {
+  color: var(--fog);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.topic-button:hover {
+  border-color: var(--ink-2);
+}
+
+.topic-button.is-active {
+  border-color: var(--signal);
+  background: color-mix(in oklab, var(--signal) 10%, transparent);
+  color: var(--signal);
+}
+
+.notes-search {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tag-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-suggestions > span {
+  margin-right: 4px;
+  color: var(--fog);
+  font-size: 0.88rem;
+}
+
+.notes-active {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.tag-remove {
+  margin-left: 8px;
+  font-size: 1.05em;
+  line-height: 1;
+}
+
+.ledger-tags-more {
+  color: var(--fog);
+}
+
 .notes-count {
   margin: 0;
   color: var(--fog);
