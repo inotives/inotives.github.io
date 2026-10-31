@@ -1,0 +1,1104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Data in 3D</title>
+<!--
+  Playground mock: D3 layouts drawn in Three.js. One self-contained page; every figure is mock data.
+  Trade map: d3-geo draws the map, d3-sankey lays out the flows on an upright plane behind it.
+  Dependency sphere: d3.chord sizes each package's slice of the sphere, modules sit inside it.
+  UI: shadcn/ui components (tabs, card, switch, slider, badge, button) recreated in plain HTML with
+  Tailwind, themed with the site's own colours and type.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  /* shadcn/ui token names, mapped to the site's palette: cyan marks active state, amber marks selection */
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-card-foreground: #e4e1d8;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-accent-foreground: #e4e1d8;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-ink-2: #b8b5ac;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base {
+    *, ::before, ::after { border-color: var(--color-border); }
+  }
+</style>
+<style>
+  body { margin: 0; background: #15171b; }
+  .stage {
+    background: radial-gradient(ellipse 80% 70% at 50% 42%, #1b1e24 0%, #15171b 72%);
+  }
+  .stage canvas { display: block; }
+  .label-layer { position: absolute; inset: 0; touch-action: none; }
+  .label-layer > * { pointer-events: none; }
+
+  /* 3D labels */
+  .lbl {
+    font: 500 12px/1.2 "IBM Plex Sans Condensed", sans-serif;
+    color: #e4e1d8;
+    white-space: nowrap;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgb(21 23 27 / 0.72);
+    transition: opacity 0.2s, color 0.2s;
+  }
+  .lbl b { font: 400 11px "Source Code Pro", monospace; color: #8b9099; margin-left: 6px; }
+  .lbl.dim { opacity: 0.18; }
+  .lbl.sel { color: #f6c453; }
+  .lbl.country { font-size: 11px; color: #1fefd7; opacity: 0; }
+  .lbl.country.on { opacity: 1; }
+  .lbl.pkg { font-size: 13px; font-weight: 600; background: none; }
+  .lbl.mod { font: 400 10.5px "Source Code Pro", monospace; background: rgb(21 23 27 / 0.55); padding: 1px 4px; }
+  .lbl.mod.out { color: #1fefd7; }
+  .lbl.mod.in { color: #f6c453; }
+
+  /* panels: left for controls, right for details; one bottom sheet at a time on phones */
+  .panel { position: absolute; z-index: 15; overflow: auto; overscroll-behavior: contain; }
+  .panel[hidden] { display: none; }
+  @media (min-width: 640px) {
+    .controls { left: 1.5rem; top: 4.25rem; width: 304px; max-height: calc(100% - 5.75rem); }
+    .detail { right: 1.5rem; top: 4.25rem; width: 300px; max-height: calc(100% - 5.75rem); }
+    .sheet-toggle { display: none; }
+  }
+  @media (max-width: 639px) {
+    .controls, .detail { left: 0.75rem; right: 0.75rem; bottom: 0.75rem; max-height: 46vh; }
+    body[data-detail="open"] .controls { display: none; }
+    .controls:not(.open) .collapsible { display: none; }
+  }
+
+  /* shadcn slider on a native range input */
+  .slider { -webkit-appearance: none; appearance: none; width: 100%; height: 16px; background: transparent; cursor: pointer; }
+  .slider::-webkit-slider-runnable-track {
+    height: 6px; border-radius: 999px;
+    background: linear-gradient(#1fefd7, #1fefd7) 0 / var(--fill, 50%) 100% no-repeat, #2a2e36;
+  }
+  .slider::-moz-range-track { height: 6px; border-radius: 999px; background: #2a2e36; }
+  .slider::-moz-range-progress { height: 6px; border-radius: 999px; background: #1fefd7; }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none; margin-top: -5px; width: 16px; height: 16px; border-radius: 999px;
+    background: #15171b; border: 1px solid rgb(31 239 215 / 0.6); box-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+  }
+  .slider::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 999px; background: #15171b; border: 1px solid rgb(31 239 215 / 0.6);
+  }
+  .slider:focus-visible { outline: none; }
+  .slider:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgb(31 239 215 / 0.35); }
+  .slider:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px rgb(31 239 215 / 0.35); }
+
+  .bar { height: 3px; border-radius: 2px; background: currentColor; opacity: 0.7; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+<div class="fixed inset-0 overflow-hidden">
+  <div id="stage-flows" class="stage absolute inset-0" role="tabpanel" aria-labelledby="tab-flows"></div>
+  <div id="stage-deps" class="stage absolute inset-0" role="tabpanel" aria-labelledby="tab-deps" hidden></div>
+
+  <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
+    <a href="/playground" class="pointer-events-auto font-brand text-[26px] leading-none text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm" title="Back to the Playground">inoTives</a>
+    <span class="hidden text-sm text-muted-foreground sm:inline">Playground</span>
+    <div role="tablist" aria-label="Views" class="pointer-events-auto ml-auto inline-flex h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground sm:mx-auto">
+      <button role="tab" id="tab-flows" data-tab="flows" aria-controls="stage-flows"
+        class="tab inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow">Trade map</button>
+      <button role="tab" id="tab-deps" data-tab="deps" aria-controls="stage-deps"
+        class="tab inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow">Dependency sphere</button>
+    </div>
+    <span class="hidden items-center rounded-md border px-2 py-0.5 text-xs font-medium text-muted-foreground sm:inline-flex">Mock data</span>
+  </header>
+
+  <!-- Trade map controls -->
+  <aside class="panel controls rounded-xl border bg-card/90 p-4 text-card-foreground shadow backdrop-blur" data-view="flows">
+    <div class="flex items-start gap-3">
+      <div class="min-w-0 flex-1">
+        <h1 class="text-lg font-semibold leading-tight">Where chips are made, and who buys them</h1>
+        <p class="mt-1 font-mono text-xs text-muted-foreground">Mock figures, US$ billions a year</p>
+      </div>
+      <button class="sheet-toggle inline-flex h-8 items-center rounded-md border border-input px-3 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-expanded="false">Controls</button>
+    </div>
+    <div class="collapsible">
+      <p class="mt-3 text-sm leading-relaxed text-ink-2">Each exporting country lifts its output into the flow diagram behind the map. The flows split by kind of chip, then drop back down to the markets that buy them.</p>
+
+      <h2 class="mt-4 text-xs font-medium text-muted-foreground">Kind of chip</h2>
+      <ul id="flows-legend" class="mt-1.5 space-y-0.5"></ul>
+
+      <div class="my-4 h-px bg-border"></div>
+
+      <div class="flex items-center justify-between gap-3">
+        <label for="sw-drops" class="text-sm">Lines to the map</label>
+        <button id="sw-drops" role="switch" aria-checked="true" data-state="checked"
+          class="switch inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[state=checked]:bg-primary data-[state=unchecked]:bg-input">
+          <span class="pointer-events-none block size-4 rounded-full bg-background shadow-lg transition-transform"></span>
+        </button>
+      </div>
+      <div class="mt-4">
+        <div class="flex items-center justify-between text-sm">
+          <label for="sl-tilt">Lean the diagram back</label>
+          <span id="sl-tilt-out" class="font-mono text-xs text-muted-foreground">0°</span>
+        </div>
+        <input id="sl-tilt" class="slider mt-2" type="range" min="0" max="55" value="0" />
+      </div>
+
+      <div class="mt-4 flex items-center gap-2">
+        <button data-reset="flows" class="inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">Reset view</button>
+        <span class="text-xs leading-snug text-muted-foreground">Drag to orbit, scroll to zoom, tap to trace a flow.</span>
+      </div>
+    </div>
+  </aside>
+  <aside id="detail-flows" class="panel detail rounded-xl border bg-card/90 p-4 text-card-foreground shadow backdrop-blur" data-view="flows" hidden aria-live="polite"></aside>
+
+  <!-- Dependency sphere controls -->
+  <aside class="panel controls rounded-xl border bg-card/90 p-4 text-card-foreground shadow backdrop-blur" data-view="deps" hidden>
+    <div class="flex items-start gap-3">
+      <div class="min-w-0 flex-1">
+        <h1 class="text-lg font-semibold leading-tight">Which modules lean on which</h1>
+        <p class="mt-1 font-mono text-xs text-muted-foreground">Mock web app, 26 modules in 6 packages</p>
+      </div>
+      <button class="sheet-toggle inline-flex h-8 items-center rounded-md border border-input px-3 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-expanded="false">Controls</button>
+    </div>
+    <div class="collapsible">
+      <p class="mt-3 text-sm leading-relaxed text-ink-2">Each package takes a slice of the sphere sized by how much it imports and is imported. Lines bend through the middle toward their package, so heavy traffic between two packages shows as a thick bundle.</p>
+
+      <div class="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+        <span class="inline-flex items-center gap-1.5"><span class="h-0.5 w-4 rounded bg-primary"></span>Imports</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-0.5 w-4 rounded bg-amber"></span>Imported by</span>
+      </div>
+
+      <h2 class="mt-4 text-xs font-medium text-muted-foreground">Packages</h2>
+      <ul id="deps-legend" class="mt-1.5 space-y-0.5"></ul>
+
+      <div class="my-4 h-px bg-border"></div>
+
+      <div class="flex items-center justify-between gap-3">
+        <label for="sw-spin" class="text-sm">Spin</label>
+        <button id="sw-spin" role="switch" aria-checked="true" data-state="checked"
+          class="switch inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[state=checked]:bg-primary data-[state=unchecked]:bg-input">
+          <span class="pointer-events-none block size-4 rounded-full bg-background shadow-lg transition-transform"></span>
+        </button>
+      </div>
+      <div class="mt-3 flex items-center justify-between gap-3">
+        <label for="sw-shells" class="text-sm">Package shells</label>
+        <button id="sw-shells" role="switch" aria-checked="true" data-state="checked"
+          class="switch inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[state=checked]:bg-primary data-[state=unchecked]:bg-input">
+          <span class="pointer-events-none block size-4 rounded-full bg-background shadow-lg transition-transform"></span>
+        </button>
+      </div>
+      <div class="mt-4">
+        <div class="flex items-center justify-between text-sm">
+          <label for="sl-bundle">Bundling</label>
+          <span id="sl-bundle-out" class="font-mono text-xs text-muted-foreground">60%</span>
+        </div>
+        <input id="sl-bundle" class="slider mt-2" type="range" min="0" max="100" value="60" />
+      </div>
+
+      <div class="mt-4 flex items-center gap-2">
+        <button data-reset="deps" class="inline-flex h-8 shrink-0 items-center justify-center whitespace-nowrap rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">Reset view</button>
+        <span class="text-xs leading-snug text-muted-foreground">Drag to orbit, tap a module or package to trace it.</span>
+      </div>
+    </div>
+  </aside>
+  <aside id="detail-deps" class="panel detail rounded-xl border bg-card/90 p-4 text-card-foreground shadow backdrop-blur" data-view="deps" hidden aria-live="polite"></aside>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const CYAN = new THREE.Color('#1fefd7');
+const AMBER = new THREE.Color('#f6c453');
+const FOG = new THREE.Color('#8b9099');
+const INK2 = '#b8b5ac';
+// muted categorical hues; cyan and amber stay reserved for active and selected state
+const PALETTE = ['#5fb3c8', '#c9a4f5', '#e9a66c', '#9ccf7f', '#e58fb0', '#8fa1d9'];
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+// ---------- shared plumbing ----------
+
+function createStage(el, fov = 40) {
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+  el.appendChild(renderer.domElement);
+  const labels = new CSS2DRenderer();
+  labels.domElement.className = 'label-layer';
+  el.appendChild(labels.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(fov, 1, 0.1, 400);
+  const controls = new OrbitControls(camera, labels.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  return {
+    el, renderer, labels, scene, camera, controls,
+    resize() {
+      const w = el.clientWidth, h = el.clientHeight;
+      if (!w || !h) return;
+      renderer.setSize(w, h);
+      labels.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    },
+    render() {
+      controls.update();
+      renderer.render(scene, camera);
+      labels.render(scene, camera);
+    },
+  };
+}
+
+// hover and tap picking: each pickable mesh carries userData.pick, a string key like "node:o-tw"
+function attachPicker(stage, targets, onHover, onTap) {
+  const ray = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  const dom = stage.labels.domElement;
+  let current = null;
+  let down = null;
+  const pick = (e) => {
+    const r = dom.getBoundingClientRect();
+    ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, stage.camera);
+    const hit = ray.intersectObjects(targets(), false).find((h) => h.object.visible && h.object.parent?.visible !== false);
+    return hit ? hit.object.userData.pick : null;
+  };
+  dom.addEventListener('pointermove', (e) => {
+    if (e.buttons || e.pointerType === 'touch') return;
+    const p = pick(e);
+    if (p !== current) {
+      current = p;
+      dom.style.cursor = p ? 'pointer' : '';
+      onHover(p);
+    }
+  });
+  dom.addEventListener('pointerleave', () => {
+    if (current) { current = null; dom.style.cursor = ''; onHover(null); }
+  });
+  dom.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; });
+  dom.addEventListener('pointerup', (e) => {
+    if (!down) return;
+    const moved = Math.hypot(e.clientX - down[0], e.clientY - down[1]);
+    down = null;
+    if (moved < 6) onTap(pick(e));
+  });
+}
+
+function label(html, cls, center = [0.5, 0.5]) {
+  const el = document.createElement('div');
+  el.className = `lbl ${cls}`;
+  el.innerHTML = html;
+  const obj = new CSS2DObject(el);
+  obj.center.set(...center);
+  return obj;
+}
+
+// on wide screens the controls card covers the left edge, so the scene shifts right of it
+function panelShift(stage) {
+  return stage.el.clientWidth >= 900 ? 160 / stage.el.clientWidth : 0;
+}
+
+// back off far enough that the scene's half width still fits across narrow screens
+function fitDistance(stage, base, halfWidth) {
+  const tanX = Math.tan(THREE.MathUtils.degToRad(stage.camera.fov / 2)) * stage.camera.aspect;
+  return Math.max(base, halfWidth / tanX);
+}
+
+function listRow({ key, name, value, max, color, note }) {
+  return `<li><button data-pick="${esc(key)}" class="group block w-full rounded-md px-2 py-1.5 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+    <span class="flex items-baseline justify-between gap-3 text-sm"><span class="truncate">${esc(name)}</span><span class="font-mono text-xs text-muted-foreground">${esc(value)}</span></span>
+    ${max ? `<span class="mt-1 block" style="color:${color}"><span class="bar block" style="width:${Math.max(4, (parseFloat(String(value).replace(/[^\d.]/g, '')) / max) * 100)}%"></span></span>` : ''}
+    ${note ? `<span class="mt-0.5 block text-xs text-muted-foreground">${esc(note)}</span>` : ''}
+  </button></li>`;
+}
+
+function detailShell(title, meta, sections) {
+  return `<div class="flex items-start gap-3">
+      <div class="min-w-0 flex-1">
+        <h2 class="text-lg font-semibold leading-tight">${esc(title)}</h2>
+        <p class="mt-1 text-sm text-muted-foreground">${meta}</p>
+      </div>
+      <button data-close class="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Close details">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>
+      </button>
+    </div>
+    ${sections.map((s) => `<h3 class="mt-4 flex items-center gap-2 text-xs font-medium text-muted-foreground">${s.swatch ? `<span class="h-0.5 w-3 rounded" style="background:${s.swatch}"></span>` : ''}${esc(s.title)}</h3><ul class="mt-1 space-y-0.5">${s.rows.join('') || '<li class="px-2 py-1 text-sm text-muted-foreground">None</li>'}</ul>`).join('')}`;
+}
+
+function setSwitch(btn, on) {
+  btn.dataset.state = on ? 'checked' : 'unchecked';
+  btn.setAttribute('aria-checked', String(on));
+  btn.firstElementChild.style.transform = on ? 'translateX(16px)' : 'translateX(0)';
+}
+function bindSwitch(id, on, onChange) {
+  const btn = document.getElementById(id);
+  setSwitch(btn, on);
+  btn.addEventListener('click', () => {
+    const next = btn.dataset.state !== 'checked';
+    setSwitch(btn, next);
+    onChange(next);
+  });
+}
+function bindSlider(id, fmt, onInput) {
+  const input = document.getElementById(id);
+  const out = document.getElementById(`${id}-out`);
+  const sync = () => {
+    const v = Number(input.value);
+    input.style.setProperty('--fill', `${((v - input.min) / (input.max - input.min)) * 100}%`);
+    out.textContent = fmt(v);
+    onInput(v);
+  };
+  input.addEventListener('input', sync);
+  sync();
+  return input;
+}
+
+// ---------- Trade map: a world map on the floor, a Sankey diagram standing behind it ----------
+
+function createTradeMap(el) {
+  const stage = createStage(el);
+  const { scene, camera, controls } = stage;
+
+  const ORIGINS = [
+    { id: 'o-tw', name: 'Taiwan', lon: 121, lat: 23.7, geo: 'Taiwan' },
+    { id: 'o-kr', name: 'South Korea', lon: 127.8, lat: 36.5, geo: 'South Korea' },
+    { id: 'o-jp', name: 'Japan', lon: 138.3, lat: 36.2, geo: 'Japan' },
+    { id: 'o-cn', name: 'China', lon: 104, lat: 35, geo: 'China' },
+    { id: 'o-my', name: 'Malaysia', lon: 102, lat: 4, geo: 'Malaysia' },
+    { id: 'o-nl', name: 'Netherlands', lon: 5.3, lat: 52.1, geo: 'Netherlands' },
+    { id: 'o-us', name: 'United States', lon: -98, lat: 39, geo: 'United States of America' },
+  ];
+  const PRODUCTS = [
+    { id: 'p-logic', name: 'Logic chips', color: PALETTE[0] },
+    { id: 'p-mem', name: 'Memory', color: PALETTE[1] },
+    { id: 'p-analog', name: 'Analog and power', color: PALETTE[2] },
+    { id: 'p-tools', name: 'Chipmaking tools', color: PALETTE[3] },
+  ];
+  const MARKETS = [
+    { id: 'm-us', name: 'United States', lon: -98, lat: 39, geo: 'United States of America' },
+    { id: 'm-mx', name: 'Mexico', lon: -102, lat: 23.6, geo: 'Mexico' },
+    { id: 'm-de', name: 'Germany', lon: 10.4, lat: 51.2, geo: 'Germany' },
+    { id: 'm-in', name: 'India', lon: 78.9, lat: 21, geo: 'India' },
+    { id: 'm-vn', name: 'Vietnam', lon: 106, lat: 16, geo: 'Vietnam' },
+    { id: 'm-br', name: 'Brazil', lon: -51.9, lat: -14.2, geo: 'Brazil' },
+  ];
+  const LINKS = [
+    ['o-tw', 'p-logic', 120], ['o-tw', 'p-analog', 18], ['o-kr', 'p-mem', 95], ['o-kr', 'p-logic', 20],
+    ['o-jp', 'p-tools', 38], ['o-jp', 'p-mem', 12], ['o-cn', 'p-analog', 40], ['o-cn', 'p-logic', 25],
+    ['o-my', 'p-analog', 45], ['o-nl', 'p-tools', 30], ['o-us', 'p-logic', 35], ['o-us', 'p-tools', 28],
+    ['p-logic', 'm-us', 70], ['p-logic', 'm-mx', 30], ['p-logic', 'm-de', 30], ['p-logic', 'm-in', 25], ['p-logic', 'm-vn', 25], ['p-logic', 'm-br', 20],
+    ['p-mem', 'm-us', 35], ['p-mem', 'm-vn', 25], ['p-mem', 'm-mx', 20], ['p-mem', 'm-in', 15], ['p-mem', 'm-de', 12],
+    ['p-analog', 'm-us', 30], ['p-analog', 'm-vn', 28], ['p-analog', 'm-mx', 25], ['p-analog', 'm-de', 10], ['p-analog', 'm-in', 10],
+    ['p-tools', 'm-us', 30], ['p-tools', 'm-de', 20], ['p-tools', 'm-in', 18], ['p-tools', 'm-vn', 15], ['p-tools', 'm-mx', 8], ['p-tools', 'm-br', 5],
+  ];
+  const KIND = { origin: 'Exporter', product: 'Kind of chip', market: 'Market' };
+  const fmt = (v) => `$${v}bn`;
+
+  // --- the map: d3-geo draws the world into a canvas that becomes the floor texture
+  const MAP_W = 20, MAP_H = 10;
+  const toMap = (lon, lat, y = 0.03) => new THREE.Vector3((lon / 180) * (MAP_W / 2), y, (-lat / 90) * (MAP_H / 2));
+  const involved = new Set([...ORIGINS, ...MARKETS].map((d) => d.geo));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 2048;
+  canvas.height = 1024;
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = stage.renderer.capabilities.getMaxAnisotropy();
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(MAP_W, MAP_H),
+    new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false }),
+  );
+  floor.rotation.x = -Math.PI / 2;
+  scene.add(floor);
+
+  function drawMap(world) {
+    const ctx = canvas.getContext('2d');
+    const projection = d3.geoEquirectangular().scale(canvas.width / (2 * Math.PI)).translate([canvas.width / 2, canvas.height / 2]);
+    const path = d3.geoPath(projection, ctx);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath(); path({ type: 'Sphere' }); ctx.fillStyle = 'rgba(29,32,38,0.55)'; ctx.fill();
+    ctx.beginPath(); path(d3.geoGraticule10()); ctx.strokeStyle = 'rgba(139,144,153,0.10)'; ctx.lineWidth = 1; ctx.stroke();
+    if (world) {
+      const countries = topojson.feature(world, world.objects.countries).features;
+      for (const c of countries) {
+        ctx.beginPath(); path(c);
+        ctx.fillStyle = involved.has(c.properties.name) ? '#323843' : '#24282f';
+        ctx.fill();
+      }
+      ctx.beginPath(); path(topojson.mesh(world, world.objects.countries, (a, b) => a !== b));
+      ctx.strokeStyle = '#3a404b'; ctx.lineWidth = 1.2; ctx.stroke();
+    }
+    ctx.beginPath(); path({ type: 'Sphere' }); ctx.strokeStyle = 'rgba(139,144,153,0.25)'; ctx.lineWidth = 2; ctx.stroke();
+    texture.needsUpdate = true;
+  }
+  drawMap(null);
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json')
+    .then((r) => r.json())
+    .then(drawMap)
+    .catch(() => {});
+
+  // --- the Sankey: laid out by d3-sankey in pixels, then drawn on an upright plane
+  const SK_W = 1800, SK_H = 720, S = 0.01;
+  const nodes = [
+    ...ORIGINS.map((d) => ({ ...d, kind: 'origin' })),
+    ...PRODUCTS.map((d) => ({ ...d, kind: 'product' })),
+    ...MARKETS.map((d) => ({ ...d, kind: 'market' })),
+  ];
+  const graph = d3.sankey().nodeId((d) => d.id).nodeWidth(16).nodePadding(24).extent([[0, 0], [SK_W, SK_H]])({
+    nodes,
+    links: LINKS.map(([source, target, value]) => ({ source, target, value })),
+  });
+  const byId = Object.fromEntries(graph.nodes.map((n) => [n.id, n]));
+  const productOf = (l) => (l.source.kind === 'product' ? l.source : l.target);
+  const wx = (px) => (px - SK_W / 2) * S;
+  const wy = (py) => (SK_H - py) * S;
+
+  const wall = new THREE.Group();
+  wall.position.set(0, 1.1, -6.4);
+  scene.add(wall);
+
+  const backdrop = new THREE.Mesh(
+    new THREE.PlaneGeometry(SK_W * S + 3.6, SK_H * S + 0.8),
+    new THREE.MeshBasicMaterial({ color: '#1d2026', transparent: true, opacity: 0.45, depthWrite: false, side: THREE.DoubleSide }),
+  );
+  backdrop.position.set(0, (SK_H * S) / 2, -0.03);
+  wall.add(backdrop);
+
+  const RIB_N = 48;
+  const ribbons = graph.links.map((l) => {
+    const x0 = l.source.x1, x1 = l.target.x0, xm = (x0 + x1) / 2, w = l.width;
+    const pos = [], idx = [];
+    for (let i = 0; i <= RIB_N; i++) {
+      const t = i / RIB_N, mt = 1 - t;
+      const x = mt ** 3 * x0 + 3 * mt * mt * t * xm + 3 * mt * t * t * xm + t ** 3 * x1;
+      const y = mt ** 3 * l.y0 + 3 * mt * mt * t * l.y0 + 3 * mt * t * t * l.y1 + t ** 3 * l.y1;
+      pos.push(wx(x), wy(y - w / 2), 0, wx(x), wy(y + w / 2), 0);
+      if (i < RIB_N) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setIndex(idx);
+    const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+      color: productOf(l).color, transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide,
+    }));
+    mesh.position.z = 0.002 * l.index;
+    mesh.userData.pick = `link:${l.index}`;
+    wall.add(mesh);
+    return mesh;
+  });
+
+  const nodeMeshes = {};
+  const nodeLabels = {};
+  for (const n of graph.nodes) {
+    const h = Math.max(n.y1 - n.y0, 2) * S;
+    const mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(16 * S, h),
+      new THREE.MeshBasicMaterial({ color: n.kind === 'product' ? n.color : INK2, transparent: true, side: THREE.DoubleSide }),
+    );
+    mesh.position.set(wx((n.x0 + n.x1) / 2), wy((n.y0 + n.y1) / 2), 0.12);
+    mesh.userData.pick = `node:${n.id}`;
+    wall.add(mesh);
+    nodeMeshes[n.id] = mesh;
+
+    const text = `${esc(n.name)}<b>${fmt(n.value)}</b>`;
+    let lbl;
+    if (n.kind === 'origin') { lbl = label(text, 'node', [1, 0.5]); lbl.position.set(wx(n.x0) - 0.1, wy((n.y0 + n.y1) / 2), 0.15); }
+    else if (n.kind === 'market') { lbl = label(text, 'node', [0, 0.5]); lbl.position.set(wx(n.x1) + 0.1, wy((n.y0 + n.y1) / 2), 0.15); }
+    else { lbl = label(text, 'node', [0.5, 1]); lbl.position.set(wx((n.x0 + n.x1) / 2), wy(n.y0) + 0.06, 0.15); }
+    wall.add(lbl);
+    nodeLabels[n.id] = lbl;
+  }
+
+  // --- country markers on the map, and the lines lifting each country into the wall
+  const places = new Map();
+  for (const n of graph.nodes) if (n.geo && !places.has(n.geo)) places.set(n.geo, n);
+  const markers = new THREE.Group();
+  scene.add(markers);
+  const countryLabels = {};
+  const markerMeshes = [];
+  for (const [geo, n] of places) {
+    const p = toMap(n.lon, n.lat);
+    const dot = new THREE.Mesh(new THREE.CircleGeometry(0.1, 24), new THREE.MeshBasicMaterial({ color: '#e4e1d8', transparent: true }));
+    dot.rotation.x = -Math.PI / 2;
+    dot.position.copy(p);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.16, 0.2, 32), new THREE.MeshBasicMaterial({ color: '#8b9099', transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.copy(p);
+    const hit = new THREE.Mesh(new THREE.CircleGeometry(0.42, 16), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
+    hit.rotation.x = -Math.PI / 2;
+    hit.position.copy(p).setY(0.04);
+    hit.userData.pick = `country:${geo}`;
+    markers.add(dot, ring, hit);
+    markerMeshes.push(hit);
+    const lbl = label(esc(n.name), 'country', [0.5, 0]);
+    lbl.position.copy(p).setY(0.3);
+    markers.add(lbl);
+    countryLabels[geo] = { lbl, ring };
+  }
+
+  const drops = new THREE.Group();
+  scene.add(drops);
+  let dropItems = [];
+  function buildDrops() {
+    for (const d of dropItems) { d.mesh.geometry.dispose(); d.mesh.material.dispose(); drops.remove(d.mesh); }
+    wall.updateMatrixWorld(true);
+    dropItems = graph.nodes.filter((n) => n.geo).map((n) => {
+      const mid = (n.y0 + n.y1) / 2;
+      const onWall = wall.localToWorld(new THREE.Vector3(n.kind === 'origin' ? wx(n.x0) : wx(n.x1), wy(mid), 0.12));
+      const onMap = toMap(n.lon, n.lat, 0.04);
+      const wallNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(wall.quaternion).multiplyScalar(2.8);
+      const a = n.kind === 'origin' ? onMap : onWall;
+      const b = n.kind === 'origin' ? onWall : onMap;
+      const curve = n.kind === 'origin'
+        ? new THREE.CubicBezierCurve3(a, a.clone().add(new THREE.Vector3(0, 3.4, 0)), b.clone().add(wallNormal), b)
+        : new THREE.CubicBezierCurve3(a, a.clone().add(wallNormal), b.clone().add(new THREE.Vector3(0, 3.4, 0)), b);
+      const mesh = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 64, 0.014 + n.value * 0.00032, 6, false),
+        new THREE.MeshBasicMaterial({ color: FOG.clone(), transparent: true, opacity: 0.35, depthWrite: false }),
+      );
+      mesh.userData.pick = `node:${n.id}`;
+      drops.add(mesh);
+      return { id: n.id, curve, mesh };
+    });
+    applyHighlight();
+  }
+
+  // particles run along the lines of whatever is traced
+  const dotGeo = new THREE.SphereGeometry(0.05, 10, 8);
+  const dotMat = new THREE.MeshBasicMaterial({ color: CYAN });
+  const sparks = new THREE.Group();
+  scene.add(sparks);
+
+  // --- tracing
+  const state = { hover: null, selected: null, reveal: reduceMotion ? 1 : 0 };
+  function related(key) {
+    if (!key) return null;
+    const [kind, id] = [key.slice(0, key.indexOf(':')), key.slice(key.indexOf(':') + 1)];
+    const nodeIds = new Set(), linkIdx = new Set();
+    const addNode = (n) => {
+      nodeIds.add(n.id);
+      for (const l of n.sourceLinks) { linkIdx.add(l.index); nodeIds.add(l.target.id); }
+      for (const l of n.targetLinks) { linkIdx.add(l.index); nodeIds.add(l.source.id); }
+    };
+    if (kind === 'node') addNode(byId[id]);
+    if (kind === 'country') graph.nodes.filter((n) => n.geo === id).forEach(addNode);
+    if (kind === 'link') {
+      const l = graph.links[Number(id)];
+      linkIdx.add(l.index); nodeIds.add(l.source.id); nodeIds.add(l.target.id);
+    }
+    return { nodeIds, linkIdx };
+  }
+
+  function applyHighlight() {
+    const r = related(state.hover ?? state.selected);
+    const selNodes = state.selected ? related(state.selected).nodeIds : null;
+    graph.links.forEach((l, i) => {
+      ribbons[i].material.opacity = !r ? 0.5 : r.linkIdx.has(i) ? 0.88 : 0.07;
+    });
+    for (const n of graph.nodes) {
+      const on = !r || r.nodeIds.has(n.id);
+      nodeMeshes[n.id].material.opacity = on ? 1 : 0.2;
+      nodeLabels[n.id].element.classList.toggle('dim', !on);
+      nodeLabels[n.id].element.classList.toggle('sel', !!state.selected && state.selected === `node:${n.id}`);
+    }
+    for (const d of dropItems) {
+      const on = r && r.nodeIds.has(d.id);
+      d.mesh.material.color.copy(on ? CYAN : FOG);
+      d.mesh.material.opacity = !r ? 0.35 : on ? 0.95 : 0.05;
+    }
+    const lit = new Set(r ? graph.nodes.filter((n) => n.geo && r.nodeIds.has(n.id)).map((n) => n.geo) : []);
+    for (const [geo, { lbl, ring }] of Object.entries(countryLabels)) {
+      lbl.element.classList.toggle('on', lit.has(geo));
+      ring.material.color.copy(lit.has(geo) ? CYAN : FOG);
+    }
+    sparks.clear();
+    if (r && !reduceMotion) {
+      for (const d of dropItems) {
+        if (!r.nodeIds.has(d.id) || !drops.visible) continue;
+        for (let k = 0; k < 5; k++) {
+          const m = new THREE.Mesh(dotGeo, dotMat);
+          m.userData = { curve: d.curve, offset: k / 5 };
+          sparks.add(m);
+        }
+      }
+    }
+  }
+
+  // --- details panel
+  const detail = document.getElementById('detail-flows');
+  function rowsFor(links, other) {
+    const max = Math.max(...links.map((l) => l.value));
+    return links.slice().sort((a, b) => b.value - a.value).map((l) => listRow({
+      key: `node:${other(l).id}`, name: other(l).name, value: fmt(l.value), max, color: productOf(l).color,
+    }));
+  }
+  function nodeSections(n) {
+    if (n.kind === 'origin') return [{ title: 'Exports by kind of chip', rows: rowsFor(n.sourceLinks, (l) => l.target) }];
+    if (n.kind === 'market') return [{ title: 'Buys', rows: rowsFor(n.targetLinks, (l) => l.source) }];
+    return [
+      { title: 'Made in', rows: rowsFor(n.targetLinks, (l) => l.source) },
+      { title: 'Sold to', rows: rowsFor(n.sourceLinks, (l) => l.target) },
+    ];
+  }
+  function renderDetail() {
+    const key = state.selected;
+    if (!key) { detail.hidden = true; document.body.dataset.detail = ''; return; }
+    const [kind, id] = [key.slice(0, key.indexOf(':')), key.slice(key.indexOf(':') + 1)];
+    if (kind === 'node') {
+      const n = byId[id];
+      detail.innerHTML = detailShell(n.name, `${KIND[n.kind]}, ${fmt(n.value)} a year`, nodeSections(n));
+    } else if (kind === 'country') {
+      const ns = graph.nodes.filter((n) => n.geo === id);
+      detail.innerHTML = detailShell(ns[0].name, ns.map((n) => `${KIND[n.kind]}, ${fmt(n.value)}`).join('<br>'), ns.flatMap(nodeSections));
+    } else {
+      const l = graph.links[Number(id)];
+      const out = Math.round((l.value / l.source.value) * 100);
+      const into = Math.round((l.value / l.target.value) * 100);
+      detail.innerHTML = detailShell(`${l.source.name} to ${l.target.name}`, `${fmt(l.value)} a year`, [{
+        title: 'Share',
+        rows: [
+          listRow({ key: `node:${l.source.id}`, name: l.source.name, value: `${out}%`, max: 100, color: productOf(l).color, note: `of everything ${l.source.kind === 'origin' ? 'it exports' : 'sold'}` }),
+          listRow({ key: `node:${l.target.id}`, name: l.target.name, value: `${into}%`, max: 100, color: productOf(l).color, note: `of everything ${l.target.kind === 'market' ? 'it buys' : 'made'}` }),
+        ],
+      }]);
+    }
+    detail.hidden = false;
+    document.body.dataset.detail = 'open';
+  }
+  function select(key) {
+    state.selected = key;
+    renderDetail();
+    applyHighlight();
+  }
+  detail.addEventListener('click', (e) => {
+    if (e.target.closest('[data-close]')) return select(null);
+    const b = e.target.closest('[data-pick]');
+    if (b) select(b.dataset.pick);
+  });
+
+  attachPicker(
+    stage,
+    () => [...(drops.visible ? markerMeshes : []), ...Object.values(nodeMeshes), ...(drops.visible ? dropItems.map((d) => d.mesh) : []), ...ribbons],
+    (key) => { state.hover = key; applyHighlight(); },
+    (key) => select(key === state.selected ? null : key),
+  );
+
+  // --- controls panel
+  document.getElementById('flows-legend').innerHTML = PRODUCTS.map((p) => `<li><button data-pick="node:${p.id}" class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+      <span class="size-2.5 rounded-sm" style="background:${p.color}"></span><span class="flex-1">${esc(p.name)}</span><span class="font-mono text-xs text-muted-foreground">${fmt(byId[p.id].value)}</span></button></li>`).join('');
+  document.getElementById('flows-legend').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-pick]');
+    if (b) select(b.dataset.pick === state.selected ? null : b.dataset.pick);
+  });
+  bindSwitch('sw-drops', true, (on) => { drops.visible = on; markers.visible = on; applyHighlight(); });
+  bindSlider('sl-tilt', (v) => `${v}°`, (v) => { wall.rotation.x = (-v * Math.PI) / 180; buildDrops(); });
+
+  const home = { pos: new THREE.Vector3(0, 7.2, 18.5), target: new THREE.Vector3(0, 2.6, -2.2), span: 26, halfWidth: 14.5 };
+  function resetView() {
+    const dir = home.pos.clone().sub(home.target);
+    const target = home.target.clone();
+    target.x -= panelShift(stage) * home.span;
+    camera.position.copy(target).add(dir.setLength(fitDistance(stage, dir.length(), home.halfWidth)));
+    controls.target.copy(target);
+    controls.update();
+  }
+  controls.maxPolarAngle = Math.PI * 0.49;
+  controls.minDistance = 5;
+  controls.maxDistance = 90;
+
+  function setReveal(t) {
+    const e = d3.easeCubicInOut(t);
+    for (const m of ribbons) m.geometry.setDrawRange(0, Math.ceil(RIB_N * e) * 6);
+    for (const d of dropItems) d.mesh.geometry.setDrawRange(0, Math.ceil(64 * Math.min(1, e * 1.4)) * 36);
+  }
+
+  return {
+    stage,
+    start() { stage.resize(); resetView(); buildDrops(); setReveal(state.reveal); },
+    resetView,
+    clear() { select(null); },
+    selected: () => state.selected,
+    tick(time, dt) {
+      if (state.reveal < 1) { state.reveal = Math.min(1, state.reveal + dt / 1.8); setReveal(state.reveal); }
+      for (const m of sparks.children) m.position.copy(m.userData.curve.getPointAt((time * 0.22 + m.userData.offset) % 1));
+      stage.render();
+    },
+  };
+}
+
+// ---------- Dependency sphere: a chord layout wrapped onto a sphere ----------
+
+function createDependencySphere(el) {
+  const stage = createStage(el);
+  const { scene, camera, controls } = stage;
+  const R = 5;
+  const sp = (r, phi, theta) => new THREE.Vector3(-r * Math.cos(phi) * Math.sin(theta), r * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta));
+
+  const PACKAGES = [
+    { id: 'app', label: 'App screens', mods: ['router', 'dashboard', 'editor', 'settings', 'onboarding'] },
+    { id: 'ui', label: 'UI kit', mods: ['button', 'form', 'table', 'chart', 'dialog', 'theme'] },
+    { id: 'api', label: 'API client', mods: ['client', 'auth', 'billing', 'search'] },
+    { id: 'data', label: 'Data layer', mods: ['store', 'cache', 'schema', 'sync'] },
+    { id: 'core', label: 'Core', mods: ['events', 'config', 'log', 'i18n'] },
+    { id: 'infra', label: 'Infra', mods: ['http', 'queue', 'metrics'] },
+  ];
+  PACKAGES.forEach((p, i) => { p.color = PALETTE[i]; p.index = i; });
+  // chance that a module in one package imports a given module in another; layers only point downward
+  const AFFINITY = {
+    app: { app: 0.12, ui: 0.5, api: 0.45, data: 0.35, core: 0.4, infra: 0.05 },
+    ui: { ui: 0.22, core: 0.35 },
+    api: { api: 0.2, data: 0.15, core: 0.45, infra: 0.6 },
+    data: { data: 0.3, core: 0.4, infra: 0.35, api: 0.1 },
+    core: { core: 0.2, infra: 0.15 },
+    infra: { infra: 0.2, core: 0.3 },
+  };
+  let seed = 11;
+  const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+  const modules = PACKAGES.flatMap((p) => p.mods.map((m) => ({ id: `${p.id}/${m}`, name: m, pkg: p })));
+  const edges = [];
+  for (const a of modules) {
+    for (const b of modules) {
+      if (a === b) continue;
+      const chance = AFFINITY[a.pkg.id][b.pkg.id] ?? 0;
+      if (rand() < chance) edges.push({ source: a, target: b, weight: 1 + Math.floor(rand() * 6) });
+    }
+  }
+  for (const m of modules) {
+    m.out = edges.filter((e) => e.source === m);
+    m.in = edges.filter((e) => e.target === m);
+  }
+
+  // d3.chord sizes each package's slice from its traffic both ways
+  const matrix = PACKAGES.map(() => PACKAGES.map(() => 0));
+  for (const e of edges) {
+    matrix[e.source.pkg.index][e.target.pkg.index] += e.weight;
+    matrix[e.target.pkg.index][e.source.pkg.index] += e.weight;
+  }
+  const groups = d3.chord().padAngle(0.09)(matrix).groups;
+  for (const g of groups) Object.assign(PACKAGES[g.index], { a0: g.startAngle, a1: g.endAngle, mid: (g.startAngle + g.endAngle) / 2 });
+
+  const root = new THREE.Group();
+  scene.add(root);
+
+  root.add(new THREE.Mesh(
+    new THREE.SphereGeometry(R, 36, 18),
+    new THREE.MeshBasicMaterial({ color: '#8b9099', wireframe: true, transparent: true, opacity: 0.045, depthWrite: false }),
+  ));
+
+  // three rows of modules inside each package's slice
+  const ROWS = [0.55, 0, -0.55];
+  for (const p of PACKAGES) {
+    const n = p.mods.length;
+    modules.filter((m) => m.pkg === p).forEach((m, k) => {
+      const phi = p.a0 + ((p.a1 - p.a0) * (k + 0.5)) / n;
+      m.pos = sp(R, phi, Math.PI / 2 - ROWS[k % 3]);
+    });
+  }
+
+  const shells = new THREE.Group();
+  root.add(shells);
+  const arcMeshes = [];
+  const pkgLabels = {};
+  for (const p of PACKAGES) {
+    shells.add(new THREE.Mesh(
+      new THREE.SphereGeometry(R * 0.995, 20, 12, p.a0, p.a1 - p.a0, Math.PI / 2 - 0.85, 1.7),
+      new THREE.MeshBasicMaterial({ color: p.color, transparent: true, opacity: 0.045, side: THREE.DoubleSide, depthWrite: false }),
+    ));
+    const pts = d3.range(0, 1.0001, 1 / 24).map((t) => sp(R * 1.08, p.a0 + (p.a1 - p.a0) * t, Math.PI / 2));
+    const arc = new THREE.Mesh(
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 48, 0.07, 6, false),
+      new THREE.MeshBasicMaterial({ color: p.color, transparent: true }),
+    );
+    arc.userData.pick = `pkg:${p.id}`;
+    root.add(arc);
+    arcMeshes.push(arc);
+    const lbl = label(esc(p.label), 'pkg');
+    lbl.element.style.color = p.color;
+    lbl.position.copy(sp(R * 1.26, p.mid, Math.PI / 2));
+    root.add(lbl);
+    pkgLabels[p.id] = lbl;
+  }
+
+  const nodeMeshes = [];
+  for (const m of modules) {
+    const degree = m.out.length + m.in.length;
+    const dot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08 + Math.min(degree, 20) * 0.006, 16, 12),
+      new THREE.MeshBasicMaterial({ color: m.pkg.color, transparent: true }),
+    );
+    dot.position.copy(m.pos);
+    root.add(dot);
+    const hit = new THREE.Mesh(new THREE.SphereGeometry(0.34, 8, 6), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
+    hit.position.copy(m.pos);
+    hit.userData.pick = `mod:${m.id}`;
+    root.add(hit);
+    nodeMeshes.push(hit);
+    m.dot = dot;
+    m.label = label(esc(m.name), 'mod', [0.5, 1.4]);
+    m.label.position.copy(m.pos.clone().multiplyScalar(1.02));
+    root.add(m.label);
+  }
+
+  const edgeGroup = new THREE.Group();
+  root.add(edgeGroup);
+  let bundling = 0.6;
+  function buildEdges() {
+    for (const e of edges) if (e.mesh) { e.mesh.geometry.dispose(); e.mesh.material.dispose(); edgeGroup.remove(e.mesh); }
+    for (const e of edges) {
+      const a = e.source.pos, b = e.target.pos;
+      let c1, c2;
+      if (e.source.pkg === e.target.pkg) {
+        c1 = a.clone().multiplyScalar(0.78);
+        c2 = b.clone().multiplyScalar(0.78);
+      } else {
+        // pull toward each package's centre, deep inside the sphere: the higher the bundling, the tighter the bundle
+        const ca = sp(R * 0.28, e.source.pkg.mid, Math.PI / 2);
+        const cb = sp(R * 0.28, e.target.pkg.mid, Math.PI / 2);
+        c1 = a.clone().multiplyScalar(0.55).lerp(ca, bundling);
+        c2 = b.clone().multiplyScalar(0.55).lerp(cb, bundling);
+      }
+      e.mesh = new THREE.Mesh(
+        new THREE.TubeGeometry(new THREE.CubicBezierCurve3(a, c1, c2, b), 40, 0.006 + e.weight * 0.0045, 5, false),
+        new THREE.MeshBasicMaterial({ color: new THREE.Color(e.source.pkg.color), transparent: true, opacity: 0.2, depthWrite: false }),
+      );
+      edgeGroup.add(e.mesh);
+    }
+    applyHighlight();
+  }
+
+  const state = { hover: null, selected: null, spin: !reduceMotion, dragging: false };
+  controls.addEventListener('start', () => { state.dragging = true; });
+  controls.addEventListener('end', () => { state.dragging = false; });
+
+  function parse(key) {
+    if (!key) return null;
+    const i = key.indexOf(':');
+    return [key.slice(0, i), key.slice(i + 1)];
+  }
+  function applyHighlight() {
+    const k = parse(state.hover ?? state.selected);
+    const outMods = new Set(), inMods = new Set(), focus = new Set();
+    for (const e of edges) {
+      if (!e.mesh) continue;
+      let dir = null;
+      if (k?.[0] === 'mod') dir = e.source.id === k[1] ? 'out' : e.target.id === k[1] ? 'in' : null;
+      if (k?.[0] === 'pkg') dir = e.source.pkg.id === k[1] ? 'out' : e.target.pkg.id === k[1] ? 'in' : null;
+      if (!k) {
+        e.mesh.material.color.set(e.source.pkg.color);
+        e.mesh.material.opacity = 0.2;
+      } else if (dir) {
+        e.mesh.material.color.copy(dir === 'out' ? CYAN : AMBER);
+        e.mesh.material.opacity = 0.92;
+        (dir === 'out' ? outMods : inMods).add(dir === 'out' ? e.target.id : e.source.id);
+        focus.add(e.source.id); focus.add(e.target.id);
+      } else {
+        e.mesh.material.opacity = 0.035;
+      }
+    }
+    for (const m of modules) {
+      const lit = !k || focus.has(m.id) || (k[0] === 'mod' && k[1] === m.id) || (k[0] === 'pkg' && m.pkg.id === k[1]);
+      m.dot.material.opacity = lit ? 1 : 0.18;
+      m.lit = k && lit;
+      m.label.element.classList.toggle('out', !!k && outMods.has(m.id) && !(k[0] === 'pkg' && m.pkg.id === k[1]));
+      m.label.element.classList.toggle('in', !!k && inMods.has(m.id) && !outMods.has(m.id));
+      m.label.element.classList.toggle('sel', state.selected === `mod:${m.id}`);
+    }
+    for (const p of PACKAGES) pkgLabels[p.id].element.classList.toggle('dim', !!k && k[0] === 'pkg' && k[1] !== p.id);
+  }
+
+  const detail = document.getElementById('detail-deps');
+  function renderDetail() {
+    const k = parse(state.selected);
+    if (!k) { detail.hidden = true; document.body.dataset.detail = ''; return; }
+    if (k[0] === 'mod') {
+      const m = modules.find((x) => x.id === k[1]);
+      const rows = (list, other) => {
+        const max = Math.max(...list.map((e) => e.weight));
+        return list.slice().sort((a, b) => b.weight - a.weight).map((e) => listRow({
+          key: `mod:${other(e).id}`, name: other(e).id, value: `${e.weight}`, max, color: other(e).pkg.color,
+        }));
+      };
+      detail.innerHTML = detailShell(m.id, `${esc(m.pkg.label)} package. Numbers are import lines.`, [
+        { title: `Imports ${m.out.length} modules`, swatch: '#1fefd7', rows: rows(m.out, (e) => e.target) },
+        { title: `Imported by ${m.in.length} modules`, swatch: '#f6c453', rows: rows(m.in, (e) => e.source) },
+      ]);
+    } else {
+      const p = PACKAGES.find((x) => x.id === k[1]);
+      const sum = (pick, keep) => {
+        const totals = d3.rollup(edges.filter(keep), (v) => d3.sum(v, (e) => e.weight), pick);
+        const max = d3.max(totals.values()) ?? 1;
+        return [...totals].sort((a, b) => b[1] - a[1]).map(([q, v]) => listRow({ key: `pkg:${q.id}`, name: q.label, value: `${v}`, max, color: q.color }));
+      };
+      detail.innerHTML = detailShell(p.label, `${p.mods.length} modules. Numbers are import lines.`, [
+        { title: 'Depends on', swatch: '#1fefd7', rows: sum((e) => e.target.pkg, (e) => e.source.pkg === p) },
+        { title: 'Used by', swatch: '#f6c453', rows: sum((e) => e.source.pkg, (e) => e.target.pkg === p && e.source.pkg !== p) },
+      ]);
+    }
+    detail.hidden = false;
+    document.body.dataset.detail = 'open';
+  }
+  function select(key) {
+    state.selected = key;
+    renderDetail();
+    applyHighlight();
+  }
+  detail.addEventListener('click', (e) => {
+    if (e.target.closest('[data-close]')) return select(null);
+    const b = e.target.closest('[data-pick]');
+    if (b) select(b.dataset.pick);
+  });
+
+  attachPicker(
+    stage,
+    () => [...nodeMeshes, ...arcMeshes],
+    (key) => { state.hover = key; applyHighlight(); },
+    (key) => select(key === state.selected ? null : key),
+  );
+
+  const legend = document.getElementById('deps-legend');
+  legend.innerHTML = PACKAGES.map((p) => `<li><button data-pick="pkg:${p.id}" class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+      <span class="size-2.5 rounded-sm" style="background:${p.color}"></span><span class="flex-1">${esc(p.label)}</span><span class="font-mono text-xs text-muted-foreground">${p.mods.length}</span></button></li>`).join('');
+  legend.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-pick]');
+    if (b) select(b.dataset.pick === state.selected ? null : b.dataset.pick);
+  });
+  bindSwitch('sw-spin', state.spin, (on) => { state.spin = on; });
+  bindSwitch('sw-shells', true, (on) => { shells.visible = on; });
+  bindSlider('sl-bundle', (v) => `${v}%`, (v) => { bundling = v / 100; buildEdges(); });
+
+  const home = { pos: new THREE.Vector3(0, 4.6, 19), target: new THREE.Vector3(0, 0, 0), span: 16, halfWidth: 7.2 };
+  function resetView() {
+    const dir = home.pos.clone().sub(home.target);
+    const target = home.target.clone();
+    target.x -= panelShift(stage) * home.span;
+    camera.position.copy(target).add(dir.setLength(fitDistance(stage, dir.length(), home.halfWidth)));
+    controls.target.copy(target);
+    root.rotation.set(0, 0, 0);
+    controls.update();
+  }
+  controls.minDistance = 7;
+  controls.maxDistance = 50;
+
+  const tmp = new THREE.Vector3(), toCam = new THREE.Vector3(), normal = new THREE.Vector3();
+  return {
+    stage,
+    start() { stage.resize(); resetView(); },
+    resetView,
+    clear() { select(null); },
+    selected: () => state.selected,
+    tick(time, dt) {
+      if (state.spin && !state.dragging && !state.hover) root.rotation.y += dt * 0.12;
+      root.updateMatrixWorld();
+      // labels on the far side of the sphere fade out
+      for (const m of modules) {
+        tmp.copy(m.pos).applyMatrix4(root.matrixWorld);
+        normal.copy(tmp).normalize();
+        toCam.copy(camera.position).sub(tmp).normalize();
+        const facing = normal.dot(toCam);
+        m.label.element.style.opacity = facing < 0.05 ? 0 : m.lit ? 1 : Math.min(0.6, facing);
+      }
+      stage.render();
+    },
+  };
+}
+
+// ---------- tabs and loop ----------
+
+let views;
+try {
+  views = {
+    flows: createTradeMap(document.getElementById('stage-flows')),
+    deps: createDependencySphere(document.getElementById('stage-deps')),
+  };
+} catch (err) {
+  console.error(err);
+  document.querySelector('.fixed').insertAdjacentHTML('beforeend',
+    '<p class="absolute inset-0 grid place-items-center p-6 text-center text-sm text-muted-foreground">This page needs WebGL to draw its 3D views.</p>');
+}
+
+let active = null;
+const started = new Set();
+function show(name) {
+  if (!views) return;
+  active = name;
+  for (const btn of document.querySelectorAll('[role="tab"]')) {
+    const on = btn.dataset.tab === name;
+    btn.dataset.state = on ? 'active' : 'inactive';
+    btn.setAttribute('aria-selected', String(on));
+    btn.tabIndex = on ? 0 : -1;
+  }
+  for (const id of ['flows', 'deps']) document.getElementById(`stage-${id}`).hidden = id !== name;
+  for (const panel of document.querySelectorAll('.panel')) {
+    if (panel.classList.contains('controls')) panel.hidden = panel.dataset.view !== name;
+    else if (panel.dataset.view !== name) panel.hidden = true;
+  }
+  if (!started.has(name)) { views[name].start(); started.add(name); }
+  else views[name].stage.resize();
+  const detail = document.getElementById(`detail-${name}`);
+  detail.hidden = !views[name].selected();
+  document.body.dataset.detail = detail.hidden ? '' : 'open';
+  const url = new URL(location.href);
+  url.searchParams.set('view', name);
+  history.replaceState(null, '', url);
+}
+
+for (const btn of document.querySelectorAll('[role="tab"]')) {
+  btn.addEventListener('click', () => show(btn.dataset.tab));
+  btn.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const next = btn.dataset.tab === 'flows' ? 'deps' : 'flows';
+    show(next);
+    document.getElementById(`tab-${next}`).focus();
+  });
+}
+for (const b of document.querySelectorAll('[data-reset]')) b.addEventListener('click', () => views?.[b.dataset.reset].resetView());
+for (const t of document.querySelectorAll('.sheet-toggle')) {
+  t.addEventListener('click', () => {
+    const panel = t.closest('.controls');
+    panel.classList.toggle('open');
+    t.setAttribute('aria-expanded', String(panel.classList.contains('open')));
+  });
+}
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && active) views[active].clear(); });
+addEventListener('resize', () => { if (active) views[active].stage.resize(); });
+
+const initial = new URLSearchParams(location.search).get('view');
+show(initial === 'deps' ? 'deps' : 'flows');
+
+const clock = new THREE.Clock();
+function frame() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if (active && !document.hidden) views[active].tick(clock.elapsedTime, dt);
+  requestAnimationFrame(frame);
+}
+if (views) requestAnimationFrame(frame);
+</script>
+</body>
+</html>

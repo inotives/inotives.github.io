@@ -28,6 +28,32 @@ function MockCard({ mock }) {
             </a>
           </p>
         )}
+        {mock.usedIn && (
+          <p className="mock-credit">
+            {mock.usedIn.text}
+            {mock.usedIn.repo && (
+              <>
+                {' '}
+                <a href={`https://github.com/${mock.usedIn.repo}`} target="_blank" rel="noopener noreferrer">
+                  View it on GitHub
+                </a>
+              </>
+            )}
+          </p>
+        )}
+        {mock.sources && (
+          <p className="mock-credit">
+            Sources:{' '}
+            {mock.sources.map((s, i) => (
+              <span key={s.href}>
+                {i > 0 && ', '}
+                <a href={s.href} target="_blank" rel="noopener noreferrer">
+                  {s.name}
+                </a>
+              </span>
+            ))}
+          </p>
+        )}
         <div className="tag-row">
           {mock.libraries.map((id) => (
             <span key={id} className="tag">

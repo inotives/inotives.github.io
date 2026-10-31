@@ -1,0 +1,1040 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Binance hack map</title>
+<!--
+  Playground mock: an investigation map of the October 29, 2026 Binance hack, drawn in chain space.
+  Amounts and times follow TRM Labs' public report (as of 00:30 UTC, October 30). Wallets are named by
+  role, never by address. Edges marked as estimates fill gaps the report leaves open.
+  Three.js draws the map; D3 provides the time scale and the timeline chart; the UI recreates
+  shadcn/ui components in Tailwind with the site's palette; icons are Flaticon UIcons.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  /* shadcn/ui token names mapped to the site's palette: cyan marks active state, amber marks selection */
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-card-foreground: #e4e1d8;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-accent-foreground: #e4e1d8;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-ink-2: #b8b5ac;
+    --color-taken: #e9a66c;
+    --color-moved: #e58fb0;
+    --color-frozen: #7cc4dc;
+    --color-bridge: #8fa1d9;
+    --color-risk: #f2706b;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base {
+    *, ::before, ::after { border-color: var(--color-border); }
+  }
+</style>
+<style>
+  body { margin: 0; background: #15171b; }
+  /* CSS2D labels carry their own z-index; keep them under the panels */
+  #stage { isolation: isolate; background: radial-gradient(ellipse 80% 70% at 55% 40%, #1b1e24 0%, #15171b 72%); }
+  #stage canvas { display: block; }
+  .label-layer { position: absolute; inset: 0; touch-action: none; }
+  .label-layer > * { pointer-events: none; }
+  .fi { display: inline-flex; line-height: 1; }
+
+  .lbl {
+    display: inline-flex; align-items: center; gap: 5px;
+    font: 500 11.5px/1.2 "IBM Plex Sans Condensed", sans-serif;
+    color: #e4e1d8; white-space: nowrap;
+    padding: 2px 6px; border-radius: 4px;
+    background: rgb(21 23 27 / 0.72);
+    transition: opacity 0.2s, color 0.2s;
+  }
+  .lbl i { font-size: 11px; opacity: 0.8; }
+  .lbl.off { opacity: 0; }
+  .lbl b.risk { font: 500 11px "Source Code Pro", monospace; color: #f2706b; }
+  .lbl.exit { box-shadow: inset 0 0 0 1px rgb(242 112 107 / 0.45); }
+  .lbl.projected { color: #f2706b; background: rgb(21 23 27 / 0.6); font-style: italic; }
+  .lbl.dim { opacity: 0.2; }
+  .lbl.sel { color: #f6c453; }
+  .lbl.lane { font-size: 12.5px; font-weight: 600; background: none; color: #b8b5ac; }
+  .lbl.lane b { font: 400 11px "Source Code Pro", monospace; color: #8b9099; }
+  .lbl.tick { font: 400 10.5px "Source Code Pro", monospace; color: #8b9099; background: none; }
+  .compact .lbl.tick, .compact .lbl.level { display: none; }
+  .lbl.level { font-size: 11px; color: #8b9099; background: none; }
+
+  .panel { position: absolute; z-index: 15; overflow: auto; overscroll-behavior: contain; }
+  .panel[hidden] { display: none; }
+  #timebar { position: absolute; z-index: 16; }
+  @media (min-width: 900px) {
+    #controls { left: 1.5rem; top: 4.25rem; width: 300px; max-height: calc(100% - 5.75rem); }
+    #side { right: 1.5rem; top: 4.25rem; width: 270px; max-height: calc(100% - 4.25rem - 12.5rem); }
+    #timebar { left: 1.5rem; right: calc(270px + 2.5rem); bottom: 1.25rem; }
+    #side { max-height: calc(100% - 5.75rem) !important; }
+  }
+  @media (max-width: 899px) {
+    #timebar { left: 0.75rem; right: 0.75rem; bottom: 0.75rem; }
+    #controls, #side { left: 0.75rem; right: 0.75rem; top: 3.75rem; max-height: calc(100% - 3.75rem - 11rem); }
+    #side.idle { display: none; }
+    body[data-detail="open"] #controls { display: none; }
+    #chart { height: 64px !important; }
+  }
+  #controls:not(.open) .collapsible { display: none; }
+
+  .slider { -webkit-appearance: none; appearance: none; width: 100%; height: 16px; background: transparent; cursor: pointer; }
+  .slider::-webkit-slider-runnable-track {
+    height: 6px; border-radius: 999px;
+    background: linear-gradient(#1fefd7, #1fefd7) 0 / var(--fill, 100%) 100% no-repeat, #2a2e36;
+  }
+  .slider::-moz-range-track { height: 6px; border-radius: 999px; background: #2a2e36; }
+  .slider::-moz-range-progress { height: 6px; border-radius: 999px; background: #1fefd7; }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none; margin-top: -5px; width: 16px; height: 16px; border-radius: 999px;
+    background: #15171b; border: 1px solid rgb(31 239 215 / 0.6); box-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+  }
+  .slider::-moz-range-thumb { width: 14px; height: 14px; border-radius: 999px; background: #15171b; border: 1px solid rgb(31 239 215 / 0.6); }
+  .slider:focus-visible { outline: none; }
+  .slider:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgb(31 239 215 / 0.35); }
+  .slider:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px rgb(31 239 215 / 0.35); }
+
+  .bar { height: 3px; border-radius: 2px; background: currentColor; opacity: 0.7; }
+  #chart svg { display: block; overflow: visible; }
+  #chart .axis text { font: 400 10px "Source Code Pro", monospace; fill: #8b9099; }
+  #chart .axis line, #chart .axis path { stroke: #2b2f37; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+<div class="fixed inset-0 overflow-hidden">
+  <div id="stage" class="absolute inset-0"></div>
+
+  <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
+    <a href="/playground" class="pointer-events-auto rounded-sm font-brand text-[26px] leading-none text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <span class="hidden text-sm text-muted-foreground sm:inline">Playground</span>
+    <span class="ml-auto hidden items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium text-muted-foreground md:inline-flex"><i class="fi fi-rr-info"></i>Reported figures with marked estimates</span>
+    <button id="sources-btn" aria-expanded="false" aria-controls="sources" class="pointer-events-auto ml-auto inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background/80 px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:ml-0"><i class="fi fi-rr-link text-xs"></i>Sources</button>
+  </header>
+  <aside id="sources" hidden class="absolute right-3 top-14 z-30 w-[min(360px,calc(100%-1.5rem))] rounded-xl border bg-card p-4 text-card-foreground shadow-lg sm:right-6">
+    <h2 class="text-base font-semibold">Sources</h2>
+    <p class="mt-1 text-sm text-muted-foreground">Amounts, times and flows follow TRM Labs' onchain report, as of 00:30 UTC on October 30. The news reports cover Binance's statements and the totals.</p>
+    <ul class="mt-3 space-y-2 text-sm">
+      <li><a class="group block rounded-md px-2 py-1.5 hover:bg-accent" href="https://www.trmlabs.com/resources/blog/north-korea-steals-usd-6-36-billion-from-binance-in-the-largest-hack-in-history" target="_blank" rel="noopener noreferrer"><span class="text-primary group-hover:underline">North Korea steals USD 6.36 billion from Binance in the largest hack in history</span><span class="mt-0.5 block text-xs text-muted-foreground">TRM Labs, October 29, 2026. Main source for this map</span></a></li>
+      <li><a class="group block rounded-md px-2 py-1.5 hover:bg-accent" href="https://www.cnbc.com/2026/10/30/billions-in-crypto-frozen-in-binance-hack-heres-what-happens-next-.html" target="_blank" rel="noopener noreferrer"><span class="text-primary group-hover:underline">Binance hack: $6.3 billion stolen, $3 billion frozen</span><span class="mt-0.5 block text-xs text-muted-foreground">CNBC, October 30, 2026</span></a></li>
+      <li><a class="group block rounded-md px-2 py-1.5 hover:bg-accent" href="https://www.cnbc.com/2026/10/29/circle-tether-freeze-funds-impacted-by-potential-binance-security-issue.html" target="_blank" rel="noopener noreferrer"><span class="text-primary group-hover:underline">$6.3 billion Binance hack is largest crypto theft on record</span><span class="mt-0.5 block text-xs text-muted-foreground">CNBC, October 29, 2026</span></a></li>
+      <li><a class="group block rounded-md px-2 py-1.5 hover:bg-accent" href="https://www.aljazeera.com/economy/2026/10/30/binance-says-2-54bn-in-crypto-funds-frozen-amid-potential-security-issue" target="_blank" rel="noopener noreferrer"><span class="text-primary group-hover:underline">Binance says $6.3bn stolen in biggest crypto heist in history</span><span class="mt-0.5 block text-xs text-muted-foreground">Al Jazeera, October 30, 2026</span></a></li>
+      <li><a class="group block rounded-md px-2 py-1.5 hover:bg-accent" href="https://www.abc.net.au/news/2026-10-30/largest-cryptocurrency-hack-billions-stolen-binance/107327732" target="_blank" rel="noopener noreferrer"><span class="text-primary group-hover:underline">Billions stolen as Binance targeted in largest cryptocurrency hack in history</span><span class="mt-0.5 block text-xs text-muted-foreground">ABC News, October 30, 2026</span></a></li>
+      <li><a class="group block rounded-md px-2 py-1.5 hover:bg-accent" href="https://en.wikipedia.org/wiki/2026_Binance_hack" target="_blank" rel="noopener noreferrer"><span class="text-primary group-hover:underline">2026 Binance hack</span><span class="mt-0.5 block text-xs text-muted-foreground">Wikipedia</span></a></li>
+    </ul>
+    <p class="mt-3 text-xs leading-relaxed text-muted-foreground">Estimates are marked on the map. They fill gaps the report leaves open: how the Ethereum total splits across sweeps, conversion amounts, some freeze times and the exit risk on smaller chains.</p>
+  </aside>
+
+  <aside id="controls" class="panel rounded-xl border bg-card/90 p-4 text-card-foreground shadow backdrop-blur">
+    <div class="flex items-start gap-3">
+      <div class="min-w-0 flex-1">
+        <h1 class="text-lg font-semibold leading-tight">Following $6.36 billion out of Binance</h1>
+        <p class="mt-1 font-mono text-xs text-muted-foreground">October 29 to 30, 2026, times in UTC</p>
+      </div>
+      <button class="sheet-toggle inline-flex h-8 items-center rounded-md border border-input px-3 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-expanded="false">Details</button>
+    </div>
+    <div class="collapsible">
+      <p class="mt-3 text-sm leading-relaxed text-ink-2">Binance wallets on ten chains paid out to one attacker within about 20 minutes. Each chain is a lane, and time runs left to right. Money the issuers froze sinks below the floor; money the attacker moved on rises above it.</p>
+
+      <h2 class="mt-4 text-xs font-medium text-muted-foreground">Height in the map</h2>
+      <ul class="mt-1.5 space-y-1 text-sm">
+        <li class="flex items-center gap-2.5 px-2"><i class="fi fi-rr-exchange w-3.5 text-[13px] text-muted-foreground"></i>Swaps, lending and market makers</li>
+        <li class="flex items-center gap-2.5 px-2"><i class="fi fi-rr-mask w-3.5 text-[13px] text-muted-foreground"></i>Attacker wallets</li>
+        <li class="flex items-center gap-2.5 px-2"><i class="fi fi-rr-bank w-3.5 text-[13px] text-muted-foreground"></i>Binance wallets, on the floor</li>
+        <li class="flex items-center gap-2.5 px-2"><i class="fi fi-rr-snowflake w-3.5 text-[13px] text-muted-foreground"></i>Frozen, below the floor</li>
+        <li class="flex items-center gap-2.5 px-2"><span class="grid w-3.5 place-items-center"><span class="size-3 rounded-full border-2 border-risk"></span></span>Exit risk: funds no issuer can freeze</li>
+      </ul>
+
+      <h2 class="mt-4 text-xs font-medium text-muted-foreground">Flows</h2>
+      <div class="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1 px-2 text-sm">
+        <span class="inline-flex items-center gap-2"><span class="h-1 w-4 rounded bg-taken"></span>Taken</span>
+        <span class="inline-flex items-center gap-2"><span class="h-1 w-4 rounded bg-moved"></span>Moved on</span>
+        <span class="inline-flex items-center gap-2"><span class="h-1 w-4 rounded bg-frozen"></span>Frozen</span>
+        <span class="inline-flex items-center gap-2"><span class="h-1 w-4 rounded bg-bridge"></span>Bridged</span>
+        <span class="col-span-2 inline-flex items-center gap-2"><span class="w-4 border-t-2 border-dashed border-risk"></span>Expected exit route</span>
+      </div>
+
+      <h2 class="mt-4 text-xs font-medium text-muted-foreground">Chains, by amount taken</h2>
+      <ul id="chains" class="mt-1.5 space-y-0.5"></ul>
+
+      <div class="my-4 h-px bg-border"></div>
+
+      <div class="flex items-center justify-between gap-3">
+        <label for="sw-labels" class="text-sm">Label every wallet</label>
+        <button id="sw-labels" role="switch" aria-checked="false" data-state="unchecked"
+          class="switch inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[state=checked]:bg-primary data-[state=unchecked]:bg-input">
+          <span class="pointer-events-none block size-4 rounded-full bg-background shadow-lg transition-transform"></span>
+        </button>
+      </div>
+      <div class="mt-3 flex items-center justify-between gap-3">
+        <label for="sw-risk" class="text-sm">Show exit risks</label>
+        <button id="sw-risk" role="switch" aria-checked="true" data-state="checked"
+          class="switch inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[state=checked]:bg-primary data-[state=unchecked]:bg-input">
+          <span class="pointer-events-none block size-4 translate-x-4 rounded-full bg-background shadow-lg transition-transform"></span>
+        </button>
+      </div>
+      <div class="mt-4 flex items-center gap-2">
+        <button id="reset" class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-rotate-left text-xs"></i>Reset view</button>
+        <span class="text-xs leading-snug text-muted-foreground">Drag to orbit, scroll to zoom, tap a wallet or flow.</span>
+      </div>
+
+      <div class="my-4 h-px bg-border"></div>
+      <p class="text-xs leading-relaxed text-muted-foreground">Amounts and times follow TRM Labs' report as of 00:30 UTC on October 30. Wallets are named by role, not address. Flows marked as estimates fill gaps the report leaves open, such as how the Ethereum total splits across sweeps and some freeze times.</p>
+      <p class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+        <a class="text-primary underline-offset-2 hover:underline" href="https://www.trmlabs.com/resources/blog/north-korea-steals-usd-6-36-billion-from-binance-in-the-largest-hack-in-history" target="_blank" rel="noopener noreferrer">TRM Labs</a>
+        <a class="text-primary underline-offset-2 hover:underline" href="https://www.cnbc.com/2026/10/30/billions-in-crypto-frozen-in-binance-hack-heres-what-happens-next-.html" target="_blank" rel="noopener noreferrer">CNBC</a>
+        <a class="text-primary underline-offset-2 hover:underline" href="https://www.aljazeera.com/economy/2026/10/30/binance-says-2-54bn-in-crypto-funds-frozen-amid-potential-security-issue" target="_blank" rel="noopener noreferrer">Al Jazeera</a>
+        <a class="text-primary underline-offset-2 hover:underline" href="https://www.abc.net.au/news/2026-10-30/largest-cryptocurrency-hack-billions-stolen-binance/107327732" target="_blank" rel="noopener noreferrer">ABC News</a>
+        <a class="text-primary underline-offset-2 hover:underline" href="https://en.wikipedia.org/wiki/2026_Binance_hack" target="_blank" rel="noopener noreferrer">Wikipedia</a>
+      </p>
+    </div>
+  </aside>
+
+  <aside id="side" class="panel idle rounded-xl border bg-card/90 p-4 text-card-foreground shadow backdrop-blur" aria-live="polite"></aside>
+
+  <section id="timebar" class="rounded-xl border bg-card/90 px-4 pb-3 pt-3 text-card-foreground shadow backdrop-blur" aria-label="Timeline">
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <button id="play" class="inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background" aria-label="Replay the night"><i class="fi fi-rr-play text-sm"></i></button>
+      <div class="min-w-[5.5rem]">
+        <div id="clock" class="font-mono text-lg leading-none">00:30</div>
+        <div id="clock-day" class="mt-1 text-xs text-muted-foreground">Oct 30</div>
+      </div>
+      <dl class="ml-auto flex flex-wrap gap-x-5 gap-y-1">
+        <div><dt class="text-xs text-muted-foreground">Taken</dt><dd id="st-taken" class="font-mono text-sm text-taken">$0</dd></div>
+        <div><dt class="text-xs text-muted-foreground">Frozen</dt><dd id="st-frozen" class="font-mono text-sm text-frozen">$0</dd></div>
+        <div><dt class="text-xs text-muted-foreground">Not frozen</dt><dd id="st-left" class="font-mono text-sm">$0</dd></div>
+        <div><dt class="text-xs text-muted-foreground">Exit risk</dt><dd id="st-risk" class="font-mono text-sm text-risk">$0</dd></div>
+      </dl>
+    </div>
+    <div id="chart" class="mt-2 h-[92px] cursor-crosshair"></div>
+    <input id="scrub" class="slider mt-1" type="range" min="0" max="1000" value="1000" aria-label="Time" />
+  </section>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const CYAN = new THREE.Color('#1fefd7');
+const AMBER = new THREE.Color('#f6c453');
+const COLORS = { theft: '#e9a66c', move: '#e58fb0', freeze: '#7cc4dc', bridge: '#8fa1d9', control: '#8b9099', staging: '#8b9099' };
+const ROLE = {
+  binance: { y: 0, color: '#b8b5ac', icon: 'bank', name: 'Binance wallet' },
+  attacker: { y: 1.8, color: '#e58fb0', icon: 'mask', name: 'Attacker wallet' },
+  service: { y: 3.4, color: '#c9a4f5', icon: 'exchange', name: 'Service' },
+  frozen: { y: -1.6, color: '#7cc4dc', icon: 'snowflake', name: 'Frozen' },
+};
+const TRM_URL = 'https://www.trmlabs.com/resources/blog/north-korea-steals-usd-6-36-billion-from-binance-in-the-largest-hack-in-history';
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const usd = (m) => (m === 0 ? '$0' : m >= 1000 ? `$${(m / 1000).toFixed(2)}B` : m >= 10 ? `$${Math.round(m)}M` : `$${m.toFixed(1)}M`);
+
+// ---------- the case file: chains, wallets and flows ----------
+// t is minutes after 20:00 UTC on October 29; 240 is midnight. Amounts are US$ millions.
+
+const CHAINS = [
+  { id: 'eth', name: 'Ethereum' }, { id: 'btc', name: 'Bitcoin' }, { id: 'tron', name: 'Tron' },
+  { id: 'xrp', name: 'XRP Ledger' }, { id: 'sol', name: 'Solana' }, { id: 'arb', name: 'Arbitrum' },
+  { id: 'op', name: 'Optimism' }, { id: 'base', name: 'Base' }, { id: 'avax', name: 'Avalanche' },
+  { id: 'pol', name: 'Polygon' },
+];
+
+const NODES = [
+  ['tc', 'eth', 'service', -9, 'Tornado Cash', 'shuffle', 'A mixer. Three small withdrawals funded the operator wallet from the morning of October 28.'],
+  ['op', 'eth', 'attacker', -6, 'Operator wallet', 'key', 'Deployed and rehearsed the sweeper code on test wallets in the hours before the theft.'],
+  ['bnEth1', 'eth', 'binance', 17, 'Binance hot wallet 1', 'bank', 'Delegated to the attacker’s sweeper contract with EIP-7702, then swept again as new funds arrived.'],
+  ['bnEth2', 'eth', 'binance', 20.5, 'Binance hot wallet 2', 'bank', 'Sent funds by ordinary signed transfer, with no delegation.'],
+  ['attEth', 'eth', 'attacker', 25, 'Main receiving wallet', 'mask', 'Received the main sweep. Tether, Circle and World Liberty froze the stablecoins left inside.'],
+  ['mm', 'eth', 'service', 44, 'Market makers', 'coins', 'USDT sold for ETH to get ahead of the freezes.'],
+  ['aave', 'eth', 'service', 49, 'Aave', 'piggy-bank', '60M USDT supplied, about 19,760 ETH borrowed against it. Aave then froze the affected markets.'],
+  ['attEth2', 'eth', 'attacker', 62, 'Two other attacker wallets', 'mask', 'Held 205M USDT until Tether froze them.'],
+  ['rlHop', 'eth', 'attacker', 92, 'RLUSD hop wallets', 'shuffle', '88.5M RLUSD passed through two hops.'],
+  ['dex', 'eth', 'service', 108, 'DEXs', 'exchange', '48M RLUSD sold between 21:42 and 22:01, until Ripple froze the rest.'],
+  ['cons', 'eth', 'attacker', 150, 'ETH consolidation wallets', 'vault', 'More than 420,000 ETH gathered in a few wallets, beyond any issuer’s reach.'],
+  ['fzTether', 'eth', 'frozen', 61, 'Tether freeze', 'snowflake', 'Frozen at 21:01, 37 minutes after the main sweep. Later sweeps landed in the same wallet.'],
+  ['fzCircle', 'eth', 'frozen', 64, 'Circle freeze', 'snowflake', 'Frozen at 21:04 with law enforcement.'],
+  ['fzRipple', 'eth', 'frozen', 121, 'Ripple freeze', 'snowflake', 'Frozen at 22:01.'],
+  ['fzWlfi', 'eth', 'frozen', 130, 'World Liberty freeze', 'snowflake', 'Frozen at 22:10.'],
+  ['fzTether2', 'eth', 'frozen', 150, 'Tether freeze, two wallets', 'snowflake', 'Time is an estimate.'],
+  ['fzCircle2', 'eth', 'frozen', 226, 'Circle freeze, bridged USDC', 'snowflake', 'Time is an estimate.'],
+  ['bnBtc', 'btc', 'binance', 17.5, 'Binance BTC hot wallet', 'bank', ''],
+  ['attBtc', 'btc', 'attacker', 21, 'Attacker BTC address', 'mask', ''],
+  ['peel', 'btc', 'attacker', 32, 'Peel chain', 'layers', 'Split into round 1,000 and 100 BTC pieces inside the same block, which makes the trail harder to follow.'],
+  ['bnTron', 'tron', 'binance', 19.5, 'Binance Tron hot wallet', 'bank', ''],
+  ['attTron', 'tron', 'attacker', 23, 'Attacker Tron wallet', 'mask', ''],
+  ['jlWallet', 'tron', 'attacker', 38, 'JustLend supplier', 'mask', ''],
+  ['justlend', 'tron', 'service', 46, 'JustLend', 'piggy-bank', 'A Tron lending protocol.'],
+  ['tronHops', 'tron', 'attacker', 52, 'Hop wallets', 'shuffle', '30M USDT from this chain was frozen.'],
+  ['uni', 'tron', 'service', 70, 'Uniswap', 'exchange', ''],
+  ['fzTron', 'tron', 'frozen', 170, 'Tether freeze, two wallets', 'snowflake', 'Time is an estimate.'],
+  ['bnXrp', 'xrp', 'binance', 3, 'Five Binance wallets', 'bank', 'Each left with only its minimum balance.'],
+  ['attXrp', 'xrp', 'attacker', 10, 'Attacker XRP address', 'mask', 'The XRP had not moved as of the report.'],
+  ['bnSol', 'sol', 'binance', 8, 'Binance Solana wallet', 'bank', ''],
+  ['attSol', 'sol', 'attacker', 12, 'Attacker SOL wallet', 'mask', ''],
+  ['bnArb', 'arb', 'binance', 12, 'Binance Arbitrum wallet', 'bank', ''],
+  ['attArb', 'arb', 'attacker', 16, 'Attacker Arbitrum wallet', 'mask', ''],
+  ['fzArb', 'arb', 'frozen', 248, 'Security Council transfer', 'shield', 'Arbitrum’s Security Council forced two transfers out of the attacker’s wallet at 00:08.'],
+  ['bnOp', 'op', 'binance', 9, 'Binance Optimism wallet', 'bank', ''],
+  ['attOp', 'op', 'attacker', 13, 'Attacker Optimism wallet', 'mask', ''],
+  ['bnBase', 'base', 'binance', 10.5, 'Binance Base wallet', 'bank', ''],
+  ['attBase', 'base', 'attacker', 14.5, 'Attacker Base wallet', 'mask', ''],
+  ['bnAvax', 'avax', 'binance', 181, 'Binance Avalanche wallet', 'bank', ''],
+  ['attAvax', 'avax', 'attacker', 189, 'Attacker Avalanche wallet', 'mask', ''],
+  ['fzAvax', 'avax', 'frozen', 210, 'Tether freeze', 'snowflake', 'Time is an estimate.'],
+  ['bnPol', 'pol', 'binance', 181, 'Binance Polygon wallet', 'bank', ''],
+  ['attPol', 'pol', 'attacker', 189, 'Attacker Polygon wallet', 'mask', ''],
+  ['fzPol', 'pol', 'frozen', 215, 'USDT0 freeze', 'snowflake', 'Time is an estimate.'],
+].map(([id, chain, role, t, name, icon, note]) => ({ id, chain, role, t, name, icon, note }));
+
+// [from, to, t, US$ millions, kind, what moved, estimate?]
+const EDGES = [
+  ['tc', 'op', -8, 0, 'staging', 'Three small Tornado Cash withdrawals fund the operator wallet', false],
+  ['op', 'bnEth1', 20, 0, 'control', '50 pre-signed EIP-7702 authorizations in one transaction; one matched the wallet’s count and handed it to the sweeper', false],
+  ['bnXrp', 'attXrp', 5, 296, 'theft', '233.46M XRP from five wallets, 20:05 to 20:09', false],
+  ['bnSol', 'attSol', 10, 96, 'theft', '970,500 SOL', false],
+  ['bnOp', 'attOp', 11, 5, 'theft', 'Part of about $39M taken on Arbitrum, Optimism and Base', true],
+  ['bnBase', 'attBase', 13, 4, 'theft', 'Part of about $39M taken on Arbitrum, Optimism and Base', true],
+  ['bnArb', 'attArb', 14, 30, 'theft', '8,426 ETH and 74.6M ARB', false],
+  ['bnBtc', 'attBtc', 20, 1470, 'theft', '18,270 BTC', false],
+  ['attBtc', 'peel', 21, 1470, 'move', 'Peeled into 1,000 and 100 BTC pieces', false],
+  ['bnTron', 'attTron', 22, 628, 'theft', '612.7M USDT and 46.4M TRX', false],
+  ['bnEth2', 'attEth', 22.5, 250, 'theft', '28,006 ETH, 55.7M USDT and 25.9M RLUSD, by ordinary transfer', true],
+  ['bnEth1', 'attEth', 23.4, 3100, 'theft', 'The main sweep: 167,464 ETH and 63 tokens, including 1.615B USDT', true],
+  ['attTron', 'jlWallet', 38, 300, 'move', '300M USDT to a wallet that starts supplying JustLend', false],
+  ['attEth', 'mm', 40, 300, 'move', 'USDT sold to market makers for ETH', true],
+  ['bnEth1', 'attEth', 41, 120, 'theft', 'Re-sweep at 20:41 through the delegation', true],
+  ['jlWallet', 'justlend', 44, 300, 'move', 'USDT supplied to JustLend', false],
+  ['attEth', 'aave', 46, 60, 'move', '60M USDT supplied to Aave', false],
+  ['aave', 'cons', 50, 80, 'move', 'About 19,760 ETH borrowed against it', true],
+  ['attTron', 'tronHops', 50, 200, 'move', '200M USDT through a chain of hop wallets', false],
+  ['mm', 'cons', 55, 300, 'move', 'ETH back from the market makers', true],
+  ['attEth', 'attEth2', 58, 205, 'move', 'USDT spread to two more wallets', true],
+  ['bnEth1', 'attEth', 59, 90, 'theft', 'Re-sweep at 20:59', true],
+  ['attEth', 'fzTether', 61, 1175, 'freeze', 'Tether freezes 971.1M USDT at 21:01; later sweeps bring the frozen wallet to 1.175B', false],
+  ['bnEth1', 'attEth', 64, 80, 'theft', 'Re-sweep at 21:04', true],
+  ['attEth', 'fzCircle', 64, 823, 'freeze', 'Circle freezes 823M USDC at 21:04', false],
+  ['tronHops', 'uni', 68, 170, 'move', 'Swapped on Uniswap; 30M USDT from this chain frozen', false],
+  ['attEth', 'cons', 70, 800, 'move', 'ETH consolidated into a few wallets', true],
+  ['attEth', 'rlHop', 90, 88.5, 'move', '88.5M RLUSD through two hops', false],
+  ['rlHop', 'dex', 102, 48, 'move', '48M RLUSD sold on DEXs from 21:42', false],
+  ['bnEth1', 'attEth', 104, 70, 'theft', 'Re-sweep at 21:44', true],
+  ['dex', 'cons', 115, 48, 'move', 'Sale proceeds join the ETH wallets', true],
+  ['rlHop', 'fzRipple', 121, 40.5, 'freeze', 'Ripple freezes the remaining 40.5M RLUSD at 22:01', false],
+  ['attEth', 'fzWlfi', 130, 27.8, 'freeze', 'World Liberty Financial freezes 27.8M USD1 at 22:10', false],
+  ['attEth2', 'fzTether2', 150, 205, 'freeze', 'Tether freezes 205M USDT in two other attacker wallets', false],
+  ['bnEth1', 'attEth', 159, 50, 'theft', 'Re-sweep at 22:39', true],
+  ['attTron', 'fzTron', 170, 378.7, 'freeze', 'Tether freezes 378.7M USDT in two attacker wallets on Tron', false],
+  ['bnAvax', 'attAvax', 185, 28, 'theft', 'Second wave at 23:05', false],
+  ['bnPol', 'attPol', 185, 10, 'theft', 'Second wave at 23:05', false],
+  ['attAvax', 'fzAvax', 210, 8.4, 'freeze', 'Tether freezes 8.4M USDt on Avalanche', false],
+  ['attPol', 'fzPol', 215, 6.2, 'freeze', '6.2M USDT0 frozen on Polygon', false],
+  ['attAvax', 'fzCircle2', 225, 1.56, 'bridge', 'AVAX swapped to USDC, bridged to Ethereum, frozen by Circle', false],
+  ['bnEth1', 'attEth', 236, 30, 'theft', 'Re-sweep at 23:56', true],
+  ['attArb', 'fzArb', 248, 30, 'freeze', 'Security Council moves 8,426 ETH and 74.6M ARB out of reach', false],
+].map(([from, to, t, value, kind, what, est], index) => ({ index, from, to, t, value, kind, what, est }));
+
+const MOMENTS = [
+  [-8, 'Operator wallet funded through Tornado Cash; sweeper code rehearsed on test wallets', 0],
+  [5, 'XRP Ledger drained first: 233.46M XRP', 2],
+  [20, 'EIP-7702 delegation hands Binance hot wallet 1 to the sweeper', 1],
+  [20, '18,270 BTC sent, then peeled into round pieces', 7],
+  [22, 'Tron: 612.7M USDT and 46.4M TRX', 9],
+  [23.4, 'Main Ethereum sweep, 167,464 ETH and 1.615B USDT', 11],
+  [61, 'Tether freezes the main wallet’s USDT', 22],
+  [64, 'Circle freezes 823M USDC', 24],
+  [102, 'RLUSD sold on DEXs, racing Ripple', 28],
+  [121, 'Ripple freezes the remaining RLUSD', 31],
+  [185, 'Second wave: Avalanche and Polygon', 36],
+  [248, 'Arbitrum’s Security Council claws back about $30M', 42],
+].map(([t, text, edge]) => ({ t, text, edge }));
+
+// Exit risk: attacker wallets holding coins no issuer can freeze, the likeliest losses.
+// TRM puts the ETH and BTC at about $2.4B; amounts on the other chains are estimates.
+const RISK = {
+  peel: { usd: 1470, asset: '18,270 BTC', why: 'Native bitcoin has no issuer to freeze it, and the peel chain splits it into pieces that are easy to move.', est: false },
+  cons: { usd: 930, asset: '420,000+ ETH', why: 'Native ETH has no issuer to freeze it. Stablecoins were swapped and borrowed into ETH to get it here.', est: false },
+  attXrp: { usd: 296, asset: '233.46M XRP', why: 'Native XRP, not moved since the theft. It can leave at any time.', est: false },
+  uni: { usd: 170, asset: 'Swapped out of USDT', why: 'USDT swapped on Uniswap is no longer in a coin Tether can freeze.', est: true },
+  attSol: { usd: 96, asset: '970,500 SOL', why: 'Native SOL has no issuer to freeze it.', est: false },
+  attAvax: { usd: 18, asset: 'AVAX left after the freezes', why: 'Native AVAX, left after the USDt freeze and the bridged USDC.', est: true },
+  attOp: { usd: 5, asset: 'ETH on Optimism', why: 'Native ETH on a rollup with no emergency freeze.', est: true },
+  attBase: { usd: 4, asset: 'ETH on Base', why: 'Native ETH on a rollup with no emergency freeze.', est: true },
+  attPol: { usd: 3.8, asset: 'POL left after the freeze', why: 'What is left after the USDT0 freeze.', est: true },
+};
+const RISK_TOTAL = d3.sum(Object.values(RISK), (r) => r.usd);
+
+// where TRM expects the money to go next: drawn dashed, not flows that happened
+NODES.push(
+  { id: 'xBridge', chain: 'eth', role: 'service', t: 262, name: 'Cross-chain bridges', icon: 'bridge', note: 'Expected next step, per TRM Labs: moving funds to other chains to break the trail.', projected: true },
+  { id: 'xOtc', chain: 'btc', role: 'service', t: 262, name: 'OTC brokers', icon: 'hand-holding-usd', note: 'Expected next step, per TRM Labs: over-the-counter brokers that turn crypto into cash.', projected: true },
+  { id: 'xSwap', chain: 'xrp', role: 'service', t: 262, name: 'Swap services', icon: 'arrows-repeat', note: 'Expected next step, per TRM Labs: instant swap services with light checks.', projected: true },
+);
+const EXITS = [['cons', 'xBridge'], ['cons', 'xOtc'], ['peel', 'xOtc'], ['peel', 'xSwap'], ['attXrp', 'xSwap'], ['attSol', 'xSwap'], ['uni', 'xBridge']];
+
+const byNode = Object.fromEntries(NODES.map((n) => [n.id, n]));
+const chainIndex = Object.fromEntries(CHAINS.map((c, i) => [c.id, i]));
+for (const n of NODES) { n.out = []; n.in = []; }
+for (const e of EDGES) {
+  e.source = byNode[e.from];
+  e.target = byNode[e.to];
+  e.source.out.push(e);
+  e.target.in.push(e);
+  e.frozen = e.kind === 'freeze' || e.kind === 'bridge';
+}
+for (const n of NODES) n.first = Math.min(n.t, ...n.in.map((e) => e.t), ...n.out.map((e) => e.t));
+for (const c of CHAINS) c.taken = d3.sum(EDGES.filter((e) => e.kind === 'theft' && e.source.chain === c.id), (e) => e.value);
+const TOTAL = d3.sum(CHAINS, (c) => c.taken);
+
+// ---------- time and space ----------
+// the first half hour holds most of the theft, so it gets more room than the hours after
+const T_MIN = -10, T_MAX = 270;
+const tx = d3.scaleLinear().domain([-10, 0, 30, 90, 270]).range([-13, -10, -1, 4, 13]);
+const laneZ = (chain) => (4.5 - chainIndex[chain]) * 1.7;
+const nodePos = (n) => new THREE.Vector3(tx(n.t), ROLE[n.role].y, laneZ(n.chain));
+const clockText = (t) => {
+  if (t < 0) return ['Before', 'Oct 28 to 29'];
+  const m = Math.round(t), h = (20 + Math.floor(m / 60)) % 24, mm = m % 60;
+  return [`${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`, m >= 240 ? 'Oct 30' : 'Oct 29'];
+};
+
+const stageEl = document.getElementById('stage');
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+} catch (err) {
+  console.error(err);
+  stageEl.innerHTML = '<p class="grid h-full place-items-center p-6 text-center text-sm text-muted-foreground">This page needs WebGL to draw the map.</p>';
+}
+if (renderer) main();
+
+function main() {
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+  stageEl.appendChild(renderer.domElement);
+  const labels = new CSS2DRenderer();
+  labels.domElement.className = 'label-layer';
+  stageEl.appendChild(labels.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 500);
+  const controls = new OrbitControls(camera, labels.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 6;
+  controls.maxDistance = 140;
+
+  const label = (html, cls, center = [0.5, 0.5]) => {
+    const el = document.createElement('div');
+    el.className = `lbl ${cls}`;
+    el.innerHTML = html;
+    const obj = new CSS2DObject(el);
+    obj.center.set(...center);
+    return obj;
+  };
+
+  // --- lanes, levels and the hour grid
+  const X0 = tx(T_MIN) - 0.6, X1 = tx(T_MAX) + 0.6, W = X1 - X0, XC = (X0 + X1) / 2;
+  const laneMat = new THREE.MeshBasicMaterial({ color: '#1d2026', transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide });
+  const laneMeshes = {};
+  for (const c of CHAINS) {
+    const lane = new THREE.Mesh(new THREE.PlaneGeometry(W, 1.25), laneMat.clone());
+    lane.rotation.x = -Math.PI / 2;
+    lane.position.set(XC, -0.01, laneZ(c.id));
+    lane.userData.pick = `chain:${c.id}`;
+    scene.add(lane);
+    laneMeshes[c.id] = lane;
+    const l = label(`${esc(c.name)} <b>${usd(c.taken)}</b>`, 'lane', [1, 0.5]);
+    l.position.set(X0 - 0.2, 0, laneZ(c.id));
+    scene.add(l);
+  }
+  const depth = 10 * 1.7;
+  const vault = new THREE.Mesh(
+    new THREE.PlaneGeometry(W, depth),
+    new THREE.MeshBasicMaterial({ color: '#7cc4dc', transparent: true, opacity: 0.035, depthWrite: false, side: THREE.DoubleSide }),
+  );
+  vault.rotation.x = -Math.PI / 2;
+  vault.position.set(XC, ROLE.frozen.y - 0.02, 0);
+  scene.add(vault);
+
+  const zFront = laneZ('eth') + 1.1, zBack = laneZ('pol') - 0.9;
+  const gridPts = [];
+  for (const t of [0, 10, 20, 30, 60, 120, 180, 240]) {
+    gridPts.push(tx(t), 0, zFront, tx(t), 0, zBack);
+    const [time] = clockText(t);
+    const l = label(time, 'tick', [0.5, 0]);
+    l.position.set(tx(t), 0, zFront + 0.45);
+    scene.add(l);
+  }
+  const grid = new THREE.LineSegments(
+    new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(gridPts, 3)),
+    new THREE.LineBasicMaterial({ color: '#2b2f37', transparent: true, opacity: 0.9 }),
+  );
+  grid.position.y = 0.005;
+  scene.add(grid);
+
+  for (const [role, text] of [['service', 'Swaps and lending'], ['attacker', 'Attacker wallets'], ['binance', 'Binance wallets'], ['frozen', 'Frozen']]) {
+    const l = label(`<i class="fi fi-rr-${ROLE[role].icon}"></i>${text}`, 'level', [1, 0.5]);
+    l.position.set(X1, ROLE[role].y, zFront + 0.6);
+    scene.add(l);
+  }
+
+  // the moving "now" plane
+  const cursor = new THREE.Group();
+  const cursorEdge = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, zFront), new THREE.Vector3(0, 0, zBack)]),
+    new THREE.LineBasicMaterial({ color: CYAN, transparent: true, opacity: 0.6 }),
+  );
+  cursor.add(cursorEdge);
+  scene.add(cursor);
+
+  // --- wallets
+  const nodeMeshes = [];
+  for (const n of NODES) {
+    const role = ROLE[n.role];
+    const through = Math.max(d3.sum(n.in, (e) => e.value), d3.sum(n.out, (e) => e.value));
+    const s = 0.75 + Math.min(1, Math.sqrt(through) / 45) * 0.9;
+    let geo;
+    if (n.role === 'binance') geo = new THREE.BoxGeometry(0.3, 0.12, 0.3);
+    else if (n.role === 'attacker') geo = new THREE.OctahedronGeometry(0.17);
+    else if (n.role === 'service') geo = new THREE.CylinderGeometry(0.17, 0.17, 0.1, 24);
+    else geo = new THREE.TorusGeometry(0.17, 0.035, 8, 32);
+    const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: role.color, transparent: true }));
+    if (n.role === 'frozen') mesh.rotation.x = Math.PI / 2;
+    mesh.scale.setScalar(s);
+    mesh.position.copy(nodePos(n));
+    scene.add(mesh);
+    const hit = new THREE.Mesh(new THREE.SphereGeometry(0.34 * s, 8, 6), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
+    hit.position.copy(mesh.position);
+    hit.userData.pick = `node:${n.id}`;
+    scene.add(hit);
+    nodeMeshes.push(hit);
+    n.mesh = mesh;
+    n.hit = hit;
+    n.major = through >= 250 || n.role === 'service' || n.id === 'op';
+    n.risk = RISK[n.id];
+    const riskTag = n.risk ? ` <b class="risk">${usd(n.risk.usd)}</b>` : '';
+    n.label = label(`<i class="fi fi-rr-${n.icon}"></i>${esc(n.name)}${riskTag}`, `node${n.risk ? ' exit' : ''}${n.projected ? ' projected' : ''}`, [0.5, n.role === 'frozen' ? -0.5 : 1.35]);
+    if (n.risk) {
+      n.halo = new THREE.Mesh(
+        new THREE.RingGeometry(0.3, 0.36, 40),
+        new THREE.MeshBasicMaterial({ color: '#f2706b', transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false }),
+      );
+      n.halo.position.copy(mesh.position);
+      n.halo.scale.setScalar(s);
+      scene.add(n.halo);
+    }
+    if (n.projected) mesh.material.color.set('#f2706b');
+    n.label.position.copy(mesh.position);
+    scene.add(n.label);
+  }
+
+  // --- flows: arcs whose thickness follows the amount
+  const TUBE_SEG = 48;
+  const repeat = {};
+  for (const e of EDGES) {
+    const a = nodePos(e.source), b = nodePos(e.target);
+    const pair = `${e.from}>${e.to}`;
+    const k = (repeat[pair] = (repeat[pair] ?? -1) + 1);
+    const mid = a.clone().add(b).multiplyScalar(0.5);
+    if (e.kind === 'freeze') mid.y -= 0.25;
+    else if (e.kind === 'bridge') mid.y += 2.2;
+    else mid.y += 0.55 + k * 0.32;
+    e.curve = new THREE.QuadraticBezierCurve3(a, mid, b);
+    const r = e.value ? 0.014 + Math.sqrt(e.value) * 0.0021 : 0.01;
+    e.mesh = new THREE.Mesh(
+      new THREE.TubeGeometry(e.curve, TUBE_SEG, r, 6, false),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(COLORS[e.kind]), transparent: true, opacity: 0.7, depthWrite: false }),
+    );
+    e.mesh.userData.pick = `edge:${e.index}`;
+    e.x = tx(e.t);
+    scene.add(e.mesh);
+  }
+
+  // sparks run along flows that are happening right now
+  const exitLines = EXITS.map(([from, to]) => {
+    const a = nodePos(byNode[from]), b = nodePos(byNode[to]);
+    const mid = a.clone().add(b).multiplyScalar(0.5);
+    mid.y += 1.4;
+    const line = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(new THREE.QuadraticBezierCurve3(a, mid, b).getPoints(48)),
+      new THREE.LineDashedMaterial({ color: '#f2706b', dashSize: 0.18, gapSize: 0.12, transparent: true, opacity: 0.8 }),
+    );
+    line.computeLineDistances();
+    scene.add(line);
+    return { from, to, line };
+  });
+
+  const sparkGeo = new THREE.SphereGeometry(0.05, 10, 8);
+  const sparks = EDGES.filter((e) => e.value).map((e) => {
+    const m = new THREE.Mesh(sparkGeo, new THREE.MeshBasicMaterial({ color: COLORS[e.kind], transparent: true }));
+    m.visible = false;
+    scene.add(m);
+    return { e, m };
+  });
+
+  // ---------- state ----------
+  let compact = false;
+  const state = { t: T_MAX, playing: false, hover: null, selected: null, focus: null, allLabels: false, risk: true, sideTab: 'moments' };
+
+  function parse(key) {
+    if (!key) return null;
+    const i = key.indexOf(':');
+    return [key.slice(0, i), key.slice(i + 1)];
+  }
+  function related(key) {
+    const k = parse(key);
+    if (!k) return null;
+    const edges = new Set(), nodes = new Set();
+    if (k[0] === 'node') {
+      const n = byNode[k[1]];
+      nodes.add(n.id);
+      for (const e of [...n.in, ...n.out]) { edges.add(e.index); nodes.add(e.from); nodes.add(e.to); }
+      for (const x of EXITS) if (x[0] === n.id || x[1] === n.id) { nodes.add(x[0]); nodes.add(x[1]); }
+    } else if (k[0] === 'risk') {
+      for (const id of Object.keys(RISK)) nodes.add(id);
+      for (const x of EXITS) nodes.add(x[1]);
+    } else if (k[0] === 'edge') {
+      const e = EDGES[Number(k[1])];
+      edges.add(e.index); nodes.add(e.from); nodes.add(e.to);
+    } else if (k[0] === 'chain') {
+      for (const e of EDGES) if (e.source.chain === k[1] || e.target.chain === k[1]) { edges.add(e.index); nodes.add(e.from); nodes.add(e.to); }
+    }
+    return { edges, nodes };
+  }
+
+  function apply() {
+    const xNow = tx(state.t);
+    cursor.position.x = xNow;
+    const key = state.hover ?? state.selected ?? state.focus;
+    const r = related(key);
+    const selected = parse(state.selected);
+    for (const e of EDGES) {
+      const p = THREE.MathUtils.clamp((xNow - e.x) / 0.7 + 0.02, 0, 1);
+      e.mesh.visible = p > 0;
+      e.mesh.geometry.setDrawRange(0, Math.ceil(TUBE_SEG * p) * 36);
+      const on = !r || r.edges.has(e.index);
+      const isSel = selected?.[0] === 'edge' && Number(selected[1]) === e.index;
+      e.mesh.material.color.set(isSel ? AMBER : COLORS[e.kind]);
+      e.mesh.material.opacity = on ? (r ? 0.95 : 0.7) : 0.06;
+    }
+    for (const n of NODES) {
+      const shown = n.projected ? state.risk && state.t >= 250 : xNow >= tx(n.first) - 0.01;
+      n.mesh.visible = n.hit.visible = shown;
+      const on = !r || r.nodes.has(n.id);
+      n.mesh.material.opacity = on ? 1 : 0.15;
+      const isSel = state.selected === `node:${n.id}`;
+      n.mesh.material.color.set(isSel ? AMBER : ROLE[n.role].color);
+      const showLabel = shown && (r ? r.nodes.has(n.id) : state.allLabels || (n.major && !compact) || (state.risk && (n.risk || n.projected) && !compact));
+      if (n.halo) n.halo.visible = shown && state.risk && (!r || r.nodes.has(n.id));
+      n.label.element.classList.toggle('exit', !!n.risk && state.risk);
+      n.label.element.querySelector('b.risk')?.toggleAttribute('hidden', !state.risk);
+      n.label.element.classList.toggle('off', !showLabel);
+      n.label.element.classList.toggle('sel', isSel);
+    }
+    for (const x of exitLines) {
+      x.line.visible = state.risk && state.t >= 250;
+      x.line.material.opacity = !r || (r.nodes.has(x.from) && r.nodes.has(x.to)) ? 0.8 : 0.08;
+    }
+    for (const c of CHAINS) {
+      const on = state.focus === `chain:${c.id}` || (key && parse(key)[0] === 'chain' && parse(key)[1] === c.id);
+      laneMeshes[c.id].material.color.set(on ? '#262b33' : '#1d2026');
+    }
+    // totals at this moment
+    const taken = d3.sum(EDGES.filter((e) => e.kind === 'theft' && e.t <= state.t), (e) => e.value);
+    const frozen = d3.sum(EDGES.filter((e) => e.frozen && e.t <= state.t), (e) => e.value);
+    document.getElementById('st-taken').textContent = usd(taken);
+    document.getElementById('st-frozen').textContent = usd(frozen);
+    document.getElementById('st-left').textContent = usd(Math.max(0, taken - frozen));
+    document.getElementById('st-risk').textContent = usd(d3.sum(NODES.filter((n) => n.risk && n.first <= state.t), (n) => n.risk.usd));
+    const [time, day] = clockText(state.t);
+    document.getElementById('clock').textContent = time;
+    document.getElementById('clock-day').textContent = day;
+    scrub.value = Math.round(((xNow - tx(T_MIN)) / (tx(T_MAX) - tx(T_MIN))) * 1000);
+    scrub.style.setProperty('--fill', `${scrub.value / 10}%`);
+    chart.setCursor(state.t);
+  }
+
+  // ---------- side panel: key moments, or details of what is picked ----------
+  const side = document.getElementById('side');
+  const row = (key, title, value, color, note, max) => `<li><button data-pick="${esc(key)}" class="block w-full rounded-md px-2 py-1.5 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+      <span class="flex items-baseline justify-between gap-3 text-sm"><span class="min-w-0 truncate">${esc(title)}</span><span class="shrink-0 font-mono text-xs text-muted-foreground">${esc(value)}</span></span>
+      ${max ? `<span class="mt-1 block" style="color:${color}"><span class="bar block" style="width:${Math.max(3, Math.sqrt(note / max) * 100)}%"></span></span>` : note ? `<span class="mt-0.5 block text-xs text-muted-foreground">${esc(note)}</span>` : ''}
+    </button></li>`;
+  const badge = (text, cls = '') => `<span class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-medium ${cls}">${text}</span>`;
+  const head = (icon, title, meta) => `<div class="flex items-start gap-3">
+      <span class="mt-0.5 grid size-8 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground"><i class="fi fi-rr-${icon}"></i></span>
+      <div class="min-w-0 flex-1"><h2 class="text-base font-semibold leading-tight">${esc(title)}</h2><p class="mt-0.5 text-sm text-muted-foreground">${meta}</p></div>
+      <button data-close class="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Back to key moments"><i class="fi fi-rr-cross-small"></i></button>
+    </div>`;
+  const kindName = { theft: 'Taken', move: 'Moved on', freeze: 'Frozen', bridge: 'Bridged, then frozen', control: 'Control', staging: 'Staging' };
+  const chainName = (id) => CHAINS[chainIndex[id]].name;
+
+  function renderSide() {
+    const k = parse(state.selected);
+    if (!k) {
+      const tabCls = 'inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow';
+      const tabs = `<div role="tablist" class="flex h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground">
+          <button role="tab" data-side-tab="moments" data-state="${state.sideTab === 'moments' ? 'active' : 'inactive'}" aria-selected="${state.sideTab === 'moments'}" class="${tabCls}"><i class="fi fi-rr-time-past text-xs"></i>Key moments</button>
+          <button role="tab" data-side-tab="risk" data-state="${state.sideTab === 'risk' ? 'active' : 'inactive'}" aria-selected="${state.sideTab === 'risk'}" class="${tabCls}"><i class="fi fi-rr-triangle-warning text-xs"></i>Exit risks</button>
+        </div>`;
+      if (state.sideTab === 'risk') {
+        const risks = NODES.filter((n) => n.risk).sort((a, b) => b.risk.usd - a.risk.usd);
+        side.innerHTML = `${tabs}
+          <p class="mt-3 text-sm leading-relaxed text-ink-2">Attacker wallets holding coins that no issuer can freeze. TRM Labs expects these funds to move next through cross-chain bridges, swap services and OTC brokers, so they are the likeliest to be lost.</p>
+          <div class="mt-3 flex items-baseline justify-between rounded-md border border-risk/40 bg-risk/10 px-3 py-2"><span class="text-sm">Potential loss</span><span class="font-mono text-lg text-risk">${usd(RISK_TOTAL)}</span></div>
+          <ul class="mt-2 space-y-0.5">${risks.map((n) => `<li><button data-pick="node:${n.id}" class="block w-full rounded-md px-2 py-1.5 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+            <span class="flex items-baseline justify-between gap-3 text-sm"><span class="min-w-0 truncate">${esc(n.name)}</span><span class="shrink-0 font-mono text-xs text-risk">${usd(n.risk.usd)}${n.risk.est ? '*' : ''}</span></span>
+            <span class="mt-0.5 block text-xs text-muted-foreground">${esc(n.risk.asset)} on ${esc(chainName(n.chain))}</span>
+            <span class="mt-1 block text-risk"><span class="bar block" style="width:${Math.max(3, (n.risk.usd / risks[0].risk.usd) * 100)}%"></span></span></button></li>`).join('')}</ul>
+          <p class="mt-2 text-xs text-muted-foreground">* Estimate. <a class="text-primary hover:underline" href="${TRM_URL}" target="_blank" rel="noopener noreferrer">TRM Labs</a> reports about $2.4B in ETH and BTC beyond reach, plus smaller amounts on other chains, and expects them to move through bridges, swap services and OTC brokers.</p>`;
+        side.classList.add('idle');
+        document.body.dataset.detail = '';
+        return;
+      }
+      side.innerHTML = `${tabs}
+        <p class="mt-3 text-sm text-muted-foreground">Pick one to jump the timeline there. Times from <a class="text-primary hover:underline" href="${TRM_URL}" target="_blank" rel="noopener noreferrer">TRM Labs</a>.</p>
+        <ol class="mt-2 space-y-0.5">${MOMENTS.map((m, i) => `<li><button data-moment="${i}" class="flex w-full gap-3 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+          <span class="w-11 shrink-0 font-mono text-xs leading-5 text-muted-foreground">${clockText(m.t)[0]}</span><span>${esc(m.text)}</span></button></li>`).join('')}</ol>`;
+      side.classList.add('idle');
+      document.body.dataset.detail = '';
+      return;
+    }
+    side.classList.remove('idle');
+    document.body.dataset.detail = 'open';
+    if (k[0] === 'edge') {
+      const e = EDGES[Number(k[1])];
+      const chains = e.source.chain === e.target.chain ? chainName(e.source.chain) : `${chainName(e.source.chain)} to ${chainName(e.target.chain)}`;
+      side.innerHTML = `${head(e.kind === 'freeze' ? 'snowflake' : e.kind === 'bridge' ? 'bridge' : e.kind === 'control' ? 'document-signed' : 'arrow-up-right', kindName[e.kind], `${clockText(e.t)[0]} UTC, ${esc(chains)}`)}
+        <p class="mt-3 text-sm leading-relaxed">${esc(e.what)}</p>
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          ${e.value ? `<span class="font-mono text-lg" style="color:${COLORS[e.kind]}">${usd(e.value)}</span>` : ''}
+          ${e.est ? badge('<i class="fi fi-rr-triangle-warning"></i>Estimate', 'text-amber') : `<a href="${TRM_URL}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-medium text-primary hover:bg-accent"><i class="fi fi-rr-document-signed"></i>Reported by TRM Labs</a>`}
+        </div>
+        <h3 class="mt-4 text-xs font-medium text-muted-foreground">Between</h3>
+        <ul class="mt-1 space-y-0.5">${row(`node:${e.from}`, e.source.name, ROLE[e.source.role].name)}${row(`node:${e.to}`, e.target.name, ROLE[e.target.role].name)}</ul>`;
+    } else if (k[0] === 'node') {
+      const n = byNode[k[1]];
+      const list = (edges, other) => {
+        const max = d3.max(edges, (e) => e.value) || 1;
+        return edges.map((e) => e.value
+          ? row(`edge:${e.index}`, `${clockText(e.t)[0]}  ${other(e).name}`, usd(e.value) + (e.est ? '*' : ''), COLORS[e.kind], e.value, max)
+          : row(`edge:${e.index}`, `${clockText(e.t)[0]}  ${other(e).name}`, kindName[e.kind])).join('');
+      };
+      side.innerHTML = `${head(n.icon, n.name, `${ROLE[n.role].name} on ${esc(chainName(n.chain))}`)}
+        ${n.note ? `<p class="mt-3 text-sm leading-relaxed text-ink-2">${esc(n.note)}</p>` : ''}
+        ${n.risk ? `<div class="mt-3 rounded-md border border-risk/40 bg-risk/10 px-3 py-2">
+          <div class="flex items-baseline justify-between gap-3"><span class="inline-flex items-center gap-1.5 text-sm font-medium text-risk"><i class="fi fi-rr-triangle-warning text-xs"></i>Exit risk</span><span class="font-mono text-sm text-risk">${usd(n.risk.usd)}${n.risk.est ? ' (estimate)' : ''}</span></div>
+          <p class="mt-1 text-sm">${esc(n.risk.asset)}. ${esc(n.risk.why)}</p>
+          <p class="mt-1 text-xs text-muted-foreground">Likely exits: ${EXITS.filter((x) => x[0] === n.id).map((x) => esc(byNode[x[1]].name)).join(', ') || 'any swap or bridge'}</p></div>` : ''}
+        ${n.in.length ? `<h3 class="mt-4 text-xs font-medium text-muted-foreground">Received</h3><ul class="mt-1 space-y-0.5">${list(n.in, (e) => e.source)}</ul>` : ''}
+        ${n.out.length ? `<h3 class="mt-4 text-xs font-medium text-muted-foreground">Sent</h3><ul class="mt-1 space-y-0.5">${list(n.out, (e) => e.target)}</ul>` : ''}
+        ${[...n.in, ...n.out].some((e) => e.est) ? '<p class="mt-3 text-xs text-muted-foreground">* Estimate</p>' : ''}`;
+    } else {
+      const c = CHAINS[chainIndex[k[1]]];
+      const edges = EDGES.filter((e) => e.source.chain === c.id || e.target.chain === c.id).filter((e) => e.value);
+      const max = d3.max(edges, (e) => e.value) || 1;
+      side.innerHTML = `${head('link', c.name, `${usd(c.taken)} taken, ${Math.round((c.taken / TOTAL) * 1000) / 10}% of the total`)}
+        <h3 class="mt-4 text-xs font-medium text-muted-foreground">Flows on this chain</h3>
+        <ul class="mt-1 space-y-0.5">${edges.map((e) => row(`edge:${e.index}`, `${clockText(e.t)[0]}  ${kindName[e.kind]}: ${e.target.name}`, usd(e.value) + (e.est ? '*' : ''), COLORS[e.kind], e.value, max)).join('')}</ul>`;
+    }
+  }
+
+  function select(key) {
+    state.selected = key;
+    const k = parse(key);
+    // make sure what is picked has already happened on the timeline
+    if (k?.[0] === 'edge') state.t = Math.max(state.t, EDGES[Number(k[1])].t + 2);
+    if (k?.[0] === 'node') state.t = Math.max(state.t, byNode[k[1]].first + 2);
+    renderSide();
+    apply();
+  }
+  side.addEventListener('click', (ev) => {
+    const tab = ev.target.closest('[data-side-tab]');
+    if (tab) {
+      state.sideTab = tab.dataset.sideTab;
+      state.focus = state.sideTab === 'risk' ? 'risk:all' : null;
+      renderSide();
+      return apply();
+    }
+    if (ev.target.closest('[data-close]')) return select(null);
+    const m = ev.target.closest('[data-moment]');
+    if (m) {
+      const moment = MOMENTS[Number(m.dataset.moment)];
+      setPlaying(false);
+      state.t = Math.min(T_MAX, moment.t + 2);
+      return select(`edge:${moment.edge}`);
+    }
+    const b = ev.target.closest('[data-pick]');
+    if (b) select(b.dataset.pick);
+  });
+
+  // ---------- chain list ----------
+  const chainList = document.getElementById('chains');
+  const maxTaken = d3.max(CHAINS, (c) => c.taken);
+  chainList.innerHTML = CHAINS.slice().sort((a, b) => b.taken - a.taken).map((c) => `<li><button data-chain="${c.id}" class="block w-full rounded-md px-2 py-1 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-pressed:bg-accent" aria-pressed="false">
+      <span class="flex items-baseline justify-between gap-3 text-sm"><span>${esc(c.name)}</span><span class="font-mono text-xs text-muted-foreground">${usd(c.taken)}</span></span>
+      <span class="mt-1 block text-taken"><span class="bar block" style="width:${Math.max(2, (c.taken / maxTaken) * 100)}%"></span></span></button></li>`).join('');
+  chainList.addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-chain]');
+    if (!b) return;
+    const key = `chain:${b.dataset.chain}`;
+    const on = state.selected !== key;
+    for (const x of chainList.querySelectorAll('[data-chain]')) x.setAttribute('aria-pressed', String(on && x === b));
+    select(on ? key : null);
+  });
+
+  // ---------- timeline chart (D3) ----------
+  const chart = (() => {
+    const el = document.getElementById('chart');
+    const svg = d3.select(el).append('svg');
+    const gArea = svg.append('g');
+    const gAxis = svg.append('g').attr('class', 'axis');
+    const cursorLine = svg.append('line').attr('stroke', '#1fefd7').attr('stroke-width', 1.5);
+    const steps = (filter) => {
+      const pts = [[T_MIN, 0]];
+      let sum = 0;
+      for (const e of EDGES.filter(filter).sort((a, b) => a.t - b.t)) { sum += e.value; pts.push([e.t, sum]); }
+      pts.push([T_MAX, sum]);
+      return pts;
+    };
+    const takenPts = steps((e) => e.kind === 'theft');
+    const frozenPts = steps((e) => e.frozen);
+    let x, y;
+    function draw() {
+      const w = el.clientWidth, h = el.clientHeight;
+      svg.attr('width', w).attr('height', h);
+      // same stretched time as the map, so the chart and the cursor plane line up
+      const r0 = tx(T_MIN), r1 = tx(T_MAX);
+      x = d3.scaleLinear().domain(tx.domain()).range(tx.range().map((v) => ((v - r0) / (r1 - r0)) * w));
+      y = d3.scaleLinear().domain([0, 6500]).range([h - 16, 2]);
+      const area = d3.area().curve(d3.curveStepAfter).x((d) => x(d[0])).y0(y(0)).y1((d) => y(d[1]));
+      const line = d3.line().curve(d3.curveStepAfter).x((d) => x(d[0])).y((d) => y(d[1]));
+      gArea.selectAll('*').remove();
+      gArea.append('path').attr('d', area(takenPts)).attr('fill', '#e9a66c').attr('fill-opacity', 0.16);
+      gArea.append('path').attr('d', line(takenPts)).attr('fill', 'none').attr('stroke', '#e9a66c').attr('stroke-width', 1.5);
+      gArea.append('path').attr('d', area(frozenPts)).attr('fill', '#7cc4dc').attr('fill-opacity', 0.22);
+      gArea.append('path').attr('d', line(frozenPts)).attr('fill', 'none').attr('stroke', '#7cc4dc').attr('stroke-width', 1.5);
+      gArea.append('text').attr('x', x(T_MAX) - 4).attr('y', y(6357) - 4).attr('text-anchor', 'end')
+        .attr('fill', '#e9a66c').attr('font-size', 10).attr('font-family', 'Source Code Pro, monospace').text('taken $6.36B');
+      gArea.append('text').attr('x', x(T_MAX) - 4).attr('y', y(2696) - 4).attr('text-anchor', 'end')
+        .attr('fill', '#7cc4dc').attr('font-size', 10).attr('font-family', 'Source Code Pro, monospace').text('frozen $2.70B');
+      // the share of the haul sitting in coins no issuer can freeze
+      gArea.append('line').attr('x1', 0).attr('x2', x(T_MAX)).attr('y1', y(RISK_TOTAL)).attr('y2', y(RISK_TOTAL))
+        .attr('stroke', '#f2706b').attr('stroke-width', 1).attr('stroke-dasharray', '4 3');
+      gArea.append('text').attr('x', 4).attr('y', y(RISK_TOTAL) - 4)
+        .attr('fill', '#f2706b').attr('font-size', 10).attr('font-family', 'Source Code Pro, monospace').text(`exit risk ${usd(RISK_TOTAL)}`);
+      const ticks = w < 520 ? [0, 30, 120, 240] : [0, 10, 20, 30, 60, 120, 180, 240];
+      gAxis.attr('transform', `translate(0,${h - 16})`)
+        .call(d3.axisBottom(x).tickValues(ticks).tickFormat((t) => clockText(t)[0]).tickSize(3));
+      setCursor(state.t);
+    }
+    function setCursor(t) {
+      if (!x) return;
+      cursorLine.attr('x1', x(t)).attr('x2', x(t)).attr('y1', 0).attr('y2', el.clientHeight - 16);
+    }
+    const fromPointer = (ev) => {
+      const r = el.getBoundingClientRect();
+      return THREE.MathUtils.clamp(x.invert(ev.clientX - r.left), T_MIN, T_MAX);
+    };
+    el.addEventListener('pointerdown', (ev) => {
+      el.setPointerCapture(ev.pointerId);
+      setPlaying(false);
+      state.t = fromPointer(ev);
+      apply();
+    });
+    el.addEventListener('pointermove', (ev) => {
+      if (!el.hasPointerCapture(ev.pointerId)) return;
+      state.t = fromPointer(ev);
+      apply();
+    });
+    return { draw, setCursor };
+  })();
+
+  // ---------- playback and scrubbing ----------
+  const scrub = document.getElementById('scrub');
+  const playBtn = document.getElementById('play');
+  scrub.addEventListener('input', () => {
+    setPlaying(false);
+    state.t = tx.invert(tx(T_MIN) + (scrub.value / 1000) * (tx(T_MAX) - tx(T_MIN)));
+    apply();
+  });
+  function setPlaying(on) {
+    state.playing = on;
+    playBtn.innerHTML = `<i class="fi fi-rr-${on ? 'pause' : 'play'} text-sm"></i>`;
+    playBtn.setAttribute('aria-label', on ? 'Pause' : 'Replay the night');
+  }
+  playBtn.addEventListener('click', () => {
+    if (!state.playing && state.t >= T_MAX - 0.5) state.t = T_MIN;
+    setPlaying(!state.playing);
+  });
+
+  // ---------- picking ----------
+  const ray = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  const dom = labels.domElement;
+  const pick = (ev) => {
+    const r = dom.getBoundingClientRect();
+    ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const targets = [...nodeMeshes.filter((m) => m.visible), ...EDGES.filter((e) => e.mesh.visible).map((e) => e.mesh)];
+    const hit = ray.intersectObjects(targets, false)[0] ?? ray.intersectObjects(Object.values(laneMeshes), false)[0];
+    return hit?.object.userData.pick ?? null;
+  };
+  let down = null;
+  dom.addEventListener('pointermove', (ev) => {
+    if (ev.buttons || ev.pointerType === 'touch') return;
+    const p = pick(ev);
+    const hoverKey = p && !p.startsWith('chain:') ? p : null;
+    if (hoverKey !== state.hover) {
+      state.hover = hoverKey;
+      dom.style.cursor = hoverKey ? 'pointer' : '';
+      apply();
+    }
+  });
+  dom.addEventListener('pointerleave', () => { if (state.hover) { state.hover = null; apply(); } });
+  dom.addEventListener('pointerdown', (ev) => { down = [ev.clientX, ev.clientY]; });
+  dom.addEventListener('pointerup', (ev) => {
+    if (!down) return;
+    const moved = Math.hypot(ev.clientX - down[0], ev.clientY - down[1]);
+    down = null;
+    if (moved >= 6) return;
+    const p = pick(ev);
+    select(p === state.selected ? null : p);
+  });
+  addEventListener('keydown', (ev) => { if (ev.key === 'Escape') select(null); });
+
+  // ---------- controls ----------
+  const sw = document.getElementById('sw-labels');
+  sw.addEventListener('click', () => {
+    state.allLabels = sw.dataset.state !== 'checked';
+    sw.dataset.state = state.allLabels ? 'checked' : 'unchecked';
+    sw.setAttribute('aria-checked', String(state.allLabels));
+    sw.firstElementChild.style.transform = state.allLabels ? 'translateX(16px)' : '';
+    apply();
+  });
+  const sourcesBtn = document.getElementById('sources-btn');
+  const sources = document.getElementById('sources');
+  const toggleSources = (open) => {
+    sources.hidden = !open;
+    sourcesBtn.setAttribute('aria-expanded', String(open));
+  };
+  sourcesBtn.addEventListener('click', () => toggleSources(sources.hidden));
+  addEventListener('pointerdown', (ev) => {
+    if (!sources.hidden && !sources.contains(ev.target) && !sourcesBtn.contains(ev.target)) toggleSources(false);
+  });
+  addEventListener('keydown', (ev) => { if (ev.key === 'Escape') toggleSources(false); });
+  const swRisk = document.getElementById('sw-risk');
+  swRisk.addEventListener('click', () => {
+    state.risk = swRisk.dataset.state !== 'checked';
+    swRisk.dataset.state = state.risk ? 'checked' : 'unchecked';
+    swRisk.setAttribute('aria-checked', String(state.risk));
+    swRisk.firstElementChild.classList.toggle('translate-x-4', state.risk);
+    apply();
+  });
+  document.querySelector('.sheet-toggle').addEventListener('click', (ev) => {
+    const panel = document.getElementById('controls');
+    panel.classList.toggle('open');
+    ev.currentTarget.setAttribute('aria-expanded', String(panel.classList.contains('open')));
+  });
+
+  const home = { pos: new THREE.Vector3(0, 14, 14.5), target: new THREE.Vector3(0, 0.4, 0.4) };
+  function resetView() {
+    const w = stageEl.clientWidth;
+    const narrow = w < 600;
+    const target = home.target.clone();
+    // phones open on the busy first hour; drag to see the rest
+    if (narrow) target.x = tx(40);
+    const dir = home.pos.clone().sub(home.target);
+    const tanX = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
+    // on wide screens the panels on both sides leave the middle for the map
+    const usable = w >= 900 ? (w - 330) / w : 0.92;
+    dir.setLength(Math.max(dir.length(), (narrow ? 9 : 18.5) / (tanX * usable)));
+    camera.position.copy(target).add(dir);
+    controls.target.copy(target);
+    controls.update();
+  }
+  document.getElementById('reset').addEventListener('click', resetView);
+
+  function resize() {
+    const w = stageEl.clientWidth, h = stageEl.clientHeight;
+    renderer.setSize(w, h);
+    labels.setSize(w, h);
+    // shift the picture away from the key moments panel and up from the timeline bar
+    if (w >= 900) camera.setViewOffset(w, h, 110, 105, w, h);
+    else camera.setViewOffset(w, h, 0, 70, w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    compact = w < 600;
+    document.body.classList.toggle('compact', compact);
+    chart.draw();
+    apply();
+  }
+  addEventListener('resize', resize);
+  resize();
+  resetView();
+  renderSide();
+  apply();
+
+  const clock = new THREE.Clock();
+  function frame() {
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const time = clock.elapsedTime;
+    if (state.playing) {
+      // play at an even pace across the stretched time axis
+      const x = Math.min(tx(T_MAX), tx(state.t) + dt * 1.25);
+      state.t = tx.invert(x);
+      if (x >= tx(T_MAX)) setPlaying(false);
+      apply();
+    }
+    const xNow = tx(state.t);
+    // exit rings face the camera and pulse gently
+    const pulse = reduceMotion ? 1 : 1 + 0.12 * Math.sin(time * 3);
+    for (const n of NODES) {
+      if (!n.halo) continue;
+      n.halo.quaternion.copy(camera.quaternion);
+      n.halo.scale.setScalar(n.mesh.scale.x * pulse);
+    }
+    for (const { e, m } of sparks) {
+      const age = xNow - e.x;
+      const live = !reduceMotion && age > 0 && age < 2.5;
+      m.visible = live;
+      if (live) {
+        m.position.copy(e.curve.getPointAt((time * 0.6 + e.index * 0.13) % 1));
+        m.material.opacity = 1 - age / 2.5;
+      }
+    }
+    controls.update();
+    renderer.render(scene, camera);
+    labels.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>
