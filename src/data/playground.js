@@ -171,4 +171,20 @@ export const PLAYGROUND_MOCKS = [
       { name: 'Wikipedia', href: 'https://en.wikipedia.org/wiki/2026_Binance_hack' },
     ],
   },
+  {
+    id: 'anthropic-ipo',
+    project: 'IPO watch',
+    name: 'ANT IPO explorer',
+    date: '2026-10-31',
+    href: '/mocks/anthropic-ipo.html',
+    preview: '/mocks/previews/anthropic-ipo.jpg',
+    description:
+      'Anthropic’s S-1 in 3D: cubes sized by revenue, losses, compute commitments and valuation, the prediction-market odds for day one, scenario paths for the first week, and the levels to watch once the dust settles. Scenarios are illustrative, not advice; built with Claude, which Anthropic makes.',
+    libraries: ['threejs', 'd3', 'shadcn', 'tailwind', 'flaticon'],
+    sources: [
+      { name: 'SEC S-1', href: 'https://www.sec.gov/Archives/edgar/data/0002130357/000162828026067168/anthropicpbc-sx1.htm' },
+      { name: 'CNBC', href: 'https://www.cnbc.com/2026/10/26/anthropic-ipo-live-updates-ai-s-1-filing.html' },
+      { name: 'Polymarket odds', href: 'https://finance.yahoo.com/markets/stocks/articles/polymarket-traders-cool-2-trillion-110000808.html' },
+    ],
+  },
 ]

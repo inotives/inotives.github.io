@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>ANT IPO explorer</title>
+<!--
+  Playground mock: Anthropic's S-1 and planned IPO, explored in 3D. Facts come from the filing and press
+  coverage, linked under Sources. Day-one, first-week and later paths are illustrative scenarios built
+  from prediction-market odds and historical IPO base rates; they are not forecasts or investment advice.
+  Disclosure: this page was built with Claude, which is made by Anthropic.
+  Three.js draws the scenes; D3 provides scales and the small charts; the UI recreates shadcn/ui
+  components in Tailwind with the site's palette; icons are Flaticon UIcons.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  /* shadcn/ui token names mapped to the site's palette: cyan marks active state, amber marks selection */
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-card-foreground: #e4e1d8;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-accent-foreground: #e4e1d8;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-ink-2: #b8b5ac;
+    --color-rev: #9ccf7f;
+    --color-cost: #e58fb0;
+    --color-commit: #e9a66c;
+    --color-value: #c9a4f5;
+    --color-cold: #7cc4dc;
+    --color-hot: #f2706b;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base {
+    *, ::before, ::after { border-color: var(--color-border); }
+  }
+</style>
+<style>
+  body { margin: 0; background: #15171b; }
+  /* CSS2D labels carry their own z-index; keep them under the panels */
+  #stage { isolation: isolate; background: radial-gradient(ellipse 80% 70% at 60% 42%, #1b1e24 0%, #15171b 72%); }
+  #stage canvas { display: block; }
+  .label-layer { position: absolute; inset: 0; touch-action: none; }
+  .label-layer > * { pointer-events: none; }
+  .fi { display: inline-flex; line-height: 1; }
+
+  .lbl {
+    font: 500 12px/1.25 "IBM Plex Sans Condensed", sans-serif;
+    color: #e4e1d8; white-space: nowrap; text-align: center;
+    padding: 2px 6px; border-radius: 4px;
+    background: rgb(21 23 27 / 0.72);
+    transition: opacity 0.2s, color 0.2s;
+  }
+  .lbl b { display: block; font: 500 11px "Source Code Pro", monospace; color: #b8b5ac; }
+  .lbl.axis { font: 400 10.5px "Source Code Pro", monospace; color: #8b9099; background: none; }
+  .lbl.level { font: 500 11px "IBM Plex Sans Condensed", sans-serif; background: none; text-align: left; }
+  .lbl.sel { color: #f6c453; }
+  .lbl.dim { opacity: 0.25; }
+
+  .panel { position: absolute; z-index: 15; overflow: auto; overscroll-behavior: contain; }
+  .panel[hidden] { display: none; }
+  @media (min-width: 900px) {
+    #panel { left: 1.5rem; top: 4.25rem; width: 330px; max-height: calc(100% - 7.5rem); }
+    #detail { right: 1.5rem; top: 4.25rem; width: 290px; max-height: calc(100% - 7.5rem); }
+    .sheet-toggle { display: none; }
+  }
+  @media (max-width: 899px) {
+    #panel, #detail { left: 0.75rem; right: 0.75rem; bottom: 3.5rem; max-height: 50vh; }
+    body[data-detail="open"] #panel { display: none; }
+    #panel:not(.open) .collapsible { display: none; }
+  }
+
+  .slider { -webkit-appearance: none; appearance: none; width: 100%; height: 16px; background: transparent; cursor: pointer; }
+  .slider::-webkit-slider-runnable-track {
+    height: 6px; border-radius: 999px;
+    background: linear-gradient(#1fefd7, #1fefd7) 0 / var(--fill, 50%) 100% no-repeat, #2a2e36;
+  }
+  .slider::-moz-range-track { height: 6px; border-radius: 999px; background: #2a2e36; }
+  .slider::-moz-range-progress { height: 6px; border-radius: 999px; background: #1fefd7; }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none; margin-top: -5px; width: 16px; height: 16px; border-radius: 999px;
+    background: #15171b; border: 1px solid rgb(31 239 215 / 0.6); box-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+  }
+  .slider::-moz-range-thumb { width: 14px; height: 14px; border-radius: 999px; background: #15171b; border: 1px solid rgb(31 239 215 / 0.6); }
+  .slider:focus-visible { outline: none; }
+  .slider:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgb(31 239 215 / 0.35); }
+  .slider:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px rgb(31 239 215 / 0.35); }
+
+  .mini text { font: 400 10px "Source Code Pro", monospace; fill: #8b9099; }
+  .mini .axis line, .mini .axis path { stroke: #2b2f37; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+<div class="fixed inset-0 overflow-hidden">
+  <div id="stage" class="absolute inset-0"></div>
+
+  <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
+    <a href="/playground" class="pointer-events-auto rounded-sm font-brand text-[26px] leading-none text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <span class="hidden text-sm text-muted-foreground lg:inline">Playground</span>
+    <div role="tablist" aria-label="Sections" class="pointer-events-auto mx-auto inline-flex h-9 max-w-full items-center overflow-x-auto rounded-lg bg-muted p-1 text-muted-foreground">
+      <button role="tab" data-tab="filing" class="tab inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi fi-rr-document-signed text-xs"></i>The filing</button>
+      <button role="tab" data-tab="day1" class="tab inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi fi-rr-bell-ring text-xs"></i>Day one</button>
+      <button role="tab" data-tab="week" class="tab inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi fi-rr-chart-line-up text-xs"></i>First 7 days</button>
+      <button role="tab" data-tab="after" class="tab inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi fi-rr-layers text-xs"></i>After the dust</button>
+    </div>
+    <button id="sources-btn" aria-expanded="false" aria-controls="sources" class="pointer-events-auto inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-input bg-background/80 px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-link text-xs"></i><span class="hidden sm:inline">Sources</span></button>
+  </header>
+
+  <aside id="sources" hidden class="absolute right-3 top-14 z-30 max-h-[calc(100%-8rem)] w-[min(380px,calc(100%-1.5rem))] overflow-auto rounded-xl border bg-card p-4 text-card-foreground shadow-lg sm:right-6">
+    <h2 class="text-base font-semibold">Sources</h2>
+    <p class="mt-1 text-sm text-muted-foreground">Facts about the filing come from the S-1 and press coverage of it, as of October 31, 2026. Scenario paths combine prediction-market odds with historical IPO data.</p>
+    <ul id="source-list" class="mt-3 space-y-1 text-sm"></ul>
+  </aside>
+
+  <aside id="panel" class="panel rounded-xl border bg-card/90 p-4 text-card-foreground shadow backdrop-blur"></aside>
+  <aside id="detail" class="panel rounded-xl border bg-card/90 p-4 text-card-foreground shadow backdrop-blur" hidden aria-live="polite"></aside>
+
+  <footer class="absolute inset-x-0 bottom-0 z-20 flex items-center justify-center gap-2 px-4 pb-3 text-center text-xs text-muted-foreground">
+    <i class="fi fi-rr-info shrink-0"></i>
+    <span>Illustrative scenarios from public sources, not a forecast or investment advice. Disclosure: built with Claude, which is made by Anthropic.</span>
+  </footer>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const bn = (v) => (v >= 1000 ? `$${(v / 1000).toFixed(v >= 10000 ? 1 : 2)}T` : `$${v >= 100 ? Math.round(v) : v.toFixed(v < 10 ? 2 : 1)}B`);
+const tn = (v) => `$${v.toFixed(2)}T`;
+const pct = (v) => `${v >= 0 ? '+' : ''}${Math.round(v * 1000) / 10}%`;
+
+// ---------- sources ----------
+const SRC = {
+  s1: ['Anthropic, PBC: Form S-1', 'SEC EDGAR, October 26, 2026', 'https://www.sec.gov/Archives/edgar/data/0002130357/000162828026067168/anthropicpbc-sx1.htm'],
+  news: ['Anthropic files S-1 with the SEC for proposed initial public offering', 'Anthropic, October 26, 2026', 'https://www.anthropic.com/news/s1-sec'],
+  cnbcLive: ['Anthropic IPO live updates: AI lab’s S-1 filing', 'CNBC, October 26, 2026', 'https://www.cnbc.com/2026/10/26/anthropic-ipo-live-updates-ai-s-1-filing.html'],
+  cnbcSplit: ['Anthropic IPO: investors weigh growth, losses and risks', 'CNBC, October 27, 2026', 'https://www.cnbc.com/2026/10/27/-anthropic-ipo-investors-growth-losses-s-1.html'],
+  fool: ['Anthropic’s gross margin rocketed to 85% from 12% in a year, but the S-1 warns it won’t last', 'The Motley Fool, October 31, 2026', 'https://www.fool.com/investing/2026/10/31/anthropics-gross-margin-rocketed-to-85-from-12-in/'],
+  yahoo: ['Anthropic publicly files IPO prospectus, noting strong revenue growth and massive spending', 'Yahoo Finance', 'https://finance.yahoo.com/technology/article/anthropic-publicly-files-ipo-prospectus-noting-strong-revenue-growth-and-massive-spending-131807138.html'],
+  insider: ['Anthropic files S-1: $16.3bn revenue, $80.7bn loss', 'Tech Insider', 'https://tech-insider.org/ie/anthropic-s1-ipo-filing-nasdaq-ant-2026/'],
+  npr: ['AI giant Anthropic files for an IPO that could break records', 'NPR, October 26, 2026', 'https://www.npr.org/2026/10/26/nx-s1-6014772/anthropic-ai-ipo-could-break-records'],
+  investing: ['Anthropic files for IPO, with revenue surging and potential $2 trillion valuation', 'Investing.com', 'https://www.investing.com/news/stock-market-news/anthropic-files-for-nasdaq-ipo-as-revenue-jumps-to-163-billion-4972842'],
+  poly: ['Polymarket traders cool on $2 trillion Anthropic IPO', 'Yahoo Finance', 'https://finance.yahoo.com/markets/stocks/articles/polymarket-traders-cool-2-trillion-110000808.html'],
+  cnbcOdds: ['Prediction market traders say an Anthropic IPO is near-certain this year', 'CNBC, October 26, 2026', 'https://www.cnbc.com/2026/10/26/prediction-markets-think-anthropic-ipo-near-certain-in-2026.html'],
+  kalshi: ['Anthropic IPO odds before Jan. 1 jump to 93% on Kalshi after S-1 filing', 'Kalshi News', 'https://news.kalshi.com/p/anthropic-ipo-odds-s1-filing-2026'],
+  figma: ['Figma more than triples in first-day trading', 'Crunchbase News, July 31, 2025', 'https://news.crunchbase.com/public/saas-figma-first-day-ipo-trading-triples/'],
+  coreweave: ['CoreWeave closes flat at $40 after biggest U.S. tech IPO since 2021', 'CNBC, March 28, 2025', 'https://www.cnbc.com/2025/03/28/coreweave-starts-trading-on-nasdaq-at-per-share.html'],
+  arm: ['Arm closes 24.7 percent above $51 IPO price in its Nasdaq debut', 'IPO Scoop, September 2023', 'https://www.iposcoop.com/the-ipo-buzz-arm-holdings-arm-prices-ipo-at-51-high-end/'],
+  armWeek: ['Arm back near IPO price after dramatic debut', 'Morningstar, September 2023', 'https://sg.morningstar.com/sg/news/239648/arm-back-near-ipo-price-after-dramatic-debut.aspx'],
+  square: ['A Square pop, and a drop', 'TechCrunch, November 2015', 'https://techcrunch.com/2015/11/24/a-square-pop-and-a-drop/'],
+  lockup: ['IPO lockup expiration impact', 'Lambda Finance', 'https://www.lambdafin.com/articles/ipo-lockup-expiration-impact'],
+  drawdown: ['IPO first-year drawdown across 2,800 US IPOs since 2000', 'Lambda Finance', 'https://www.lambdafin.com/articles/ipo-first-year-drawdown'],
+  kandia: ['Read the fine print: Anthropic’s IPO', 'Lucas Kandia, Chasing Clarity', 'https://lucaskandia.substack.com/p/read-the-fine-print-anthropics-ipo'],
+  protos: ['Anthropic was keeping its IPO share price secret: footnote reveals $71.43', 'Protos', 'https://protos.com/anthropic-was-keeping-its-ipo-share-price-secret-footnote-reveals-71-43/'],
+  fortune: ['Anthropic’s 7 cofounders are each worth $14 billion already', 'Fortune, October 26, 2026', 'https://fortune.com/2026/10/26/anthropic-ipo-cofounders-how-rich-billionaires-philanthropy-amodei/'],
+  npm: ['Anthropic on Nasdaq Private Market', 'Nasdaq Private Market', 'https://www.nasdaqprivatemarket.com/company/anthropic/'],
+};
+const cite = (key) => `<a href="${SRC[key][2]}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">${esc(SRC[key][1].split(',')[0])}</a>`;
+document.getElementById('source-list').innerHTML = Object.values(SRC).map(([title, outlet, href]) => `<li><a class="group block rounded-md px-2 py-1.5 hover:bg-accent" href="${href}" target="_blank" rel="noopener noreferrer"><span class="text-primary group-hover:underline">${esc(title)}</span><span class="mt-0.5 block text-xs text-muted-foreground">${esc(outlet)}</span></a></li>`).join('');
+
+// ---------- what the filing shows (US$ billions) ----------
+const FILING = [
+  { id: 'rev25', name: 'Revenue, 2025', v: 4.59, color: '#9ccf7f', body: 'Full-year revenue for 2025, up 1,089% on 2024.', src: 'cnbcLive' },
+  { id: 'revH1', name: 'Revenue, first half of 2026', v: 16.29, color: '#9ccf7f', body: 'Up 1,304% from $1.16B a year earlier. About $4.7B came in Q1 and $11.6B in Q2, when the company posted a GAAP operating profit.', src: 'cnbcLive' },
+  { id: 'opex', name: 'Operating expenses, first half of 2026', v: 17.0, color: '#e58fb0', body: 'Up from $3.3B a year earlier. Includes $9.7B of research and development, where model training sits, and $3.8B of sales and marketing.', src: 'fool' },
+  { id: 'loss', name: 'Net loss, first half of 2026', v: 80.7, inner: 8.7, color: '#e58fb0', body: 'Most of it, about $72B, is the non-cash change in fair value of convertible notes and derivatives, not money spent. The solid core shows the rest.', src: 'cnbcSplit' },
+  { id: 'compute', name: 'Future compute commitments', v: 417, color: '#e9a66c', body: 'What Anthropic is obliged to pay providers for data centers, chips and cloud services in the years ahead. Includes at least $44.9B with Microsoft through May 2033.', src: 'yahoo' },
+  { id: 'private', name: 'Last private valuation, May 2026', v: 965, color: '#c9a4f5', body: 'Post-money valuation at the last private round. For late private investors, this is roughly where they break even.', src: 'investing' },
+  { id: 'ipo', name: 'Reported IPO valuation', v: 1500, v2: 2000, color: '#c9a4f5', body: 'Reports put the target between $1.5T and $2T. The solid cube is $1.5T; the wire frame is $2T. No price range or share count has been filed yet.', src: 'investing' },
+];
+const FACTS = [
+  ['Ticker', 'ANT on the Nasdaq Global Select Market', 'news'],
+  ['Lead underwriters', 'Goldman Sachs and Morgan Stanley', 'cnbcLive'],
+  ['Implied gross margin', '85% in H1 2026, up from 12%; the S-1 warns margins will fluctuate as new compute arrives', 'fool'],
+  ['Debt', '$6.2B, mainly convertible notes issued to Amazon', 'cnbcLive'],
+  ['Risk factors', 'More than 90 pages, including real-world harm from its models', 'cnbcLive'],
+  ['Customers', 'No single customer over 10% of revenue in the nine months to September 30', 'yahoo'],
+];
+const REV_BARS = [['H1 2025', 1.16], ['2025', 4.59], ['Q1 2026', 4.7], ['Q2 2026', 11.6]];
+
+// ---------- day one: Polymarket's first-day closing market cap brackets ----------
+// The report gives the three middle brackets and 42% above $2T; the outer two are derived from those.
+const BRACKETS = [
+  { lo: 1.25, hi: 1.5, label: 'Under $1.5T', p: 0.14, derived: true },
+  { lo: 1.5, hi: 1.75, label: '$1.5T to $1.75T', p: 0.16 },
+  { lo: 1.75, hi: 2.0, label: '$1.75T to $2T', p: 0.28 },
+  { lo: 2.0, hi: 2.25, label: '$2T to $2.25T', p: 0.25 },
+  { lo: 2.25, hi: 2.5, label: 'Over $2.25T', p: 0.17, derived: true },
+];
+const MARKET_MEAN = d3.sum(BRACKETS, (b) => ((b.lo + b.hi) / 2) * b.p);
+
+// ---------- scenarios ----------
+const COMPS = [
+  { name: 'CoreWeave', pop: 0, week: null, note: 'Priced at $40, below its range, and closed flat on day one.', src: 'coreweave' },
+  { name: 'Arm', pop: 0.247, week: 0.023, note: 'Closed 24.7% above its $51 price on day one, then traded back near $52 within a week.', src: 'arm' },
+  { name: 'Figma', pop: 2.5, week: null, note: 'Priced at $33 and closed near $115.50, about 250% up, on day one. It later traded around $80.', src: 'figma' },
+];
+const state = { tab: 'filing', price: 1.75, pop: 0.12, drawdown: 0.42, shares: 16.94, unit: 'share', selected: null, hover: null };
+
+// Per share: the S-1 says 846,840,960 shares were 5% of fully diluted shares on June 30, about 16.94B in all.
+// New IPO shares, converted notes and RSUs add more after listing, which lowers the price per share.
+const perShare = (T) => (T * 1000) / state.shares;
+const usdShare = (T) => `$${perShare(T).toFixed(2)}`;
+const money = (T) => (state.unit === 'share' ? usdShare(T) : tn(T));
+const both = (T) => `${tn(T)}, ${usdShare(T)} a share`;
+const REFS = [
+  { name: 'Series H round, May to June 2026', p: 58.9, src: 'fortune', body: 'Preferred shares sold at $589.0095, or $58.90 after the 10-for-1 split on September 17.' },
+  { name: 'Board’s mark, September 30', p: 71.43, src: 'protos', body: 'Implied by a footnote: a $2B donation match settled with about 28M shares. Includes a discount because the shares were not yet traded.' },
+  { name: 'Nasdaq Private Market, late October', p: 85.1, src: 'npm', body: 'Secondary-market price for private shares, split-adjusted.' },
+  { name: 'Notice live quote, split-adjusted', p: 90.8, src: 'protos', body: 'Notice shows $908 before the split, $90.80 after it.' },
+];
+const bracketLabel = (b) => {
+  if (state.unit !== 'share') return b.label;
+  if (b.lo === 1.25) return `Under ${usdShare(1.5)}`;
+  if (b.hi === 2.5) return `Over ${usdShare(2.25)}`;
+  return `${usdShare(b.lo)} to ${usdShare(b.hi)}`;
+};
+
+function weekPaths() {
+  const V = state.price, p = state.pop;
+  const f = {
+    cold: [1, 1.0, 1.03, 0.99, 0.96, 0.95, 0.93, 0.92],
+    base: [1, 1 + p, 1 + p + 0.05, 1 + p + 0.08, 1 + p + 0.04, 1 + p - 0.01, 1 + p - 0.03, 1 + p - 0.04],
+    hot: [1, 1.35, 1.48, 1.55, 1.5, 1.42, 1.36, 1.3],
+  };
+  return Object.fromEntries(Object.entries(f).map(([k, arr]) => [k, arr.map((x) => x * V)]));
+}
+function afterPath() {
+  const base = weekPaths().base;
+  const high = d3.max(base), d7 = base[7], V = state.price;
+  const trough = high * (1 - state.drawdown);
+  const keys = [
+    [0, V], [1, base[1]], [3, base[3]], [7, d7],
+    [60, d7 + (trough - d7) * 0.55], [120, trough], [175, trough * 1.04],
+    [190, trough * 1.04 * (1 - 0.071)], [260, (trough * 0.966 + V) / 2],
+  ];
+  const interp = d3.scaleLinear().domain(keys.map((k) => k[0])).range(keys.map((k) => k[1]));
+  const pts = d3.range(0, 261, 2).map((d) => [d, interp(d)]);
+  // the lowest point, which can be the dip after the lockup rather than the correction itself
+  const low = pts.reduce((m, q) => (q[1] < m[1] ? q : m));
+  return { high, low, d7, pts };
+}
+
+// ---------- three.js stage ----------
+const stageEl = document.getElementById('stage');
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+} catch (err) {
+  console.error(err);
+  stageEl.innerHTML = '<p class="grid h-full place-items-center p-6 text-center text-sm text-muted-foreground">This page needs WebGL to draw its 3D views.</p>';
+}
+if (renderer) main();
+
+function main() {
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+  stageEl.appendChild(renderer.domElement);
+  const labels = new CSS2DRenderer();
+  labels.domElement.className = 'label-layer';
+  stageEl.appendChild(labels.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 400);
+  const controls = new OrbitControls(camera, labels.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 5;
+  controls.maxDistance = 80;
+  controls.maxPolarAngle = Math.PI * 0.495;
+
+  scene.add(new THREE.AmbientLight(0xffffff, 1.1));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+  sun.position.set(-6, 12, 9);
+  scene.add(sun);
+  const grid = new THREE.GridHelper(40, 40, 0x2b2f37, 0x22252c);
+  grid.position.y = -0.01;
+  scene.add(grid);
+
+  const label = (html, cls = '', center = [0.5, 1]) => {
+    const el = document.createElement('div');
+    el.className = `lbl ${cls}`;
+    el.innerHTML = html;
+    const obj = new CSS2DObject(el);
+    obj.center.set(...center);
+    return obj;
+  };
+  const pickables = [];
+  const groups = {};
+  function freshGroup(name) {
+    const old = groups[name];
+    if (old) {
+      old.traverse((o) => {
+        if (o.isCSS2DObject) o.element.remove();
+        o.geometry?.dispose();
+        if (o.material) [].concat(o.material).forEach((m) => m.dispose());
+      });
+      scene.remove(old);
+    }
+    const g = new THREE.Group();
+    groups[name] = g;
+    scene.add(g);
+    for (let i = pickables.length - 1; i >= 0; i--) if (pickables[i].userData.group === name) pickables.splice(i, 1);
+    return g;
+  }
+  // CSS2DRenderer only checks each label's own visibility, so hide a group's labels with it
+  function setGroupVisible(name, on) {
+    groups[name]?.traverse((o) => { if (o === groups[name] || o.isCSS2DObject) o.visible = on; });
+  }
+  const pickable = (mesh, group, info) => {
+    mesh.userData.group = group;
+    mesh.userData.info = info;
+    pickables.push(mesh);
+    return mesh;
+  };
+  const edgesOf = (mesh, color, opacity = 0.6) => new THREE.LineSegments(
+    new THREE.EdgesGeometry(mesh.geometry),
+    new THREE.LineBasicMaterial({ color, transparent: true, opacity }),
+  );
+
+  // --- The filing: cubes whose volume follows the dollar amount
+  function buildFiling() {
+    const g = freshGroup('filing');
+    const side = (v) => Math.cbrt(v) * 0.34;
+    const widths = FILING.map((d) => side(d.v2 ?? d.v));
+    const gap = 0.7;
+    let x = -(d3.sum(widths) + gap * (widths.length - 1)) / 2;
+    FILING.forEach((d, i) => {
+      const s = side(d.v), w = widths[i];
+      const cx = x + w / 2;
+      x += w + gap;
+      const solidOpacity = d.inner ? 0.18 : 0.85;
+      const cube = new THREE.Mesh(
+        new THREE.BoxGeometry(s, s, s),
+        new THREE.MeshStandardMaterial({ color: d.color, roughness: 0.55, metalness: 0.1, transparent: true, opacity: solidOpacity, depthWrite: !d.inner }),
+      );
+      cube.position.set(cx, s / 2, 0);
+      cube.add(edgesOf(cube, d.color, 0.8));
+      g.add(cube);
+      const perShareNote = d.id === 'ipo' ? ` At ${state.shares.toFixed(2)}B shares that is ${usdShare(1.5)} to ${usdShare(2.0)} a share.` : '';
+      pickable(cube, 'filing', { key: d.id, title: d.name, value: bn(d.v) + (d.v2 ? ` to ${bn(d.v2)}` : ''), body: d.body + perShareNote, src: d.src });
+      if (d.inner) {
+        const si = side(d.inner);
+        const core = new THREE.Mesh(new THREE.BoxGeometry(si, si, si), new THREE.MeshStandardMaterial({ color: d.color, roughness: 0.5 }));
+        core.position.set(cx, si / 2, 0);
+        g.add(core);
+      }
+      if (d.v2) {
+        const s2 = side(d.v2);
+        const wire = new THREE.Mesh(new THREE.BoxGeometry(s2, s2, s2), new THREE.MeshBasicMaterial({ visible: false }));
+        wire.position.set(cx, s2 / 2, 0);
+        wire.add(edgesOf(wire, d.color, 0.55));
+        g.add(wire);
+      }
+      const top = d.v2 ? side(d.v2) : s;
+      const l = label(`${esc(d.name)}<b>${bn(d.v)}${d.v2 ? ` to ${bn(d.v2)}` : ''}</b>`);
+      // the small cubes sit close together, so their labels alternate between two heights
+      l.position.set(cx, top + 0.15 + (top < 2 ? (i % 2 ? 1.5 : 0.3) : 0), 0);
+      l.userData.key = d.id;
+      g.add(l);
+    });
+  }
+
+  // --- Day one: probability bars for the first-day closing market cap
+  const xCap = d3.scaleLinear().domain([1.25, 2.5]).range([-7.5, 7.5]);
+  function buildDay1() {
+    const g = freshGroup('day1');
+    const yP = (p) => p * 22;
+    for (const b of BRACKETS) {
+      const w = xCap(b.hi) - xCap(b.lo) - 0.18, h = yP(b.p);
+      const holds = state.price >= b.lo && state.price < b.hi;
+      const bar = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, 2.2),
+        new THREE.MeshStandardMaterial({ color: '#c9a4f5', roughness: 0.5, transparent: true, opacity: b.derived ? 0.45 : 0.85 }),
+      );
+      bar.position.set((xCap(b.lo) + xCap(b.hi)) / 2, h / 2, 0);
+      bar.add(edgesOf(bar, '#c9a4f5', 0.9));
+      g.add(bar);
+      pickable(bar, 'day1', {
+        key: `b${b.lo}`, title: `First-day close ${bracketLabel(b)}`, value: `${Math.round(b.p * 100)}% chance`,
+        body: b.derived ? 'Derived: the report gives 42% for every bracket above $2T and the three middle brackets; this bracket is what is left over.' : 'Odds from Polymarket’s contract on Anthropic’s market value at the close of its first trading day.',
+        src: 'poly',
+      });
+      const l = label(`${Math.round(b.p * 100)}%${b.derived ? '*' : ''}<b>${esc(bracketLabel(b))}</b>`);
+      l.position.set(bar.position.x, h + 0.15, 0);
+      if (holds) l.element.classList.add('sel');
+      g.add(l);
+    }
+    // the reported pricing range, as a slab on the floor
+    const slab = new THREE.Mesh(
+      new THREE.BoxGeometry(xCap(2.0) - xCap(1.5), 0.04, 4.6),
+      new THREE.MeshBasicMaterial({ color: '#1fefd7', transparent: true, opacity: 0.12 }),
+    );
+    slab.position.set((xCap(1.5) + xCap(2.0)) / 2, 0.02, 0);
+    g.add(slab);
+    const sl = label('Reported valuation range', 'axis', [0.5, 0]);
+    sl.position.set((xCap(1.5) + xCap(2.0)) / 2, 0, 2.6);
+    g.add(sl);
+    // the assumed pricing and the market's average, as thin upright planes
+    const marker = (x, color, text, z) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(0.04, 8.8), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, side: THREE.DoubleSide }));
+      m.position.set(x, 4.4, z);
+      g.add(m);
+      const l = label(text, 'level', [0, 0.5]);
+      l.element.style.color = color;
+      l.position.set(x + 0.12, 8.6, z);
+      g.add(l);
+    };
+    marker(xCap(state.price), '#f6c453', `Assumed pricing ${money(state.price)}`, 1.2);
+    marker(xCap(MARKET_MEAN), '#1fefd7', `Market average close ${money(MARKET_MEAN)}`, -1.2);
+    for (const t of [1.25, 1.5, 1.75, 2.0, 2.25, 2.5]) {
+      const l = label(money(t), 'axis', [0.5, 0]);
+      l.position.set(xCap(t), 0, 1.6);
+      g.add(l);
+    }
+  }
+
+  // --- First 7 days: three scenario paths over trading days
+  const xDay = (d) => -7 + d * 2;
+  const yCap = d3.scaleLinear().domain([1.2, 3.0]).range([0, 7.5]);
+  const LANES = { cold: 3, base: 0, hot: -3 };
+  const SCEN = {
+    cold: { name: 'Cold', color: '#7cc4dc', note: 'Prices fully, opens flat like CoreWeave, then drifts below the offer price as early buyers sell.' },
+    base: { name: 'Base', color: '#1fefd7', note: 'A pop in line with the prediction markets, a peak around day 3, then some giveback, the way Arm traded.' },
+    hot: { name: 'Hot', color: '#f2706b', note: 'Scarce float meets retail demand: a strong pop and a run into days 3 and 4 before profit-taking.' },
+  };
+  function buildWeek() {
+    const g = freshGroup('week');
+    const paths = weekPaths();
+    for (const [k, arr] of Object.entries(paths)) {
+      const z = LANES[k], s = SCEN[k];
+      const pts = arr.map((v, d) => new THREE.Vector3(xDay(d), yCap(Math.min(v, 3.0)), z));
+      const tube = new THREE.Mesh(
+        new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 96, 0.07, 8, false),
+        new THREE.MeshStandardMaterial({ color: s.color, emissive: s.color, emissiveIntensity: 0.25, roughness: 0.4 }),
+      );
+      g.add(tube);
+      // a translucent curtain under each path makes its height readable from any angle
+      const curtain = new THREE.BufferGeometry();
+      const pos = [];
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i], b = pts[i + 1];
+        pos.push(a.x, 0, z, b.x, 0, z, a.x, a.y, z, b.x, 0, z, b.x, b.y, z, a.x, a.y, z);
+      }
+      curtain.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      g.add(new THREE.Mesh(curtain, new THREE.MeshBasicMaterial({ color: s.color, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false })));
+      const peakDay = arr.indexOf(d3.max(arr));
+      arr.forEach((v, d) => {
+        const dot = new THREE.Mesh(new THREE.SphereGeometry(d === peakDay ? 0.17 : 0.11, 16, 12), new THREE.MeshStandardMaterial({ color: s.color, emissive: s.color, emissiveIntensity: 0.3 }));
+        dot.position.copy(pts[d]);
+        g.add(dot);
+        pickable(dot, 'week', {
+          key: `${k}${d}`, title: `${s.name} scenario, ${d === 0 ? 'pricing' : `day ${d}`}`, value: both(v),
+          body: `${pct(v / state.price - 1)} against the assumed pricing of ${both(state.price)}. ${s.note}`, src: k === 'base' ? 'poly' : k === 'cold' ? 'coreweave' : 'figma',
+        });
+      });
+      const peak = label(`${s.name} high<b>${money(arr[peakDay])}</b>`);
+      peak.element.style.color = s.color;
+      peak.position.copy(pts[peakDay]).add(new THREE.Vector3(0, 0.3, 0));
+      g.add(peak);
+    }
+    // reference planes: the assumed pricing and the $2T line
+    const level = (v, color, text) => {
+      const plane = new THREE.Mesh(new THREE.PlaneGeometry(15, 8.5), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.05, side: THREE.DoubleSide, depthWrite: false }));
+      plane.rotation.x = -Math.PI / 2;
+      plane.position.set(0, yCap(v), 0);
+      g.add(plane);
+      const edge = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-7.5, yCap(v), 4.25), new THREE.Vector3(7.5, yCap(v), 4.25)]), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.7 }));
+      g.add(edge);
+      const l = label(text, 'level', [0, 0.5]);
+      l.element.style.color = color;
+      l.position.set(7.7, yCap(v), 4.25);
+      g.add(l);
+    };
+    level(state.price, '#f6c453', `Pricing ${money(state.price)}`);
+    level(2.0, '#8b9099', state.unit === 'share' ? `$2T line, ${usdShare(2.0)}` : '$2T line');
+    // comparables: their day-one move applied to the assumed pricing
+    COMPS.forEach((c, i) => {
+      const v = state.price * (1 + c.pop);
+      const capped = v > 3.0;
+      const p = new THREE.Vector3(xDay(1) + (i - 1) * 0.5, yCap(Math.min(v, 3.0)), -6);
+      const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.16), new THREE.MeshStandardMaterial({ color: '#b8b5ac' }));
+      m.position.copy(p);
+      g.add(m);
+      pickable(m, 'week', { key: `comp${i}`, title: `${c.name}’s day one, applied to ANT`, value: `${pct(c.pop)} would close at ${both(v)}`, body: c.note, src: c.src });
+      const l = label(`${c.name} ${pct(c.pop)}${capped ? `<b>${money(v)}, off the chart</b>` : ''}`, '', [0.5, 1]);
+      l.position.copy(p).add(new THREE.Vector3(0, 0.25, 0));
+      g.add(l);
+    });
+    const cl = label('Comparables’ day one', 'axis', [0.5, 0]);
+    cl.position.set(xDay(1), 0, -5.2);
+    g.add(cl);
+    for (let d = 0; d <= 7; d++) {
+      const l = label(d === 0 ? 'Pricing' : `Day ${d}`, 'axis', [0.5, 0]);
+      l.position.set(xDay(d), 0, 4.6);
+      g.add(l);
+    }
+    for (const [k, z] of Object.entries(LANES)) {
+      const l = label(SCEN[k].name, 'level', [1, 0.5]);
+      l.element.style.color = SCEN[k].color;
+      l.position.set(xDay(0) - 0.4, 0.1, z);
+      g.add(l);
+    }
+  }
+
+  // --- After the dust: one path through the first months, with support and resistance levels
+  const xT = d3.scaleLinear().domain([0, 260]).range([-8, 8]);
+  const yA = d3.scaleLinear().domain([0.8, 2.6]).range([0, 7.5]);
+  function levels() {
+    const a = afterPath();
+    return [
+      { key: 'r2', name: 'First-week high', v: a.high, color: '#f2706b', kind: 'Resistance', body: 'Everyone who bought near the top of the first week is underwater below this line. Rallies tend to stall here as they sell to get out even.' },
+      { key: 'r1', name: '$2T line', v: 2.0, color: '#e9a66c', kind: 'Resistance', body: 'A round number and the line prediction markets are split on. Round numbers attract orders, so they often act as resistance on the way up.' },
+      { key: 'p', name: 'IPO pricing', v: state.price, color: '#f6c453', kind: 'Pivot', body: 'The offer price. Once a stock falls through it, it often turns into resistance; holding above it keeps it as support.' },
+      { key: 'board', name: 'Board’s September mark', v: (71.43 * state.shares) / 1000, color: '#9ccf7f', kind: 'Support', body: 'The $71.43 a share the board put on the stock on September 30, implied by an S-1 footnote. Below it, the stock trades under what insiders recently paid.' },
+      { key: 's1', name: 'Last private round', v: 0.965, color: '#c9a4f5', kind: 'Deep support', body: 'The $965B valuation of May 2026, close to the $58.90 Series H price. Late private investors break even here, which tends to draw buyers.' },
+    ];
+  }
+  function buildAfter() {
+    const g = freshGroup('after');
+    const a = afterPath();
+    const pts = a.pts.map(([d, v]) => new THREE.Vector3(xT(d), yA(v), 0));
+    const tube = new THREE.Mesh(
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 260, 0.07, 8, false),
+      new THREE.MeshStandardMaterial({ color: '#1fefd7', emissive: '#1fefd7', emissiveIntensity: 0.25 }),
+    );
+    g.add(tube);
+    const curtain = new THREE.BufferGeometry();
+    const pos = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i], p1 = pts[i + 1];
+      pos.push(p0.x, 0, 0, p1.x, 0, 0, p0.x, p0.y, 0, p1.x, 0, 0, p1.x, p1.y, 0, p0.x, p0.y, 0);
+    }
+    curtain.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.add(new THREE.Mesh(curtain, new THREE.MeshBasicMaterial({ color: '#1fefd7', transparent: true, opacity: 0.07, side: THREE.DoubleSide, depthWrite: false })));
+
+    for (const L of levels()) {
+      const plane = new THREE.Mesh(new THREE.PlaneGeometry(16, 5), new THREE.MeshBasicMaterial({ color: L.color, transparent: true, opacity: 0.07, side: THREE.DoubleSide, depthWrite: false }));
+      plane.rotation.x = -Math.PI / 2;
+      plane.position.set(0, yA(L.v), 0);
+      g.add(plane);
+      const edge = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-8, yA(L.v), 2.5), new THREE.Vector3(8, yA(L.v), 2.5)]), new THREE.LineBasicMaterial({ color: L.color, transparent: true, opacity: 0.8 }));
+      g.add(edge);
+      pickable(plane, 'after', { key: L.key, title: `${L.kind}: ${L.name}`, value: both(L.v), body: L.body, src: L.key === 's1' ? 'fortune' : L.key === 'board' ? 'protos' : L.key === 'r1' ? 'poly' : 'armWeek' });
+      const l = label(`${L.kind}: ${esc(L.name)} <span style="font-family:Source Code Pro,monospace">${money(L.v)}</span>`, 'level', [0, 0.5]);
+      l.element.style.color = L.color;
+      l.position.set(8.2, yA(L.v), 2.5);
+      g.add(l);
+    }
+    // the trough and the lockup expiry
+    const trough = a.low;
+    const tDot = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12), new THREE.MeshStandardMaterial({ color: '#7cc4dc', emissive: '#7cc4dc', emissiveIntensity: 0.4 }));
+    tDot.position.set(xT(trough[0]), yA(trough[1]), 0);
+    g.add(tDot);
+    pickable(tDot, 'after', { key: 'trough', title: 'Where the correction bottoms', value: both(trough[1]), body: `${Math.round((1 - trough[1] / a.high) * 100)}% below the first-week high, after the lockup dip. Across US tech IPOs since 2000, the median first-year drawdown is about 42%.`, src: 'drawdown' });
+    const tl = label(`Correction low<b>${money(trough[1])}</b>`, '', [0.5, -0.3]);
+    tl.element.style.color = '#7cc4dc';
+    tl.position.copy(tDot.position);
+    g.add(tl);
+    const lock = new THREE.Mesh(new THREE.PlaneGeometry(5, 7.5), new THREE.MeshBasicMaterial({ color: '#f2706b', transparent: true, opacity: 0.06, side: THREE.DoubleSide, depthWrite: false }));
+    lock.rotation.y = Math.PI / 2;
+    lock.position.set(xT(180), 3.75, 0);
+    g.add(lock);
+    pickable(lock, 'after', { key: 'lockup', title: 'Lockup expiry, about day 180', value: '−7.1% on average for tech', body: 'When insiders and early investors may sell, typically 180 days after listing. Anthropic’s exact lockup terms are in the S-1; this marks the common timing. Tech IPOs averaged about −7.1% in the ten trading days after expiry.', src: 'lockup' });
+    const ll = label('Lockup expiry', 'axis', [0.5, 1]);
+    ll.position.set(xT(180), 7.6, 0);
+    g.add(ll);
+    for (const d of [0, 30, 60, 90, 120, 180, 240]) {
+      const l = label(d === 0 ? 'Listing' : `Day ${d}`, 'axis', [0.5, 0]);
+      l.position.set(xT(d), 0, 2.8);
+      g.add(l);
+    }
+  }
+
+  // ---------- panel content per tab ----------
+  const panel = document.getElementById('panel');
+  const detail = document.getElementById('detail');
+  const sliderRow = (id, text, min, max, step, value, out) => `<div class="mt-3">
+      <div class="flex items-center justify-between text-sm"><label for="${id}">${text}</label><span id="${id}-out" class="font-mono text-xs text-muted-foreground">${out}</span></div>
+      <input id="${id}" class="slider mt-2" type="range" min="${min}" max="${max}" step="${step}" value="${value}" />
+    </div>`;
+  const head = (title, sub) => `<div class="flex items-start gap-3">
+      <div class="min-w-0 flex-1"><h1 class="text-lg font-semibold leading-tight">${title}</h1><p class="mt-1 font-mono text-xs text-muted-foreground">${sub}</p></div>
+      <button class="sheet-toggle inline-flex h-8 items-center rounded-md border border-input px-3 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-expanded="${panel.classList.contains('open')}">Details</button>
+    </div>`;
+
+  const unitBtn = (unit, text) => `<button data-unit="${unit}" data-state="${state.unit === unit ? 'active' : 'inactive'}" aria-pressed="${state.unit === unit}" class="inline-flex flex-1 items-center justify-center rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow">${text}</button>`;
+  const priceBlock = () => `<div class="mt-3 rounded-lg border p-3">
+      <div class="flex items-center justify-between gap-3"><span class="text-sm font-medium">Prices</span>
+        <div class="inline-flex h-8 w-52 items-center rounded-lg bg-muted p-1 text-muted-foreground">${unitBtn('share', 'Per share')}${unitBtn('cap', 'Company value')}</div></div>
+      ${sliderRow('sl-shares', 'Shares after listing', 16.9, 18.5, 0.02, state.shares, `${state.shares.toFixed(2)}B`)}
+      <p class="mt-2 text-xs leading-relaxed text-muted-foreground">The S-1 implies about 16.94B fully diluted shares on June 30 (${cite('kandia')}). Shares sold in the IPO, converted notes and settled RSUs add to that, which lowers the price per share (${cite('fortune')}). The final count arrives with the price range.</p>
+      <h3 class="mt-3 text-xs font-medium text-muted-foreground">Reference prices per share</h3>
+      <ul class="mt-1 space-y-1 text-sm">${REFS.map((r) => `<li class="flex items-baseline justify-between gap-3"><span>${esc(r.name)} <span class="text-xs">(${cite(r.src)})</span></span><span class="shrink-0 font-mono text-xs">$${r.p.toFixed(2)}</span></li>`).join('')}</ul>
+    </div>`;
+
+  function renderPanel() {
+    const t = state.tab;
+    if (t === 'filing') {
+      panel.innerHTML = `${head('What Anthropic’s S-1 shows', 'Filed October 26, 2026, Nasdaq: ANT')}
+        <div class="collapsible">
+          <p class="mt-3 text-sm leading-relaxed text-ink-2">Each cube’s volume follows its dollar amount, so the jump from revenue to commitments to valuation reads as a jump in size. The net loss cube is mostly glass: the solid core is the part that is not a non-cash accounting charge.</p>
+          <h2 class="mt-4 text-xs font-medium text-muted-foreground">Revenue by period, US$ billions</h2>
+          <div id="mini" class="mini mt-1" style="height:110px"></div>
+          <h2 class="mt-3 text-xs font-medium text-muted-foreground">Also in the filing</h2>
+          <dl class="mt-1 space-y-2 text-sm">${FACTS.map(([k, v, s]) => `<div><dt class="text-xs text-muted-foreground">${esc(k)}</dt><dd>${esc(v)} <span class="text-xs">(${cite(s)})</span></dd></div>`).join('')}</dl>
+          <p class="mt-3 text-xs text-muted-foreground">Hover or tap a cube for its source.</p>
+        </div>`;
+      drawRevenue();
+    } else if (t === 'day1') {
+      panel.innerHTML = `${head('What to expect on day one', 'Target: the week of November 16, 2026')}
+        <div class="collapsible">
+          ${priceBlock()}
+          <ol class="mt-3 space-y-2 text-sm">
+            <li class="flex gap-2.5"><i class="fi fi-rr-document-signed mt-0.5 text-muted-foreground"></i><span><b class="font-medium">Amended S-1.</b> Adds the price range and share count, which the first filing leaves blank (${cite('news')}).</span></li>
+            <li class="flex gap-2.5"><i class="fi fi-rr-users mt-0.5 text-muted-foreground"></i><span><b class="font-medium">Roadshow and pricing.</b> Goldman Sachs and Morgan Stanley set the price the night before trading. The raise could be as much as $100B (${cite('fool')}).</span></li>
+            <li class="flex gap-2.5"><i class="fi fi-rr-bell-ring mt-0.5 text-muted-foreground"></i><span><b class="font-medium">First trade.</b> Reports point to the week of November 16, with November 19 or 20 floated and a debut before Thanksgiving (${cite('poly')}).</span></li>
+          </ol>
+          <p class="mt-3 text-sm leading-relaxed text-ink-2">With no share count yet, there is no price per share to estimate, so this page works in market value. The bars show what Polymarket traders expect the company to be worth at the close of its first day; derived brackets are marked *.</p>
+          <div class="mt-3 grid grid-cols-2 gap-2">
+            <div class="rounded-md border px-3 py-2"><div class="text-xs text-muted-foreground">Market average close</div><div class="font-mono text-base text-primary">${money(MARKET_MEAN)}</div></div>
+            <div class="rounded-md border px-3 py-2"><div class="text-xs text-muted-foreground">Chance it closes over ${money(2.0)}</div><div class="font-mono text-base">42%</div></div>
+          </div>
+          ${sliderRow('sl-price', 'Assume it prices at', 1.5, 2.0, 0.01, state.price, both(state.price))}
+          <p class="mt-2 text-xs text-muted-foreground">The pricing you set here carries into the next two tabs. Reports put it between $1.5T and $2T (${cite('investing')}).</p>
+        </div>`;
+    } else if (t === 'week') {
+      const paths = weekPaths();
+      const rows = Object.entries(paths).map(([k, arr]) => `<tr class="border-t"><td class="py-1.5 pr-2"><span class="inline-flex items-center gap-1.5"><span class="size-2 rounded-full" style="background:${SCEN[k].color}"></span>${SCEN[k].name}</span></td><td class="py-1.5 text-right font-mono text-xs">${money(arr[1])}</td><td class="py-1.5 text-right font-mono text-xs">${money(d3.max(arr))}</td><td class="py-1.5 text-right font-mono text-xs">${money(arr[7])}</td></tr>`).join('');
+      panel.innerHTML = `${head('How high in the first 7 days', `Priced at ${both(state.price)}, assumed`)}
+        <div class="collapsible">
+          ${priceBlock()}
+          <p class="mt-3 text-sm leading-relaxed text-ink-2">Three paths for the first week of trading. Big tech debuts have ranged from flat (CoreWeave) to about 25% up (Arm) to about 250% up (Figma), and early pops often fade within days (${cite('square')}).</p>
+          <table class="mt-3 w-full text-sm"><thead><tr class="text-xs text-muted-foreground"><th class="pb-1 text-left font-normal">Scenario</th><th class="pb-1 text-right font-normal">Day 1</th><th class="pb-1 text-right font-normal">7-day high</th><th class="pb-1 text-right font-normal">Day 7</th></tr></thead><tbody>${rows}</tbody></table>
+          ${sliderRow('sl-pop', 'Base case day-one pop', 0, 0.5, 0.01, state.pop, pct(state.pop))}
+          ${sliderRow('sl-price', 'Assumed pricing', 1.5, 2.0, 0.01, state.price, both(state.price))}
+          <p class="mt-3 text-xs leading-relaxed text-muted-foreground">The base pop starts at +12%, which lands day one near the prediction-market average of ${both(MARKET_MEAN)} (${cite('poly')}). A raise of up to $100B is a small float for a company this size, which can feed a pop; that is a reading, not a figure from the sources.</p>
+        </div>`;
+    } else {
+      const a = afterPath();
+      panel.innerHTML = `${head('The correction, and where resistance sits', 'The months after listing, base case')}
+        <div class="collapsible">
+          ${priceBlock()}
+          <p class="mt-3 text-sm leading-relaxed text-ink-2">After the first week the base path drifts down to a correction low, dips again when the lockup ends, then recovers part of the way. The planes are the levels traders watch.</p>
+          <ul class="mt-3 space-y-1.5 text-sm">${levels().map((L) => `<li><button data-pick="${L.key}" class="flex w-full items-baseline justify-between gap-3 rounded-md px-2 py-1 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><span class="inline-flex items-center gap-2"><span class="h-0.5 w-3 rounded" style="background:${L.color}"></span>${esc(L.kind)}: ${esc(L.name)}</span><span class="font-mono text-xs text-muted-foreground">${money(L.v)}</span></button></li>`).join('')}
+            <li><button data-pick="trough" class="flex w-full items-baseline justify-between gap-3 rounded-md px-2 py-1 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><span class="inline-flex items-center gap-2"><span class="size-2 rounded-full bg-cold"></span>Correction low</span><span class="font-mono text-xs text-muted-foreground">${money(a.low[1])}</span></button></li></ul>
+          ${sliderRow('sl-dd', 'Drawdown from the first-week high', 0.1, 0.6, 0.01, state.drawdown, `−${Math.round(state.drawdown * 100)}%`)}
+          <h2 class="mt-4 text-xs font-medium text-muted-foreground">Base rates behind the path</h2>
+          <ul class="mt-1 space-y-1.5 text-sm text-ink-2">
+            <li>Median first-year drawdown for US tech IPOs since 2000: about −42% (${cite('drawdown')})</li>
+            <li>Ten days after lockup expiry, tech IPOs averaged about −7.1% (${cite('lockup')})</li>
+            <li>Five of the ten biggest IPOs ever were down after a year (${cite('fool')})</li>
+            <li>Arm gave back its 25% pop within a week (${cite('armWeek')})</li>
+          </ul>
+        </div>`;
+    }
+    for (const [id, key, fmt] of [['sl-price', 'price', both], ['sl-pop', 'pop', pct], ['sl-dd', 'drawdown', (v) => `−${Math.round(v * 100)}%`], ['sl-shares', 'shares', (v) => `${v.toFixed(2)}B`]]) {
+      const input = document.getElementById(id);
+      if (!input) continue;
+      const sync = () => input.style.setProperty('--fill', `${((input.value - input.min) / (input.max - input.min)) * 100}%`);
+      sync();
+      input.addEventListener('input', () => {
+        state[key] = Number(input.value);
+        document.getElementById(`${id}-out`).textContent = fmt(state[key]);
+        sync();
+        rebuild();
+      });
+      input.addEventListener('change', () => renderPanel());
+    }
+    panel.querySelector('.sheet-toggle')?.addEventListener('click', (ev) => {
+      panel.classList.toggle('open');
+      ev.currentTarget.setAttribute('aria-expanded', String(panel.classList.contains('open')));
+    });
+  }
+  panel.addEventListener('click', (ev) => {
+    const u = ev.target.closest('[data-unit]');
+    if (u) {
+      state.unit = u.dataset.unit;
+      renderPanel();
+      return rebuild();
+    }
+    const b = ev.target.closest('[data-pick]');
+    if (!b) return;
+    const mesh = pickables.find((m) => m.userData.group === state.tab && m.userData.info.key === b.dataset.pick);
+    if (mesh) select(mesh.userData.info);
+  });
+
+  function drawRevenue() {
+    const el = document.getElementById('mini');
+    const w = el.clientWidth || 290, h = 110;
+    const svg = d3.select(el).append('svg').attr('width', w).attr('height', h);
+    const x = d3.scaleBand().domain(REV_BARS.map((d) => d[0])).range([0, w]).padding(0.3);
+    const y = d3.scaleLinear().domain([0, 12.5]).range([h - 18, 4]);
+    svg.selectAll('rect').data(REV_BARS).join('rect')
+      .attr('x', (d) => x(d[0])).attr('width', x.bandwidth()).attr('y', (d) => y(d[1])).attr('height', (d) => y(0) - y(d[1]))
+      .attr('rx', 2).attr('fill', '#9ccf7f').attr('fill-opacity', 0.85);
+    svg.selectAll('text.v').data(REV_BARS).join('text').attr('class', 'v')
+      .attr('x', (d) => x(d[0]) + x.bandwidth() / 2).attr('y', (d) => y(d[1]) - 3).attr('text-anchor', 'middle').text((d) => `$${d[1]}B`);
+    svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${h - 18})`).call(d3.axisBottom(x).tickSize(0)).select('.domain').remove();
+  }
+
+  // ---------- details on hover or tap ----------
+  function renderDetail() {
+    const info = state.hover ?? state.selected;
+    if (!info) { detail.hidden = true; document.body.dataset.detail = ''; return; }
+    detail.hidden = false;
+    document.body.dataset.detail = 'open';
+    const [title, outlet, href] = SRC[info.src];
+    detail.innerHTML = `<div class="flex items-start gap-3">
+        <div class="min-w-0 flex-1"><h2 class="text-base font-semibold leading-tight">${esc(info.title)}</h2><p class="mt-1 font-mono text-base text-amber">${esc(info.value)}</p></div>
+        <button data-close class="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Close details"><i class="fi fi-rr-cross-small"></i></button>
+      </div>
+      <p class="mt-2 text-sm leading-relaxed text-ink-2">${esc(info.body)}</p>
+      <a href="${href}" target="_blank" rel="noopener noreferrer" class="mt-3 flex items-start gap-2 rounded-md border px-3 py-2 text-xs hover:bg-accent"><i class="fi fi-rr-link mt-0.5 text-muted-foreground"></i><span><span class="text-primary">${esc(title)}</span><span class="mt-0.5 block text-muted-foreground">${esc(outlet)}</span></span></a>`;
+  }
+  function select(info) {
+    state.selected = info && state.selected?.key === info.key ? null : info;
+    renderDetail();
+  }
+  detail.addEventListener('click', (ev) => { if (ev.target.closest('[data-close]')) { state.selected = null; state.hover = null; renderDetail(); } });
+
+  const ray = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  const dom = labels.domElement;
+  const pick = (ev) => {
+    const r = dom.getBoundingClientRect();
+    ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObjects(pickables.filter((m) => m.userData.group === state.tab), false)[0];
+    return hit?.object.userData.info ?? null;
+  };
+  let down = null;
+  dom.addEventListener('pointermove', (ev) => {
+    if (ev.buttons || ev.pointerType === 'touch') return;
+    const info = pick(ev);
+    if (info?.key !== state.hover?.key) {
+      state.hover = info;
+      dom.style.cursor = info ? 'pointer' : '';
+      renderDetail();
+    }
+  });
+  dom.addEventListener('pointerleave', () => { if (state.hover) { state.hover = null; renderDetail(); } });
+  dom.addEventListener('pointerdown', (ev) => { down = [ev.clientX, ev.clientY]; });
+  dom.addEventListener('pointerup', (ev) => {
+    if (!down) return;
+    const moved = Math.hypot(ev.clientX - down[0], ev.clientY - down[1]);
+    down = null;
+    if (moved < 6) select(pick(ev));
+  });
+
+  // ---------- tabs, camera and resize ----------
+  const HOMES = {
+    filing: { pos: [0, 4.5, 15], target: [0, 1.6, 0], half: 9.5 },
+    day1: { pos: [-5, 9, 16], target: [0, 2.8, 0], half: 10.5 },
+    week: { pos: [-7, 8.5, 15], target: [0, 2.6, 0], half: 10 },
+    after: { pos: [0, 9.5, 17], target: [1.2, 2.4, 0], half: 11.5 },
+  };
+  const tween = { t: 1, fromPos: new THREE.Vector3(), fromTarget: new THREE.Vector3(), toPos: new THREE.Vector3(), toTarget: new THREE.Vector3() };
+  function goHome(animate) {
+    const h = HOMES[state.tab];
+    const target = new THREE.Vector3(...h.target);
+    const dir = new THREE.Vector3(...h.pos).sub(target);
+    const w = stageEl.clientWidth;
+    const usable = w >= 900 ? (w - 680) / w : 0.95;
+    const tanX = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
+    dir.setLength(Math.max(dir.length(), h.half / (tanX * usable)));
+    tween.fromPos.copy(camera.position);
+    tween.fromTarget.copy(controls.target);
+    tween.toPos.copy(target).add(dir);
+    tween.toTarget.copy(target);
+    tween.t = animate && !reduceMotion ? 0 : 1;
+    if (tween.t === 1) { camera.position.copy(tween.toPos); controls.target.copy(tween.toTarget); }
+  }
+  function rebuild() {
+    if (state.tab === 'filing') buildFiling();
+    if (state.tab === 'day1') buildDay1();
+    if (state.tab === 'week') buildWeek();
+    if (state.tab === 'after') buildAfter();
+    setGroupVisible(state.tab, true);
+    state.selected = null;
+    renderDetail();
+  }
+  function show(tab, animate = true) {
+    state.tab = tab;
+    state.selected = state.hover = null;
+    for (const b of document.querySelectorAll('[role="tab"]')) {
+      const on = b.dataset.tab === tab;
+      b.dataset.state = on ? 'active' : 'inactive';
+      b.setAttribute('aria-selected', String(on));
+      b.tabIndex = on ? 0 : -1;
+    }
+    rebuild();
+    for (const name of Object.keys(groups)) setGroupVisible(name, name === tab);
+    renderPanel();
+    renderDetail();
+    goHome(animate);
+    const url = new URL(location.href);
+    url.searchParams.set('view', tab);
+    history.replaceState(null, '', url);
+  }
+  for (const b of document.querySelectorAll('[role="tab"]')) b.addEventListener('click', () => show(b.dataset.tab));
+
+  const sourcesBtn = document.getElementById('sources-btn');
+  const sources = document.getElementById('sources');
+  const toggleSources = (open) => { sources.hidden = !open; sourcesBtn.setAttribute('aria-expanded', String(open)); };
+  sourcesBtn.addEventListener('click', () => toggleSources(sources.hidden));
+  addEventListener('pointerdown', (ev) => {
+    if (!sources.hidden && !sources.contains(ev.target) && !sourcesBtn.contains(ev.target)) toggleSources(false);
+  });
+  addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Escape') return;
+    toggleSources(false);
+    state.selected = state.hover = null;
+    renderDetail();
+  });
+
+  function resize() {
+    const w = stageEl.clientWidth, h = stageEl.clientHeight;
+    renderer.setSize(w, h);
+    labels.setSize(w, h);
+    // keep the scene centred between the two side panels on wide screens
+    if (w >= 900) camera.setViewOffset(w, h, -20, 0, w, h);
+    else camera.setViewOffset(w, h, 0, 90, w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  addEventListener('resize', () => { resize(); goHome(false); });
+
+  resize();
+  const initial = new URLSearchParams(location.search).get('view');
+  show(HOMES[initial] ? initial : 'filing', false);
+
+  const clock = new THREE.Clock();
+  function frame() {
+    const dt = Math.min(clock.getDelta(), 0.05);
+    if (tween.t < 1) {
+      tween.t = Math.min(1, tween.t + dt / 0.9);
+      const e = d3.easeCubicInOut(tween.t);
+      camera.position.lerpVectors(tween.fromPos, tween.toPos, e);
+      controls.target.lerpVectors(tween.fromTarget, tween.toTarget, e);
+    }
+    controls.update();
+    renderer.render(scene, camera);
+    labels.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>
