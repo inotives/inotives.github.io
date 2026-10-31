@@ -187,4 +187,15 @@ export const PLAYGROUND_MOCKS = [
       { name: 'Polymarket odds', href: 'https://finance.yahoo.com/markets/stocks/articles/polymarket-traders-cool-2-trillion-110000808.html' },
     ],
   },
+  {
+    id: 'chart-agent',
+    project: 'Chat analytics',
+    name: 'Chart agent',
+    date: '2026-11-01',
+    href: '/mocks/chart-agent.html',
+    preview: '/mocks/previews/chart-agent.jpg',
+    description:
+      'A chat window where an analytics agent answers with charts. It calls tools on the MCP servers you have connected, then writes its reply in OpenUI Lang, which renders line by line into a card with a D3 or Three.js chart. Open a chart to explore it, save it to My charts and pull it back later with fresh data. A mock: replies are scripted and every figure is generated.',
+    libraries: ['openui', 'd3', 'threejs', 'shadcn', 'tailwind', 'flaticon'],
+  },
 ]
