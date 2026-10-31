@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Memory Sphere</title>
+<!--
+  Agent Core mock: memory sphere. One self-contained page; all data below is mock.
+  Three.js r180 (WebGL lines + CSS2D icon nodes), Flaticon UIcons 3.0.0 regular-rounded,
+  Geist from Google Fonts. Panels use shadcn/ui-style zinc tokens in plain CSS.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    }
+  }
+</script>
+<style>
+  :root {
+    --bg: #1d222b;
+    --bg-2: #262c37;
+    --card: rgb(22 26 33 / 0.78);
+    --border: rgb(148 163 184 / 0.16);
+    --ink: #e6e9ef;
+    --ink-2: #b4bccb;
+    --fog: #7c8698;
+    --accent: #8ecae6;
+    --font: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, monospace;
+
+    /* inner layer: memory domains */
+    --research: #8ecae6;
+    --data: #86a8e0;
+    --ai: #c8a2dc;
+    --projects: #ec9a72;
+    --concepts: #94d8c4;
+    --memos: #d9b8a4;
+    /* outer layer */
+    --apps: #a9c78b;
+    --skills: #f2cf86;
+    --routines: #e4e8f1;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: radial-gradient(ellipse at 50% 45%, var(--bg-2), var(--bg) 70%);
+    background-color: var(--bg);
+    color: var(--ink);
+    font: 400 13px/1.45 var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body { overflow: hidden; }
+
+  button { font: inherit; color: inherit; }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* --- scene --- */
+  /* isolate: CSS2DRenderer gives labels large z-indexes; keep them under the panels and controls */
+  #scene { position: fixed; inset: 0; isolation: isolate; }
+  #scene canvas { display: block; }
+  #labels { position: absolute; inset: 0; pointer-events: none; }
+
+  .node {
+    pointer-events: auto;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+
+  .node-chip {
+    display: grid;
+    place-items: center;
+    width: var(--size);
+    height: var(--size);
+    border: 1px solid color-mix(in oklab, var(--c) 70%, transparent);
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--c) 16%, rgb(20 24 31 / 0.9));
+    box-shadow: 0 0 calc(var(--size) * 0.55) color-mix(in oklab, var(--c) 38%, transparent);
+    color: var(--c);
+    transform: scale(var(--depth, 1));
+    opacity: var(--fade, 1);
+    transition: opacity 160ms ease, filter 160ms ease;
+  }
+
+  .node-chip i { display: block; font-size: calc(var(--size) * 0.46); line-height: 1; }
+
+  .node.memory { --size: 24px; }
+  .node.outer { --size: 36px; }
+
+  .node:hover .node-chip,
+  .node.is-selected .node-chip {
+    background: color-mix(in oklab, var(--c) 30%, rgb(20 24 31 / 0.9));
+    box-shadow: 0 0 22px color-mix(in oklab, var(--c) 70%, transparent);
+  }
+
+  .node.is-selected .node-chip { border-color: #fff; }
+
+  .has-focus .node:not(.is-lit) .node-chip { opacity: 0.16; filter: saturate(0.4); }
+
+  .node.is-hidden { visibility: hidden; }
+
+  #tooltip {
+    position: fixed;
+    z-index: 20;
+    max-width: 260px;
+    padding: 6px 9px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: rgb(15 18 24 / 0.94);
+    color: var(--ink);
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 10px));
+    transition: opacity 120ms ease;
+  }
+  #tooltip.is-on { opacity: 1; }
+  #tooltip span { display: block; color: var(--fog); font-size: 11px; }
+
+  /* --- panels --- */
+  .panel {
+    position: fixed;
+    top: 20px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 300px;
+    max-height: calc(100% - 40px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .panel-left { left: 20px; }
+  .panel-right { right: 20px; }
+
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    background: var(--card);
+    backdrop-filter: blur(10px);
+  }
+
+  .card-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0 0 10px;
+    color: var(--fog);
+    font: 500 11px/1.2 var(--mono);
+  }
+
+  .brand h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  .brand p { margin: 4px 0 0; color: var(--fog); }
+  .brand a { color: var(--ink-2); text-underline-offset: 3px; }
+  .brand a:hover { color: var(--accent); }
+
+  .legend { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+  .legend + .card-title { margin-top: 14px; }
+
+  .legend button {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    border: 0;
+    border-radius: 6px;
+    padding: 5px 6px;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+  }
+  .legend button:hover { background: rgb(148 163 184 / 0.1); }
+  .legend button[aria-pressed='false'] { color: var(--fog); }
+  .legend button[aria-pressed='false'] .swatch { background: none; }
+  .legend .count { margin-left: auto; color: var(--fog); font: 12px var(--mono); }
+
+  .swatch {
+    width: 10px;
+    height: 10px;
+    flex: none;
+    border: 1px solid var(--c);
+    border-radius: 50%;
+    background: var(--c);
+  }
+
+  .hint { margin: 10px 0 0; color: var(--fog); font-size: 12px; }
+
+  .rank { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+
+  /* let long titles shrink to an ellipsis instead of widening the list */
+  .rank, .linked, .timeline { grid-template-columns: minmax(0, 1fr); }
+
+  .row-button {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    border: 0;
+    border-radius: 6px;
+    padding: 6px;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+  }
+  .row-button:hover { background: rgb(148 163 184 / 0.1); }
+  .row-button i { width: 16px; flex: none; color: var(--c); font-size: 14px; line-height: 1; text-align: center; }
+  .row-button .meta { flex: none; margin-left: auto; color: var(--fog); font: 12px var(--mono); white-space: nowrap; }
+  .row-button .name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* detail */
+
+  .detail-head { display: flex; gap: 12px; align-items: flex-start; }
+  .detail-icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border: 1px solid color-mix(in oklab, var(--c) 70%, transparent);
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--c) 18%, transparent);
+    color: var(--c);
+    font-size: 18px;
+  }
+  .detail-icon i { line-height: 1; }
+  .detail-head h2 { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.3; }
+  .detail-head p { margin: 2px 0 0; color: var(--fog); font-size: 12px; }
+  .detail-copy { margin: 12px 0 0; color: var(--ink-2); }
+
+  .facts { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; }
+  .facts li {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 2px 7px;
+    color: var(--ink-2);
+    font: 11px var(--mono);
+  }
+
+  .linked-title { margin: 14px 0 4px; color: var(--fog); font: 500 11px var(--mono); }
+  .linked { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; }
+
+  /* timeline */
+  .timeline { position: relative; display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+  .timeline .time { width: 40px; flex: none; color: var(--fog); font: 12px var(--mono); }
+  .timeline .state { margin-left: auto; font: 11px var(--mono); }
+  .state-done { color: var(--apps); }
+  .state-running { color: var(--accent); }
+  .state-failed { color: #f28b82; }
+  .state-next { color: var(--fog); }
+  .now {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 2px 6px;
+    color: var(--accent);
+    font: 11px var(--mono);
+  }
+  .now::after { content: ''; flex: 1; height: 1px; background: color-mix(in oklab, var(--accent) 50%, transparent); }
+
+  /* view controls */
+  .controls {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    z-index: 10;
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--card);
+    backdrop-filter: blur(10px);
+    transform: translateX(-50%);
+  }
+  .controls button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    border-radius: 6px;
+    padding: 6px 10px;
+    background: none;
+    color: var(--ink-2);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .controls button:hover { color: var(--ink); }
+  .controls button[aria-pressed='true'] { background: rgb(148 163 184 / 0.16); color: var(--ink); }
+  .controls i { line-height: 1; }
+
+  /* detail drawer: slides in from the right when a node is selected */
+  .drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    width: min(380px, 100%);
+    overflow-y: auto;
+    border-left: 1px solid var(--border);
+    padding: 16px 18px 24px;
+    background: rgb(17 20 26 / 0.86);
+    backdrop-filter: blur(14px);
+    box-shadow: -24px 0 48px rgb(0 0 0 / 0.35);
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 280ms;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .drawer.is-open {
+    transform: none;
+    visibility: visible;
+    transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s;
+  }
+  .drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .drawer-head .card-title { margin: 0; }
+  .drawer-close {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: none;
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .drawer-close:hover { color: var(--ink); background: rgb(148 163 184 / 0.1); }
+  .drawer .detail-head h2 { font-size: 17px; }
+  .drawer .detail-icon { width: 46px; height: 46px; font-size: 20px; }
+
+  @media (max-width: 960px) {
+    body { overflow: auto; }
+    #scene { position: relative; height: 64vh; }
+    .panel {
+      position: static;
+      width: auto;
+      max-height: none;
+      overflow: visible;
+      padding: 0 16px 16px;
+    }
+    .panel-left { padding-top: 16px; }
+    .controls { position: absolute; top: calc(64vh - 52px); bottom: auto; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .node-chip, #tooltip, .drawer, .drawer.is-open { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div id="scene"><div id="labels"></div></div>
+<div id="tooltip" role="status" aria-live="polite"></div>
+
+<aside class="panel panel-left" aria-label="Layers">
+  <div class="card brand">
+    <h1>Memory sphere</h1>
+    <p>Agent Core mock: memory in the core, the tools that use it on the shell. <a href="/playground">Back to playground</a></p>
+  </div>
+  <div class="card">
+    <h2 class="card-title"><span>Outer layer</span><span id="outer-total"></span></h2>
+    <ul class="legend" id="legend-outer"></ul>
+    <h2 class="card-title"><span>Inner layer: memory</span><span id="inner-total"></span></h2>
+    <ul class="legend" id="legend-inner"></ul>
+    <p class="hint">Click a node for its details. Toggle a group to hide it. Drag to rotate, scroll to zoom.</p>
+  </div>
+  <div class="card">
+    <h2 class="card-title"><span>Most connected notes</span><span>links</span></h2>
+    <ol class="rank" id="ranked"></ol>
+  </div>
+</aside>
+
+<aside class="panel panel-right" aria-label="Routines">
+  <div class="card">
+    <h2 class="card-title"><span>Today: routines</span><span id="routine-summary"></span></h2>
+    <ol class="timeline" id="timeline"></ol>
+  </div>
+</aside>
+
+<aside class="drawer" id="drawer" aria-label="Node details" inert>
+  <div class="drawer-head">
+    <p class="card-title" id="drawer-kind"></p>
+    <button type="button" class="drawer-close" id="drawer-close" aria-label="Close details">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+    </button>
+  </div>
+  <div id="detail" aria-live="polite"></div>
+</aside>
+
+<div class="controls" role="group" aria-label="View">
+  <button type="button" id="rotate" aria-pressed="true"><i class="fi fi-rr-refresh"></i>Auto-rotate</button>
+  <button type="button" id="reset"><i class="fi fi-rr-eye"></i>Reset view</button>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// ---------------------------------------------------------------------------
+// Mock data
+// ---------------------------------------------------------------------------
+const GROUPS = {
+  research: { label: 'Research', layer: 'inner', color: '--research' },
+  data: { label: 'Data systems', layer: 'inner', color: '--data' },
+  ai: { label: 'AI engineering', layer: 'inner', color: '--ai' },
+  projects: { label: 'Projects', layer: 'inner', color: '--projects' },
+  concepts: { label: 'Concepts', layer: 'inner', color: '--concepts' },
+  memos: { label: 'Memos', layer: 'inner', color: '--memos' },
+  apps: { label: 'Apps', layer: 'outer', color: '--apps' },
+  skills: { label: 'Skills', layer: 'outer', color: '--skills' },
+  routines: { label: 'Routines', layer: 'outer', color: '--routines' },
+};
+
+// [id, group, icon, title, summary]
+const MEMORY = [
+  ['attention', 'research', 'book', 'Attention Is All You Need: paper notes', 'Self-attention, multi-head attention and positional encoding, and why the transformer dropped recurrence.'],
+  ['scaling', 'research', 'chart-line-up', 'Scaling laws for language models', 'Loss falls as a power law in parameters, data and compute; Chinchilla rebalances data against size.'],
+  ['rag-paper', 'research', 'books', 'Retrieval-augmented generation summary', 'Pairing a retriever with a generator so answers cite fresh, external documents.'],
+  ['react', 'research', 'robot', 'ReAct: reasoning and acting', 'Interleaving thoughts with tool calls so an agent can look things up mid-answer.'],
+  ['mcp-spec', 'research', 'plug', 'Model Context Protocol walkthrough', 'Servers expose tools, resources and prompts; clients negotiate capabilities over JSON-RPC.'],
+  ['raft', 'research', 'network', 'Raft consensus explained', 'Leader election, log replication and safety, the readable alternative to Paxos.'],
+  ['dataflow', 'research', 'diagram-project', 'The Dataflow model paper', 'Windowing, watermarks and triggers as one model for batch and streaming.'],
+  ['lakehouse', 'research', 'layers', 'The lakehouse architecture paper', 'Warehouse features on open table formats over object storage.'],
+  ['iceberg', 'data', 'database', 'Iceberg compaction and snapshot expiry', 'Rewrite small files, expire old snapshots and keep metadata lean.'],
+  ['cdc', 'data', 'data-transfer', 'CDC from Postgres with Debezium', 'Logical replication into Kafka, then merged into lake tables.'],
+  ['dbt-staging', 'data', 'code-branch', 'dbt staging layer conventions', 'One staging model per source table: rename, cast and nothing else.'],
+  ['duckdb', 'data', 'cube', 'DuckDB extensions we rely on', 'httpfs, iceberg and vss make local analytics reach the lake.'],
+  ['parquet', 'data', 'file-csv', 'Parquet partitioning and file sizing', 'Partition on low-cardinality columns; aim for 128 to 512 MB files.'],
+  ['kafka', 'data', 'paper-plane', 'Kafka topic naming and retention', 'domain.entity.event names, with retention set by replay needs.'],
+  ['quality', 'data', 'list-check', 'Data quality checks with dbt tests', 'Uniqueness, not-null and freshness tests as the first line of defence.'],
+  ['sql-eval', 'ai', 'flask', 'Text-to-SQL eval harness design', 'Execution accuracy over a golden set, with per-schema breakdowns.'],
+  ['reranker', 'ai', 'filter', 'Reranker ablation: cross-encoder vs LLM judge', 'Cross-encoders win on latency; LLM judges win on long, messy queries.'],
+  ['caching', 'ai', 'time-past', 'Prompt caching cost study', 'Stable prefixes first; cache hits cut long-context cost by most of the bill.'],
+  ['guardrails', 'ai', 'shield-check', 'Guardrails for read-only SQL agents', 'One SELECT per call, a role with no write grants, and row limits.'],
+  ['embeddings-shootout', 'ai', 'chart-scatter', 'Embedding model shootout for code and SQL', 'Recall at 10 across five models on schema and query retrieval.'],
+  ['judge', 'ai', 'checkbox', 'LLM-as-judge calibration', 'Agreement with human labels before trusting automated scores.'],
+  ['migration', 'projects', 'rocket', 'Lakehouse migration', 'Moving marts from the warehouse onto Iceberg tables, domain by domain.'],
+  ['helpdesk', 'projects', 'comment-alt', 'Data helpdesk agent', 'An agent that answers data questions with read-only SQL and citations.'],
+  ['eval-warehouse', 'projects', 'table-list', 'Eval results warehouse', 'Every eval run and judge score in one queryable schema.'],
+  ['memory-search', 'projects', 'search', 'Memory graph search service', 'Hybrid full-text and vector search over these notes.'],
+  ['cost-obs', 'projects', 'coins', 'Cost observability dashboard', 'Warehouse credits and token spend by team and workflow.'],
+  ['embedding', 'concepts', 'dna', 'Embedding', 'A vector that places similar meanings close together.'],
+  ['transformer', 'concepts', 'microchip', 'Transformer', 'The attention-based architecture behind modern language models.'],
+  ['kv-cache', 'concepts', 'bolt', 'KV cache', 'Stored keys and values that make each new token cheaper to generate.'],
+  ['vector-db', 'concepts', 'grid', 'Vector database', 'An index built for nearest-neighbour search over embeddings.'],
+  ['chunking', 'concepts', 'apps', 'Chunking', 'Splitting documents into retrievable pieces without losing context.'],
+  ['hallucination', 'concepts', 'lightbulb-on', 'Hallucination', 'Fluent output that is not grounded in the input or the world.'],
+  ['function-calling', 'concepts', 'api', 'Function calling', 'Models emitting structured calls that the host executes.'],
+  ['backfill', 'memos', 'memo-pad', 'Checklist: before running a backfill', 'Freeze writers, size the warehouse, dry-run one partition.'],
+  ['uv', 'memos', 'terminal', 'uv Python toolchain quickstart', 'Install, lock and run with one fast tool.'],
+  ['psql', 'memos', 'file-code', 'psql tips for large result sets', 'FETCH_COUNT, \\copy and pagers for queries that return millions of rows.'],
+];
+
+// [id, group, icon, title, summary, facts, memory links]
+const OUTER = [
+  ['query-lab', 'apps', 'terminal', 'Query Lab', 'SQL scratchpad across DuckDB, Postgres and the lake.', ['42 sessions / 7d'], ['duckdb', 'psql', 'guardrails', 'parquet']],
+  ['lineage', 'apps', 'sitemap', 'Lineage Explorer', 'dbt and pipeline lineage as an interactive graph.', ['beta'], ['dbt-staging', 'cdc', 'migration']],
+  ['eval-board', 'apps', 'chart-histogram', 'Eval Board', 'Eval runs, judge scores and regressions over time.', ['new'], ['sql-eval', 'judge', 'eval-warehouse']],
+  ['notebook', 'apps', 'notebook', 'Research Notebook', 'Drafts and reading notes that become memory.', ['18 notes / 7d'], ['attention', 'scaling', 'rag-paper', 'react']],
+  ['cost-monitor', 'apps', 'coins', 'Cost Monitor', 'Credits and token spend with anomaly flags.', ['2 alerts'], ['cost-obs', 'caching']],
+  ['calendar', 'apps', 'calendar', 'Calendar', 'Meetings and focus blocks the agent plans around.', ['5 events today'], ['migration', 'helpdesk']],
+  ['inbox', 'apps', 'inbox', 'Inbox', 'Mail triaged into stakeholders, alerts and newsletters.', ['12 unread'], ['helpdesk', 'quality']],
+  ['sql-optimizer', 'skills', 'magic-wand', '/sql-optimizer', 'Rewrites slow queries and explains the plan change.', ['opus', '11 runs / 7d'], ['duckdb', 'parquet', 'psql']],
+  ['dbt-review', 'skills', 'code-branch', '/dbt-model-review', 'Reviews dbt models against the staging conventions.', ['sonnet', '23 runs / 7d'], ['dbt-staging', 'quality']],
+  ['rag-eval', 'skills', 'flask', '/rag-eval-harness', 'Runs retrieval evals and compares rerankers.', ['opus', '6 runs / 7d'], ['rag-paper', 'reranker', 'chunking', 'embeddings-shootout']],
+  ['dq-audit', 'skills', 'shield-check', '/data-quality-audit', 'Audits tests and freshness for a set of models.', ['sonnet', '14 runs / 7d'], ['quality', 'backfill']],
+  ['research-digest', 'skills', 'newspaper', '/research-digest', 'Summarises new papers into research notes.', ['fable', '3 runs / 7d'], ['attention', 'scaling', 'lakehouse', 'dataflow']],
+  ['pipeline-scaffold', 'skills', 'layers', '/pipeline-scaffold', 'Scaffolds an ingestion pipeline from a source spec.', ['opus', '2 runs / 7d'], ['cdc', 'kafka', 'iceberg']],
+  ['schema-diff', 'skills', 'data-transfer', '/schema-diff', 'Compares two schema versions and flags breaking changes.', ['haiku', '9 runs / 7d'], ['cdc', 'dbt-staging']],
+  ['note-writer', 'skills', 'feather', '/note-writer', 'Turns a session into a linked memory note.', ['sonnet', '31 runs / 7d'], ['memory-search', 'embedding', 'chunking']],
+  ['mcp-builder', 'skills', 'plug', '/mcp-tool-builder', 'Drafts MCP tool schemas from a function signature.', ['opus', '4 runs / 7d'], ['mcp-spec', 'function-calling']],
+  ['memory-garden', 'routines', 'leaf', 'Memory garden', 'Finds orphan notes and proposes links.', ['01:45', 'done'], ['memory-search', 'embedding', 'vector-db']],
+  ['elt-refresh', 'routines', 'refresh', 'Nightly ELT refresh', 'Rebuilds staging and marts after source loads.', ['02:00', 'done'], ['dbt-staging', 'iceberg', 'migration']],
+  ['snapshots', 'routines', 'cloud-upload', 'Backup snapshots', 'Snapshots memory and eval tables to object storage.', ['03:00', 'done'], ['iceberg', 'eval-warehouse']],
+  ['standup', 'routines', 'sun', 'Daily standup brief', 'Summarises yesterday, today and blockers.', ['07:30', 'done'], ['migration', 'helpdesk']],
+  ['inbox-triage', 'routines', 'envelope', 'Inbox triage', 'Sorts new mail and drafts replies for review.', ['08:30', 'done'], ['helpdesk']],
+  ['cost-scan', 'routines', 'bell', 'Cost anomaly scan', 'Flags spend spikes against a 14-day baseline.', ['09:00', 'failed'], ['cost-obs', 'caching']],
+  ['eval-suite', 'routines', 'stopwatch', 'Eval regression suite', 'Re-runs the golden sets after model or prompt changes.', ['12:00', 'running'], ['sql-eval', 'judge', 'reranker']],
+  ['weekly-digest', 'routines', 'journal-alt', 'Weekly research digest', 'Collects the week’s research notes into one brief.', ['16:00', 'next'], ['scaling', 'react', 'rag-paper']],
+];
+
+// memory-to-memory links
+const MEMORY_LINKS = [
+  ['attention', 'transformer'], ['attention', 'kv-cache'], ['scaling', 'transformer'], ['rag-paper', 'embedding'],
+  ['rag-paper', 'vector-db'], ['rag-paper', 'chunking'], ['rag-paper', 'hallucination'], ['react', 'function-calling'],
+  ['react', 'mcp-spec'], ['mcp-spec', 'function-calling'], ['raft', 'kafka'], ['dataflow', 'kafka'], ['dataflow', 'cdc'],
+  ['lakehouse', 'iceberg'], ['lakehouse', 'migration'], ['lakehouse', 'parquet'], ['iceberg', 'parquet'], ['iceberg', 'duckdb'],
+  ['cdc', 'kafka'], ['dbt-staging', 'quality'], ['quality', 'backfill'], ['duckdb', 'parquet'], ['sql-eval', 'eval-warehouse'],
+  ['sql-eval', 'guardrails'], ['sql-eval', 'judge'], ['reranker', 'embeddings-shootout'], ['reranker', 'rag-paper'],
+  ['caching', 'kv-cache'], ['caching', 'cost-obs'], ['guardrails', 'helpdesk'], ['embeddings-shootout', 'embedding'],
+  ['judge', 'hallucination'], ['migration', 'backfill'], ['helpdesk', 'function-calling'], ['helpdesk', 'memory-search'],
+  ['memory-search', 'vector-db'], ['memory-search', 'chunking'], ['eval-warehouse', 'duckdb'], ['uv', 'duckdb'], ['psql', 'cdc'],
+];
+
+const ROUTINE_NOW = '10:20';
+
+// ---------------------------------------------------------------------------
+// Model
+// ---------------------------------------------------------------------------
+const css = getComputedStyle(document.documentElement);
+const colorOf = (group) => css.getPropertyValue(GROUPS[group].color).trim();
+
+const nodes = new Map();
+for (const [id, group, icon, title, summary] of MEMORY) {
+  nodes.set(id, { id, group, icon, title, summary, layer: 'inner', facts: [], links: new Set() });
+}
+for (const [id, group, icon, title, summary, facts, links] of OUTER) {
+  nodes.set(id, { id, group, icon, title, summary, layer: 'outer', facts, links: new Set() });
+  for (const target of links) MEMORY_LINKS.push([id, target]);
+}
+const edges = MEMORY_LINKS.map(([a, b]) => {
+  if (!nodes.has(a) || !nodes.has(b)) throw new Error(`unknown link ${a} -> ${b}`);
+  nodes.get(a).links.add(b);
+  nodes.get(b).links.add(a);
+  return [a, b];
+});
+
+// deterministic random so the layout is the same on every load
+function rng(seed) {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rand = rng(7);
+
+const INNER_R = 1.55;
+const OUTER_R = 2.55;
+const CORE_R = 1.0;
+
+// memory: a loose cluster inside the inner sphere, each domain pulled toward its own direction
+const innerGroups = Object.keys(GROUPS).filter((g) => GROUPS[g].layer === 'inner');
+const groupDir = new Map(innerGroups.map((g, i) => {
+  const phi = Math.acos(1 - (2 * (i + 0.5)) / innerGroups.length);
+  const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+  return [g, new THREE.Vector3().setFromSphericalCoords(1, phi, theta)];
+}));
+for (const node of nodes.values()) {
+  if (node.layer !== 'inner') continue;
+  const p = new THREE.Vector3(rand() * 2 - 1, rand() * 2 - 1, rand() * 2 - 1);
+  if (p.length() > 1) p.setLength(rand());
+  node.target = p.multiplyScalar(CORE_R * 0.75).addScaledVector(groupDir.get(node.group), CORE_R * 0.5);
+}
+
+// outer: a Fibonacci spiral over the shell, one band per group
+const outerNodes = [...nodes.values()].filter((n) => n.layer === 'outer');
+outerNodes.forEach((node, i) => {
+  const phi = Math.acos(1 - (2 * (i + 0.5)) / outerNodes.length);
+  const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+  node.target = new THREE.Vector3().setFromSphericalCoords(OUTER_R, phi, theta);
+});
+
+// ---------------------------------------------------------------------------
+// Scene
+// ---------------------------------------------------------------------------
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const host = document.getElementById('scene');
+const labelsHost = document.getElementById('labels');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+host.prepend(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer({ element: labelsHost });
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+const HOME = new THREE.Vector3(0.6, 0.9, 8.6);
+camera.position.copy(HOME);
+
+const controls = new OrbitControls(camera, labelsHost);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minDistance = 4.2;
+controls.maxDistance = 13;
+controls.autoRotate = !reduceMotion;
+controls.autoRotateSpeed = 0.4;
+labelsHost.style.pointerEvents = 'auto';
+
+function shell(radius, opacity) {
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(radius, 42, 28),
+    new THREE.MeshBasicMaterial({ color: 0xaab4c6, wireframe: true, transparent: true, opacity, depthWrite: false })
+  );
+  scene.add(mesh);
+  return mesh;
+}
+shell(INNER_R, 0.07);
+shell(OUTER_R, 0.045);
+
+// links: one LineSegments, per-vertex RGBA so highlights only rewrite colours
+const linePos = new Float32Array(edges.length * 6);
+const lineCol = new Float32Array(edges.length * 8);
+const lineGeo = new THREE.BufferGeometry();
+lineGeo.setAttribute('position', new THREE.BufferAttribute(linePos, 3));
+lineGeo.setAttribute('color', new THREE.BufferAttribute(lineCol, 4));
+scene.add(new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false })));
+
+const tmpColor = new THREE.Color();
+function paintLines(focus) {
+  edges.forEach(([a, b], i) => {
+    const lit = focus && (a === focus || b === focus);
+    const outer = nodes.get(a).layer === 'outer' || nodes.get(b).layer === 'outer';
+    const hidden = nodes.get(a).hidden || nodes.get(b).hidden;
+    let alpha = hidden ? 0 : outer ? 0.2 : 0.32;
+    if (focus && !hidden) alpha = lit ? 0.9 : 0.04;
+    tmpColor.set(lit ? colorOf(nodes.get(focus).group) : '#b7c2d6');
+    for (const v of [0, 1]) lineCol.set([tmpColor.r, tmpColor.g, tmpColor.b, alpha], i * 8 + v * 4);
+  });
+  lineGeo.attributes.color.needsUpdate = true;
+}
+
+function placeLines() {
+  edges.forEach(([a, b], i) => {
+    linePos.set([...nodes.get(a).object.position.toArray(), ...nodes.get(b).object.position.toArray()], i * 6);
+  });
+  lineGeo.attributes.position.needsUpdate = true;
+  lineGeo.computeBoundingSphere();
+}
+
+// nodes: real DOM buttons carrying Flaticon icons, positioned by CSS2DRenderer
+const tooltip = document.getElementById('tooltip');
+for (const node of nodes.values()) {
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.className = `node ${node.layer === 'outer' ? 'outer' : 'memory'}`;
+  el.style.setProperty('--c', colorOf(node.group));
+  el.setAttribute('aria-label', `${node.title}, ${GROUPS[node.group].label}`);
+  el.innerHTML = `<span class="node-chip"><i class="fi fi-rr-${node.icon}" aria-hidden="true"></i></span>`;
+  // OrbitControls captures the pointer on press, which would retarget the click to the
+  // label layer; a press that starts on a node selects it instead of starting a drag
+  el.addEventListener('pointerdown', (event) => event.stopPropagation());
+  el.addEventListener('pointerenter', () => hover(node));
+  el.addEventListener('pointerleave', () => hover(null));
+  // keyboard focus previews like hover; focus that follows a click or a closed drawer does not
+  el.addEventListener('focus', () => { if (el.matches(':focus-visible')) hover(node); });
+  el.addEventListener('blur', () => { if (hovered === node) hover(null); });
+  el.addEventListener('click', (event) => {
+    event.stopPropagation();
+    select(selected === node.id ? null : node.id);
+  });
+  node.el = el;
+  node.chip = el.firstElementChild;
+  node.object = new CSS2DObject(el);
+  node.object.position.set(0, 0, 0);
+  scene.add(node.object);
+}
+
+// ---------------------------------------------------------------------------
+// Focus: hover previews, click selects
+// ---------------------------------------------------------------------------
+let hovered = null;
+let selected = null;
+
+function applyFocus() {
+  const focus = hovered?.id ?? selected;
+  document.body.classList.toggle('has-focus', Boolean(focus));
+  const lit = focus ? new Set([focus, ...nodes.get(focus).links]) : null;
+  for (const node of nodes.values()) {
+    node.el.classList.toggle('is-lit', Boolean(lit?.has(node.id)));
+    node.el.classList.toggle('is-selected', node.id === selected);
+  }
+  paintLines(focus);
+  // the globe keeps turning slowly; it only pauses under the pointer so nodes stay clickable
+  controls.autoRotate = !reduceMotion && rotateOn && !hovered;
+}
+
+function hover(node) {
+  hovered = node;
+  if (node) {
+    const rect = node.el.getBoundingClientRect();
+    tooltip.innerHTML = `${escapeHtml(node.title)}<span>${GROUPS[node.group].label} · ${node.links.size} links</span>`;
+    tooltip.style.left = `${rect.left + rect.width / 2}px`;
+    tooltip.style.top = `${rect.top}px`;
+  }
+  tooltip.classList.toggle('is-on', Boolean(node));
+  applyFocus();
+}
+
+const drawer = document.getElementById('drawer');
+
+function select(id) {
+  selected = id;
+  renderDetail();
+  drawer.classList.toggle('is-open', Boolean(id));
+  drawer.inert = !id;
+  if (id) drawer.scrollTop = 0;
+  applyFocus();
+}
+
+document.getElementById('drawer-close').addEventListener('click', () => {
+  const node = selected && nodes.get(selected);
+  select(null);
+  node?.el.focus({ preventScroll: true });
+});
+
+// a click on empty space clears the selection, but the end of a drag does not
+let downAt = null;
+labelsHost.addEventListener('pointerdown', (event) => { downAt = [event.clientX, event.clientY]; });
+labelsHost.addEventListener('click', (event) => {
+  if (downAt && Math.hypot(event.clientX - downAt[0], event.clientY - downAt[1]) > 4) return;
+  select(null);
+});
+addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') select(null);
+});
+
+// ---------------------------------------------------------------------------
+// Panels
+// ---------------------------------------------------------------------------
+function escapeHtml(text) {
+  return text.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
+
+function rowButton(node, meta) {
+  return `<button type="button" class="row-button" data-select="${node.id}" style="--c:${colorOf(node.group)}">
+    <i class="fi fi-rr-${node.icon}" aria-hidden="true"></i><span class="name">${escapeHtml(node.title)}</span>
+    ${meta ? `<span class="meta">${meta}</span>` : ''}</button>`;
+}
+
+const hiddenGroups = new Set();
+function renderLegend(layer, listId, totalId) {
+  const groups = Object.keys(GROUPS).filter((g) => GROUPS[g].layer === layer);
+  const all = [...nodes.values()].filter((n) => n.layer === layer);
+  document.getElementById(totalId).textContent = `${all.length} nodes`;
+  document.getElementById(listId).innerHTML = groups.map((g) => {
+    const count = all.filter((n) => n.group === g).length;
+    return `<li><button type="button" data-group="${g}" aria-pressed="${!hiddenGroups.has(g)}">
+      <span class="swatch" style="--c:${colorOf(g)}"></span>${GROUPS[g].label}<span class="count">${count}</span></button></li>`;
+  }).join('');
+}
+
+function renderRanking() {
+  const ranked = [...nodes.values()].filter((n) => n.layer === 'inner').sort((a, b) => b.links.size - a.links.size).slice(0, 6);
+  document.getElementById('ranked').innerHTML = ranked.map((n) => `<li>${rowButton(n, n.links.size)}</li>`).join('');
+}
+
+function renderDetail() {
+  const card = document.getElementById('detail');
+  const node = selected && nodes.get(selected);
+  // keep the last node's content while the drawer slides out
+  if (!node) return;
+  document.getElementById('drawer-kind').textContent = node.layer === 'outer' ? 'Outer layer' : 'Inner layer: memory';
+  const linked = [...node.links].map((id) => nodes.get(id));
+  const inner = linked.filter((n) => n.layer === 'inner');
+  const outer = linked.filter((n) => n.layer === 'outer');
+  const section = (title, list) => list.length
+    ? `<p class="linked-title">${title} (${list.length})</p><ul class="linked">${list.map((n) => `<li>${rowButton(n, GROUPS[n.group].label)}</li>`).join('')}</ul>`
+    : '';
+  card.innerHTML = `
+    <div class="detail-head" style="--c:${colorOf(node.group)}">
+      <span class="detail-icon"><i class="fi fi-rr-${node.icon}" aria-hidden="true"></i></span>
+      <div><h2>${escapeHtml(node.title)}</h2><p>${GROUPS[node.group].label}</p></div>
+    </div>
+    <p class="detail-copy">${escapeHtml(node.summary)}</p>
+    ${node.facts.length ? `<ul class="facts">${node.facts.map((f) => `<li>${escapeHtml(f)}</li>`).join('')}</ul>` : ''}
+    ${section(node.layer === 'outer' ? 'Uses memory' : 'Linked notes', inner)}
+    ${section('Used by', outer)}`;
+}
+
+function renderTimeline() {
+  const routines = [...nodes.values()].filter((n) => n.group === 'routines').sort((a, b) => a.facts[0].localeCompare(b.facts[0]));
+  const done = routines.filter((r) => r.facts[1] === 'done').length;
+  document.getElementById('routine-summary').textContent = `${done}/${routines.length} done`;
+  const label = { done: 'done', running: 'running', failed: 'failed', next: 'next' };
+  let nowPlaced = false;
+  document.getElementById('timeline').innerHTML = routines.map((r) => {
+    const [time, state] = r.facts;
+    let html = '';
+    if (!nowPlaced && time > ROUTINE_NOW) {
+      nowPlaced = true;
+      html += `<li class="now">Now ${ROUTINE_NOW}</li>`;
+    }
+    return html + `<li><button type="button" class="row-button" data-select="${r.id}" style="--c:${colorOf(r.group)}">
+      <span class="time">${time}</span><i class="fi fi-rr-${r.icon}" aria-hidden="true"></i><span class="name">${escapeHtml(r.title)}</span>
+      <span class="state state-${state}">${label[state]}</span></button></li>`;
+  }).join('');
+}
+
+document.addEventListener('click', (event) => {
+  const pick = event.target.closest('[data-select]');
+  if (pick) {
+    select(pick.dataset.select);
+    return;
+  }
+  const toggle = event.target.closest('[data-group]');
+  if (toggle) {
+    const g = toggle.dataset.group;
+    hiddenGroups.has(g) ? hiddenGroups.delete(g) : hiddenGroups.add(g);
+    toggle.setAttribute('aria-pressed', String(!hiddenGroups.has(g)));
+    for (const node of nodes.values()) {
+      node.hidden = hiddenGroups.has(node.group);
+      node.el.classList.toggle('is-hidden', node.hidden);
+    }
+    if (selected && nodes.get(selected).hidden) select(null);
+    else applyFocus();
+  }
+});
+
+let rotateOn = !reduceMotion;
+const rotateButton = document.getElementById('rotate');
+rotateButton.setAttribute('aria-pressed', String(rotateOn));
+rotateButton.addEventListener('click', () => {
+  rotateOn = !rotateOn;
+  rotateButton.setAttribute('aria-pressed', String(rotateOn));
+  applyFocus();
+});
+document.getElementById('reset').addEventListener('click', () => {
+  camera.position.copy(HOME).setLength(homeDistance());
+  controls.target.set(0, 0, 0);
+  select(null);
+});
+
+renderLegend('outer', 'legend-outer', 'outer-total');
+renderLegend('inner', 'legend-inner', 'inner-total');
+renderRanking();
+renderTimeline();
+paintLines(null);
+
+// ---------------------------------------------------------------------------
+// Render loop: one intro (nodes expand from the core), then depth cues per frame
+// ---------------------------------------------------------------------------
+// pull the camera back on narrow screens so the whole outer shell stays in view
+function homeDistance() {
+  const halfWidth = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
+  return Math.max(HOME.length(), 3.0 / halfWidth);
+}
+
+function resize() {
+  const { clientWidth: w, clientHeight: h } = host;
+  renderer.setSize(w, h);
+  labelRenderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  camera.position.setLength(Math.max(camera.position.length(), homeDistance()));
+  controls.maxDistance = Math.max(13, homeDistance() * 1.3);
+}
+new ResizeObserver(resize).observe(host);
+resize();
+
+const INTRO_MS = reduceMotion ? 0 : 1400;
+const start = performance.now();
+const camPos = new THREE.Vector3();
+const nodeCam = new THREE.Vector3();
+
+function frame(now) {
+  const t = INTRO_MS ? Math.min(1, (now - start) / INTRO_MS) : 1;
+  const ease = 1 - (1 - t) ** 3;
+  if (t <= 1 && !frame.settled) {
+    for (const node of nodes.values()) node.object.position.copy(node.target).multiplyScalar(ease);
+    placeLines();
+    frame.settled = t === 1;
+  }
+
+  controls.update();
+
+  // nearer nodes are larger and brighter; nodes behind the core fade back
+  camPos.copy(camera.position);
+  const centre = camPos.length();
+  for (const node of nodes.values()) {
+    nodeCam.copy(node.object.position);
+    const d = nodeCam.distanceTo(camPos);
+    const depth = THREE.MathUtils.clamp(centre / d, 0.7, 1.35);
+    node.chip.style.setProperty('--depth', depth.toFixed(3));
+    node.chip.style.setProperty('--fade', THREE.MathUtils.clamp(0.35 + (depth - 0.7) * 1.3, 0.35, 1).toFixed(3));
+  }
+
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

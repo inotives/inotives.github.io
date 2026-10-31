@@ -20,27 +20,24 @@ function slugifyHeading(value) {
     .replace(/^-+|-+$/g, '')
 }
 
+// Defined once at module level: components created inside the render would be
+// new types every render, so React would remount every heading and anything
+// holding the old elements (the table-of-contents observer) would lose them
+const headingComponents = {
+  h2: ({ children, ...props }) => (
+    <h2 id={slugifyHeading(getTextFromNode(children))} {...props}>
+      {children}
+    </h2>
+  ),
+  h3: ({ children, ...props }) => (
+    <h3 id={slugifyHeading(getTextFromNode(children))} {...props}>
+      {children}
+    </h3>
+  ),
+}
+
 export default function MarkdownRenderer({ content }) {
   if (!content) return null
-
-  const headingComponents = {
-    h2: ({ children, ...props }) => {
-      const id = slugifyHeading(getTextFromNode(children))
-      return (
-        <h2 id={id} {...props}>
-          {children}
-        </h2>
-      )
-    },
-    h3: ({ children, ...props }) => {
-      const id = slugifyHeading(getTextFromNode(children))
-      return (
-        <h3 id={id} {...props}>
-          {children}
-        </h3>
-      )
-    },
-  }
 
   return (
     <div className="manual-prose">

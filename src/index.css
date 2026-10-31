@@ -100,6 +100,9 @@ input {
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
   color: var(--ink);
   font-family: var(--font-brand);
   font-size: 1.9rem;
@@ -110,6 +113,13 @@ input {
 
 .brand:hover {
   color: var(--signal);
+}
+
+.brand-logo {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  image-rendering: pixelated;
 }
 
 .nav-links {
@@ -149,8 +159,77 @@ input {
   cursor: pointer;
 }
 
-.mobile-nav {
+/* Mobile menu: a panel that slides in from the right over a dimmed page */
+.nav-drawer {
   display: none;
+}
+
+.nav-drawer-scrim {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in oklab, var(--bg) 40%, transparent);
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.nav-drawer-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(78vw, 300px);
+  border-left: 1px solid var(--line);
+  padding: 8px 16px 24px;
+  /* translucent like the sticky header, so the page shows through the menu */
+  background: color-mix(in oklab, var(--raise) 60%, transparent);
+  backdrop-filter: blur(10px);
+  transform: translateX(100%);
+  transition: transform 220ms ease;
+}
+
+.nav-drawer.is-open .nav-drawer-scrim {
+  opacity: 1;
+}
+
+.nav-drawer.is-open .nav-drawer-panel {
+  transform: none;
+}
+
+.nav-drawer-close {
+  align-self: flex-end;
+  margin-bottom: 16px;
+}
+
+.nav-drawer-panel nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-drawer-link {
+  border-bottom: 1px solid var(--line);
+  border-left: 2px solid transparent;
+  padding: 14px 12px;
+  color: var(--ink-2);
+  font-size: 1.1rem;
+  text-decoration: none;
+}
+
+.nav-drawer-link:hover {
+  color: var(--ink);
+}
+
+.nav-drawer-link.is-active {
+  border-left-color: var(--signal);
+  color: var(--signal);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-drawer-scrim,
+  .nav-drawer-panel {
+    transition: none;
+  }
 }
 
 .site-footer {
@@ -411,6 +490,20 @@ button.tag-active:hover {
   font-weight: 400;
   letter-spacing: 0.01em;
   line-height: 0.78;
+}
+
+.home-hero .wordmark {
+  display: flex;
+  align-items: center;
+  gap: 0.14em;
+}
+
+/* the pixel logo is drawn on a 32px grid; pixelated scaling keeps its edges hard */
+.wordmark-logo {
+  width: 0.78em;
+  height: 0.78em;
+  flex: none;
+  image-rendering: pixelated;
 }
 
 .home-hero .dek {
@@ -1045,6 +1138,132 @@ button.heat-cell[aria-pressed="true"] {
   font-size: 0.85rem;
 }
 
+/* Playground */
+.mock-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.mock-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--raise);
+}
+
+.mock-preview {
+  display: block;
+  border-bottom: 1px solid var(--line);
+}
+
+.mock-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 1;
+  object-fit: cover;
+  object-position: top;
+  transition: opacity 160ms ease;
+}
+
+.mock-preview:hover img {
+  opacity: 0.85;
+}
+
+.mock-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px 18px;
+}
+
+.mock-body .record-meta,
+.mock-body .record-title,
+.mock-body .record-copy {
+  margin: 0;
+}
+
+.mock-body .record-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.mock-body .record-title a:hover {
+  color: var(--signal);
+}
+
+.mock-credit {
+  margin: 0;
+  color: var(--fog);
+  font-size: 0.9rem;
+}
+
+.mock-credit a {
+  color: var(--ink-2);
+}
+
+.mock-credit a:hover {
+  color: var(--signal);
+}
+
+.library-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px 32px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.library-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.library-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.library-head h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.08rem;
+  font-weight: 600;
+}
+
+.library-head span,
+.library-used {
+  color: var(--fog);
+  font-size: 0.85rem;
+}
+
+.library-list p {
+  margin: 0;
+  color: var(--ink-2);
+  font-family: var(--font-read);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.library-list .library-used {
+  font-family: inherit;
+}
+
+.library-links {
+  display: flex;
+  gap: 16px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
 /* Notes index */
 .notes-filters {
   display: flex;
@@ -1220,20 +1439,15 @@ button.heat-cell[aria-pressed="true"] {
 
 .article-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 190px;
+  grid-template-columns: minmax(0, 1fr) 230px;
   align-items: start;
-  gap: 48px;
+  gap: 56px;
 }
 
-/* In an article the column is wide: running text keeps a readable measure,
-   while figures, code and tables use the full width so diagrams stay legible */
+/* Text, figures, code and tables share one column edge, so the
+   table of contents sits right beside the running text */
 .article-layout .manual-prose {
   max-width: none;
-}
-
-/* markdown wraps images in <p>, so paragraphs holding an image are exempt */
-.article-layout .manual-prose > :is(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6):not(:has(img)) {
-  max-width: 70ch;
 }
 
 .article-layout .manual-prose img[src$=".svg"] {
@@ -1243,6 +1457,8 @@ button.heat-cell[aria-pressed="true"] {
 .article-toc {
   position: sticky;
   top: 84px;
+  /* match the half-leading above the prose's first line */
+  padding-top: 0.38rem;
   font-size: 0.86rem;
 }
 
@@ -2038,7 +2254,9 @@ a.contribution-cell.has-report:hover {
 
   .project-steps,
   .teaching-grid,
-  .earlier-list {
+  .earlier-list,
+  .mock-grid,
+  .library-list {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -2106,16 +2324,16 @@ a.contribution-cell.has-report:hover {
     display: inline-flex;
   }
 
-  .mobile-nav {
-    display: flex;
-    flex-direction: column;
-    border-top: 1px solid var(--line);
-    padding: 8px 16px 14px;
+  .nav-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: block;
+    pointer-events: none;
   }
 
-  .mobile-nav .nav-link {
-    border-bottom: 1px solid var(--line);
-    padding: 10px 0;
+  .nav-drawer.is-open {
+    pointer-events: auto;
   }
 
   .record-grid,

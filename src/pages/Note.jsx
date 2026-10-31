@@ -8,6 +8,8 @@ import { postTags } from '../utils/tags'
 import MarkdownRenderer from '../components/MarkdownRenderer'
 
 const WORDS_PER_MINUTE = 220
+// sticky header height plus a little breathing room
+const HEADING_OFFSET = 120
 
 function slugifyHeading(value) {
   return value
@@ -52,20 +54,38 @@ function useCurrentHeading(headings) {
   const [current, setCurrent] = useState({ headings: null, id: null })
 
   useEffect(() => {
-    if (headings.length === 0 || !('IntersectionObserver' in window)) return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) setCurrent({ headings, id: entry.target.id })
-        })
-      },
-      { rootMargin: '-80px 0px -70% 0px' }
-    )
-    headings.forEach(({ id }) => {
-      const el = document.getElementById(id)
-      if (el) observer.observe(el)
-    })
-    return () => observer.disconnect()
+    if (headings.length === 0) return
+    let frame = null
+
+    // the current section is the last heading that has scrolled past the
+    // reading line just below the sticky header
+    const update = () => {
+      frame = null
+      let id = null
+      for (const heading of headings) {
+        const el = document.getElementById(heading.id)
+        if (!el) continue
+        if (el.getBoundingClientRect().top > HEADING_OFFSET) break
+        id = heading.id
+      }
+      // at the very bottom, short final sections can never reach the line
+      const atBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2
+      if (atBottom) id = headings[headings.length - 1].id
+      setCurrent({ headings, id })
+    }
+    const onScroll = () => {
+      if (frame === null) frame = requestAnimationFrame(update)
+    }
+
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (frame !== null) cancelAnimationFrame(frame)
+    }
   }, [headings])
 
   return current.headings === headings ? current.id : null

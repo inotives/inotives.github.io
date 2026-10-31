@@ -37,7 +37,10 @@ export default function Home() {
     <div className="page-stack">
       <section className="home-hero">
         <div>
-          <h1 className="wordmark">inoTives</h1>
+          <h1 className="wordmark">
+            <img className="wordmark-logo" src="/assets/images/logo/logo-dark.svg" alt="" />
+            inoTives
+          </h1>
           <p className="dek">
             Working notes on data engineering, AI agent workflows, and research
             tools for crypto and stock markets.
