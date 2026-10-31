@@ -99,4 +99,15 @@ export const PLAYGROUND_MOCKS = [
       'Two slowly turning wireframe globes: memory notes clustered in the core, and the apps, skills and routines that use them on the outer shell, each drawn as its own icon. Select a node to trace its links.',
     libraries: ['threejs', 'flaticon'],
   },
+  {
+    id: 'spark-island',
+    project: 'Sparkling',
+    name: 'Spark Island',
+    date: '2026-10-31',
+    href: '/mocks/spark-island.html',
+    preview: '/mocks/previews/spark-island.jpg',
+    description:
+      'A kid’s home island in a gamified learning app: a voxel island with floating islets, decorations and a robot companion, over daily tasks, care meters and subject levels. Drag to turn the island and tap Sparkling to say hi.',
+    libraries: ['threejs', 'daisyui', 'tailwind', 'flaticon'],
+  },
 ]
