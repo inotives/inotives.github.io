@@ -198,4 +198,15 @@ export const PLAYGROUND_MOCKS = [
       'A chat window where an analytics agent answers with charts. It calls tools on the MCP servers you have connected, then writes its reply in OpenUI Lang, which renders line by line into a card with a D3 or Three.js chart. Open a chart to explore it, save it to My charts and pull it back later with fresh data. A mock: replies are scripted and every figure is generated.',
     libraries: ['openui', 'd3', 'threejs', 'shadcn', 'tailwind', 'flaticon'],
   },
+  {
+    id: 'brand-kit',
+    project: 'inoTives',
+    name: 'Brand kit',
+    date: '2026-11-01',
+    href: '/mocks/brand-kit.html',
+    preview: '/mocks/previews/brand-kit.jpg',
+    description:
+      'The inoTives design system written down, as an example of the brand kit every company should keep: concept, color tokens with live contrast checks, the data palette and ramps, fonts and type scale, and number and date formats. Then the same brand applied in shadcn/ui tokens, a D3 theme helper and Three.js scene rules, with toggles that show each library’s defaults, plus a Flaticon base icon set. Copy any value or download the tokens.',
+    libraries: ['shadcn', 'd3', 'threejs', 'tailwind', 'flaticon'],
+  },
 ]
