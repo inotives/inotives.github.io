@@ -1,8 +1,17 @@
 // UI experiments shown on /playground. Each mock is a self-contained HTML file in
 // public/mocks/ running on mock data; `libraries` lists the ids it is built with,
-// and `credit` names whose design a mock is based on.
+// `credit` names whose design a mock is based on, and `usedIn` says which of my projects
+// uses the UI (with its repo when it is public), and `sources` links where a mock's real figures come from.
 
 export const PLAYGROUND_LIBRARIES = [
+  {
+    id: 'd3',
+    name: 'D3',
+    kind: 'Data visualization',
+    description: 'Layouts, scales and map projections for data, here feeding Sankey, chord and map layouts into Three.js.',
+    site: 'https://d3js.org',
+    repo: 'd3/d3',
+  },
   {
     id: 'threejs',
     name: 'Three.js',
@@ -87,6 +96,7 @@ export const PLAYGROUND_MOCKS = [
     description:
       'The same memory drawn as rings around the agent core, switchable to a sphere, beside agent status and the day’s workflow timeline. Styled with shadcn/ui design tokens recreated in plain HTML.',
     libraries: ['shadcn', 'tailwind', 'threejs'],
+    usedIn: { text: 'The UI for my personal agentic second brain project.' },
   },
   {
     id: 'agent-core-sphere',
@@ -109,6 +119,7 @@ export const PLAYGROUND_MOCKS = [
     description:
       'A kid’s home island in a gamified learning app: a voxel island with floating islets, decorations and a robot companion, over daily tasks, care meters and subject levels. Drag to turn the island and tap Sparkling to say hi.',
     libraries: ['threejs', 'daisyui', 'tailwind', 'flaticon'],
+    usedIn: { text: 'From my personal project, a gamified quiz app for kids in Primary 1 to 6.' },
   },
   {
     id: 'inoai-console',
@@ -120,5 +131,44 @@ export const PLAYGROUND_MOCKS = [
     description:
       'The home screen of a personal AI agent: health, activity and failures drawn as glowing rings around a voxel robot, with tasks, memory and skills below. Tap a ring or the status chip to open the side panel, with demo data in every section.',
     libraries: ['threejs', 'flaticon'],
+    usedIn: { text: 'The primary UI of my InoAI project.', repo: 'inotives/inoai' },
+  },
+  {
+    id: 'data-3d-flows',
+    project: 'Data in 3D',
+    name: 'Trade map',
+    date: '2026-10-31',
+    href: '/mocks/data-3d.html?view=flows',
+    preview: '/mocks/previews/data-3d-flows.jpg',
+    description:
+      'A world map lying flat with a Sankey diagram standing behind it: chip exports lift off the map, split by kind of chip and drop back down to the markets that buy them. Tap a country or flow to trace it.',
+    libraries: ['d3', 'threejs', 'shadcn', 'tailwind'],
+  },
+  {
+    id: 'data-3d-deps',
+    project: 'Data in 3D',
+    name: 'Dependency sphere',
+    date: '2026-10-31',
+    href: '/mocks/data-3d.html?view=deps',
+    preview: '/mocks/previews/data-3d-deps.jpg',
+    description:
+      'A chord diagram wrapped onto a sphere: each package of a mock web app gets a slice sized by its traffic, and imports bundle through the middle. Pick a module to see what it imports and what imports it.',
+    libraries: ['d3', 'threejs', 'shadcn', 'tailwind'],
+  },
+  {
+    id: 'binance-hack-map',
+    project: 'Chain forensics',
+    name: 'Binance hack map',
+    date: '2026-10-31',
+    href: '/mocks/binance-hack-map.html',
+    preview: '/mocks/previews/binance-hack-map.jpg',
+    description:
+      'An investigation map of the October 29, 2026 Binance hack: one lane per chain, time left to right, frozen funds sinking below the floor and laundered funds rising above it. Red rings mark the likely exits: wallets holding coins no issuer can freeze. Replay the night or pick a wallet to follow its money. Figures from TRM Labs’ report, with gaps marked as estimates.',
+    libraries: ['threejs', 'd3', 'shadcn', 'tailwind', 'flaticon'],
+    sources: [
+      { name: 'TRM Labs', href: 'https://www.trmlabs.com/resources/blog/north-korea-steals-usd-6-36-billion-from-binance-in-the-largest-hack-in-history' },
+      { name: 'CNBC', href: 'https://www.cnbc.com/2026/10/30/billions-in-crypto-frozen-in-binance-hack-heres-what-happens-next-.html' },
+      { name: 'Wikipedia', href: 'https://en.wikipedia.org/wiki/2026_Binance_hack' },
+    ],
   },
 ]
