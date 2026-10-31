@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" role="img" aria-labelledby="title desc">
+  <title id="title">Four layers between card SQL and a published dashboard</title>
+  <desc id="desc">Card SQL is parsed without running and must be one SELECT with no table functions. Its tables are checked against the caller's role scope. It runs on a read-only copy of gold holding only those tables, with a time limit and a row cap. Before publishing, every card must work for every audience role, and published dashboards are re-checked after each data run.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+  </defs>
+  <rect width="1200" height="480" rx="24" fill="url(#bg)"/>
+  <text x="47" y="56" fill="#f6f9fc" font-family="system-ui,sans-serif" font-size="28" font-weight="700">Self-serve only works when the boundary is enforced in code</text>
+  <text x="47" y="85" fill="#a9bdd0" font-family="system-ui,sans-serif" font-size="16">The same checks apply whether the SQL came from a person, their agent or a built-in page.</text>
+  <g font-family="system-ui,sans-serif">
+    <rect x="43" y="118" width="1114" height="72" rx="16" fill="#263e5b" stroke="#75a8d5"/>
+    <text x="70" y="161" fill="#fff" font-size="19" font-weight="700">1  Parse, don't run</text>
+    <text x="400" y="161" fill="#c8dbee" font-size="16">Exactly one SELECT. No table functions, no file reads. Length limit.</text>
+
+    <rect x="83" y="204" width="1034" height="72" rx="16" fill="#1d3d45" stroke="#53dfdc"/>
+    <text x="110" y="247" fill="#fff" font-size="19" font-weight="700">2  Check the tables</text>
+    <text x="400" y="247" fill="#c1e5e5" font-size="16">Every table it reads must belong to the caller's roles.</text>
+
+    <rect x="123" y="290" width="954" height="72" rx="16" fill="#294a40" stroke="#71c69a"/>
+    <text x="150" y="333" fill="#fff" font-size="19" font-weight="700">3  Run in a small box</text>
+    <text x="400" y="333" fill="#c7ead6" font-size="16">A read-only copy holding only those tables, a time limit and a row cap.</text>
+
+    <rect x="163" y="376" width="874" height="72" rx="16" fill="#4c3d2b" stroke="#e3ad5a"/>
+    <text x="190" y="419" fill="#fff" font-size="19" font-weight="700">4  Check before publish</text>
+    <text x="440" y="419" fill="#f1d7aa" font-size="16">Every card works for every audience role, and again after each run.</text>
+  </g>
+</svg>
