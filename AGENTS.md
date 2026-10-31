@@ -147,5 +147,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - On a branch that is already merged into `master`: switch to an up-to-date `master` and create one new branch from it.
 - Check before branching: `git branch --merged master` (or the PR state on GitHub) tells you whether the current branch is merged.
 - Create extra branches, or switch between unmerged ones, only when a human explicitly asks.
+- One task, one commit. When a human approves a finished task, commit it on the working branch. Each commit is a save point the branch can return to, so don't hold several tasks in one uncommitted pile, and don't commit a task before it is approved.
 
 ---
