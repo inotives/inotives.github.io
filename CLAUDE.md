@@ -12,6 +12,7 @@ Site rebuilt in April 2026 from Python static generator to React 18 + Vite + Tai
 
 - Content in `content/` (Obsidian vault) — posts and pages as markdown with YAML frontmatter
 - Build: `npm run build` (prebuild generates content-index.json, then Vite bundles)
+- Local dev/testing: `npm run dev` serves on http://localhost:8551 (set in `vite.config.js`; `npm run preview` uses the same port)
 - Deploy: GitHub Actions workflow builds and deploys to GitHub Pages (source: GitHub Actions, not branch)
 - Legacy freeboard dashboards in `public/dashboards/` served as-is
 - `inotives_banks/` in `public/` — intentionally unlisted, accessible only by direct URL
