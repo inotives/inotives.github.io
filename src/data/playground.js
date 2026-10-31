@@ -228,4 +228,21 @@ export const PLAYGROUND_MOCKS = [
       'Chart.js charts lifted into 3D: a radar lofted across six months, a multi-axis line chart with each axis on its own panel, a polar area with sectors extruded by a second value, and grouped bars set out in rows. Chart.js lays out scales, labels and every point on hidden canvases; Three.js uses those canvases as textures and builds the geometry from the positions Chart.js computed. Each view opens the original interactive Chart.js chart.',
     libraries: ['chartjs', 'threejs', 'shadcn', 'tailwind', 'flaticon'],
   },
+  {
+    id: 'd3-3d',
+    project: 'Data in 3D',
+    name: 'D3 in 3D',
+    date: '2026-11-01',
+    href: '/mocks/d3-3d.html',
+    preview: '/mocks/previews/d3-3d.jpg',
+    description:
+      'Four 3D charts where D3 does the data work and Three.js draws: a chain profile wrapped around a sphere, with scores grouped by direction and colored against a benchmark, seven years of real US Treasury yield curves stacked month by month (watch 2022 turn the curve upside down), a bubble chart in a box, and a world map of 2026 GDP as stacked bars with a Sankey that splits the top 20 economies into services, industry and agriculture and flows each part into its country. GDP from the IMF’s October 2026 outlook; sector shares approximate.',
+    libraries: ['d3', 'threejs', 'shadcn', 'tailwind', 'flaticon'],
+    sources: [
+      { name: 'IMF WEO, Oct 2026', href: 'https://www.imf.org/en/publications/weo/issues/2026/10/13/world-economic-outlook-october-2026' },
+      { name: 'Worldometer table', href: 'https://www.worldometers.info/gdp/gdp-by-country/?region=worldwide&year=2026&metric=nominal' },
+      { name: 'World Bank WDI', href: 'https://data.worldbank.org/indicator/NV.SRV.TOTL.ZS' },
+      { name: 'US Treasury yield curve', href: 'https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve' },
+    ],
+  },
 ]
