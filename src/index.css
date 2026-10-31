@@ -100,6 +100,9 @@ input {
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
   color: var(--ink);
   font-family: var(--font-brand);
   font-size: 1.9rem;
@@ -110,6 +113,13 @@ input {
 
 .brand:hover {
   color: var(--signal);
+}
+
+.brand-logo {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  image-rendering: pixelated;
 }
 
 .nav-links {
@@ -149,8 +159,77 @@ input {
   cursor: pointer;
 }
 
-.mobile-nav {
+/* Mobile menu: a panel that slides in from the right over a dimmed page */
+.nav-drawer {
   display: none;
+}
+
+.nav-drawer-scrim {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in oklab, var(--bg) 40%, transparent);
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.nav-drawer-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(78vw, 300px);
+  border-left: 1px solid var(--line);
+  padding: 8px 16px 24px;
+  /* translucent like the sticky header, so the page shows through the menu */
+  background: color-mix(in oklab, var(--raise) 60%, transparent);
+  backdrop-filter: blur(10px);
+  transform: translateX(100%);
+  transition: transform 220ms ease;
+}
+
+.nav-drawer.is-open .nav-drawer-scrim {
+  opacity: 1;
+}
+
+.nav-drawer.is-open .nav-drawer-panel {
+  transform: none;
+}
+
+.nav-drawer-close {
+  align-self: flex-end;
+  margin-bottom: 16px;
+}
+
+.nav-drawer-panel nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-drawer-link {
+  border-bottom: 1px solid var(--line);
+  border-left: 2px solid transparent;
+  padding: 14px 12px;
+  color: var(--ink-2);
+  font-size: 1.1rem;
+  text-decoration: none;
+}
+
+.nav-drawer-link:hover {
+  color: var(--ink);
+}
+
+.nav-drawer-link.is-active {
+  border-left-color: var(--signal);
+  color: var(--signal);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-drawer-scrim,
+  .nav-drawer-panel {
+    transition: none;
+  }
 }
 
 .site-footer {
@@ -411,6 +490,20 @@ button.tag-active:hover {
   font-weight: 400;
   letter-spacing: 0.01em;
   line-height: 0.78;
+}
+
+.home-hero .wordmark {
+  display: flex;
+  align-items: center;
+  gap: 0.14em;
+}
+
+/* the pixel logo is drawn on a 32px grid; pixelated scaling keeps its edges hard */
+.wordmark-logo {
+  width: 0.78em;
+  height: 0.78em;
+  flex: none;
+  image-rendering: pixelated;
 }
 
 .home-hero .dek {
@@ -2103,16 +2196,16 @@ a.contribution-cell.has-report:hover {
     display: inline-flex;
   }
 
-  .mobile-nav {
-    display: flex;
-    flex-direction: column;
-    border-top: 1px solid var(--line);
-    padding: 8px 16px 14px;
+  .nav-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: block;
+    pointer-events: none;
   }
 
-  .mobile-nav .nav-link {
-    border-bottom: 1px solid var(--line);
-    padding: 10px 0;
+  .nav-drawer.is-open {
+    pointer-events: auto;
   }
 
   .record-grid,
