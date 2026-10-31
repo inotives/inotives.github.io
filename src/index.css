@@ -1220,20 +1220,15 @@ button.heat-cell[aria-pressed="true"] {
 
 .article-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 190px;
+  grid-template-columns: minmax(0, 1fr) 230px;
   align-items: start;
-  gap: 48px;
+  gap: 56px;
 }
 
-/* In an article the column is wide: running text keeps a readable measure,
-   while figures, code and tables use the full width so diagrams stay legible */
+/* Text, figures, code and tables share one column edge, so the
+   table of contents sits right beside the running text */
 .article-layout .manual-prose {
   max-width: none;
-}
-
-/* markdown wraps images in <p>, so paragraphs holding an image are exempt */
-.article-layout .manual-prose > :is(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6):not(:has(img)) {
-  max-width: 70ch;
 }
 
 .article-layout .manual-prose img[src$=".svg"] {
@@ -1243,6 +1238,8 @@ button.heat-cell[aria-pressed="true"] {
 .article-toc {
   position: sticky;
   top: 84px;
+  /* match the half-leading above the prose's first line */
+  padding-top: 0.38rem;
   font-size: 0.86rem;
 }
 
