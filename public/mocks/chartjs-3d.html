@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Chart.js in 3D</title>
+<!--
+  Playground mock: Chart.js charts lifted into 3D with Three.js. Chart.js does what it is good at, 2D layout:
+  scales, ticks, grid, labels and the pixel position of every point, bar and sector. Each chart renders on a
+  hidden canvas; Three.js uses that canvas as a texture (axes, grid, labels) and reads the computed positions
+  from chart.getDatasetMeta(i).data to build real 3D geometry: lofted radar layers, multi-axis ribbons,
+  extruded polar sectors and bar rows. Every view can show the original interactive Chart.js chart.
+  Styled with the inoTives brand kit. All figures are mock data.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-ink-2: #b8b5ac;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base { *, ::before, ::after { border-color: var(--color-border); } }
+</style>
+<style>
+  body { margin: 0; background: #15171b; }
+  .fi { display: inline-flex; line-height: 1; }
+  #stage { isolation: isolate; background: radial-gradient(ellipse 80% 70% at 62% 45%, #1b1e24 0%, #15171b 72%); }
+  #stage canvas { display: block; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+  .lbl { font: 400 11px "Source Code Pro", monospace; color: #8b9099; white-space: nowrap; padding: 1px 5px; border-radius: 4px; background: rgb(21 23 27 / 0.6); }
+  .lbl.strong { color: #e4e1d8; font: 500 12px "IBM Plex Sans Condensed", sans-serif; }
+  #offscreen { position: fixed; left: -10000px; top: 0; pointer-events: none; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
+  .code { font: 400 11.5px/1.6 "Source Code Pro", monospace; white-space: pre; }
+  .code .c { color: #8b9099; font-style: italic; } .code .s { color: #9ccf7f; } .code .k { color: #c9a4f5; } .code .n { color: #e9a66c; }
+  @media (min-width: 900px) { #panel { left: 1.5rem; top: 4.5rem; width: 340px; max-height: calc(100% - 6rem); } }
+  @media (max-width: 899px) { #panel { left: 0.75rem; right: 0.75rem; bottom: 0.75rem; max-height: 46vh; } }
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+<div id="offscreen" aria-hidden="true"></div>
+<div class="fixed inset-0 overflow-hidden">
+  <div id="stage" class="absolute inset-0"></div>
+
+  <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
+    <a href="/playground" class="pointer-events-auto rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <span class="hidden text-sm text-muted-foreground lg:inline">Playground · Chart.js in 3D</span>
+    <div role="tablist" aria-label="Chart types" id="tabs" class="pointer-events-auto mx-auto inline-flex h-9 max-w-full items-center overflow-x-auto rounded-lg bg-muted p-1 text-muted-foreground"></div>
+    <span class="hidden rounded-md border bg-background/70 px-2 py-0.5 text-xs text-muted-foreground sm:inline">Mock data</span>
+  </header>
+
+  <aside id="panel" class="scroll-thin absolute z-10 overflow-auto rounded-xl border bg-card/90 p-4 shadow backdrop-blur"></aside>
+
+  <!-- the source Chart.js chart, flat and interactive -->
+  <div id="flat" hidden class="absolute inset-0 z-30 flex items-center justify-center bg-black/55 p-3 backdrop-blur-sm sm:p-8">
+    <div role="dialog" aria-modal="true" aria-labelledby="flat-title" class="flex h-full max-h-[620px] w-full max-w-[920px] flex-col rounded-xl border bg-card p-4 shadow-lg sm:p-5">
+      <div class="flex items-start gap-3">
+        <div class="min-w-0 flex-1">
+          <h2 id="flat-title" class="font-semibold"></h2>
+          <p class="text-xs text-muted-foreground">The same data as a plain Chart.js chart, with its own tooltips and legend.</p>
+        </div>
+        <button id="flat-close" class="inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Close"><i class="fi fi-rr-cross-small"></i></button>
+      </div>
+      <div class="relative mt-3 min-h-0 flex-1"><canvas id="flat-canvas"></canvas></div>
+    </div>
+  </div>
+
+  <footer class="pointer-events-none absolute bottom-3 right-4 z-10 hidden text-xs text-muted-foreground md:block"><i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Drag to turn · scroll to zoom · hover for values</footer>
+</div>
+<div id="tip" hidden class="pointer-events-none fixed z-40 rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---------- brand kit ----------
+const B = { paper: '#15171b', raise: '#1d2026', line: '#2b2f37', ink: '#e4e1d8', ink2: '#b8b5ac', fog: '#8b9099', signal: '#1fefd7', amber: '#f6c453' };
+const PAL = ['#1fefd7', '#f6c453', '#c9a4f5', '#9ccf7f', '#e58fb0', '#7cc4dc', '#e9a66c'];
+const alpha = (hex, a) => hex + Math.round(a * 255).toString(16).padStart(2, '0');
+const MONO = '"Source Code Pro", monospace', SANS = '"IBM Plex Sans Condensed", sans-serif';
+// Chart.js defaults set once from the brand, so every chart (hidden or flat) matches
+Chart.defaults.color = B.fog;
+Chart.defaults.borderColor = B.line;
+Chart.defaults.font.family = MONO;
+Chart.defaults.font.size = 11;
+Chart.defaults.plugins.tooltip.backgroundColor = alpha(B.paper, 0.95);
+Chart.defaults.plugins.tooltip.borderColor = B.line;
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+Chart.defaults.plugins.tooltip.titleFont = { family: SANS, weight: '600', size: 12 };
+Chart.defaults.plugins.legend.labels.boxWidth = 10;
+Chart.defaults.plugins.legend.labels.boxHeight = 3;
+
+// ---------- seeded mock data ----------
+let seed = 7;
+const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+const gauss = () => Math.sqrt(-2 * Math.log(rnd() || 1e-9)) * Math.cos(2 * Math.PI * rnd());
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmt = (v, d = 1) => v.toLocaleString('en-US', { maximumFractionDigits: d, minimumFractionDigits: d });
+
+const MONTHS = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+const AXES = ['TVL', 'Volume', 'Users', 'Fees', 'Developers', 'Uptime'];
+const CHAINS = {
+  Ethereum: [92, 70, 60, 88, 95, 97], Solana: [55, 92, 90, 66, 70, 82], Base: [40, 64, 78, 50, 58, 95],
+};
+const radarData = Object.fromEntries(Object.entries(CHAINS).map(([k, base]) => [k, MONTHS.map((_, m) => base.map((v, i) => clamp(v * (0.78 + 0.05 * m) + 7 * gauss() + (i === 2 && k !== 'Ethereum' ? m * 2 : 0), 8, 100)))]));
+
+const DAYS = Array.from({ length: 60 }, (_, i) => { const d = new Date(Date.UTC(2026, 8, 3 + i)); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }); });
+const SERIES = (() => {
+  let p = 61000, v;
+  const price = DAYS.map((_, i) => (i ? (p *= Math.exp(0.002 + 0.022 * gauss())) : p));
+  const vol = DAYS.map((_, i) => (v = 28 + 9 * Math.sin(i / 6) + 5 * gauss() + (i > 40 ? 10 : 0)));
+  const fund = DAYS.map((_, i) => 0.008 + 0.006 * Math.sin(i / 9) + 0.004 * gauss());
+  return [
+    { key: 'price', name: 'BTC price', unit: 'US$', data: price, color: PAL[0], fmt: (x) => `$${fmt(x, 0)}` },
+    { key: 'vol', name: 'Spot volume', unit: 'US$ B', data: vol, color: PAL[1], fmt: (x) => `$${fmt(x, 1)}B` },
+    { key: 'fund', name: 'Funding rate', unit: '% per 8h', data: fund, color: PAL[2], fmt: (x) => `${fmt(x, 3)}%` },
+  ];
+})();
+
+const VENUES = ['Binance', 'OKX', 'Bybit', 'Coinbase', 'CME', 'Bitget', 'Deribit', 'Hyperliquid'];
+const POLAR = { share: [34, 12, 14, 8, 9, 7, 5, 11], oi: [21.4, 9.8, 12.1, 3.2, 14.6, 6.1, 4.8, 8.9], growth: [4, -2, 6, 3, 9, 5, -1, 31] };
+
+const ROWS = ['Ethereum', 'Solana', 'Base', 'Arbitrum'];
+const BARS = ROWS.map((r, k) => ({ name: r, color: PAL[k], data: MONTHS.map((_, m) => clamp([62, 12, 6, 3.4][k] * (1 + 0.05 * m * (k === 2 ? 3 : 1)) * (1 + 0.06 * gauss()), 1, 99)) }));
+
+// ---------- Chart.js on hidden canvases ----------
+const host = $('#offscreen');
+const offCharts = [];
+function offChart(config, w, h) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h; c.style.width = `${w}px`; c.style.height = `${h}px`;
+  host.appendChild(c);
+  const o = config.options ?? {};
+  const chart = new Chart(c, {
+    ...config,
+    options: { ...o, responsive: false, animation: false, devicePixelRatio: 1, events: [], plugins: { legend: { display: false }, tooltip: { enabled: false }, ...(o.plugins ?? {}) } },
+  });
+  offCharts.push(chart);
+  return chart;
+}
+function texture(chart) {
+  const t = new THREE.CanvasTexture(chart.canvas);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+// Chart.js pixel position -> plane coordinates (plane centered at 0, y up)
+const toPlane = (chart, px, py, W) => { const H = (W * chart.height) / chart.width; return [(px / chart.width - 0.5) * W, (0.5 - py / chart.height) * H]; };
+
+// ---------- Three.js stage ----------
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.appendChild(renderer.domElement);
+const labelR = new CSS2DRenderer();
+labelR.domElement.className = 'labels';
+stage.appendChild(labelR.domElement);
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(B.paper, 26, 60);
+scene.add(new THREE.HemisphereLight('#cfe9ff', B.paper, 1.15));
+const key = new THREE.DirectionalLight('#ffffff', 1.5); key.position.set(-8, 14, 10); scene.add(key);
+const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 200);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.minDistance = 6; controls.maxDistance = 45;
+controls.autoRotateSpeed = 0.45;
+controls.addEventListener('start', () => { controls.autoRotate = false; });
+let group = new THREE.Group(); scene.add(group);
+let pickables = [];
+
+function lbl(text, pos, cls = '') { const d = document.createElement('div'); d.className = `lbl ${cls}`; d.textContent = text; const o = new CSS2DObject(d); o.position.copy(pos); group.add(o); return o; }
+function clearScene() {
+  group.traverse((o) => {
+    if (o.geometry) o.geometry.dispose();
+    const mats = Array.isArray(o.material) ? o.material : o.material ? [o.material] : [];
+    mats.forEach((m) => { m.map?.dispose(); m.dispose(); });
+    if (o.isCSS2DObject) o.element.remove();
+  });
+  scene.remove(group); group = new THREE.Group(); scene.add(group);
+  pickables = [];
+  offCharts.splice(0).forEach((c) => { c.canvas.remove(); c.destroy(); });
+}
+const panelMat = (chart) => new THREE.MeshBasicMaterial({ map: texture(chart), transparent: true, side: THREE.DoubleSide, depthWrite: false });
+const solid = (color, opts = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.1, ...opts });
+
+// ================= views =================
+const VIEWS = {};
+const state = { view: 'radar', chain: 'Solana', series: { price: true, vol: true, fund: true }, polarHeight: 'oi', barFocus: null };
+
+// ---------- 1. 3D radar: one Chart.js radar per month, lofted along depth ----------
+VIEWS.radar = {
+  tab: '3D radar', icon: 'fi-rr-chart-network',
+  title: 'Radar over time',
+  blurb: 'Six monthly radar charts stacked front to back. The shape between them is lofted from the points Chart.js computed, so you see each metric grow or shrink across the months.',
+  how: ['Chart.js draws each month’s radar (scale, grid, labels) on a hidden canvas and computes every vertex position.', 'Three.js stacks the canvases as transparent layers and joins the vertices into a skin and six axis threads.'],
+  camera: [5.5, 4.5, 14], target: [0, 0, 0],
+  build() {
+    const W = 6.4, gap = 1.25, data = radarData[state.chain], col = PAL[Object.keys(CHAINS).indexOf(state.chain)];
+    const layers = MONTHS.map((m, k) => {
+      const last = k === MONTHS.length - 1;
+      const chart = offChart({
+        type: 'radar',
+        data: { labels: AXES, datasets: [{ data: data[k], borderColor: alpha(col, last ? 1 : 0.55), backgroundColor: alpha(col, last ? 0.18 : 0.06), borderWidth: last ? 4 : 2, pointRadius: 0 }] },
+        options: { layout: { padding: 8 }, scales: { r: { min: 0, max: 100, ticks: { display: k === 0, stepSize: 25, backdropColor: 'transparent', color: B.fog, font: { size: 18 } }, grid: { color: k === 0 ? B.line : 'transparent', lineWidth: 2 }, angleLines: { color: k === 0 ? B.line : 'transparent', lineWidth: 2 }, pointLabels: { color: last ? B.ink : 'transparent', font: { family: SANS, size: 26, weight: '500' } } } } },
+      }, 720, 720);
+      const z = (k - (MONTHS.length - 1) / 2) * gap;
+      const plane = new THREE.Mesh(new THREE.PlaneGeometry(W, W), panelMat(chart));
+      plane.position.z = z; plane.renderOrder = k;
+      group.add(plane);
+      const pts = chart.getDatasetMeta(0).data.map((el) => { const [x, y] = toPlane(chart, el.x, el.y, W); return new THREE.Vector3(x, y, z); });
+      lbl(m, new THREE.Vector3(0, -W / 2 - 0.15, z), last ? 'strong' : '');
+      return pts;
+    });
+    // skin between consecutive layers
+    const pos = [], n = AXES.length;
+    for (let k = 0; k < layers.length - 1; k++) for (let i = 0; i < n; i++) {
+      const a = layers[k][i], b = layers[k][(i + 1) % n], c = layers[k + 1][(i + 1) % n], d = layers[k + 1][i];
+      pos.push(...a.toArray(), ...b.toArray(), ...c.toArray(), ...a.toArray(), ...c.toArray(), ...d.toArray());
+    }
+    const skin = new THREE.BufferGeometry(); skin.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); skin.computeVertexNormals();
+    group.add(new THREE.Mesh(skin, solid(col, { transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false })));
+    // axis threads and vertex beads
+    const beadGeo = new THREE.SphereGeometry(0.075, 14, 10);
+    for (let i = 0; i < n; i++) {
+      const curve = new THREE.CatmullRomCurve3(layers.map((l) => l[i]));
+      group.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 40, 0.022, 6), new THREE.MeshBasicMaterial({ color: col })));
+      layers.forEach((l, k) => {
+        const bead = new THREE.Mesh(beadGeo, solid(k === layers.length - 1 ? B.amber : col));
+        bead.position.copy(l[i]); bead.userData = { html: `<div class="font-medium">${esc(state.chain)} · ${MONTHS[k]}</div><div class="font-mono">${AXES[i]} ${fmt(data[k][i], 0)} / 100</div>` };
+        group.add(bead); pickables.push(bead);
+      });
+    }
+  },
+  controls() {
+    return `<div><p class="mb-1.5 text-xs text-muted-foreground">Chain</p><div class="inline-flex rounded-lg bg-muted p-1 text-muted-foreground" role="radiogroup">${Object.keys(CHAINS).map((c, i) => `<button data-chain="${c}" role="radio" aria-checked="${state.chain === c}" class="inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-checked:bg-background aria-checked:text-foreground aria-checked:shadow"><span class="size-2 rounded-full" style="background:${PAL[i]}"></span>${c}</button>`).join('')}</div></div>`;
+  },
+  flat() {
+    const col = PAL[Object.keys(CHAINS).indexOf(state.chain)];
+    return { title: `${state.chain}: six months on one radar`, config: { type: 'radar', data: { labels: AXES, datasets: MONTHS.map((m, k) => ({ label: m, data: radarData[state.chain][k], borderColor: alpha(col, 0.25 + 0.15 * k), backgroundColor: alpha(col, k === 5 ? 0.15 : 0.02), borderWidth: k === 5 ? 2.5 : 1.25, pointRadius: 2 })) }, options: { scales: { r: { min: 0, max: 100, ticks: { stepSize: 25, backdropColor: 'transparent' }, pointLabels: { color: B.ink2, font: { family: SANS, size: 13 } } } } } } };
+  },
+  snippet: `// one hidden radar per month
+const chart = new Chart(canvas, { type: 'radar', data, options: {
+  responsive: false, animation: false,
+  scales: { r: { min: 0, max: 100 } } } });
+
+// Chart.js already placed every vertex: read them
+const pts = chart.getDatasetMeta(0).data
+  .map((el) => toPlane(chart, el.x, el.y));   // pixels -> plane units
+
+// the canvas becomes a transparent layer at depth z
+const layer = new THREE.Mesh(new THREE.PlaneGeometry(W, W),
+  new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(chart.canvas),
+    transparent: true, depthWrite: false }));
+layer.position.z = z;`,
+};
+
+// ---------- 2. multi-axis lines: one panel per y-axis, ribbons in front ----------
+VIEWS.multi = {
+  tab: 'Multi-axis lines', icon: 'fi-rr-chart-line-up',
+  title: 'Three axes, three depths',
+  blurb: 'A multi-axis line chart squeezes three scales into one frame. Here each series keeps its own y-axis on its own panel, set behind the next, and the shared date axis lines up through all of them.',
+  how: ['Chart.js lays out one line chart per series with the same x-axis, so dates sit at the same pixel on every panel.', 'Three.js turns each series into a tube and a translucent curtain down to its axis floor.'],
+  camera: [-9, 5.5, 15], target: [0, 0, -1.9],
+  build() {
+    const W = 10, gap = 1.9, on = SERIES.filter((s) => state.series[s.key]);
+    let guide = null;
+    on.forEach((s, k) => {
+      const chart = offChart({
+        type: 'line',
+        data: { labels: DAYS, datasets: [{ data: s.data, borderColor: 'transparent', pointRadius: 0 }] },
+        options: { layout: { padding: { top: 24, right: 24, left: 8, bottom: 4 } }, scales: {
+          x: { ticks: { color: k === 0 ? B.fog : 'transparent', maxTicksLimit: 7, font: { size: 18 } }, grid: { display: false }, border: { color: B.line, width: 2 } },
+          y: { ticks: { color: s.color, maxTicksLimit: 5, font: { size: 18 }, callback: (v) => s.fmt(+v).replace(/\.0+(?=[^\d]|$)/, '') }, grid: { color: alpha(B.line, 0.9), lineWidth: 2 }, border: { display: false } },
+        } },
+      }, 1000, 440);
+      const z = -k * gap, H = (W * chart.height) / chart.width;
+      const panel = new THREE.Mesh(new THREE.PlaneGeometry(W, H), panelMat(chart));
+      panel.position.z = z; group.add(panel);
+      const meta = chart.getDatasetMeta(0).data;
+      const floorY = toPlane(chart, 0, chart.chartArea.bottom, W)[1];
+      const pts = meta.map((el) => { const [x, y] = toPlane(chart, el.x, el.y, W); return new THREE.Vector3(x, y, z + 0.02); });
+      if (k === 0) guide = { xs: pts.map((p) => p.x), floorY };
+      group.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 240, 0.03, 6), new THREE.MeshBasicMaterial({ color: s.color })));
+      // curtain from the line down to this panel's x-axis
+      const pos = [];
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i], b = pts[i + 1];
+        pos.push(a.x, a.y, a.z, b.x, b.y, b.z, b.x, floorY, b.z, a.x, a.y, a.z, b.x, floorY, b.z, a.x, floorY, a.z);
+      }
+      const cg = new THREE.BufferGeometry(); cg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      const curtain = new THREE.Mesh(cg, new THREE.MeshBasicMaterial({ color: s.color, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false }));
+      curtain.userData = { series: s, pts };
+      group.add(curtain); pickables.push(curtain);
+      lbl(`${s.name} · ${s.unit}`, new THREE.Vector3(W / 2 + 0.2, toPlane(chart, 0, chart.chartArea.top, W)[1], z), 'strong').element.style.color = s.color;
+    });
+    // date guides through all panels
+    if (on.length > 1) [0, 20, 40, 59].forEach((i) => {
+      const x = guide.xs[i];
+      const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, guide.floorY, 0.05), new THREE.Vector3(x, guide.floorY, -(on.length - 1) * gap)]);
+      group.add(new THREE.Line(g, new THREE.LineDashedMaterial({ color: B.fog, dashSize: 0.12, gapSize: 0.1, transparent: true, opacity: 0.5 })).computeLineDistances());
+    });
+  },
+  pick(hit) {
+    const { series: s, pts } = hit.object.userData;
+    let best = 0, d = Infinity;
+    pts.forEach((p, i) => { const e = Math.abs(p.x - hit.point.x); if (e < d) { d = e; best = i; } });
+    return `<div class="font-medium">${DAYS[best]}</div><div class="flex items-center gap-2"><span class="size-2 rounded-full" style="background:${s.color}"></span>${esc(s.name)}<span class="ml-auto pl-3 font-mono">${s.fmt(s.data[best])}</span></div>`;
+  },
+  controls() {
+    return `<div><p class="mb-1.5 text-xs text-muted-foreground">Series</p><div class="space-y-1">${SERIES.map((s) => `<label class="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"><input type="checkbox" data-series="${s.key}" ${state.series[s.key] ? 'checked' : ''} class="size-4 accent-[#1fefd7]" /><span class="size-2 rounded-full" style="background:${s.color}"></span>${s.name}<span class="ml-auto font-mono text-[11px] text-muted-foreground">${s.unit}</span></label>`).join('')}</div></div>`;
+  },
+  flat() {
+    const on = SERIES.filter((s) => state.series[s.key]);
+    const ids = ['y', 'y1', 'y2'];
+    return { title: 'BTC price, volume and funding on three y-axes', config: { type: 'line', data: { labels: DAYS, datasets: on.map((s, k) => ({ label: s.name, data: s.data, yAxisID: ids[k], borderColor: s.color, backgroundColor: alpha(s.color, 0.1), borderWidth: 1.75, pointRadius: 0, tension: 0.3 })) }, options: { interaction: { mode: 'index', intersect: false }, scales: Object.fromEntries([['x', { ticks: { maxTicksLimit: 8 }, grid: { display: false } }], ...on.map((s, k) => [ids[k], { position: k === 1 ? 'right' : 'left', ticks: { color: s.color, maxTicksLimit: 6 }, grid: { display: k === 0 }, border: { display: false } }])]), plugins: { tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${on[c.datasetIndex].fmt(c.parsed.y)}` } } } } } };
+  },
+  snippet: `// same labels for every series, so x lines up across panels
+const panels = series.map((s) => new Chart(canvas(), { type: 'line',
+  data: { labels: days, datasets: [{ data: s.data, borderColor: 'transparent' }] },
+  options: { responsive: false, scales: { y: { ticks: { color: s.color } } } } }));
+
+// tube through the points Chart.js placed for this series
+const pts = chart.getDatasetMeta(0).data
+  .map((el) => new THREE.Vector3(...toPlane(chart, el.x, el.y), z));
+new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 240, 0.03);
+
+// curtain down to this panel's own x-axis
+const floorY = toPlane(chart, 0, chart.chartArea.bottom)[1];`,
+};
+
+// ---------- 3. polar: Chart.js polar area on the floor, sectors extruded ----------
+VIEWS.polar = {
+  tab: '3D polar', icon: 'fi-rr-chart-pie',
+  title: 'Polar area with height',
+  blurb: 'A polar area chart already encodes one value as radius. Extruding each sector adds a second value as height: here, each venue’s share of volume and its open interest or growth.',
+  how: ['Chart.js lays out the polar area on a hidden canvas: the radial scale, grid, venue labels and each sector’s angles and radius.', 'Three.js redraws each sector as an extruded wedge from those angles, standing on the Chart.js grid as the floor.'],
+  camera: [0, 11.5, 13.5], target: [0, 0.8, 0],
+  build() {
+    const W = 9, hKey = state.polarHeight;
+    const chart = offChart({
+      type: 'polarArea',
+      data: { labels: VENUES, datasets: [{ data: POLAR.share, backgroundColor: 'transparent', borderColor: 'transparent' }] },
+      options: { layout: { padding: 10 }, scales: { r: { ticks: { stepSize: 10, backdropColor: 'transparent', font: { size: 18 }, callback: (v) => `${v}%`, z: 1 }, grid: { color: B.line, lineWidth: 2 }, angleLines: { display: true, color: B.line, lineWidth: 2 }, pointLabels: { display: true, centerPointLabels: true, color: B.ink2, font: { family: SANS, size: 24, weight: '500' } } } } },
+    }, 800, 800);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(W, W), panelMat(chart));
+    floor.rotation.x = -Math.PI / 2; group.add(floor);
+    const vals = POLAR[hKey], max = Math.max(...vals.map(Math.abs));
+    chart.getDatasetMeta(0).data.forEach((el, i) => {
+      const { x, y, startAngle, endAngle, outerRadius } = el.getProps(['x', 'y', 'startAngle', 'endAngle', 'outerRadius'], true);
+      const [cx, cy] = toPlane(chart, x, y, W), r = (outerRadius / chart.width) * W, pad = 0.012;
+      const shape = new THREE.Shape(); shape.moveTo(cx, cy);
+      // canvas angles run clockwise with y down; flip to the plane's y-up
+      for (let s = 0; s <= 24; s++) { const a = -(startAngle + pad + ((endAngle - startAngle - 2 * pad) * s) / 24); shape.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a)); }
+      const v = vals[i], h = Math.max(0.08, (Math.abs(v) / max) * 2.6);
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false, curveSegments: 1 });
+      const color = hKey === 'growth' && v < 0 ? '#e58fb0' : PAL[i % PAL.length];
+      const wedge = new THREE.Mesh(geo, solid(color, { transparent: true, opacity: 0.9 }));
+      wedge.rotation.x = -Math.PI / 2;
+      wedge.userData = { html: `<div class="font-medium">${VENUES[i]}</div><div class="font-mono">${POLAR.share[i]}% of volume</div><div class="font-mono">${hKey === 'oi' ? `$${fmt(POLAR.oi[i], 1)}B open interest` : `${v > 0 ? '+' : '−'}${Math.abs(v)}% growth, 30d`}</div>` };
+      group.add(wedge); pickables.push(wedge);
+      const mid = -(startAngle + endAngle) / 2, rr = r * 0.62;
+      lbl(hKey === 'oi' ? `$${fmt(POLAR.oi[i], 1)}B` : `${v > 0 ? '+' : '−'}${Math.abs(v)}%`, new THREE.Vector3(cx + rr * Math.cos(mid), h + 0.25, -(cy + rr * Math.sin(mid))));
+    });
+  },
+  controls() {
+    return `<div><p class="mb-1.5 text-xs text-muted-foreground">Height shows</p><div class="inline-flex rounded-lg bg-muted p-1 text-muted-foreground" role="radiogroup">${[['oi', 'Open interest'], ['growth', 'Growth, 30d']].map(([k, l]) => `<button data-height="${k}" role="radio" aria-checked="${state.polarHeight === k}" class="rounded-md px-3 py-1 text-sm font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-checked:bg-background aria-checked:text-foreground aria-checked:shadow">${l}</button>`).join('')}</div><p class="mt-2 text-xs text-muted-foreground">Radius is always share of volume.${state.polarHeight === 'growth' ? ' Rose wedges shrank.' : ''}</p></div>`;
+  },
+  flat() {
+    return { title: 'Share of volume by venue', config: { type: 'polarArea', data: { labels: VENUES, datasets: [{ label: 'Share of volume', data: POLAR.share, backgroundColor: PAL.concat(PAL).slice(0, 8).map((c) => alpha(c, 0.55)), borderColor: B.raise, borderWidth: 2 }] }, options: { scales: { r: { ticks: { backdropColor: 'transparent', callback: (v) => `${v}%` }, pointLabels: { display: true, centerPointLabels: true, color: B.ink2, font: { family: SANS, size: 13 } } } }, plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: (c) => ` ${c.parsed.r}% of volume` } } } } } };
+  },
+  snippet: `// Chart.js computes each sector's geometry
+const el = chart.getDatasetMeta(0).data[i];
+const { x, y, startAngle, endAngle, outerRadius } =
+  el.getProps(['x', 'y', 'startAngle', 'endAngle', 'outerRadius'], true);
+
+// rebuild it as a shape, flipping canvas angles to y-up
+const shape = new THREE.Shape().moveTo(cx, cy);
+for (let s = 0; s <= 24; s++) {
+  const a = -(startAngle + (endAngle - startAngle) * s / 24);
+  shape.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+}
+// second value becomes height
+new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false });`,
+};
+
+// ---------- 4. bar skyline: one Chart.js bar chart, each dataset its own row ----------
+VIEWS.bars = {
+  tab: 'Bar skyline', icon: 'fi-rr-chart-histogram',
+  title: 'Grouped bars as rows',
+  blurb: 'Grouped bars get crowded fast. Giving each dataset its own row in depth keeps the months aligned and lets small series stay visible behind large ones.',
+  how: ['Chart.js lays out the bar chart once with grouped: false, so every dataset’s bars share the same x and width; its axes become the back wall.', 'Three.js reads each bar’s x, y and base and builds a box per bar, one row per dataset.'],
+  camera: [-9.5, 7.5, 15.5], target: [0, 0.4, 1.2],
+  build() {
+    const W = 9, depth = 0.7, gap = 0.95;
+    const chart = offChart({
+      type: 'bar',
+      data: { labels: MONTHS, datasets: BARS.map((b) => ({ data: b.data, backgroundColor: 'transparent', grouped: false, barPercentage: 0.62, categoryPercentage: 1 })) },
+      options: { layout: { padding: { top: 20, right: 16 } }, scales: { x: { ticks: { color: 'transparent' }, grid: { display: false }, border: { color: B.line, width: 2 } }, y: { beginAtZero: true, ticks: { maxTicksLimit: 6, font: { size: 18 }, callback: (v) => `$${v}B` }, grid: { color: B.line, lineWidth: 2 }, border: { display: false } } } },
+    }, 1000, 560);
+    const H = (W * chart.height) / chart.width;
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(W, H), panelMat(chart));
+    wall.position.z = -0.6; group.add(wall);
+    const floorY = toPlane(chart, 0, chart.chartArea.bottom, W)[1];
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry((chart.chartArea.width / chart.width) * W, (BARS.length - 1) * gap + depth + 0.8), new THREE.MeshStandardMaterial({ color: B.raise, roughness: 1 }));
+    floor.rotation.x = -Math.PI / 2; floor.position.set(toPlane(chart, (chart.chartArea.left + chart.chartArea.right) / 2, 0, W)[0], floorY - 0.001, ((BARS.length - 1) * gap) / 2 + 0.2);
+    group.add(floor);
+    const box = new THREE.BoxGeometry(1, 1, 1);
+    BARS.forEach((b, k) => {
+      const z = k * gap + 0.2, dim = state.barFocus !== null && state.barFocus !== k;
+      chart.getDatasetMeta(k).data.forEach((el, i) => {
+        const { x, y, base, width } = el.getProps(['x', 'y', 'base', 'width'], true);
+        const [wx, top] = toPlane(chart, x, y, W), bot = toPlane(chart, x, base, W)[1];
+        const m = new THREE.Mesh(box, solid(b.color, { transparent: dim, opacity: dim ? 0.18 : 1 }));
+        m.scale.set((width / chart.width) * W, Math.max(0.02, top - bot), depth);
+        m.position.set(wx, bot + (top - bot) / 2, z);
+        m.userData = { html: `<div class="font-medium">${b.name} · ${MONTHS[i]}</div><div class="font-mono">$${fmt(b.data[i], 1)}B TVL</div>` };
+        group.add(m); pickables.push(m);
+        if (k === BARS.length - 1) lbl(MONTHS[i], new THREE.Vector3(wx, floorY, z + 0.75));
+      });
+      lbl(b.name, new THREE.Vector3(toPlane(chart, chart.chartArea.right, 0, W)[0] + 0.3, floorY + 0.2, z), 'strong').element.style.color = b.color;
+    });
+  },
+  controls() {
+    return `<div><p class="mb-1.5 text-xs text-muted-foreground">Focus a row</p><div class="flex flex-wrap gap-1.5">${[['', 'All'], ...ROWS.map((r, k) => [k, r])].map(([k, l]) => `<button data-focus="${k}" aria-pressed="${String(state.barFocus ?? '') === String(k)}" class="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-pressed:border-primary/60 aria-pressed:text-primary">${k !== '' ? `<span class="size-2 rounded-full" style="background:${PAL[k]}"></span>` : ''}${l}</button>`).join('')}</div></div>`;
+  },
+  flat() {
+    return { title: 'TVL by chain and month (grouped bars)', config: { type: 'bar', data: { labels: MONTHS, datasets: BARS.map((b) => ({ label: b.name, data: b.data, backgroundColor: alpha(b.color, 0.8), borderRadius: 2 })) }, options: { scales: { x: { grid: { display: false } }, y: { ticks: { callback: (v) => `$${v}B` } } }, plugins: { tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: $${fmt(c.parsed.y, 1)}B` } } } } } };
+  },
+  snippet: `// grouped: false puts every dataset's bars at the same x
+datasets: rows.map((r) => ({ data: r.data, grouped: false,
+  backgroundColor: 'transparent' }))
+
+// read each bar's box from Chart.js and rebuild it in 3D
+chart.getDatasetMeta(k).data.forEach((el) => {
+  const { x, y, base, width } = el.getProps(['x', 'y', 'base', 'width'], true);
+  const bar = new THREE.Mesh(box, material);
+  bar.scale.set(width * px, (base - y) * px, depth);
+  bar.position.set(...toPlane(chart, x, (y + base) / 2), rowZ);
+});`,
+};
+
+// ---------- panel, tabs, switching ----------
+const ORDER = ['radar', 'multi', 'polar', 'bars'];
+$('#tabs').innerHTML = ORDER.map((k) => `<button role="tab" data-tab="${k}" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi ${VIEWS[k].icon} text-xs"></i>${VIEWS[k].tab}</button>`).join('');
+const hl = (src) => {
+  let out = '', last = 0;
+  for (const m of src.matchAll(/(\/\/[^\n]*)|('[^'\n]*')|\b(const|new|for|let|return)\b|\b(\d+(?:\.\d+)?)\b/g)) {
+    const g = m.slice(1).findIndex((x) => x !== undefined);
+    out += esc(src.slice(last, m.index)) + `<span class="${['c', 's', 'k', 'n'][g]}">${esc(m[0])}</span>`;
+    last = m.index + m[0].length;
+  }
+  return out + esc(src.slice(last));
+};
+function renderPanel() {
+  const v = VIEWS[state.view];
+  $('#panel').innerHTML = `
+    <h1 class="text-lg font-semibold leading-tight">${v.title}</h1>
+    <p class="mt-1.5 text-sm leading-relaxed text-ink-2">${v.blurb}</p>
+    <div class="mt-4">${v.controls()}</div>
+    <button id="show-flat" class="mt-4 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-chart-line-up text-xs"></i>Show the Chart.js chart</button>
+    <div class="mt-4 space-y-2 border-t pt-3 text-sm">
+      <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">How it’s built</p>
+      <p class="flex gap-2 text-ink-2"><span class="mt-0.5 inline-flex h-5 shrink-0 items-center rounded bg-amber/15 px-1.5 font-mono text-[10.5px] text-amber">Chart.js</span><span>${v.how[0]}</span></p>
+      <p class="flex gap-2 text-ink-2"><span class="mt-0.5 inline-flex h-5 shrink-0 items-center rounded bg-primary/15 px-1.5 font-mono text-[10.5px] text-primary">Three.js</span><span>${v.how[1]}</span></p>
+    </div>
+    <details class="mt-3 rounded-lg border bg-background/60">
+      <summary class="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground"><i class="fi fi-rr-code-simple"></i>The key code<i class="fi fi-rr-angle-small-down ml-auto"></i></summary>
+      <pre class="code scroll-thin overflow-auto border-t p-3">${hl(v.snippet)}</pre>
+    </details>`;
+  $('#show-flat').onclick = openFlat;
+}
+function show(view, { keepCamera = false } = {}) {
+  state.view = view;
+  document.querySelectorAll('[data-tab]').forEach((b) => { b.dataset.state = b.dataset.tab === view ? 'active' : ''; b.setAttribute('aria-selected', b.dataset.tab === view); });
+  clearScene();
+  const v = VIEWS[view];
+  v.build();
+  if (!keepCamera) {
+    camera.position.set(...v.camera); controls.target.set(...v.target);
+    controls.autoRotate = !reduceMotion;
+  }
+  renderPanel();
+  try { history.replaceState(null, '', `?view=${view}`); } catch { /* sandboxed */ }
+}
+$('#tabs').onclick = (e) => { const b = e.target.closest('[data-tab]'); if (b) show(b.dataset.tab); };
+$('#panel').addEventListener('click', (e) => {
+  const chain = e.target.closest('[data-chain]'), h = e.target.closest('[data-height]'), f = e.target.closest('[data-focus]');
+  if (chain) { state.chain = chain.dataset.chain; show('radar', { keepCamera: true }); }
+  if (h) { state.polarHeight = h.dataset.height; show('polar', { keepCamera: true }); }
+  if (f) { state.barFocus = f.dataset.focus === '' ? null : +f.dataset.focus; show('bars', { keepCamera: true }); }
+});
+$('#panel').addEventListener('change', (e) => {
+  const s = e.target.closest('[data-series]');
+  if (!s) return;
+  state.series[s.dataset.series] = s.checked;
+  if (!Object.values(state.series).some(Boolean)) { state.series[s.dataset.series] = true; s.checked = true; return; }
+  show('multi', { keepCamera: true });
+});
+
+// ---------- flat Chart.js view ----------
+let flatChart = null;
+function openFlat() {
+  const { title, config } = VIEWS[state.view].flat();
+  $('#flat-title').textContent = title;
+  $('#flat').hidden = false;
+  flatChart?.destroy();
+  flatChart = new Chart($('#flat-canvas'), { ...config, options: { ...config.options, responsive: true, maintainAspectRatio: false, animation: reduceMotion ? false : { duration: 500 } } });
+  $('#flat-close').focus();
+}
+function closeFlat() { $('#flat').hidden = true; flatChart?.destroy(); flatChart = null; $('#show-flat')?.focus(); }
+$('#flat-close').onclick = closeFlat;
+$('#flat').addEventListener('click', (e) => { if (e.target.id === 'flat') closeFlat(); });
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#flat').hidden) closeFlat(); });
+
+// ---------- hover ----------
+const tip = $('#tip'), ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+let hover = null;
+const setGlow = (o, on) => { if (o?.material?.emissive) o.material.emissive.set(on ? '#3a3220' : '#000000'); };
+renderer.domElement.addEventListener('pointermove', (ev) => {
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const hit = ray.intersectObjects(pickables, false)[0];
+  const obj = hit?.object ?? null;
+  if (hover !== obj) { setGlow(hover, false); setGlow(obj, true); hover = obj; }
+  if (!hit) { tip.hidden = true; return; }
+  tip.innerHTML = VIEWS[state.view].pick ? VIEWS[state.view].pick(hit) : obj.userData.html;
+  tip.hidden = false;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = `${ev.clientX + 14 + w > innerWidth ? ev.clientX - w - 14 : ev.clientX + 14}px`;
+  tip.style.top = `${ev.clientY + 14 + h > innerHeight ? ev.clientY - h - 14 : ev.clientY + 14}px`;
+});
+renderer.domElement.addEventListener('pointerleave', () => { setGlow(hover, false); hover = null; tip.hidden = true; });
+
+// ---------- loop ----------
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h); labelR.setSize(w, h);
+  camera.aspect = w / h;
+  // on narrow screens pull back so the whole chart fits
+  camera.fov = w < 700 ? 48 : 34;
+  // on desktop the side panel covers the left; center the scene in the space beside it
+  if (w >= 900) camera.setViewOffset(w, h, -185, 0, w, h); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); labelR.render(scene, camera); });
+
+const initial = new URLSearchParams(location.search).get('view');
+document.fonts.ready.then(() => show(ORDER.includes(initial) ? initial : 'radar'));
+</script>
+</body>
+</html>

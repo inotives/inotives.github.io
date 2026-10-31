@@ -13,6 +13,14 @@ export const PLAYGROUND_LIBRARIES = [
     repo: 'd3/d3',
   },
   {
+    id: 'chartjs',
+    name: 'Chart.js',
+    kind: 'Charting',
+    description: 'Canvas charts from a config object: scales, legends and tooltips out of the box. Here its layout drives 3D geometry in Three.js.',
+    site: 'https://www.chartjs.org',
+    repo: 'chartjs/Chart.js',
+  },
+  {
     id: 'threejs',
     name: 'Three.js',
     kind: '3D graphics',
@@ -208,5 +216,16 @@ export const PLAYGROUND_MOCKS = [
     description:
       'The inoTives design system written down, as an example of the brand kit every company should keep: concept, color tokens with live contrast checks, the data palette and ramps, fonts and type scale, and number and date formats. Then the same brand applied in shadcn/ui tokens, a D3 theme helper and Three.js scene rules, with toggles that show each library’s defaults, plus a Flaticon base icon set. Copy any value or download the tokens.',
     libraries: ['shadcn', 'd3', 'threejs', 'tailwind', 'flaticon'],
+  },
+  {
+    id: 'chartjs-3d',
+    project: 'Data in 3D',
+    name: 'Chart.js in 3D',
+    date: '2026-11-01',
+    href: '/mocks/chartjs-3d.html',
+    preview: '/mocks/previews/chartjs-3d.jpg',
+    description:
+      'Chart.js charts lifted into 3D: a radar lofted across six months, a multi-axis line chart with each axis on its own panel, a polar area with sectors extruded by a second value, and grouped bars set out in rows. Chart.js lays out scales, labels and every point on hidden canvases; Three.js uses those canvases as textures and builds the geometry from the positions Chart.js computed. Each view opens the original interactive Chart.js chart.',
+    libraries: ['chartjs', 'threejs', 'shadcn', 'tailwind', 'flaticon'],
   },
 ]
