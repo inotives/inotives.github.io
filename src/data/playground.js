@@ -110,4 +110,15 @@ export const PLAYGROUND_MOCKS = [
       'A kid’s home island in a gamified learning app: a voxel island with floating islets, decorations and a robot companion, over daily tasks, care meters and subject levels. Drag to turn the island and tap Sparkling to say hi.',
     libraries: ['threejs', 'daisyui', 'tailwind', 'flaticon'],
   },
+  {
+    id: 'inoai-console',
+    project: 'inoai',
+    name: 'Ring console',
+    date: '2026-10-31',
+    href: '/mocks/inoai.html',
+    preview: '/mocks/previews/inoai.jpg',
+    description:
+      'The home screen of a personal AI agent: health, activity and failures drawn as glowing rings around a voxel robot, with tasks, memory and skills below. Tap a ring or the status chip to open the side panel, with demo data in every section.',
+    libraries: ['threejs', 'flaticon'],
+  },
 ]
