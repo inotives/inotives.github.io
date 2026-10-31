@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">Every dashboard is a spec served by the same two routes</title>
+  <desc id="desc">Built-in specs and agent-drafted specs are stored as versioned JSON. The API reads a spec, runs each card's SQL through a query guard against the gold tables, and returns rows plus the chart type. The browser renders them with a fixed chart library.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="520" rx="24" fill="url(#bg)"/>
+  <text x="47" y="56" fill="#f6f9fc" font-family="system-ui,sans-serif" font-size="28" font-weight="700">A new chart is a card in a spec, not a new endpoint</text>
+  <text x="47" y="85" fill="#a9bdd0" font-family="system-ui,sans-serif" font-size="16">Specs are data. The API and the chart library stay the same as dashboards are added.</text>
+  <g font-family="system-ui,sans-serif">
+    <rect x="43" y="130" width="230" height="96" rx="16" fill="#263e5b" stroke="#75a8d5"/>
+    <text x="64" y="166" fill="#fff" font-size="19" font-weight="700">Built-in specs</text>
+    <text x="64" y="194" fill="#c8dbee" font-size="15">Reviewed like code</text>
+    <rect x="43" y="246" width="230" height="96" rx="16" fill="#4c3d2b" stroke="#e3ad5a"/>
+    <text x="64" y="282" fill="#fff" font-size="19" font-weight="700">Drafted specs</text>
+    <text x="64" y="310" fill="#f1d7aa" font-size="15">Written by an agent</text>
+
+    <rect x="333" y="178" width="230" height="116" rx="16" fill="#1d3d45" stroke="#53dfdc"/>
+    <text x="354" y="214" fill="#fff" font-size="19" font-weight="700">Spec store</text>
+    <text x="354" y="242" fill="#c1e5e5" font-size="15">Versioned JSON:</text>
+    <text x="354" y="266" fill="#c1e5e5" font-size="15">filters + cards</text>
+
+    <rect x="623" y="150" width="250" height="172" rx="16" fill="#263e5b" stroke="#75a8d5"/>
+    <text x="644" y="186" fill="#fff" font-size="19" font-weight="700">Dashboard API</text>
+    <text x="644" y="216" fill="#c8dbee" font-size="14" font-family="ui-monospace,Menlo,monospace">GET /dashboards/:id</text>
+    <text x="644" y="240" fill="#c8dbee" font-size="14" font-family="ui-monospace,Menlo,monospace">GET /dashboards/:id/</text>
+    <text x="644" y="260" fill="#c8dbee" font-size="14" font-family="ui-monospace,Menlo,monospace">    cards/:card?filters</text>
+    <text x="644" y="296" fill="#a9bdd0" font-size="14">Two routes for every page</text>
+
+    <rect x="933" y="130" width="224" height="96" rx="16" fill="#1d3d45" stroke="#53dfdc"/>
+    <text x="954" y="166" fill="#fff" font-size="19" font-weight="700">Query guard</text>
+    <text x="954" y="194" fill="#c1e5e5" font-size="15">One SELECT, role scope</text>
+    <rect x="933" y="246" width="224" height="96" rx="16" fill="#294a40" stroke="#71c69a"/>
+    <text x="954" y="282" fill="#fff" font-size="19" font-weight="700">Gold tables</text>
+    <text x="954" y="310" fill="#c7ead6" font-size="15">Read-only snapshot</text>
+
+    <rect x="623" y="392" width="250" height="96" rx="16" fill="#3b2f52" stroke="#b49ce6"/>
+    <text x="644" y="428" fill="#fff" font-size="19" font-weight="700">Chart library</text>
+    <text x="644" y="456" fill="#ddd0f5" font-size="15">Rows + chart type → chart</text>
+    <rect x="933" y="392" width="224" height="96" rx="16" fill="#2a3442" stroke="#90adc2"/>
+    <text x="954" y="428" fill="#fff" font-size="19" font-weight="700">Dashboard page</text>
+    <text x="954" y="456" fill="#c8d4e0" font-size="15">Same look everywhere</text>
+  </g>
+  <g fill="none" stroke="#90adc2" stroke-width="1.8" marker-end="url(#arrow)">
+    <path d="M273 178 C300 178 305 220 331 222"/>
+    <path d="M273 294 C300 294 305 254 331 252"/>
+    <path d="M563 236 H620"/>
+    <path d="M873 200 C900 200 905 178 930 178"/>
+    <path d="M1045 226 V243"/>
+    <path d="M930 300 C900 300 895 320 876 300" stroke-dasharray="5 5"/>
+    <path d="M748 322 V389"/>
+    <path d="M873 440 H930"/>
+  </g>
+  <text x="764" y="364" fill="#a9bdd0" font-family="system-ui,sans-serif" font-size="14">rows + chart type</text>
+</svg>

@@ -1,6 +1,26 @@
 {
   "posts": [
     {
+      "slug": "2026-10-31-self-serve-dashboards-as-specs",
+      "filename": "2026-10-31-self-serve-dashboards-as-specs.md",
+      "category": "post",
+      "title": "Dashboards as specs: letting an agent design self-serve dashboards",
+      "date": "2026-10-31",
+      "tags": [
+        "ai-agents",
+        "mcp",
+        "dashboards",
+        "data-visualization",
+        "api-design",
+        "analytics",
+        "crypto"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Instead of having an agent write dashboard code, give it a narrow contract: a dashboard is a spec of SQL cards, each card picks a chart type from a fixed library, filters arrive as query string values, and an MCP server lets the agent draft and test while a person publishes. A stablecoin-flows example shows how the pieces fit.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-27-agent-built-dashboards-from-analytical-databases",
       "filename": "2026-10-27-agent-built-dashboards-from-analytical-databases.md",
       "category": "post",
