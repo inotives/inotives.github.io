@@ -1138,6 +1138,132 @@ button.heat-cell[aria-pressed="true"] {
   font-size: 0.85rem;
 }
 
+/* Playground */
+.mock-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.mock-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--raise);
+}
+
+.mock-preview {
+  display: block;
+  border-bottom: 1px solid var(--line);
+}
+
+.mock-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 1;
+  object-fit: cover;
+  object-position: top;
+  transition: opacity 160ms ease;
+}
+
+.mock-preview:hover img {
+  opacity: 0.85;
+}
+
+.mock-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px 18px;
+}
+
+.mock-body .record-meta,
+.mock-body .record-title,
+.mock-body .record-copy {
+  margin: 0;
+}
+
+.mock-body .record-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.mock-body .record-title a:hover {
+  color: var(--signal);
+}
+
+.mock-credit {
+  margin: 0;
+  color: var(--fog);
+  font-size: 0.9rem;
+}
+
+.mock-credit a {
+  color: var(--ink-2);
+}
+
+.mock-credit a:hover {
+  color: var(--signal);
+}
+
+.library-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px 32px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.library-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.library-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.library-head h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.08rem;
+  font-weight: 600;
+}
+
+.library-head span,
+.library-used {
+  color: var(--fog);
+  font-size: 0.85rem;
+}
+
+.library-list p {
+  margin: 0;
+  color: var(--ink-2);
+  font-family: var(--font-read);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.library-list .library-used {
+  font-family: inherit;
+}
+
+.library-links {
+  display: flex;
+  gap: 16px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
 /* Notes index */
 .notes-filters {
   display: flex;
@@ -2128,7 +2254,9 @@ a.contribution-cell.has-report:hover {
 
   .project-steps,
   .teaching-grid,
-  .earlier-list {
+  .earlier-list,
+  .mock-grid,
+  .library-list {
     grid-template-columns: minmax(0, 1fr);
   }
 
