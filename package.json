@@ -38,5 +38,8 @@
     "globals": "^17.4.0",
     "tailwindcss": "^4.2.2",
     "vite": "^8.0.4"
+  },
+  "overrides": {
+    "postcss-selector-parser": "^6.1.5"
   }
 }
