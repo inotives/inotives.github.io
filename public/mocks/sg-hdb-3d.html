@@ -1,0 +1,1656 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Singapore HDB Resale</title>
+<!--
+  Playground mock: Singapore's HDB resale market on a 3D island.
+  Three.js draws the island and the bars, D3 does projection, scales, colour and the panel charts,
+  Leaflet shows the street map for whatever is selected (OneMap Night tiles). UI recreates
+  shadcn/ui in Tailwind with the inoTives brand kit. Icons: Flaticon UIcons.
+  Views: planning areas raised by median price per m², and every HDB block as a bar
+  (median price, coloured by remaining lease, with a filter for million-dollar sales).
+  Data (real): HDB resale flat prices from Jan 2017 (data.gov.sg), block positions from OneMap,
+  URA Master Plan 2019 planning-area boundaries. Prepared into data/sg-hdb-resale.json.
+  The latest sales for a selected block are fetched live from the data.gov.sg API.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-ink-2: #b8b5ac;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base { *, ::before, ::after { border-color: var(--color-border); } }
+</style>
+<style>
+  body { margin: 0; background: #15171b; }
+  .fi { display: inline-flex; line-height: 1; }
+  #stage { isolation: isolate; background: radial-gradient(ellipse 80% 70% at 60% 48%, #1b1e24 0%, #15171b 72%); }
+  #stage canvas { display: block; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+  .lbl { font: 400 10.5px "Source Code Pro", monospace; color: #8b9099; white-space: nowrap; }
+  .lbl.bg { padding: 1px 5px; border-radius: 4px; background: rgb(21 23 27 / 0.7); }
+  .lbl.strong { color: #e4e1d8; font: 500 12px "IBM Plex Sans Condensed", sans-serif; }
+  .lbl.sel { color: #f6c453; font: 500 12px "IBM Plex Sans Condensed", sans-serif; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
+  .slider { -webkit-appearance: none; appearance: none; width: 100%; height: 16px; background: transparent; cursor: pointer; }
+  .slider::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: linear-gradient(#f6c453, #f6c453) 0 / var(--fill, 50%) 100% no-repeat, #2a2e36; }
+  .slider::-moz-range-track { height: 6px; border-radius: 999px; background: #2a2e36; }
+  .slider::-moz-range-progress { height: 6px; border-radius: 999px; background: #f6c453; }
+  .slider::-webkit-slider-thumb { -webkit-appearance: none; margin-top: -5px; width: 16px; height: 16px; border-radius: 999px; background: #15171b; border: 1px solid rgb(246 196 83 / 0.7); }
+  .slider::-moz-range-thumb { width: 14px; height: 14px; border-radius: 999px; background: #15171b; border: 1px solid rgb(246 196 83 / 0.7); }
+  .slider:focus-visible { outline: none; }
+  .slider:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgb(246 196 83 / 0.35); }
+  #lmap { background: #0e1013; }
+  .leaflet-container { font: 12px "IBM Plex Sans Condensed", sans-serif; }
+  .leaflet-control-attribution { background: rgb(21 23 27 / 0.8) !important; color: #8b9099 !important; font-size: 9.5px; }
+  .leaflet-control-attribution a { color: #b8b5ac !important; }
+  .leaflet-bar a { background: #1d2026 !important; color: #e4e1d8 !important; border-color: #2b2f37 !important; }
+  .leaflet-tooltip { background: #15171b; color: #e4e1d8; border: 1px solid #2b2f37; box-shadow: none; font-size: 11.5px; }
+  .leaflet-tooltip::before { display: none; }
+  @media (min-width: 900px) { #panel { left: 1.5rem; top: 4.5rem; width: 360px; max-height: calc(100% - 6rem); } #panel.wide { width: 420px; } }
+  @media (max-width: 899px) { #panel { left: 0.75rem; right: 0.75rem; bottom: 0.75rem; max-height: 46vh; } }
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+<div class="fixed inset-0 overflow-hidden">
+  <div id="stage" class="absolute inset-0"></div>
+  <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
+    <a href="/playground" class="pointer-events-auto rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <span class="hidden text-sm text-muted-foreground lg:inline">Playground · Singapore HDB resale</span>
+    <div role="tablist" aria-label="Map views" id="tabs" class="pointer-events-auto mx-auto inline-flex h-9 max-w-full items-center overflow-x-auto rounded-lg bg-muted p-1 text-muted-foreground"></div>
+    <span class="hidden w-[190px] lg:block"></span>
+  </header>
+  <aside id="panel" class="scroll-thin absolute z-10 overflow-auto rounded-xl border bg-card/90 p-4 shadow backdrop-blur"></aside>
+  <div id="legend" class="pointer-events-none absolute bottom-3 right-4 z-10 hidden rounded-lg border bg-card/80 px-3 py-2 text-xs text-muted-foreground backdrop-blur md:block"></div>
+</div>
+<div id="tip" hidden class="pointer-events-none fixed z-40 rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const B = { paper: '#15171b', raise: '#1d2026', muted: '#23262d', line: '#2b2f37', ink: '#e4e1d8', ink2: '#b8b5ac', fog: '#8b9099', signal: '#1fefd7', amber: '#f6c453', pink: '#e58fb0' };
+const RAMP = d3.interpolateRgbBasis(['#174d49', '#1fefd7', '#f6c453', '#e58fb0']);
+const GOLD = d3.interpolateRgbBasis(['#3a3426', '#8a6a24', '#f6c453', '#fff3c4']);   // million-dollar sales: dim bronze to bright gold
+const PSM_DOMAIN = [4500, 9000];   // S$/m²; a few central areas go well past 9k and are clamped
+const LEASE = d3.interpolateRgbBasis(['#e58fb0', '#f6c453', '#9ccf7f', '#1fefd7']);
+const CHANGE = d3.interpolateRgbBasis(['#7cc4dc', '#3a3f48', '#e58fb0']);
+const sgd = (v) => (v >= 1e6 ? `S$${d3.format('.3~f')(v / 1e6)}M` : `S$${d3.format(',.0f')(Math.round(v / 1000))}k`);
+const psmF = (v) => `S$${d3.format(',')(Math.round(v))}/m²`;
+const title = (s) => s.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase()).replace(/\bSt\b(?=\.? |$)/, 'St');
+
+// ================= stage =================
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.appendChild(renderer.domElement);
+const labelR = new CSS2DRenderer(); labelR.domElement.className = 'labels'; stage.appendChild(labelR.domElement);
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(B.paper, 40, 90);
+scene.add(new THREE.HemisphereLight('#cfe9ff', B.paper, 1.2));
+const key = new THREE.DirectionalLight('#ffffff', 1.6); key.position.set(-8, 16, 12); scene.add(key);
+const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 300);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.minDistance = 1.5; controls.maxDistance = 70; controls.maxPolarAngle = Math.PI * 0.47; controls.autoRotateSpeed = 0.35;
+controls.addEventListener('start', () => { controls.autoRotate = false; fly = null; });
+let group = new THREE.Group(); scene.add(group);
+let pickables = [];
+const tickers = new Set();
+
+function lbl(text, pos, cls = '', parent = group) { const d = document.createElement('div'); d.className = `lbl ${cls}`; d.textContent = text; const o = new CSS2DObject(d); o.position.copy(pos); parent.add(o); return o; }
+function clearScene() {
+  group.traverse((o) => {
+    o.geometry?.dispose();
+    (Array.isArray(o.material) ? o.material : o.material ? [o.material] : []).forEach((m) => m.dispose());
+    if (o.isCSS2DObject) o.element.remove();
+  });
+  scene.remove(group); group = new THREE.Group(); scene.add(group);
+  pickables = []; tickers.clear(); ring = null;
+}
+
+// ================= data =================
+let DATA = null, AREAS = [], BLOCKS = [], YEARS = [], TOWNS = [];
+const dataReady = fetch('data/sg-hdb-resale.json').then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(async (d) => {
+  DATA = d; YEARS = d.years;
+  AREAS = d.areas.map((a, i) => ({ ...a, i, hdb: a.y.some((y) => y[1] > 0) }));
+  BLOCKS = d.blocks.map(([lat, lon, area, lease, blk, st, psm, pk, n, n1m, town, postal], i) => ({ i, lat, lon, area, lease, blk, street: d.streets[st], psm, pk, n, n1m, town, postal }));
+  TOWNS = d.towns;
+  d.fileLastMonth = d.lastMonth;
+  await restoreSync();
+  return d;
+});
+const yi = (y) => y - YEARS[0];
+const remaining = (b, y) => 99 - (y - b.lease);
+const blockName = (b) => `Blk ${b.blk} ${title(b.street)}`;
+const yearLabel = (y) => (y === YEARS.at(-1) ? `${y} to ${d3.timeFormat('%b')(new Date(`${DATA.lastMonth}-01`))}` : `${y}`);
+
+// Projection: Mercator fitted to the island, in world units. x east, z south.
+let proj = null;
+const P = (lon, lat) => { const [x, y] = proj([lon, lat]); return [x, y]; };
+function setupProjection() {
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  AREAS.forEach((a) => a.p.forEach((poly) => poly[0].forEach(([x, y]) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); })));
+  proj = d3.geoMercator().fitExtent([[-12, -7.5], [12, 7.5]], { type: 'MultiPoint', coordinates: [[x0, y0], [x1, y1]] });
+}
+function shapeOf(poly) {
+  const toV = (r) => r.map(([lon, lat]) => { const [x, z] = P(lon, lat); return new THREE.Vector2(x, -z); });
+  const s = new THREE.Shape(toV(poly[0]));
+  poly.slice(1).forEach((h) => s.holes.push(new THREE.Path(toV(h))));
+  return s;
+}
+const centroid = (a) => {
+  let best = null, ar = -1;
+  a.p.forEach((poly) => { const r = poly[0]; const s = Math.abs(d3.polygonArea(r)); if (s > ar) { ar = s; best = r; } });
+  return d3.polygonCentroid(best);
+};
+
+// The island: every planning area as a flat tile with its border.
+function island(dimHdb = false) {
+  const g = new THREE.Group();
+  const edges = [];
+  AREAS.forEach((a) => {
+    const shapes = a.p.map(shapeOf);
+    const geo = new THREE.ShapeGeometry(shapes); geo.rotateX(-Math.PI / 2);
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: a.hdb && !dimHdb ? '#262a31' : '#1f2228', roughness: 0.9 }));
+    m.position.y = -0.01; g.add(m);
+    a.p.forEach((poly) => poly.forEach((r) => r.forEach((pt, k) => {
+      const q = r[(k + 1) % r.length]; const [ax, az] = P(...pt), [bx, bz] = P(...q);
+      edges.push(new THREE.Vector3(ax, 0.002, az), new THREE.Vector3(bx, 0.002, bz));
+    })));
+  });
+  g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(edges), new THREE.LineBasicMaterial({ color: '#3a3f48', transparent: true, opacity: 0.8 })));
+  group.add(g);
+}
+
+// ================= state =================
+const state = { view: 'areas', year: 2026, color: 'price', metric: 'price', million: false, area: null, block: null, focus: null };   // focus: null | 'r:<region>' | 'a:<area index>'
+let playTimer = null, fly = null;
+
+// ================= view 1: planning areas =================
+const VIEWS = {};
+VIEWS.areas = {
+  tab: 'Areas', icon: 'fi-rr-city',
+  title: 'What a square metre costs, by planning area',
+  blurb: 'Each planning area with HDB flats rises by its median resale price per square metre. Play the years to watch the run-up after 2020; switch the colour to see which areas rose fastest, or where the million-dollar flats sell.',
+  how: ['Mercator projection of the URA planning areas, median and change scales, the colour ramp and the panel charts.', 'Each area is an extruded shape; heights ease between years.'],
+  camera: [-2, 17, 19], target: [0.5, 0, 0.6],
+  maxPsm: 0,
+  build() {
+    island();
+    this.maxPsm = d3.max(AREAS, (a) => d3.max(a.y, (y) => y[0]));
+    this.meshes = [];
+    AREAS.filter((a) => a.hdb).forEach((a) => {
+      const geo = new THREE.ExtrudeGeometry(a.p.map(shapeOf), { depth: 1, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
+      // roof lit, walls unlit: thousands of short wall segments would otherwise stripe in the light
+      const m = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ color: B.signal, roughness: 0.6, metalness: 0.05 }), new THREE.MeshBasicMaterial({ color: B.signal })]);
+      m.scale.y = 0.001; m.userData = { area: a.i, h: 0.001, pick: () => areaTip(a) };
+      // outline of the roof only (local y = 1 is the top once the mesh is scaled)
+      const roof = [];
+      a.p.forEach((poly) => poly.forEach((r) => r.forEach((pt, k) => { const [ax, az] = P(...pt), [bx, bz] = P(...r[(k + 1) % r.length]); roof.push(new THREE.Vector3(ax, 1, az), new THREE.Vector3(bx, 1, bz)); })));
+      m.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(roof), new THREE.LineBasicMaterial({ color: '#15171b', transparent: true, opacity: 0.6 })));
+      group.add(m); pickables.push(m); this.meshes.push(m);
+      const [cx, cz] = P(...centroid(a));
+      a.lbl = lbl(a.n, new THREE.Vector3(cx, 0, cz), 'bg');
+    });
+    tickers.add(() => this.meshes.forEach((m) => {
+      const d = m.userData.h - m.scale.y;
+      if (Math.abs(d) > 1e-4) m.scale.y += reduceMotion ? d : d * 0.14;
+      AREAS[m.userData.area].lbl.position.y = m.scale.y + 0.25;
+    }));
+    this.update();
+  },
+  update() {
+    const k = yi(state.year), sh = d3.scaleLinear([0, this.maxPsm], [0, 2.6]);
+    const ch = d3.scaleDiverging([-6, 0, 14], CHANGE).clamp(true), col = d3.scaleSequential(PSM_DOMAIN, RAMP).clamp(true);
+    // gold scale is fixed across years (busiest area-year), sqrt so a handful of sales still shows
+    this.maxM = d3.max(AREAS, (a) => d3.max(a.y, (y) => y[2])) || 1;
+    const gold = d3.scaleSequentialSqrt([0, this.maxM], GOLD);
+    const gm = state.color === 'million';
+    this.meshes.forEach((m) => {
+      const a = AREAS[m.userData.area], [psm, n, m1] = a.y[k];
+      const prev = k > 0 ? a.y[k - 1][0] : 0;
+      m.userData.h = n ? Math.max(0.02, sh(psm)) : 0.001;
+      m.visible = n > 0; a.lbl.visible = n > 0;
+      const c = gm ? (m1 ? gold(m1) : '#2f333a') : state.color === 'change' ? (prev && psm ? ch(((psm / prev) - 1) * 100) : '#3a3f48') : col(psm);
+      const top = new THREE.Color(state.area === a.i ? (gm ? B.signal : B.amber) : c);
+      m.material[0].color.copy(top); m.material[1].color.copy(top).multiplyScalar(0.55);
+      a.lbl.element.className = `lbl bg ${state.area === a.i ? 'sel' : ''}`;
+      a.lbl.element.textContent = gm && m1 ? `${a.n} · ${d3.format(',')(m1)}` : a.n;
+      if (gm && m1) a.lbl.element.style.color = m1 >= this.maxM * 0.25 ? '#f6c453' : ''; else a.lbl.element.style.color = '';
+    });
+    legend();
+  },
+};
+function areaTip(a) {
+  const k = yi(state.year), [psm, n, m1, byt] = a.y[k], prev = k > 0 ? a.y[k - 1][0] : 0;
+  const chg = prev && psm ? ((psm / prev) - 1) * 100 : null;
+  return `<div class="font-medium text-foreground">${esc(a.n)}</div>
+    <div class="text-muted-foreground">${esc(a.r)} · ${yearLabel(state.year)}</div>
+    <div class="mt-1 font-mono">${psmF(psm)} median${chg == null ? '' : ` <span class="${chg >= 0 ? 'text-[#e58fb0]' : 'text-[#7cc4dc]'}">${chg >= 0 ? '+' : ''}${chg.toFixed(1)}%</span>`}</div>
+    <div class="font-mono text-muted-foreground">${d3.format(',')(n)} sales${m1 ? ` · ${m1} at S$1M+` : ''}</div>`;
+}
+
+// ================= view 2: blocks =================
+const BOX = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
+VIEWS.blocks = {
+  tab: 'Blocks', icon: 'fi-rr-building',
+  title: 'Every HDB block, by price and lease',
+  blurb: 'One bar per block that sold a flat in the year. Height is the median resale price; colour is the lease left, so you can see old central blocks still selling high next to newer estates further out.',
+  how: ['Scales for price and lease, the lease colour ramp, the yearly chart and the lease-versus-price scatter.', 'About 9,700 bars in one instanced mesh; picking reads the instance id.'],
+  camera: [-1.5, 13.5, 15.5], target: [0.5, 0, 0.8],
+  build() {
+    island();
+    const n = BLOCKS.length;
+    const mat = new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.05 });
+    const mesh = new THREE.InstancedMesh(BOX, mat, n);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.mesh = mesh; this.pos = BLOCKS.map((b) => P(b.lon, b.lat));
+    this.cur = new Float32Array(n); this.tgt = new Float32Array(n);
+    this.maxK = d3.quantile(BLOCKS.flatMap((b) => b.pk.filter(Boolean)), 0.999);
+    this.maxPsm = d3.quantile(BLOCKS.flatMap((b) => b.psm.filter(Boolean)), 0.999);
+    mesh.userData.pick = (hit) => blockTip(BLOCKS[hit.instanceId]);
+    mesh.userData.blockAt = (hit) => hit.instanceId;
+    mesh.userData.alive = (i) => this.cur[i] > 0.001;
+    group.add(mesh); pickables.push(mesh);
+    // selection marker
+    this.marker = new THREE.Group();
+    const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1, 6).translate(0, 0.5, 0), new THREE.MeshBasicMaterial({ color: B.amber }));
+    const halo = new THREE.Mesh(new THREE.RingGeometry(0.09, 0.12, 32).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: B.amber, side: THREE.DoubleSide }));
+    halo.position.y = 0.01;
+    this.marker.add(pin, halo); this.pin = pin;
+    this.markLbl = lbl('', new THREE.Vector3(), 'sel bg', this.marker);
+    group.add(this.marker);
+    this.dirty = true;
+    tickers.add(() => this.step());
+    tickers.add(ringStep);
+    this.update();
+  },
+  step() {
+    if (!this.dirty) return;
+    const m4 = new THREE.Matrix4(), w = 0.042;
+    let moving = false;
+    for (let i = 0; i < this.cur.length; i++) {
+      const d = this.tgt[i] - this.cur[i];
+      if (Math.abs(d) > 1e-4) { this.cur[i] += reduceMotion ? d : d * 0.16; moving = true; } else this.cur[i] = this.tgt[i];
+      const [x, z] = this.pos[i];
+      m4.makeScale(w, Math.max(this.cur[i], 1e-4), w); m4.setPosition(x, 0, z);
+      this.mesh.setMatrixAt(i, m4);
+    }
+    this.mesh.instanceMatrix.needsUpdate = true;
+    if (state.block != null) { const h = this.cur[state.block]; this.pin.scale.y = h + 0.5; this.markLbl.position.y = h + 0.62; }
+    if (!moving) { this.dirty = false; this.mesh.computeBoundingSphere(); this.mesh.computeBoundingBox?.(); }
+  },
+  update() {
+    const k = yi(state.year), psm = state.metric === 'psm';
+    const sh = d3.scaleLinear([0, psm ? this.maxPsm : this.maxK], [0, 1.6]).clamp(true);
+    const lease = d3.scaleSequential([45, 95], LEASE).clamp(true);
+    const c = new THREE.Color();
+    BLOCKS.forEach((b, i) => {
+      const sold = b.n[k] > 0, top = b.n1m[k] > 0;
+      const show = sold && (!state.million || top) && (state.focus == null || inFocus(b));   // outside the focus: flat stubs
+      this.tgt[i] = sold ? (show ? Math.max(0.02, sh(psm ? b.psm[k] : b.pk[k])) : 0.02) : 0;
+      if (i === state.block) c.set(B.ink);
+      else if (state.focus != null && !inFocus(b)) c.set('#30343b');
+      else if (state.million) c.set(top ? B.amber : '#2f343c');
+      else c.set(lease(remaining(b, state.year)));
+      this.mesh.setColorAt(i, c);
+    });
+    this.mesh.instanceColor.needsUpdate = true;
+    this.dirty = true;
+    const b = BLOCKS[state.block];
+    this.marker.visible = !!b;
+    if (b) { const [x, z] = this.pos[b.i]; this.marker.position.set(x, 0, z); this.markLbl.element.textContent = blockName(b); }
+    sunburst();
+    legend();
+  },
+};
+
+// ================= sunburst ring around a town (Blocks, town in focus) =================
+// D3's partition lays out the town's sales for the year: inner ring by flat type, outer ring by
+// floor level within each type. Three.js draws each slice as a thin extruded arc lying on the ground,
+// centred on the town and just outside its blocks. Slices ease to new angles when the year changes.
+const MIX_COL = ['#7cc4dc', '#9ccf7f', '#1fefd7', '#f6c453', '#e58fb0', '#c9a4f5'];
+const mixName = (i) => title(DATA.mixTypes[i]).replace('Other', '1-room and multi-gen');
+const bandCol = (ti, bi) => d3.interpolateRgb('#15171b', MIX_COL[ti])(0.42 + bi * 0.19);
+let ring = null;   // { town, g, c: [x, z], r: [r0, r1, r2, r3], segs: Map(key -> seg), head }
+function arcGeo(r0, r1, a0, a1) {
+  // angles run clockwise from north; shape y is north (it becomes -z once laid flat)
+  const s = new THREE.Shape(), A = (a) => Math.PI / 2 - a;
+  s.absarc(0, 0, r1, A(a0), A(a1), true);
+  s.absarc(0, 0, r0, A(a1), A(a0), false);
+  const g = new THREE.ExtrudeGeometry(s, { depth: 0.035, bevelEnabled: false, curveSegments: Math.max(4, Math.ceil((a1 - a0) * 24)) });
+  g.rotateX(-Math.PI / 2);
+  return g;
+}
+function sunburst() {
+  const v = VIEWS.blocks;
+  if (state.focus == null) { if (ring) { dropRing(); } return; }
+  if (!ring || ring.town !== state.focus) buildRing();
+  const t = TOWNS[state.focus], k = yi(state.year), mix = t.mix[k];
+  const total = d3.sum(mix.flat(), (d) => d[0]);
+  const root = d3.partition().size([Math.PI * 2, 3])(d3.hierarchy({ children: mix.map((bands, ti) => ({ ti, children: bands.map(([n, pk], bi) => ({ ti, bi, n, pk })) })) }, (d) => d.children).sum((d) => d.n ?? 0));
+  root.descendants().slice(1).forEach((d) => {
+    const key = d.depth === 1 ? `t${d.data.ti}` : `b${d.data.ti}_${d.data.bi}`, seg = ring.segs.get(key);
+    const pad = d.x1 - d.x0 > 0.03 ? 0.006 : 0;
+    seg.tgt = [d.x0 + pad, Math.max(d.x0 + pad, d.x1 - pad)];
+    seg.n = d.value; seg.share = total ? d.value / total : 0; seg.pk = d.data.pk;
+    if (d.depth === 1) {
+      const mid = (d.x0 + d.x1) / 2, R = ring.r[3] + 0.16;
+      seg.lbl.position.set(ring.c[0] + Math.sin(mid) * R, 0.05, ring.c[1] - Math.cos(mid) * R);
+      seg.lbl.element.textContent = `${mixName(d.data.ti).replace('1-room and multi-gen', 'Other')} ${d3.format('.0%')(seg.share)}`;
+      seg.lbl.visible = seg.share >= 0.04;
+    }
+  });
+  ring.head.element.textContent = `${t.n} · ${d3.format(',')(total)} sales in ${state.year}`;
+  ring.anim = true;
+}
+function buildRing() {
+  dropRing();
+  const v = VIEWS.blocks, pts = BLOCKS.filter(inFocus).map((b) => v.pos[b.i]);
+  const [x0, x1] = d3.extent(pts, (p) => p[0]), [z0, z1] = d3.extent(pts, (p) => p[1]);
+  const c = [(x0 + x1) / 2, (z0 + z1) / 2];
+  const r0 = d3.max(pts, (p) => Math.hypot(p[0] - c[0], p[1] - c[1])) + 0.14;
+  const w = Math.min(0.32, Math.max(0.1, r0 * 0.12));
+  const r = [r0, r0 + w, r0 + w + 0.02, r0 + w * 1.85];
+  const g = new THREE.Group(); g.position.set(c[0], 0.005, c[1]);
+  // faint guide circle under the ring
+  const guide = new THREE.Mesh(new THREE.RingGeometry(r[0] - 0.01, r[3] + 0.01, 96).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#1d2026', transparent: true, opacity: 0.85, depthWrite: false }));
+  g.add(guide);
+  const segs = new Map();
+  DATA.mixTypes.forEach((_, ti) => {
+    const make = (key, rr0, rr1, color, extra) => {
+      const m = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.05 }));
+      const seg = { key, m, r0: rr0, r1: rr1, cur: [0, 0], tgt: [0, 0], ...extra };
+      m.userData.pick = () => ringTip(seg);
+      g.add(m); pickables.push(m); segs.set(key, seg);
+      return seg;
+    };
+    const tseg = make(`t${ti}`, r[0], r[1], MIX_COL[ti], { ti });
+    tseg.lbl = lbl('', new THREE.Vector3(), 'bg'); tseg.lbl.visible = false;
+    DATA.bands.forEach((_, bi) => make(`b${ti}_${bi}`, r[2], r[3], bandCol(ti, bi), { ti, bi }));
+  });
+  const head = lbl('', new THREE.Vector3(c[0], 0.05, c[1] + r[3] + 0.45), 'strong bg');   // front edge, clear of the bars
+  group.add(g);
+  ring = { town: state.focus, g, c, r, segs, head, anim: true };
+}
+function dropRing() {
+  if (!ring) return;
+  ring.g.traverse((o) => { o.geometry?.dispose(); o.material?.dispose?.(); });
+  ring.segs.forEach((s) => { pickables = pickables.filter((p) => p !== s.m); if (s.lbl) { s.lbl.element.remove(); group.remove(s.lbl); } });
+  ring.head.element.remove(); group.remove(ring.head);
+  group.remove(ring.g); ring = null;
+}
+function ringStep() {
+  if (!ring?.anim) return;
+  let moving = false;
+  ring.segs.forEach((s) => {
+    const d0 = s.tgt[0] - s.cur[0], d1 = s.tgt[1] - s.cur[1];
+    if (Math.abs(d0) + Math.abs(d1) < 1e-4) { if (s.cur !== s.tgt) { s.cur = [...s.tgt]; } else return; }
+    else { s.cur = reduceMotion ? [...s.tgt] : [s.cur[0] + d0 * 0.14, s.cur[1] + d1 * 0.14]; moving = true; }
+    s.m.geometry.dispose();
+    s.m.geometry = s.cur[1] - s.cur[0] > 1e-4 ? arcGeo(s.r0, s.r1, s.cur[0], s.cur[1]) : new THREE.BufferGeometry();
+  });
+  ring.anim = moving;
+}
+function ringTip(seg) {
+  const t = TOWNS[state.focus];
+  const head = seg.bi == null ? mixName(seg.ti) : `${mixName(seg.ti)}, floors ${DATA.bands[seg.bi]}`;
+  const price = seg.bi == null ? t.y[yi(state.year)][3][seg.ti] : seg.pk;
+  return `<div class="font-medium text-foreground"><span class="mr-1.5 inline-block size-2.5 rounded-sm" style="background:${seg.bi == null ? MIX_COL[seg.ti] : bandCol(seg.ti, seg.bi)}"></span>${esc(head)}</div>
+    <div class="text-muted-foreground">${esc(t.n)} · ${yearLabel(state.year)}</div>
+    <div class="mt-1 font-mono">${d3.format(',')(seg.n)} sales · ${d3.format('.1%')(seg.share)} of the town</div>
+    ${price ? `<div class="font-mono text-muted-foreground">median ${sgd(price * 1000)}</div>` : ''}`;
+}
+function blockTip(b) {
+  const k = yi(state.year), y = state.year;
+  const head = `<div class="font-medium text-foreground">${esc(blockName(b))}</div><div class="text-muted-foreground">${esc(AREAS[b.area]?.n ?? '')} · lease from ${b.lease}</div>`;
+  if (!b.n[k]) return `${head}<div class="mt-1 text-muted-foreground">No resale in ${yearLabel(y)}</div>`;
+  return `${head}<div class="mt-1 font-mono">${sgd(b.pk[k] * 1000)} median · ${psmF(b.psm[k])}</div>
+    <div class="font-mono text-muted-foreground">${b.n[k]} sale${b.n[k] > 1 ? 's' : ''} in ${yearLabel(y)}${b.n1m[k] ? ` · <span class="text-amber">${b.n1m[k]} at S$1M+</span>` : ''}</div>
+    <div class="font-mono text-muted-foreground">about ${remaining(b, y)} years of lease left</div>`;
+}
+
+// ================= legend (bottom right) =================
+function legend() {
+  const el = $('#legend'), stops = (f, n = 24) => d3.range(n + 1).map((i) => f(i / n)).join(',');
+  let body = '';
+  if (state.view === 'value') { const st = (f, n = 24) => d3.range(n + 1).map((i) => f(i / n)).join(','); el.innerHTML = V.res ? `<div class="mb-1 text-foreground">Sold vs model, ${title(V.type).toLowerCase()}</div><div class="h-2 w-48 rounded-full" style="background:linear-gradient(90deg,${st(d3.interpolateRgbBasis(['#7cc4dc', '#3a3f48', '#e58fb0']))})"></div><div class="mt-1 flex w-48 justify-between font-mono text-[10.5px]"><span>12% below</span><span>0</span><span>12% above</span></div><div class="mt-2 border-t pt-1.5"><i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Click a bar to value a flat there</div>` : '<i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Drag to turn · scroll to zoom'; return; }
+  if (state.view === 'areas' && state.color === 'price') body = `<div class="mb-1 text-foreground">Median price per m²</div><div class="h-2 w-48 rounded-full" style="background:linear-gradient(90deg,${stops(RAMP)})"></div><div class="mt-1 flex w-48 justify-between font-mono text-[10.5px]"><span>S$4.5k or less</span><span>S$9k+</span></div>`;
+  else if (state.view === 'areas' && state.color === 'million') body = `<div class="mb-1 text-foreground">Sales at S$1M or more, ${state.year}</div><div class="h-2 w-48 rounded-full" style="background:linear-gradient(90deg,${stops((t) => GOLD(t))})"></div><div class="mt-1 flex w-48 justify-between font-mono text-[10.5px]"><span>1</span><span>${d3.format(',')(Math.round(VIEWS.areas.maxM / 4))}</span><span>${d3.format(',')(VIEWS.areas.maxM)}</span></div><div class="mt-1 flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm bg-[#2f333a]"></span>none</div>`;
+  else if (state.view === 'areas') body = `<div class="mb-1 text-foreground">Change on the year</div><div class="h-2 w-48 rounded-full" style="background:linear-gradient(90deg,${stops(CHANGE)})"></div><div class="mt-1 flex w-48 justify-between font-mono text-[10.5px]"><span>−6%</span><span>0</span><span>+14%</span></div>`;
+  else if (state.million) body = `<div class="flex items-center gap-2 text-foreground"><span class="inline-block size-2.5 rounded-sm bg-amber"></span>Block with a S$1M+ sale in ${state.year}</div>`;
+  else body = `<div class="mb-1 text-foreground">Lease left, years</div><div class="h-2 w-48 rounded-full" style="background:linear-gradient(90deg,${stops(LEASE)})"></div><div class="mt-1 flex w-48 justify-between font-mono text-[10.5px]"><span>45</span><span>70</span><span>95</span></div>`;
+  el.innerHTML = `${body}<div class="mt-2 border-t pt-1.5"><i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Drag to turn · scroll to zoom · click to select</div>`;
+}
+
+// ================= panel =================
+const ORDER = ['areas', 'blocks', 'value'];
+const renderTabs = () => $('#tabs').innerHTML = ORDER.map((k) => `<button role="tab" data-tab="${k}" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi ${VIEWS[k].icon}"></i>${VIEWS[k].tab}</button>`).join('');
+
+const seg = (name, opts, cur) => `<div class="inline-flex h-8 items-center rounded-md bg-muted p-0.5 text-xs text-muted-foreground">${opts.map(([v, t]) => `<button data-${name}="${v}" data-state="${v === cur ? 'active' : ''}" class="rounded px-2.5 py-1 font-medium transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow">${t}</button>`).join('')}</div>`;
+const tile = (label, id, val, sub = '') => `<div class="rounded-lg border bg-background/40 p-2"><div class="text-[11px] text-muted-foreground">${label}</div><div id="${id}" class="mt-0.5 font-mono text-[15px] text-foreground">${val}</div>${sub ? `<div id="${id}-sub" class="text-[11px] text-muted-foreground">${sub}</div>` : ''}</div>`;
+
+function yearControl() {
+  const pct = ((state.year - YEARS[0]) / (YEARS.length - 1)) * 100;
+  return `<div class="flex items-center gap-2">
+    <button id="play" class="inline-flex size-8 shrink-0 items-center justify-center rounded-md border bg-background/60 text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="${playTimer ? 'Pause' : 'Play the years'}"><i class="fi ${playTimer ? 'fi-rr-pause' : 'fi-rr-play'}"></i></button>
+    <input id="year" type="range" class="slider" min="${YEARS[0]}" max="${YEARS.at(-1)}" step="1" value="${state.year}" style="--fill:${pct}%" aria-label="Year" />
+    <span id="year-lbl" class="w-[96px] shrink-0 whitespace-nowrap text-right font-mono text-sm text-amber">${yearLabel(state.year)}</span>
+  </div>`;
+}
+
+function renderPanel() {
+  const v = VIEWS[state.view];
+  if (!DATA) { $('#panel').innerHTML = `<h1 class="text-lg font-semibold">${v.title}</h1><p class="mt-2 text-sm text-muted-foreground">Loading 243,000 resale records…</p>`; return; }
+  const opts = state.view === 'value' ? valueForm() : state.view === 'areas'
+    ? `<div class="mt-3 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Colour</span>${seg('color', [['price', 'Price per m²'], ['change', 'Change'], ['million', 'S$1M+ sales']], state.color)}</div>`
+    : `<div class="mt-3 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Height</span>${seg('metric', [['price', 'Median price'], ['psm', 'Price per m²']], state.metric)}</div>
+       <label class="mt-2 flex cursor-pointer items-center justify-between gap-2 text-sm"><span><i class="fi fi-rr-sack-dollar mr-1.5 align-[-2px] text-amber"></i>Only S$1M+ sales</span>
+         <button id="million" role="switch" aria-checked="${state.million}" class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${state.million ? 'bg-amber' : 'bg-input'}"><span class="inline-block size-4 rounded-full bg-background shadow transition-transform ${state.million ? 'translate-x-[18px]' : 'translate-x-0.5'}"></span></button></label>
+       <div class="relative mt-3">
+         <i class="fi fi-rr-search pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"></i>
+         <input id="search" type="search" autocomplete="off" spellcheck="false" placeholder="Search a block, street, town or postal code" aria-label="Search a block, street, town or postal code" role="combobox" aria-expanded="false" aria-controls="search-list"
+           class="h-9 w-full rounded-md border bg-background/60 pl-8 pr-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+         <div id="search-list" role="listbox" hidden class="absolute inset-x-0 top-10 z-20 max-h-72 overflow-auto rounded-md border bg-background p-1 shadow-lg"></div>
+       </div>
+       <p id="search-note" class="mt-1 hidden text-xs text-muted-foreground"></p>
+       <div class="mt-3 flex items-center justify-between gap-2"><label for="focus" class="text-xs text-muted-foreground"><i class="fi fi-rr-search-location mr-1 align-[-2px]"></i>Zoom to</label>
+         <div class="relative"><select id="focus" class="h-8 w-[200px] appearance-none rounded-md border bg-background/60 pl-2.5 pr-8 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">${focusOptions()}</select>
+         <i class="fi fi-rr-angle-small-down pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"></i></div></div>`;
+  if (renderPanel.view !== state.view) { $('#panel').scrollTop = 0; renderPanel.view = state.view; }
+  $('#panel').classList.toggle('wide', state.view === 'value');
+  $('#panel').innerHTML = `
+    <h1 class="text-lg font-semibold leading-tight">${v.title}</h1>
+    <p class="mt-1.5 text-sm leading-relaxed text-ink-2">${v.blurb}</p>
+    <div id="sync-row" class="mt-3">${syncRow()}</div>
+    ${state.view === 'value' ? '' : `<div class="mt-4">${yearControl()}</div>`}
+    ${opts}
+    <div id="detail" class="mt-4 border-t pt-3"></div>
+    <div class="mt-4 space-y-2 border-t pt-3 text-sm">
+      <p class="text-xs font-medium text-muted-foreground">How it’s built</p>
+      <p class="flex gap-2 text-ink-2"><span class="mt-0.5 inline-flex h-5 shrink-0 items-center rounded bg-amber/15 px-1.5 font-mono text-[10.5px] text-amber">D3</span><span>${v.how[0]}</span></p>
+      <p class="flex gap-2 text-ink-2"><span class="mt-0.5 inline-flex h-5 shrink-0 items-center rounded bg-primary/15 px-1.5 font-mono text-[10.5px] text-primary">Three.js</span><span>${v.how[1]}</span></p>
+      ${state.view === 'value' ? '' : `<p class="flex gap-2 text-ink-2"><span class="mt-0.5 inline-flex h-5 shrink-0 items-center rounded bg-[#c9a4f5]/15 px-1.5 font-mono text-[10.5px] text-[#c9a4f5]">Leaflet</span><span>The street map for the selection, on OneMap tiles.</span></p>`}
+    </div>
+    <p class="mt-3 text-xs text-muted-foreground"><i class="fi fi-rr-info mr-1 align-[-1px]"></i>HDB resale prices, Jan 2017 to ${d3.timeFormat('%b %Y')(new Date(`${DATA.lastMonth}-01`))}, from data.gov.sg. Areas are URA planning areas, which differ slightly from HDB towns. Lease left is estimated from the lease start year.</p>`;
+  renderDetail();
+}
+
+// The selection-dependent part of the panel. Rebuilt on selection, refreshed on year change.
+function renderDetail() {
+  const el = $('#detail'); if (!el) return;
+  dropMap();
+  if (state.view === 'value') return valueDetail(el);
+  if (state.view === 'blocks' && state.block != null) return blockDetail(el);
+  if (state.view === 'areas' && state.area != null) return areaDetail(el);
+  if (state.view === 'blocks' && state.focus != null) return focusDetail(el);
+  return islandDetail(el);
+}
+
+// ---------- town focus (Blocks) ----------
+// state.focus is an index into TOWNS (the 26 HDB towns in the resale data), or null.
+const inFocus = (b) => b.town === state.focus;
+const focusLabel = () => (state.focus == null ? 'All of Singapore' : TOWNS[state.focus].n);
+function focusOptions() {
+  const opt = (v, t) => `<option value="${v}" ${String(state.focus ?? '') === String(v) ? 'selected' : ''}>${esc(t)}</option>`;
+  return opt('', 'All of Singapore') + `<optgroup label="HDB towns">${TOWNS.map((t, i) => opt(i, t.n)).join('')}</optgroup>`;
+}
+function setFocus(f) {
+  state.focus = f === '' || f == null ? null : +f;
+  state.block = null;
+  const sel = $('#focus'); if (sel) sel.value = state.focus ?? '';
+  VIEWS.blocks.update(); renderDetail();
+  $('#panel').scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+  flyToFocus();
+}
+// Fit the camera to the town's blocks, keeping the default viewing angle.
+function flyToFocus() {
+  const v = VIEWS.blocks;
+  if (state.focus == null) { flyCam(new THREE.Vector3(...v.target), new THREE.Vector3(...v.camera)); return; }
+  const pts = BLOCKS.filter(inFocus).map((b) => v.pos[b.i]);
+  if (!pts.length) return;
+  const [x0, x1] = d3.extent(pts, (p) => p[0]), [z0, z1] = d3.extent(pts, (p) => p[1]);
+  let size = Math.max(x1 - x0, (z1 - z0) * 1.5, 0.8);
+  const t = new THREE.Vector3((x0 + x1) / 2, 0.3, (z0 + z1) / 2);
+  if (ring) { size = Math.max(size, ring.r[3] * 2.3); t.set(ring.c[0], 0.3, ring.c[1] - 0.15); }   // fit the sunburst too
+  const dir = new THREE.Vector3(...v.camera).sub(new THREE.Vector3(...v.target)).normalize();
+  flyCam(t, t.clone().add(dir.multiplyScalar(size * 1.25 + 3.2)));
+}
+function focusDetail(el) {
+  const t = TOWNS[state.focus], k = yi(state.year), [psm, n, m1] = t.y[k];
+  el.innerHTML = `<div class="flex items-start justify-between gap-2"><div><div class="text-sm font-medium">${esc(t.n)}</div><div id="t-sub" class="text-xs text-muted-foreground">${townSub()}</div></div>
+      <button data-focus="" class="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-cross-small mr-0.5 align-[-2px]"></i>All of Singapore</button></div>
+    <div class="mt-2 grid grid-cols-3 gap-2">${tile('Per m²', 't-psm', n ? psmF(psm).replace('/m²', '') : '–')}${tile('Sales', 't-n', d3.format(',')(n))}${tile('S$1M+', 't-m', d3.format(',')(m1))}</div>
+    <div id="chart" class="mt-3"></div>
+    <div id="lmap" class="mt-3 h-[200px] overflow-hidden rounded-lg border"></div>
+    <p class="mt-1 text-[11px] text-muted-foreground">Blocks sold in ${state.year}, coloured by price per m². Click one, here or on the 3D map, to see its sales.</p>
+    <div class="mt-3 flex items-baseline justify-between"><span id="mix-head" class="text-xs font-medium text-ink-2">Sales mix, ${state.year}</span><span class="text-[11px] text-muted-foreground">the ring around the town</span></div><div id="mix" class="mt-1.5"></div>`;
+  yearBars($('#chart'), t.y.map((y) => y[0]), { color: B.signal, fmt: (v) => (v ? `${d3.format('.1f')(v / 1000)}k` : '') });
+  mixTable(t);
+  townMap();
+}
+const townSub = () => `HDB town · ${d3.format(',')(BLOCKS.filter((b) => inFocus(b) && b.n[yi(state.year)]).length)} blocks sold in ${state.year}`;
+function townMap() {
+  lmap = newMap();
+  const pts = BLOCKS.filter(inFocus);
+  const bounds = L.latLngBounds(pts.map((b) => [b.lat, b.lon]));
+  const fit = () => { lmap?.invalidateSize(); lmap?.fitBounds(bounds, { padding: [10, 10] }); };
+  fit(); requestAnimationFrame(fit);
+  blockMarkers(pts);
+}
+// Circle markers for blocks sold in the year, coloured by price per m²; click opens the block.
+function blockMarkers(list) {
+  if (!lmap) return;
+  lmarkers.forEach((m) => m.remove()); lmarkers = [];
+  const k = yi(state.year), col = d3.scaleSequential(PSM_DOMAIN, RAMP).clamp(true);
+  list.filter((b) => b.n[k]).forEach((b) => {
+    const mk = L.circleMarker([b.lat, b.lon], { radius: 3.5, weight: 0, fillColor: col(b.psm[k]), fillOpacity: 0.9 })
+      .bindTooltip(`${esc(blockName(b))}<br><span style="font-family:Source Code Pro">${psmF(b.psm[k])}</span>`, { direction: 'top', offset: [0, -4] })
+      .on('click', () => openBlock(b.i, { fly: true })).addTo(lmap);
+    lmarkers.push(mk);
+  });
+}
+// Panel twin of the ring: share of sales by flat type, its floor split, and median price.
+function mixTable(t) {
+  const el = $('#mix'); if (!el) return;
+  const k = yi(state.year), mix = t.mix[k], total = d3.sum(mix.flat(), (d) => d[0]) || 1;
+  const rows = mix.map((bands, ti) => ({ ti, n: d3.sum(bands, (b) => b[0]), bands })).filter((r) => r.n);
+  el.innerHTML = `<div class="grid grid-cols-[1fr_auto_auto] items-center gap-x-3 gap-y-1.5 text-xs">${rows.map((r) => `
+    <div class="min-w-0"><div class="flex items-center gap-1.5 text-ink-2"><span class="inline-block size-2.5 shrink-0 rounded-sm" style="background:${MIX_COL[r.ti]}"></span><span class="truncate">${esc(mixName(r.ti))}</span></div>
+      <div class="mt-1 flex h-1.5 overflow-hidden rounded-full bg-muted">${r.bands.map(([n], bi) => `<span title="Floors ${DATA.bands[bi]}: ${n}" style="width:${(n / r.n) * 100}%;background:${bandCol(r.ti, bi)}"></span>`).join('')}</div></div>
+    <span class="text-right font-mono text-ink-2">${d3.format('.0%')(r.n / total)}</span>
+    <span class="w-[62px] text-right font-mono text-foreground">${t.y[k][3][r.ti] ? sgd(t.y[k][3][r.ti] * 1000) : '–'}</span>`).join('')}</div>
+  <p class="mt-2 text-[11px] text-muted-foreground">Bars split each flat type by floor: ${DATA.bands.map((b, bi) => `<span style="color:${bandCol(2, bi)}">${b}</span>`).join(', ')}. Price is the median for the type.</p>`;
+}
+// Areas ranked by million-dollar sales for the year (Areas tab, gold colour).
+function goldRanks() {
+  const el = $('#gold'); if (!el) return;
+  const k = yi(state.year), rows = AREAS.filter((a) => a.hdb && a.y[k][2]).sort((x, y) => y.y[k][2] - x.y[k][2]);
+  if (!rows.length) { el.innerHTML = `<p class="text-xs text-muted-foreground">No resale flat sold for S$1M or more in ${state.year}.</p>`; return; }
+  const W = el.clientWidth || 320, x = d3.scaleLinear([0, rows[0].y[k][2]], [0, W - 170]), gold = d3.scaleSequentialSqrt([0, VIEWS.areas.maxM || 1], GOLD);
+  el.innerHTML = rows.map((a) => `<button data-area="${a.i}" class="flex w-full items-center gap-2 rounded px-1 py-0.5 text-left text-xs hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+    <span class="w-[104px] shrink-0 truncate text-ink-2">${esc(a.n)}</span><span class="h-2.5 rounded-sm" style="width:${Math.max(2, x(a.y[k][2]))}px;background:${gold(a.y[k][2])}"></span><span class="font-mono text-ink-2">${d3.format(',')(a.y[k][2])}</span></button>`).join('');
+}
+function townRanks() {
+  const el = $('#ranks'); if (!el) return;
+  const k = yi(state.year), rows = TOWNS.map((t, i) => ({ ...t, i })).filter((t) => t.y[k][1]).sort((x, y) => y.y[k][0] - x.y[k][0]);
+  const W = el.clientWidth || 320, x = d3.scaleLinear([0, d3.max(rows, (t) => t.y[k][0]) || 1], [0, W - 170]);
+  const col = d3.scaleSequential(PSM_DOMAIN, RAMP).clamp(true);
+  el.innerHTML = rows.map((t) => `<button data-focus="${t.i}" class="flex w-full items-center gap-2 rounded px-1 py-0.5 text-left text-xs hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+    <span class="w-[104px] shrink-0 truncate text-ink-2">${esc(t.n)}</span><span class="h-2.5 rounded-sm" style="width:${Math.max(2, x(t.y[k][0]))}px;background:${col(t.y[k][0])}"></span><span class="font-mono text-ink-2">${d3.format('.1f')(t.y[k][0] / 1000)}k</span></button>`).join('');
+}
+
+function islandDetail(el) {
+  const k = yi(state.year), [psm, n, pk] = DATA.island[k];
+  const prev = k > 0 ? DATA.island[k - 1][0] : null;
+  if (state.view === 'blocks' && state.million) {
+    el.innerHTML = `<div class="text-sm font-medium">Million-dollar resale flats</div>
+      <div class="mt-2 grid grid-cols-2 gap-2">${tile(`Sales at S$1M+ in ${state.year}`, 't-m', d3.format(',')(DATA.million[k]))}${tile('Share of all sales', 't-ms', d3.format('.1%')(DATA.million[k] / n))}</div>
+      <div id="chart" class="mt-3"></div>
+      <p class="mt-2 text-xs text-muted-foreground">Click a bar on the map to see the block’s latest sales.</p>`;
+    yearBars($('#chart'), DATA.million, { color: B.amber, fmt: d3.format(',') });
+    return;
+  }
+  el.innerHTML = `<div class="text-sm font-medium">All of Singapore</div>
+    <div class="mt-2 grid grid-cols-3 gap-2">${tile('Median', 't-p', sgd(pk * 1000))}${tile('Per m²', 't-psm', psmF(psm).replace('/m²', ''), prev ? `${psm >= prev ? '+' : ''}${(((psm / prev) - 1) * 100).toFixed(1)}% on year` : '')}${tile('Sales', 't-n', d3.format(',')(n))}</div>
+    <div id="chart" class="mt-3"></div>
+    <p class="mt-2 text-xs text-muted-foreground">Median price per m² each year. ${state.view === 'areas' ? 'Click an area to see its blocks on the street map.' : 'Click a block on the map to see its sales.'}</p>
+    ${state.view === 'areas' && state.color === 'million' ? `<div class="mt-3 flex items-baseline justify-between"><span class="text-xs font-medium text-ink-2">Gold-mine areas, ${state.year}</span><span class="text-[11px] text-muted-foreground">sales at S$1M+</span></div><div id="gold" class="mt-1.5"></div>` : ''}
+    ${state.view === 'blocks' ? `<div class="mt-3 text-xs font-medium text-ink-2">Towns by median price per m², ${state.year}</div><div id="ranks" class="mt-1.5"></div><p class="mt-2 text-xs text-muted-foreground">Click a town to zoom in.</p>` : ''}`;
+  yearBars($('#chart'), DATA.island.map((d) => d[0]), { color: B.signal, fmt: (v) => `${d3.format('.1f')(v / 1000)}k` });
+  townRanks(); goldRanks();
+  if (state.view === 'areas') islandExtras(el);
+}
+
+// Areas tab, all of Singapore: where prices moved, the million-dollar share, the floor premium, and
+// flat age against price summed over every area.
+function islandExtras(el) {
+  const k = yi(state.year), head = (h, sub) => `<div class="mt-5 flex items-baseline justify-between gap-2 border-t pt-3"><span class="text-xs font-medium text-ink-2">${h}</span><span class="text-[11px] text-muted-foreground">${sub}</span></div>`;
+  el.insertAdjacentHTML('beforeend', `
+    ${head(`Biggest movers, ${state.year}`, 'price per m², on the year')}<div id="movers" class="mt-1.5"></div>
+    ${head('Million-dollar share', 'S$1M+ sales as a share of all')}<div id="m-share" class="mt-2"></div>
+    ${head(`Floor premium, ${state.year}`, 'median price per m²')}<div id="floors" class="mt-2"></div>
+    ${head(`Flat age and price, ${state.year}`, 'vs each area’s median per m²')}<div id="diverge" class="mt-1"></div>`);
+  movers(k);
+  const share = DATA.million.map((m, i) => (DATA.island[i][1] ? m / DATA.island[i][1] : 0));
+  yearBars($('#m-share'), share, { color: '#8a6a24', fmt: d3.format('.1%') });
+  $('#m-share').insertAdjacentHTML('beforeend', `<p class="mt-1 text-[11px] text-muted-foreground">${d3.format('.1%')(share[0])} of resale flats sold for S$1M or more in ${YEARS[0]}; ${d3.format('.1%')(share[k])} in ${state.year}.</p>`);
+  floorPremium(DATA.floors[k], 'Not like for like: the tallest blocks are mostly newer and more central, so part of the premium is location and lease, not height alone.');
+  // island-wide grid: sum every area's age x price-band counts (each sale compared with its own area's median)
+  const grid = AGE_BANDS.map((_, i) => PRICE_BANDS.map((_, j) => d3.sum(AREAS, (a) => a.d[k][i][j])));
+  diverging({ d: YEARS.map(() => grid) });   // diverging() reads d[current year]
+}
+// Areas with the largest rise and fall in median price per m², among areas with 50+ sales in both years.
+function movers(k) {
+  const el = $('#movers'); if (!el) return;
+  if (k === 0) { el.innerHTML = `<p class="text-xs text-muted-foreground">No earlier year to compare with ${YEARS[0]}.</p>`; return; }
+  const rows = AREAS.filter((a) => a.y[k][1] >= 50 && a.y[k - 1][1] >= 50).map((a) => ({ a, c: a.y[k][0] / a.y[k - 1][0] - 1 }));
+  const sorted = d3.sort(rows, (d) => -d.c), pick = [...sorted.slice(0, 5), ...sorted.slice(-3).filter((d) => !sorted.slice(0, 5).includes(d))];
+  const W = el.clientWidth || 320, lim = d3.max(pick, (d) => Math.abs(d.c)) || 0.01, x = d3.scaleLinear([-lim, lim], [110, W - 46]);
+  el.innerHTML = `<svg width="${W}" height="${pick.length * 18 + 4}" role="img" aria-label="Areas with the biggest change in price per square metre">
+    <line x1="${x(0)}" x2="${x(0)}" y1="0" y2="${pick.length * 18}" stroke="${B.fog}"/>
+    ${pick.map((d, i) => `<g data-area="${d.a.i}" style="cursor:pointer"><rect x="0" y="${i * 18}" width="${W}" height="18" fill="transparent"/>
+      <text x="0" y="${i * 18 + 12.5}" font-size="11" fill="${B.ink2}">${esc(d.a.n)}</text>
+      <rect x="${Math.min(x(0), x(d.c))}" y="${i * 18 + 3}" width="${Math.max(1, Math.abs(x(d.c) - x(0)))}" height="12" rx="2" fill="${d.c >= 0 ? '#e58fb0' : '#7cc4dc'}"/>
+      <text x="${d.c >= 0 ? x(d.c) + 4 : x(d.c) - 4}" y="${i * 18 + 12.5}" text-anchor="${d.c >= 0 ? 'start' : 'end'}" font-size="10" font-family="Source Code Pro" fill="${B.ink2}">${fmtPct(d.c)}</text>
+      <title>${esc(d.a.n)}: ${psmF(d.a.y[k - 1][0])} to ${psmF(d.a.y[k][0])}</title></g>`).join('')}
+  </svg>
+  <p class="text-[11px] text-muted-foreground">Top five and bottom three of ${rows.length} areas with 50 or more sales in both years. Click one to open it.</p>`;
+}
+const areaFloors = (a) => floorPremium(a.f[yi(state.year)], `Within ${a.n}, so location matters less than island-wide, but taller blocks here are often newer too.`);
+// Median price per m² by floor band, with the premium over floors 1 to 6.
+function floorPremium(v, note) {
+  const el = $('#floors'); if (!el) return;
+  if (!d3.sum(v)) { el.innerHTML = `<p class="text-xs text-muted-foreground">No sales in ${state.year}.</p>`; return; }
+  const base = v[0], W = el.clientWidth || 320, x = d3.scaleLinear([0, d3.max(v) || 1], [92, W - 92]);
+  el.innerHTML = `<div class="space-y-1">${v.map((p, i) => `<div class="flex items-center gap-2 text-xs"><span class="w-[84px] shrink-0 text-ink-2">Floors ${DATA.bands[i]}</span>
+      <span class="h-2.5 rounded-sm" style="width:${p ? Math.max(2, x(p) - 92) : 0}px;background:${d3.interpolateRgb('#15171b', B.signal)(0.42 + i * 0.19)}"></span>
+      <span class="font-mono text-ink-2">${p ? `${d3.format('.1f')(p / 1000)}k` : '–'}</span>${i && p && base ? `<span class="font-mono text-[11px] text-[#e58fb0]">${fmtPct(p / base - 1)}</span>` : ''}</div>`).join('')}</div>
+  <p class="mt-1.5 text-[11px] text-muted-foreground">${note}${base ? '' : ' No sales on floors 1 to 6 this year, so no premium is shown.'}</p>`;
+}
+
+function areaDetail(el) {
+  const a = AREAS[state.area], k = yi(state.year), [psm, n, m1, byt] = a.y[k];
+  el.innerHTML = `<div class="flex items-start justify-between gap-2"><div><div class="text-sm font-medium">${esc(a.n)}</div><div class="text-xs text-muted-foreground">${esc(a.r)}</div></div>
+      <button data-clear class="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-cross-small mr-0.5 align-[-2px]"></i>Clear</button></div>
+    <div class="mt-2 grid grid-cols-3 gap-2">${tile('Per m²', 't-psm', n ? psmF(psm).replace('/m²', '') : '–')}${tile('Sales', 't-n', d3.format(',')(n))}${tile('S$1M+', 't-m', d3.format(',')(m1))}</div>
+    <div id="lmap" class="mt-3 h-[200px] overflow-hidden rounded-lg border"></div>
+    <p class="mt-1 text-[11px] text-muted-foreground">Blocks sold in ${state.year}, coloured by price per m². Click one to open it in Blocks.</p>
+    <div class="mt-3 text-xs font-medium text-ink-2">Median price by flat type</div><div id="types" class="mt-1.5"></div>
+    <div class="mt-3 text-xs font-medium text-ink-2">Price per m² against lease left</div><div id="scatter" class="mt-1"></div>
+    <div class="mt-4 flex items-baseline justify-between"><span id="fl-head" class="text-xs font-medium text-ink-2">Floor premium, ${state.year}</span><span class="text-[11px] text-muted-foreground">median price per m²</span></div>
+    <div id="floors" class="mt-1.5"></div>
+    <div class="mt-4 flex items-baseline justify-between"><span id="div-head" class="text-xs font-medium text-ink-2">Flat age and price, ${state.year}</span><span class="text-[11px] text-muted-foreground">vs area median per m²</span></div>
+    <div id="diverge" class="mt-1"></div>`;
+  areaMap(a); typeBars(a); scatter(a); areaFloors(a); diverging(a);
+}
+
+function blockDetail(el) {
+  const b = BLOCKS[state.block], k = yi(state.year), area = AREAS[b.area];
+  el.innerHTML = `<div class="flex items-start justify-between gap-2"><div><div class="text-sm font-medium">${esc(blockName(b))}</div><div class="text-xs text-muted-foreground">${esc(area?.n ?? '')} · lease from ${b.lease}</div></div>
+      <button data-clear class="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-cross-small mr-0.5 align-[-2px]"></i>Clear</button></div>
+    <div class="mt-2 grid grid-cols-3 gap-2">${tile(`Median ${state.year}`, 't-p', b.n[k] ? sgd(b.pk[k] * 1000) : '–')}${tile('Per m²', 't-psm', b.n[k] ? psmF(b.psm[k]).replace('/m²', '') : '–')}${tile('Lease left', 't-l', `${remaining(b, state.year)} yrs`)}</div>
+    <div id="chart" class="mt-3"></div>
+    <div id="lmap" class="mt-3 h-[190px] overflow-hidden rounded-lg border"></div>
+    <div class="mt-3 flex items-center justify-between"><span class="text-xs font-medium text-ink-2">Latest sales</span><span id="live-src" class="text-[11px] text-muted-foreground"></span></div>
+    <div id="live" class="mt-1.5 text-xs text-muted-foreground">Fetching from data.gov.sg…</div>`;
+  yearBars($('#chart'), b.pk.map((v) => v * 1000), { color: B.ink2, fmt: (v) => (v ? sgd(v) : ''), hi: true });
+  blockMap(b);
+  liveSales(b);
+}
+
+// Called when only the year changed: refresh numbers and charts without rebuilding the map.
+function refreshDetail() {
+  const lab = $('#year-lbl'); if (lab) lab.textContent = yearLabel(state.year);
+  const r = $('#year'); if (r) { r.value = state.year; r.style.setProperty('--fill', `${((state.year - YEARS[0]) / (YEARS.length - 1)) * 100}%`); }
+  const k = yi(state.year);
+  if (state.view === 'blocks' && state.block != null) {
+    const b = BLOCKS[state.block];
+    $('#t-p').textContent = b.n[k] ? sgd(b.pk[k] * 1000) : '–'; $('#t-psm').textContent = b.n[k] ? psmF(b.psm[k]).replace('/m²', '') : '–'; $('#t-l').textContent = `${remaining(b, state.year)} yrs`;
+    $('#t-p').previousElementSibling.textContent = `Median ${state.year}`;
+    yearBars($('#chart'), b.pk.map((v) => v * 1000), { color: B.ink2, fmt: (v) => (v ? sgd(v) : ''), hi: true });
+    styleMarkers();
+    return;
+  }
+  if (state.view === 'areas' && state.area != null) {
+    const a = AREAS[state.area], [psm, n, m1] = a.y[k];
+    $('#t-psm').textContent = n ? psmF(psm).replace('/m²', '') : '–'; $('#t-n').textContent = d3.format(',')(n); $('#t-m').textContent = d3.format(',')(m1);
+    $('#lmap + p').textContent = `Blocks sold in ${state.year}, coloured by price per m². Click one to open it in Blocks.`;
+    areaMarkers(a); typeBars(a); scatter(a); areaFloors(a); diverging(a); $('#div-head').textContent = `Flat age and price, ${state.year}`; $('#fl-head').textContent = `Floor premium, ${state.year}`;
+    return;
+  }
+  if (state.view === 'blocks' && state.focus != null && $('#lmap')) {
+    const t = TOWNS[state.focus], [psm, n, m1] = t.y[k];
+    $('#t-psm').textContent = n ? psmF(psm).replace('/m²', '') : '–'; $('#t-n').textContent = d3.format(',')(n); $('#t-m').textContent = d3.format(',')(m1);
+    $('#t-sub').textContent = townSub(); $('#mix-head').textContent = `Sales mix, ${state.year}`;
+    $('#lmap + p').textContent = `Blocks sold in ${state.year}, coloured by price per m². Click one, here or on the 3D map, to see its sales.`;
+    yearBars($('#chart'), t.y.map((y) => y[0]), { color: B.signal, fmt: (v) => (v ? `${d3.format('.1f')(v / 1000)}k` : '') });
+    mixTable(t); blockMarkers(BLOCKS.filter(inFocus));
+    return;
+  }
+  renderDetail();
+}
+
+// ---------- D3 panel charts ----------
+function yearBars(el, values, { color, fmt, hi = false }) {
+  const W = el.clientWidth || 320, H = 96, m = { t: 14, r: 2, b: 16, l: 2 };
+  const x = d3.scaleBand(YEARS, [m.l, W - m.r]).padding(0.22), y = d3.scaleLinear([0, d3.max(values) || 1], [H - m.b, m.t]);
+  const k = yi(state.year);
+  el.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="By year">
+    ${values.map((v, i) => `<rect x="${x(YEARS[i])}" y="${y(v)}" width="${x.bandwidth()}" height="${Math.max(0, H - m.b - y(v))}" rx="2" fill="${i === k ? B.amber : color}" opacity="${i === k ? 1 : 0.55}" data-year="${YEARS[i]}" style="cursor:pointer"></rect>`).join('')}
+    ${YEARS.map((yy, i) => `<text x="${x(yy) + x.bandwidth() / 2}" y="${H - 3}" text-anchor="middle" font-size="9.5" font-family="Source Code Pro" fill="${i === k ? B.amber : B.fog}">${String(yy).slice(2)}</text>`).join('')}
+    ${values[k] ? `<text x="${Math.min(W - 30, Math.max(30, x(YEARS[k]) + x.bandwidth() / 2))}" y="${y(values[k]) - 4}" text-anchor="middle" font-size="10" font-family="Source Code Pro" fill="${B.amber}">${fmt(values[k])}</text>` : ''}
+  </svg>`;
+}
+function typeBars(a) {
+  const el = $('#types'); if (!el) return;
+  const byt = a.y[yi(state.year)][3], W = el.clientWidth || 320;
+  const x = d3.scaleLinear([0, d3.max(a.y, (y) => d3.max(y[3])) || 1], [0, W - 150]);
+  el.innerHTML = DATA.types.map((t, i) => `<div class="flex items-center gap-2 py-0.5 text-xs"><span class="w-[70px] shrink-0 text-muted-foreground">${title(t)}</span>
+    <span class="h-2.5 rounded-sm bg-primary/70" style="width:${byt[i] ? Math.max(2, x(byt[i])) : 0}px"></span><span class="font-mono text-ink-2">${byt[i] ? sgd(byt[i] * 1000) : '–'}</span></div>`).join('');
+}
+// Diverging stacked bars (after Observable's d3/diverging-stacked-bar-chart): one row per flat-age band,
+// each row 100% of that band's sales, split by price per m² against the area's median for the year.
+// Below-median shares stack left of zero, above-median shares right.
+const AGE_BANDS = ['Under 10', '10 to 19', '20 to 29', '30 to 39', '40 to 49', '50 and over'];
+const PRICE_BANDS = ['20%+ below', 'Up to 20% below', 'Up to 20% above', '20%+ above'];
+const PRICE_COL = ['#7cc4dc', '#3d6d7d', '#7d4a5e', '#e58fb0'];
+function diverging(a) {
+  const el = $('#diverge'); if (!el) return;
+  const grid = a.d[yi(state.year)], W = el.clientWidth || 320, m = { t: 22, r: 40, b: 6, l: 64 }, rowH = 22;
+  const rows = grid.map((c, i) => { const n = d3.sum(c); return { i, n, c, s: c.map((v) => (n ? v / n : 0)) }; });
+  if (!d3.sum(rows, (r) => r.n)) { el.innerHTML = `<p class="text-xs text-muted-foreground">No sales in ${state.year}.</p>`; return; }
+  const lim = Math.min(1, Math.ceil(d3.max(rows, (r) => Math.max(r.s[0] + r.s[1], r.s[2] + r.s[3])) * 4) / 4) || 1;
+  const H = m.t + rows.length * rowH + m.b;
+  const x = d3.scaleLinear([-lim, lim], [m.l, W - m.r]), y = d3.scaleBand(rows.map((r) => r.i), [m.t, H - m.b]).padding(0.18);
+  const pct = d3.format('.0%');
+  // segment extents: left side grows outward from zero (near band first), right side likewise
+  const segs = (r) => [[-r.s[1] - r.s[0], -r.s[1], 0], [-r.s[1], 0, 1], [0, r.s[2], 2], [r.s[2], r.s[2] + r.s[3], 3]];
+  el.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="Share of sales above and below the area median price per square metre, by flat age">
+    ${x.ticks(4).map((t) => `<line x1="${x(t)}" x2="${x(t)}" y1="${m.t - 4}" y2="${H - m.b}" stroke="${t === 0 ? B.fog : B.line}" ${t === 0 ? '' : 'stroke-dasharray="2 3"'}/><text x="${x(t)}" y="${m.t - 8}" text-anchor="middle" font-size="9.5" font-family="Source Code Pro" fill="${B.fog}">${pct(Math.abs(t))}</text>`).join('')}
+    ${rows.map((r) => `
+      <text x="${m.l - 6}" y="${y(r.i) + y.bandwidth() / 2 + 3.5}" text-anchor="end" font-size="11" fill="${r.n ? B.ink2 : B.fog}">${AGE_BANDS[r.i]}</text>
+      ${r.n ? segs(r).map(([x0, x1, k]) => (x1 - x0 > 0 ? `<rect x="${x(x0)}" y="${y(r.i)}" width="${Math.max(0.5, x(x1) - x(x0))}" height="${y.bandwidth()}" fill="${PRICE_COL[k]}"><title>${AGE_BANDS[r.i]} years old, ${PRICE_BANDS[k].toLowerCase()} median: ${r.c[k]} sales (${pct(r.s[k])})</title></rect>
+        ${x(x1) - x(x0) > 26 ? `<text x="${(x(x0) + x(x1)) / 2}" y="${y(r.i) + y.bandwidth() / 2 + 3.5}" text-anchor="middle" font-size="9.5" font-family="Source Code Pro" fill="${k === 0 || k === 3 ? '#15171b' : B.ink}" pointer-events="none">${pct(r.s[k])}</text>` : ''}` : '')).join('')
+        : `<text x="${x(0) + 6}" y="${y(r.i) + y.bandwidth() / 2 + 3.5}" font-size="10" fill="${B.fog}">no sales</text>`}
+      <text x="${W - m.r + 6}" y="${y(r.i) + y.bandwidth() / 2 + 3.5}" font-size="9.5" font-family="Source Code Pro" fill="${B.fog}">${r.n ? d3.format(',')(r.n) : ''}</text>`).join('')}
+  </svg>
+  <div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">${PRICE_BANDS.map((b, k) => `<span class="inline-flex items-center gap-1"><span class="inline-block size-2.5 rounded-sm" style="background:${PRICE_COL[k]}"></span>${b}</span>`).join('')}</div>
+  <p class="mt-1.5 text-[11px] text-muted-foreground">${divergeSummary(rows)} Rows are flat age at sale; the number on the right is sales.</p>`;
+}
+// One plain sentence comparing the youngest and oldest age bands that have sales.
+function divergeSummary(rows) {
+  const has = rows.filter((r) => r.n >= 5);
+  if (has.length < 2) return 'Too few sales to compare ages this year.';
+  const young = has[0], old = has.at(-1), up = (r) => r.s[2] + r.s[3];
+  return `${pct0(up(young))} of flats ${AGE_BANDS[young.i].toLowerCase()} years old sold above the area median, against ${pct0(up(old))} of those ${AGE_BANDS[old.i].toLowerCase()}.`;
+}
+const pct0 = d3.format('.0%');
+function scatter(a) {
+  const el = $('#scatter'); if (!el) return;
+  const k = yi(state.year), pts = BLOCKS.filter((b) => b.area === a.i && b.n[k]);
+  const W = el.clientWidth || 320, H = 150, m = { t: 8, r: 8, b: 24, l: 40 };
+  const x = d3.scaleLinear([40, 99], [m.l, W - m.r]), y = d3.scaleLinear([0, d3.max(BLOCKS, (b) => (b.area === a.i ? d3.max(b.psm) : 0)) || 1], [H - m.b, m.t]).nice();
+  const col = d3.scaleSequential(PSM_DOMAIN, RAMP).clamp(true);
+  el.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="Price per square metre against lease left">
+    ${y.ticks(4).map((t) => `<line x1="${m.l}" x2="${W - m.r}" y1="${y(t)}" y2="${y(t)}" stroke="${B.line}"/><text x="${m.l - 5}" y="${y(t) + 3}" text-anchor="end" font-size="9.5" font-family="Source Code Pro" fill="${B.fog}">${t / 1000}k</text>`).join('')}
+    ${x.ticks(5).map((t) => `<text x="${x(t)}" y="${H - 9}" text-anchor="middle" font-size="9.5" font-family="Source Code Pro" fill="${B.fog}">${t}</text>`).join('')}
+    <text x="${W - m.r}" y="${H - 0}" text-anchor="end" font-size="9.5" fill="${B.fog}">years of lease left</text>
+    ${pts.map((b) => `<circle cx="${x(remaining(b, state.year))}" cy="${y(b.psm[k])}" r="2.6" fill="${col(b.psm[k])}" fill-opacity="0.8" data-block="${b.i}" style="cursor:pointer"><title>${esc(blockName(b))}: ${psmF(b.psm[k])}</title></circle>`).join('')}
+  </svg>`;
+}
+
+// ---------- Leaflet ----------
+let lmap = null, lmarkers = [];
+const ONEMAP = 'https://www.onemap.gov.sg/maps/tiles/Night/{z}/{x}/{y}.png';
+const ONEMAP_ATTR = '<a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a> © contributors | <a href="https://www.sla.gov.sg/" target="_blank" rel="noopener">Singapore Land Authority</a>';
+function dropMap() { if (lmap) { lmap.remove(); lmap = null; lmarkers = []; } }
+function newMap() {
+  const m = L.map('lmap', { zoomControl: true, attributionControl: true, scrollWheelZoom: false, minZoom: 11, maxZoom: 18, maxBounds: [[1.13, 103.55], [1.5, 104.1]] });
+  L.tileLayer(ONEMAP, { detectRetina: true, maxZoom: 18, attribution: ONEMAP_ATTR }).addTo(m);
+  m.attributionControl.setPrefix(false);
+  return m;
+}
+function areaMap(a) {
+  lmap = newMap();
+  const gj = { type: 'MultiPolygon', coordinates: a.p };
+  const outline = L.geoJSON(gj, { style: { color: B.amber, weight: 1.5, fill: false } }).addTo(lmap);
+  const fit = () => { lmap?.invalidateSize(); lmap?.fitBounds(outline.getBounds(), { padding: [6, 6] }); };
+  fit(); requestAnimationFrame(fit);
+  areaMarkers(a);
+}
+function areaMarkers(a) {
+  if (!lmap) return;
+  lmarkers.forEach((m) => m.remove()); lmarkers = [];
+  const k = yi(state.year), col = d3.scaleSequential(PSM_DOMAIN, RAMP).clamp(true);
+  BLOCKS.filter((b) => b.area === a.i && b.n[k]).forEach((b) => {
+    const mk = L.circleMarker([b.lat, b.lon], { radius: 3.5, weight: 0, fillColor: col(b.psm[k]), fillOpacity: 0.9 })
+      .bindTooltip(`${esc(blockName(b))}<br><span style="font-family:Source Code Pro">${psmF(b.psm[k])}</span>`, { direction: 'top', offset: [0, -4] })
+      .on('click', () => openBlock(b.i)).addTo(lmap);
+    lmarkers.push(mk);
+  });
+}
+function blockMap(b) {
+  lmap = newMap();
+  lmap.setView([b.lat, b.lon], 16);
+  requestAnimationFrame(() => { lmap?.invalidateSize(); lmap?.setView([b.lat, b.lon], 16); });
+  const near = BLOCKS.filter((o) => Math.abs(o.lat - b.lat) < 0.012 && Math.abs(o.lon - b.lon) < 0.016);
+  near.forEach((o) => {
+    const mk = L.circleMarker([o.lat, o.lon], { radius: o.i === b.i ? 7 : 4, weight: o.i === b.i ? 2 : 0, color: B.ink })
+      .bindTooltip(esc(blockName(o)), { direction: 'top', offset: [0, -4] })
+      .on('click', () => { if (o.i !== b.i) openBlock(o.i, { fly: true }); }).addTo(lmap);
+    mk.block = o; lmarkers.push(mk);
+  });
+  styleMarkers();
+}
+function styleMarkers() {
+  const lease = d3.scaleSequential([45, 95], LEASE).clamp(true), y = state.year, k = yi(y);
+  lmarkers.forEach((mk) => { const o = mk.block; if (!o) return;
+    mk.setStyle({ fillColor: o.i === state.block ? B.amber : lease(remaining(o, y)), fillOpacity: o.n[k] || o.i === state.block ? 0.95 : 0.25 }); });
+}
+
+// ---------- live: latest sales for a block from data.gov.sg ----------
+const liveCache = new Map();
+async function liveSales(b) {
+  const key = `${b.blk}|${b.street}`, el = () => $('#live');
+  const draw = (rows, when) => {
+    if (state.block !== b.i || !el()) return;
+    $('#live-src').textContent = when;
+    el().innerHTML = rows.length ? `<table class="w-full text-left"><thead class="text-muted-foreground"><tr class="border-b"><th class="py-1 font-normal">Month</th><th class="font-normal">Flat</th><th class="font-normal">Storey</th><th class="text-right font-normal">m²</th><th class="text-right font-normal">Price</th></tr></thead>
+      <tbody class="font-mono text-ink-2">${rows.map((r) => `<tr class="border-b border-border/60"><td class="py-1">${r.month}</td><td>${esc(title(r.flat_type).replace(' Room', 'R'))}</td><td>${esc(r.storey_range.replace(' TO ', '–'))}</td><td class="text-right">${Math.round(+r.floor_area_sqm)}</td><td class="text-right ${+r.resale_price >= 1e6 ? 'text-amber' : 'text-foreground'}">${sgd(+r.resale_price)}</td></tr>`).join('')}</tbody></table>`
+      : 'No resale records for this block.';
+  };
+  if (liveCache.has(key)) return draw(...liveCache.get(key));
+  try {
+    const f = encodeURIComponent(JSON.stringify({ block: b.blk, street_name: b.street }));
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 8000);
+    const r = await fetch(`https://data.gov.sg/api/action/datastore_search?resource_id=d_8b84c4ee58e3cfc0ece0d773c8ca6abc&limit=6&sort=month%20desc&filters=${f}`, { signal: ctl.signal });
+    clearTimeout(t);
+    if (!r.ok) throw new Error(r.status === 429 ? 'busy' : r.status);
+    const rows = (await r.json()).result.records;
+    const res = [rows, `live · ${d3.timeFormat('%H:%M')(new Date())}`];
+    liveCache.set(key, res); draw(...res);
+  } catch (e) {
+    if (state.block !== b.i || !el()) return;
+    el().innerHTML = `${e.message === 'busy' ? 'data.gov.sg is limiting requests right now.' : 'Couldn’t reach data.gov.sg.'} <button data-retry class="ml-1 rounded px-1.5 py-0.5 text-foreground underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">Try again</button>`;
+  }
+}
+
+// ---------- search: towns, blocks (number, street, postal code), then OneMap for anything else ----------
+const EXPAND = { BT: 'BUKIT', AVE: 'AVENUE', ST: 'STREET', RD: 'ROAD', DR: 'DRIVE', CRES: 'CRESCENT', JLN: 'JALAN', LOR: 'LORONG', KG: 'KAMPONG',
+  NTH: 'NORTH', STH: 'SOUTH', UPP: 'UPPER', TG: 'TANJONG', PK: 'PARK', CTRL: 'CENTRAL', CL: 'CLOSE', CWEALTH: 'COMMONWEALTH', HTS: 'HEIGHTS',
+  MKT: 'MARKET', GDNS: 'GARDENS', TER: 'TERRACE', PL: 'PLACE', CTR: 'CENTRE', LN: 'LANE', HG: 'HOUGANG',
+  // common short names people type
+  AMK: 'ANG MO KIO', TPY: 'TOA PAYOH', CCK: 'CHOA CHU KANG', BBT: 'BUKIT BATOK', BPJ: 'BUKIT PANJANG', JW: 'JURONG WEST', JE: 'JURONG EAST' };
+const norm = (q) => q.toUpperCase().replace(/[’']/g, '').replace(/[^A-Z0-9]+/g, ' ').trim();
+let INDEX = null, results = [], active = -1;
+function buildIndex() {
+  INDEX = BLOCKS.map((b) => {
+    const st = norm(b.street);
+    const street = ` ${st} ${st.split(' ').map((w) => EXPAND[w] ?? w).join(' ')} `;
+    return { street, all: ` ${norm(b.blk)}${street}${b.postal} ${norm(TOWNS[b.town].n)} ` };
+  });
+}
+function searchLocal(q) {
+  const toks = norm(q).split(' ').filter(Boolean).flatMap((t) => (EXPAND[t] ?? t).split(' ')).filter((t) => t !== 'BLK' && t !== 'BLOCK');
+  if (!toks.length) return [];
+  if (!INDEX) buildIndex();
+  const out = [];
+  TOWNS.forEach((t, i) => { const n = ` ${norm(t.n)} `; if (toks.every((k) => n.includes(` ${k}`))) out.push({ kind: 'town', i, label: t.n, sub: 'HDB town' }); });
+  const hits = [];
+  BLOCKS.forEach((b, i) => {
+    const text = INDEX[i].all;
+    // every query word must start a word in the index; 1-2 digit numbers (avenue numbers) must match whole
+    if (!toks.every((k) => text.includes(` ${k} `) || (text.includes(` ${k}`) && !/^\d{1,2}$/.test(k)))) return;
+    const whole = toks.filter((k) => text.includes(` ${k} `)).length;
+    const inStreet = toks.filter((k) => INDEX[i].street.includes(` ${k}`)).length;   // street-name matches outrank town-only ones
+    const score = (toks.includes(b.postal) ? 0 : 4) + (toks.includes(norm(b.blk)) ? 0 : 2) - whole * 0.1 - inStreet * 0.5;
+    hits.push({ score, b });
+  });
+  hits.sort((x, y) => x.score - y.score || d3.ascending(x.b.street, y.b.street) || d3.ascending(+x.b.blk.replace(/\D/g, '') || 0, +y.b.blk.replace(/\D/g, '') || 0));
+  hits.slice(0, 8 - Math.min(out.length, 3)).forEach(({ b }) => out.push({ kind: 'block', i: b.i, label: blockName(b), sub: `${TOWNS[b.town].n}${b.postal ? ` · ${b.postal}` : ''}` }));
+  return out.slice(0, 8);
+}
+function searchSuggest(q) {
+  results = q.trim().length ? searchLocal(q) : [];
+  if (q.trim().length >= 3) results.push({ kind: 'onemap', q: q.trim(), label: `Find “${q.trim()}” with OneMap`, sub: 'Addresses, buildings and postal codes; flies to the nearest HDB block' });
+  active = results.length ? 0 : -1;
+  drawSuggest();
+}
+function drawSuggest() {
+  const list = $('#search-list'), input = $('#search'); if (!list) return;
+  list.hidden = !results.length; input.setAttribute('aria-expanded', String(!!results.length));
+  const icon = { town: 'fi-rr-city', block: 'fi-rr-building', onemap: 'fi-rr-marker' };
+  list.innerHTML = results.map((r, i) => `<button type="button" role="option" id="sr-${i}" aria-selected="${i === active}" data-pick="${i}" class="flex w-full items-start gap-2 rounded px-2 py-1.5 text-left text-sm ${i === active ? 'bg-accent text-foreground' : 'text-ink-2'} hover:bg-accent focus-visible:outline-none">
+    <i class="fi ${icon[r.kind]} mt-0.5 text-muted-foreground"></i><span class="min-w-0"><span class="block truncate">${esc(r.label)}</span><span class="block truncate text-[11px] text-muted-foreground">${esc(r.sub)}</span></span></button>`).join('');
+  if (active >= 0) input.setAttribute('aria-activedescendant', `sr-${active}`); else input.removeAttribute('aria-activedescendant');
+  $(`#sr-${active}`)?.scrollIntoView({ block: 'nearest' });
+}
+function closeSuggest() { results = []; active = -1; drawSuggest(); }
+function searchKey(e) {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { if (!results.length) return; e.preventDefault(); active = (active + (e.key === 'ArrowDown' ? 1 : -1) + results.length) % results.length; drawSuggest(); }
+  else if (e.key === 'Enter') { e.preventDefault(); if (!results.length) searchSuggest(e.target.value); if (results.length) pickResult(Math.max(0, active)); }
+  else if (e.key === 'Escape') { closeSuggest(); }
+}
+function note(text) { const n = $('#search-note'); if (n) { n.textContent = text; n.classList.toggle('hidden', !text); } }
+function goToBlock(i) {
+  const b = BLOCKS[i];
+  state.focus = b.town; state.block = i;
+  const sel = $('#focus'); if (sel) sel.value = b.town;
+  VIEWS.blocks.update(); renderDetail(); flyTo(i);
+}
+async function pickResult(k) {
+  const r = results[k]; if (!r) return;
+  closeSuggest();
+  const input = $('#search');
+  if (r.kind === 'town') { input.value = r.label; note(''); setFocus(r.i); return; }
+  if (r.kind === 'block') { input.value = r.label; note(''); goToBlock(r.i); return; }
+  note('Searching OneMap…');
+  try {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 8000);
+    const res = await fetch(`https://www.onemap.gov.sg/api/common/elastic/search?searchVal=${encodeURIComponent(r.q)}&returnGeom=Y&getAddrDetails=Y&pageNum=1`, { signal: ctl.signal });
+    clearTimeout(t);
+    if (!res.ok) throw new Error(res.status === 429 ? 'busy' : res.status);
+    const hit = (await res.json()).results?.[0];
+    if (!hit) { note(`OneMap found nothing for “${r.q}”. Try a postal code or a street name.`); return; }
+    const lat = +hit.LATITUDE, lon = +hit.LONGITUDE, km = (b) => d3.geoDistance([lon, lat], [b.lon, b.lat]) * 6371;
+    const near = d3.least(BLOCKS, km);
+    const place = title(hit.BUILDING && hit.BUILDING !== 'NIL' ? hit.BUILDING : hit.ADDRESS);
+    note(km(near) < 0.03 ? `${place}: this is ${blockName(near)}.` : `${place} is not an HDB resale block. Showing the nearest one, ${blockName(near)}, ${d3.format('.1f')(km(near))} km away.`);
+    input.value = place;
+    goToBlock(near.i);
+  } catch (err) {
+    note(err.message === 'busy' ? 'OneMap is limiting requests right now. Try again in a minute.' : 'Couldn’t reach OneMap. Search by block, street, town or postal code still works.');
+  }
+}
+
+// ---------- sync: re-fetch the latest year(s) from the HDB resale API and recompute in the browser ----------
+// The saved file holds medians, not raw sales, so a sync re-downloads every month of each year it touches
+// (one request per month) and rebuilds that year's figures exactly as the prep script does.
+const RESALE_API = 'https://data.gov.sg/api/action/datastore_search?resource_id=d_8b84c4ee58e3cfc0ece0d773c8ca6abc';
+const sync = { status: 'idle', text: '' };   // idle | busy | done | error
+// Synced sales are kept in this browser's IndexedDB so they survive a reload. Static reference data
+// (block positions, boundaries, the saved history) always comes from the shipped file.
+const IDB = { name: 'inotives-sg-hdb', store: 'sync', key: 'latest-v2' };   // v2: rows carry the lease start year
+function idbOpen() {
+  return new Promise((ok, no) => { const r = indexedDB.open(IDB.name, 1); r.onupgradeneeded = () => r.result.createObjectStore(IDB.store); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+}
+async function idb(mode, fn) {
+  try {
+    const db = await idbOpen();
+    return await new Promise((ok, no) => { const tx = db.transaction(IDB.store, mode), q = fn(tx.objectStore(IDB.store)); tx.oncomplete = () => ok(q?.result); tx.onerror = () => no(tx.error); });
+  } catch { return null; }   // private mode or storage blocked: the page still works, it just won't remember
+}
+const COLS = ['month', 'town', 'flat_type', 'block', 'street_name', 'storey_range', 'floor_area_sqm', 'resale_price', 'lease_commence_date'];
+const packRows = (rows) => rows.map((r) => COLS.map((c) => r[c]));
+const unpackRows = (rows) => rows.map((a) => Object.fromEntries(COLS.map((c, i) => [c, a[i]])));
+// On load: reapply a saved sync unless the shipped file has caught up with it.
+async function restoreSync() {
+  const saved = await idb('readonly', (st) => st.get(IDB.key));
+  if (!saved?.rows?.length) return;
+  const newer = saved.lastMonth > DATA.fileLastMonth || (saved.lastMonth === DATA.fileLastMonth && saved.fileLastMonth === DATA.fileLastMonth);
+  if (!newer) { await idb('readwrite', (st) => st.delete(IDB.key)); return; }
+  const rows = unpackRows(saved.rows);
+  applySales(rows, [...new Set(rows.map((r) => +r.month.slice(0, 4)))]);
+  DATA.lastMonth = saved.lastMonth;
+  if (state.year === +DATA.fileLastMonth.slice(0, 4)) state.year = YEARS.at(-1);
+  sync.status = 'done';
+  sync.text = `Synced ${d3.timeFormat('%-d %b, %H:%M')(new Date(saved.savedAt))}: data to ${d3.timeFormat('%b %Y')(new Date(`${saved.lastMonth}-01`))}, kept in this browser.`;
+  sync.saved = true;
+}
+async function resetSync() {
+  await idb('readwrite', (st) => st.delete(IDB.key));
+  location.reload();
+}
+
+function syncRow() {
+  const busy = sync.status === 'busy';
+  const label = busy ? sync.text : sync.status === 'idle' ? `Data to ${d3.timeFormat('%b %Y')(new Date(`${DATA?.lastMonth ?? '2026-10'}-01`))}` : sync.text;
+  return `<div class="flex items-center justify-between gap-2 rounded-md border bg-background/40 px-2.5 py-1.5 text-xs">
+    <span class="min-w-0 ${sync.status === 'error' ? 'text-[#e58fb0]' : 'text-muted-foreground'}" aria-live="polite">${esc(label)}</span>
+    <button id="sync" ${busy || !DATA ? 'disabled' : ''} class="inline-flex shrink-0 items-center gap-1.5 rounded px-2 py-1 font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60">
+      <i class="fi fi-rr-refresh ${busy ? 'animate-spin' : ''}"></i>${busy ? 'Syncing' : 'Sync with HDB'}</button>
+    ${sync.saved && !busy ? `<button id="sync-reset" title="Forget the synced data and use the saved file" class="shrink-0 rounded px-1.5 py-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">Reset</button>` : ''}</div>`;
+}
+function setSync(status, text) { sync.status = status; sync.text = text; const r = $('#sync-row'); if (r) r.innerHTML = syncRow(); }
+async function fetchMonth(m) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const r = await fetch(`${RESALE_API}&limit=10000&filters=${encodeURIComponent(JSON.stringify({ month: m }))}`);
+    if (r.status === 429) { await new Promise((ok) => setTimeout(ok, 4000 * (attempt + 1))); continue; }
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return (await r.json()).result.records;
+  }
+  throw new Error('busy');
+}
+async function syncLatest() {
+  const oldLast = DATA.lastMonth, now = new Date();
+  const firstYear = +oldLast.slice(0, 4), thisMonth = d3.timeFormat('%Y-%m')(now);
+  const months = d3.timeMonths(new Date(firstYear, 0, 1), d3.timeMonth.offset(d3.timeMonth.floor(now), 1)).map(d3.timeFormat('%Y-%m'));
+  const got = new Map(); let done = 0;
+  setSync('busy', `Fetching ${months.length} months from data.gov.sg…`);
+  try {
+    const queue = [...months];
+    await Promise.all(d3.range(3).map(async () => {
+      while (queue.length) {
+        const m = queue.shift();
+        got.set(m, await fetchMonth(m));
+        setSync('busy', `Fetched ${++done} of ${months.length} months…`);
+      }
+    }));
+  } catch (err) {
+    setSync('error', err.message === 'busy' ? 'data.gov.sg is limiting requests. Try again in a minute.' : 'Couldn’t reach data.gov.sg. The saved data is unchanged.');
+    return;
+  }
+  const rows = [...got.values()].flat();
+  if (!rows.length) { setSync('done', `Up to date: no sales after ${oldLast}.`); return; }
+  const oldN = new Map(YEARS.map((y, k) => [y, DATA.island[k][1]])), wasLatest = state.year === YEARS.at(-1);
+  const res = applySales(rows, d3.groups(rows, (r) => +r.month.slice(0, 4)).map(([y]) => y));
+  const newLast = d3.max(rows, (r) => r.month);
+  DATA.lastMonth = newLast > oldLast ? newLast : oldLast;
+  const added = d3.sum(res.years, (y) => DATA.island[yi(y)][1] - (oldN.get(y) ?? 0));
+  liveCache.clear();
+  const stored = await idb('readwrite', (st) => st.put({ savedAt: Date.now(), lastMonth: DATA.lastMonth, fileLastMonth: DATA.fileLastMonth, rows: packRows(rows) }, IDB.key)) !== null;
+  sync.saved = stored;
+  if (wasLatest) state.year = YEARS.at(-1);   // follow into a new year if one arrived
+  INDEX = null; blockKeyMap = null;
+  VIEWS[state.view].update();
+  if (state.view === 'value' && V.res) runValuation();   // the 24-month comparable window moves with the data
+  renderPanel();
+  setSync('done', `Synced ${d3.timeFormat('%H:%M')(new Date())}: data to ${d3.timeFormat('%b %Y')(new Date(`${DATA.lastMonth}-01`))}, ${added >= 0 ? `${d3.format(',')(added)} more` : `${d3.format(',')(-added)} fewer`} sales than saved${res.unmapped ? `, ${d3.format(',')(res.unmapped)} at blocks not on the map` : ''}.${stored ? ' Kept in this browser.' : ' This browser won’t keep it after a reload.'}`);
+}
+// Rebuild every figure for the given years from raw sale records.
+function applySales(rows, years) {
+  // a new calendar year: extend every per-year array with an empty slot
+  years.filter((y) => y > YEARS.at(-1)).sort().forEach((y) => {
+    YEARS.push(y);
+    BLOCKS.forEach((b) => { b.psm.push(0); b.pk.push(0); b.n.push(0); b.n1m.push(0); });
+    TOWNS.forEach((t) => { t.y.push([0, 0, 0, DATA.types.map(() => 0)]); t.mix.push(DATA.mixTypes.map(() => DATA.bands.map(() => [0, 0]))); });
+    AREAS.forEach((a) => { a.y.push([0, 0, 0, DATA.types.map(() => 0)]); a.d.push(AGE_BANDS.map(() => PRICE_BANDS.map(() => 0))); a.f.push(DATA.bands.map(() => 0)); });
+    DATA.island.push([0, 0, 0]); DATA.million.push(0); DATA.floors.push(DATA.bands.map(() => 0));
+  });
+  const key = new Map(BLOCKS.map((b) => [`${b.blk}|${b.street}`, b]));
+  const townIdx = new Map(TOWNS.map((t, i) => [t.n.replace(' / ', '/').toUpperCase(), i]));
+  // round half to even, like Python's round() in the prep script, so a sync reproduces the file exactly
+  const rnd = (x) => { const f = Math.floor(x), d = x - f; return d > 0.5 + 1e-9 ? f + 1 : d < 0.5 - 1e-9 ? f : (f % 2 === 0 ? f : f + 1); };
+  const med = (v) => d3.median(v) ?? 0, K = (v) => rnd(med(v) / 1000);
+  const stats = (list) => [rnd(med(list.map((r) => r.psm))), list.length, list.filter((r) => r.price >= 1e6).length,
+    DATA.types.map((t) => { const v = list.filter((r) => r.type === t).map((r) => r.price); return v.length ? K(v) : 0; })];
+  let unmapped = 0;
+  years.forEach((y) => {
+    const k = yi(y);
+    const recs = rows.filter((r) => +r.month.slice(0, 4) === y).map((r) => {
+      const price = +r.resale_price, sqm = +r.floor_area_sqm, lo = +r.storey_range.slice(0, 2);
+      return { price, psm: price / sqm, type: r.flat_type, age: y - +r.lease_commence_date, b: key.get(`${r.block}|${r.street_name}`), t: townIdx.get(r.town),
+        band: lo <= 6 ? 0 : lo <= 12 ? 1 : lo <= 24 ? 2 : 3 };
+    });
+    unmapped += recs.filter((r) => !r.b).length;
+    DATA.island[k] = [rnd(med(recs.map((r) => r.psm))), recs.length, K(recs.map((r) => r.price))];
+    DATA.million[k] = recs.filter((r) => r.price >= 1e6).length;
+    DATA.floors[k] = DATA.bands.map((_, bi) => { const v = recs.filter((r) => r.band === bi).map((r) => r.psm); return v.length ? rnd(med(v)) : 0; });
+    const byBlock = d3.group(recs.filter((r) => r.b), (r) => r.b);
+    BLOCKS.forEach((b) => {
+      const v = byBlock.get(b) ?? [];
+      b.psm[k] = v.length ? rnd(med(v.map((r) => r.psm))) : 0;
+      b.pk[k] = v.length ? K(v.map((r) => r.price)) : 0;
+      b.n[k] = v.length; b.n1m[k] = v.filter((r) => r.price >= 1e6).length;
+    });
+    const byTown = d3.group(recs.filter((r) => r.t != null), (r) => r.t);
+    TOWNS.forEach((t, i) => {
+      const v = byTown.get(i) ?? [];
+      t.y[k] = stats(v);
+      t.mix[k] = DATA.mixTypes.map((mt, ti) => DATA.bands.map((_, bi) => {
+        const p = v.filter((r) => (DATA.mixTypes.includes(r.type) ? r.type === mt : ti === DATA.mixTypes.length - 1) && r.band === bi).map((r) => r.price);
+        return [p.length, p.length ? K(p) : 0];
+      }));
+    });
+    const byArea = d3.group(recs.filter((r) => r.b && r.b.area >= 0), (r) => r.b.area);
+    const bucket = (v, edges) => edges.filter((e) => v >= e).length;   // same banding as the prep script
+    AREAS.forEach((a) => {
+      const v = byArea.get(a.i) ?? [];
+      a.y[k] = stats(v); a.hdb = a.hdb || a.y[k][1] > 0;
+      const grid = AGE_BANDS.map(() => PRICE_BANDS.map(() => 0)), mid = med(v.map((r) => r.psm));
+      v.forEach((r) => { grid[bucket(r.age, [10, 20, 30, 40, 50])][bucket(r.psm / mid - 1, [-0.2, 0, 0.2])] += 1; });
+      a.d[k] = grid;
+      a.f[k] = DATA.bands.map((_, bi) => { const p = v.filter((r) => r.band === bi).map((r) => r.psm); return p.length ? rnd(med(p)) : 0; });
+    });
+  });
+  INDEX = null;
+  return { years, unmapped };
+}
+
+// ================= view 3: value a flat =================
+// Pick a block (postal code or name). Its own sales history comes live from data.gov.sg and fills in the
+// likely flat type, storey and size. Then the town's sales of that flat type over the last 24 months are
+// fetched and a small hedonic model is fitted in the browser:
+//   log(price per m²) ~ storey + lease left + floor area + months since sale + distance from this block
+// The model gives the estimate and its range; the charts read off what it learned.
+const V = { blk: null, hist: null, type: null, storey: null, area: null, buy: '', buyYear: '', status: '', res: null };
+const histCache = new Map(), compCache = new Map();
+const leaseYears = (s) => { const m = /(\d+)\s*years?(?:\s*(\d+)\s*months?)?/.exec(s || ''); return m ? +m[1] + (+m[2] || 0) / 12 : null; };
+const storeyMid = (s) => { const [a, b] = s.split(' TO ').map(Number); return (a + b) / 2; };
+const monthNum = (m) => +m.slice(0, 4) * 12 + +m.slice(5, 7) - 1;
+const townApi = (i) => TOWNS[i].n.replace(' / ', '/').toUpperCase();
+let blockKeyMap = null;
+const blockByKey = (blk, st) => { if (!blockKeyMap) blockKeyMap = new Map(BLOCKS.map((b) => [`${b.blk}|${b.street}`, b])); return blockKeyMap.get(`${blk}|${st}`); };
+const kmBetween = (a, b) => d3.geoDistance([a.lon, a.lat], [b.lon, b.lat]) * 6371;
+
+async function apiRecords(filters, limit = 10000) {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const r = await fetch(`${RESALE_API}&limit=${limit}&filters=${encodeURIComponent(JSON.stringify(filters))}`);
+    if (r.status === 429) { await new Promise((ok) => setTimeout(ok, 3000 * (attempt + 1))); continue; }
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return (await r.json()).result.records;
+  }
+  throw new Error('busy');
+}
+async function loadHistory(b) {
+  const key = `${b.blk}|${b.street}`;
+  if (!histCache.has(key)) histCache.set(key, await apiRecords({ block: b.blk, street_name: b.street }, 2000));
+  return histCache.get(key);
+}
+async function loadComps(town, type) {
+  const end = monthNum(DATA.lastMonth), months = d3.range(24).map((i) => { const n = end - i; return `${Math.floor(n / 12)}-${String((n % 12) + 1).padStart(2, '0')}`; });
+  const key = `${town}|${type}|${DATA.lastMonth}`;
+  if (!compCache.has(key)) compCache.set(key, await apiRecords({ town: townApi(town), flat_type: type, month: months }));
+  return compCache.get(key);
+}
+
+// Choose a block: load its history, fill the form from it, then value.
+async function valueBlock(i) {
+  const b = BLOCKS[i];
+  const keepType = V.type;   // moving between blocks keeps the flat type you were looking at, if the new block has it
+  Object.assign(V, { blk: i, hist: null, res: null, buy: '', buyYear: '', status: `Loading ${blockName(b)}…` });
+  renderPanel(); VIEWS.value.update(); flyValue();
+  try {
+    const hist = await loadHistory(b);
+    if (V.blk !== i) return;
+    V.hist = hist;
+    const recent = hist.filter((r) => r.month >= `${+DATA.lastMonth.slice(0, 4) - 5}`);
+    const pool = recent.length ? recent : hist;
+    V.type = keepType && hist.some((r) => r.flat_type === keepType) ? keepType : d3.greatest(d3.rollups(pool, (v) => v.length, (r) => r.flat_type), (d) => d[1])?.[0] ?? '4 ROOM';
+    setTypeDefaults();
+    await runValuation();
+  } catch (err) {
+    V.status = err.message === 'busy' ? 'data.gov.sg is limiting requests. Try again in a minute.' : 'Couldn’t reach data.gov.sg to load this block’s sales.';
+    renderPanel();
+  }
+}
+// Storey and area defaults for the chosen type at this block (median of its own sales).
+function setTypeDefaults() {
+  const own = (V.hist || []).filter((r) => r.flat_type === V.type);
+  const st = d3.sort([...new Set(own.map((r) => r.storey_range))], storeyMid);
+  V.storeys = st.length ? st : ['01 TO 03', '04 TO 06', '07 TO 09', '10 TO 12', '13 TO 15', '16 TO 18'];
+  V.storey = V.storeys[Math.floor((V.storeys.length - 1) / 2)];
+  V.area = own.length ? Math.round(d3.median(own, (r) => +r.floor_area_sqm)) : ({ '2 ROOM': 45, '3 ROOM': 68, '4 ROOM': 92, '5 ROOM': 112, EXECUTIVE: 142 }[V.type] ?? 90);
+}
+
+async function runValuation() {
+  const b = BLOCKS[V.blk];
+  V.status = `Fetching ${title(V.type)} sales in ${TOWNS[b.town].n}…`; V.res = null;
+  renderPanel();
+  try {
+    const comps = await loadComps(b.town, V.type);
+    if (BLOCKS[V.blk] !== b) return;
+    V.res = fitModel(b, comps);
+    V.status = V.res ? '' : `Too few ${title(V.type)} sales in ${TOWNS[b.town].n} over the last 24 months to fit a model.`;
+  } catch (err) {
+    V.status = err.message === 'busy' ? 'data.gov.sg is limiting requests. Try again in a minute.' : 'Couldn’t reach data.gov.sg for comparable sales.';
+  }
+  renderPanel(); VIEWS.value.update(); flyValue();
+}
+
+// Ridge-stabilised least squares on standardised features. Small (6x6) normal equations.
+function solve(A, y) {
+  const n = A.length, M = A.map((row, i) => [...row, y[i]]);
+  for (let c = 0; c < n; c++) {
+    let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    [M[c], M[p]] = [M[p], M[c]];
+    for (let r = 0; r < n; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; }
+  }
+  return M.map((row, i) => row[n] / row[i]);
+}
+const FEATS = [
+  { key: 'storey', name: 'Floor level', unit: 3, say: (p) => `${fmtPct(p)} per 3 floors up` },
+  { key: 'lease', name: 'Lease left', unit: 10, say: (p) => `${fmtPct(p)} per 10 more years of lease` },
+  { key: 'area', name: 'Floor area', unit: 10, say: (p) => `${fmtPct(p)} per m² for every 10 m² bigger` },
+  { key: 'ago', name: 'Market trend', unit: -12, say: (p) => `${fmtPct(p)} a year over the last 2 years` },
+  { key: 'dist', name: 'Distance', unit: 1, say: (p) => `${fmtPct(p)} per km from this block` },
+];
+const fmtPct = (p) => `${p >= 0 ? '+' : '−'}${d3.format('.1%')(Math.abs(p))}`;
+function fitModel(b, comps) {
+  const end = monthNum(DATA.lastMonth);
+  const rows = comps.map((r) => {
+    const cb = blockByKey(r.block, r.street_name), lease = leaseYears(r.remaining_lease) ?? (99 - (+r.month.slice(0, 4) - +r.lease_commence_date));
+    const psm = +r.resale_price / +r.floor_area_sqm;
+    return cb ? { r, cb, psm, y: Math.log(psm), x: { storey: storeyMid(r.storey_range), lease, area: +r.floor_area_sqm, ago: end - monthNum(r.month), dist: kmBetween(cb, b) } } : null;
+  }).filter(Boolean);
+  if (rows.length < 25) return null;
+  const keys = FEATS.map((f) => f.key);
+  const mu = Object.fromEntries(keys.map((k) => [k, d3.mean(rows, (r) => r.x[k])]));
+  const sd = Object.fromEntries(keys.map((k) => [k, d3.deviation(rows, (r) => r.x[k]) || 1]));
+  const z = (x) => [1, ...keys.map((k) => (x[k] - mu[k]) / sd[k])];
+  const Z = rows.map((r) => z(r.x)), p = keys.length + 1, lam = 0.5;
+  const A = d3.range(p).map((i) => d3.range(p).map((j) => d3.sum(Z, (row) => row[i] * row[j]) + (i === j && i > 0 ? lam : 0)));
+  const yv = d3.range(p).map((i) => d3.sum(Z, (row, n) => row[i] * rows[n].y));
+  const beta = solve(A, yv);
+  const pred = (x) => d3.sum(z(x), (v, i) => v * beta[i]);
+  rows.forEach((r) => { r.fit = pred(r.x); r.res = r.y - r.fit; });
+  const sigma = d3.deviation(rows, (r) => r.res), ybar = d3.mean(rows, (r) => r.y);
+  const r2 = 1 - d3.sum(rows, (r) => r.res ** 2) / d3.sum(rows, (r) => (r.y - ybar) ** 2);
+  const perUnit = Object.fromEntries(keys.map((k, i) => [k, beta[i + 1] / sd[k]]));
+  // this flat today
+  const leaseNow = 99 - (end / 12 - b.lease);   // years left now, from the lease start year
+  const me = { storey: storeyMid(V.storey), lease: Math.max(1, leaseNow), area: +V.area, ago: 0, dist: 0 };
+  const psmHat = Math.exp(pred(me)), value = psmHat * me.area, k80 = 1.2816 * sigma;
+  // cross-check: 15 nearest sales, each adjusted to this flat's features by the model
+  const near = d3.sort(rows, (r) => r.x.dist + Math.abs(r.x.lease - me.lease) / 20).slice(0, 15);
+  const nearAdj = d3.median(near, (r) => Math.exp(r.y + d3.sum(keys, (k) => perUnit[k] * (me[k] - r.x[k])))) * me.area;
+  const conf = rows.length >= 150 && sigma <= 0.09 ? 'High' : rows.length >= 60 && sigma <= 0.13 ? 'Medium' : 'Low';
+  return { rows, beta, perUnit, sigma, r2, me, psmHat, value, lo: value * Math.exp(-k80), hi: value * Math.exp(k80), near, nearAdj, conf, pred, keys };
+}
+
+// ---------- panel ----------
+function valueForm() {
+  const b = V.blk != null ? BLOCKS[V.blk] : null;
+  const types = b && V.hist ? d3.sort([...new Set(V.hist.map((r) => r.flat_type))]) : [];
+  const sel = (id, opts, cur, fmt = (x) => x) => `<div class="relative"><select id="${id}" ${opts.length ? '' : 'disabled'} class="h-8 w-full appearance-none rounded-md border bg-background/60 pl-2.5 pr-7 text-sm text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">${opts.map((o) => `<option value="${esc(o)}" ${o === cur ? 'selected' : ''}>${esc(fmt(o))}</option>`).join('')}</select><i class="fi fi-rr-angle-small-down pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"></i></div>`;
+  const field = (label, html) => `<label class="block"><span class="mb-1 block text-[11px] text-muted-foreground">${label}</span>${html}</label>`;
+  const inp = (id, val, ph, extra = '') => `<input id="${id}" value="${esc(val ?? '')}" placeholder="${ph}" ${extra} class="h-8 w-full rounded-md border bg-background/60 px-2.5 font-mono text-sm text-foreground placeholder:font-sans placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />`;
+  return `<div class="relative mt-3">
+      <i class="fi fi-rr-search pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"></i>
+      <input id="v-search" type="search" autocomplete="off" spellcheck="false" value="${b ? esc(blockName(b)) : ''}" placeholder="Postal code or block, e.g. 560314" aria-label="Postal code or block" role="combobox" aria-expanded="false" aria-controls="v-list"
+        class="h-9 w-full rounded-md border bg-background/60 pl-8 pr-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+      <div id="v-list" role="listbox" hidden class="absolute inset-x-0 top-10 z-20 max-h-72 overflow-auto rounded-md border bg-background p-1 shadow-lg"></div>
+    </div>
+    ${b ? `<p class="mt-1 text-xs text-muted-foreground">${esc(TOWNS[b.town].n)} · lease from ${b.lease}${b.postal ? ` · ${b.postal}` : ''}</p>` : ''}
+    <div class="mt-3 grid grid-cols-3 gap-2">
+      ${field('Flat type', sel('v-type', types, V.type, (t) => title(t)))}
+      ${field('Storey', sel('v-storey', b && V.hist ? V.storeys : [], V.storey, (s) => s.replace(' TO ', '–')))}
+      ${field('Floor area, m²', inp('v-area', b && V.hist ? V.area : '', '–', `inputmode="numeric" ${b && V.hist ? '' : 'disabled'}`))}
+    </div>
+    <div class="mt-2 grid grid-cols-2 gap-2">
+      ${field('Bought for, S$ (optional)', inp('v-buy', V.buy, 'e.g. 420000', 'inputmode="numeric"'))}
+      ${field('Year bought', inp('v-buyyear', V.buyYear, 'e.g. 2019', 'inputmode="numeric"'))}
+    </div>`;
+}
+function valueDetail(el) {
+  if (V.blk == null) {
+    el.innerHTML = `<p class="text-sm text-ink-2">Search a postal code or block above to value a flat in it.</p>
+      <p class="mt-2 text-xs text-muted-foreground">Try <button data-try="560314" class="text-foreground underline underline-offset-2">560314</button>, <button data-try="Punggol Field" class="text-foreground underline underline-offset-2">Punggol Field</button> or <button data-try="C'wealth" class="text-foreground underline underline-offset-2">C'wealth</button>.</p>`;
+    return;
+  }
+  if (!V.res) { el.innerHTML = `<p class="text-sm ${/Couldn|limiting|Too few/.test(V.status) ? 'text-[#e58fb0]' : 'text-muted-foreground'}" aria-live="polite">${esc(V.status)}</p>`; return; }
+  const R = V.res, b = BLOCKS[V.blk];
+  const sec = (n, h, sub) => `<div class="mt-5 flex items-baseline justify-between gap-2 border-t pt-3"><span class="text-sm font-medium">${h}</span><span class="text-[11px] text-muted-foreground">${sub}</span></div>`;
+  el.innerHTML = `
+    <div class="rounded-lg border bg-background/40 p-3">
+      <div class="text-[11px] text-muted-foreground">Estimated value, ${title(V.type)}, floors ${V.storey.replace(' TO ', '–')}, ${V.area} m²</div>
+      <div class="mt-1 font-mono text-2xl text-foreground">${sgd(R.value)}</div>
+      <div class="mt-0.5 font-mono text-xs text-ink-2">likely ${sgd(R.lo)} to ${sgd(R.hi)} · ${psmF(R.psmHat)}</div>
+      <div class="mt-2 grid grid-cols-3 gap-2 text-[11px]">
+        <div><div class="text-muted-foreground">Confidence</div><div class="font-mono text-foreground">${R.conf}</div></div>
+        <div><div class="text-muted-foreground">Sales used</div><div class="font-mono text-foreground">${d3.format(',')(R.rows.length)}</div></div>
+        <div><div class="text-muted-foreground">Model fit, R²</div><div class="font-mono text-foreground">${d3.format('.2f')(R.r2)}</div></div>
+      </div>
+      <p class="mt-2 text-[11px] text-muted-foreground">The 15 nearest sales, adjusted to this flat, point to ${sgd(R.nearAdj)}. The range covers 80% of how far sales typically land from the model.</p>
+    </div>
+    ${returnBlock()}
+    ${sec(1, 'What moves the price', `${title(V.type)}, ${esc(TOWNS[b.town].n)}`)}<div id="v-drivers" class="mt-2"></div>
+    ${sec(2, 'Where this flat sits', 'last 12 months')}<div id="v-dist" class="mt-2"></div>
+    ${sec(3, 'Lease runway', 'model value as the lease runs down')}<div id="v-lease" class="mt-2"></div>
+    ${sec(4, 'Five-year outlook', 'a projection, not a forecast')}<div id="v-outlook" class="mt-2"></div>
+    ${sec(5, 'Blocks that sold below the model', 'possible value picks')}<div id="v-picks" class="mt-2"></div>
+    ${sec(6, 'Same budget elsewhere', `${title(V.type)} median, ${YEARS.at(-1)}`)}<div id="v-towns" class="mt-2"></div>
+    <p class="mt-4 text-[11px] text-muted-foreground"><i class="fi fi-rr-info mr-1 align-[-1px]"></i>An indicative model from public resale records, not a valuation for HDB, bank or CPF purposes.</p>`;
+  drivers(); distChart(); leaseChart(); outlook(); picks(); townBudget();
+}
+function returnBlock() {
+  const buy = +String(V.buy).replace(/[^\d.]/g, ''), yr = +V.buyYear;
+  if (!buy || !yr || yr < 1990 || yr > +DATA.lastMonth.slice(0, 4)) return '';
+  const R = V.res, years = Math.max(0.5, +DATA.lastMonth.slice(0, 4) + +DATA.lastMonth.slice(5, 7) / 12 - (yr + 0.5));
+  const gain = R.value - buy, cagr = (R.value / buy) ** (1 / years) - 1;
+  const t = TOWNS[BLOCKS[V.blk].town], ti = DATA.types.indexOf(V.type), k0 = YEARS.indexOf(yr);
+  const townG = ti >= 0 && k0 >= 0 && t.y[k0][3][ti] && t.y.at(-1)[3][ti] ? (t.y.at(-1)[3][ti] / t.y[k0][3][ti]) ** (1 / years) - 1 : null;
+  return `<div class="mt-2 grid grid-cols-3 gap-2">${tile('Gain', 'v-gain', `${gain >= 0 ? '+' : '−'}${sgd(Math.abs(gain))}`)}${tile('A year', 'v-cagr', fmtPct(cagr))}${tile('Town, same type', 'v-town', townG == null ? '–' : fmtPct(townG))}</div>`;
+}
+
+// 1. what the model learned, as % effects
+function drivers() {
+  const el = $('#v-drivers'), R = V.res, W = el.clientWidth || 340;
+  const eff = FEATS.map((f) => ({ f, p: Math.exp(R.perUnit[f.key] * f.unit) - 1 }));
+  const lim = Math.max(0.02, d3.max(eff, (d) => Math.abs(d.p)));
+  const x = d3.scaleLinear([-lim, lim], [110, W - 50]);
+  el.innerHTML = `<svg width="${W}" height="${eff.length * 24 + 6}" role="img" aria-label="Effect of each feature on price per square metre">
+    <line x1="${x(0)}" x2="${x(0)}" y1="0" y2="${eff.length * 24}" stroke="${B.fog}"/>
+    ${eff.map((d, i) => `<text x="0" y="${i * 24 + 15}" font-size="11" fill="${B.ink2}">${d.f.name}</text>
+      <rect x="${Math.min(x(0), x(d.p))}" y="${i * 24 + 5}" width="${Math.max(1, Math.abs(x(d.p) - x(0)))}" height="13" rx="2" fill="${d.p >= 0 ? '#e58fb0' : '#7cc4dc'}"><title>${d.f.say(d.p)}</title></rect>
+      <text x="${d.p >= 0 ? x(d.p) + 4 : x(d.p) - 4}" y="${i * 24 + 15}" text-anchor="${d.p >= 0 ? 'start' : 'end'}" font-size="10" font-family="Source Code Pro" fill="${B.ink2}">${fmtPct(d.p)}</text>`).join('')}
+  </svg>
+  <ul class="mt-1 space-y-0.5 text-[11px] text-muted-foreground">${eff.map((d) => `<li>${d.f.name}: ${d.f.say(d.p)}</li>`).join('')}</ul>`;
+}
+// 2. histogram of price per m² over the last 12 months, with this flat marked
+function distChart() {
+  const el = $('#v-dist'), R = V.res, W = el.clientWidth || 340, H = 120, m = { t: 14, r: 16, b: 20, l: 16 };
+  const vals = R.rows.filter((r) => r.x.ago < 12).map((r) => r.psm);
+  if (vals.length < 10) { el.innerHTML = '<p class="text-xs text-muted-foreground">Too few sales in the last 12 months.</p>'; return; }
+  const x = d3.scaleLinear(d3.extent([...vals, R.psmHat]), [m.l, W - m.r]).nice(), bins = d3.bin().domain(x.domain()).thresholds(24)(vals);
+  const y = d3.scaleLinear([0, d3.max(bins, (d) => d.length)], [H - m.b, m.t]);
+  const rank = vals.filter((v) => v < R.psmHat).length / vals.length;
+  el.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="Distribution of price per square metre">
+    ${bins.map((d) => `<rect x="${x(d.x0) + 0.5}" y="${y(d.length)}" width="${Math.max(0, x(d.x1) - x(d.x0) - 1)}" height="${H - m.b - y(d.length)}" fill="${d.x1 <= R.psmHat ? '#3d6d7d' : '#4a4f59'}"><title>${psmF(d.x0)} to ${psmF(d.x1)}: ${d.length} sales</title></rect>`).join('')}
+    <line x1="${x(R.psmHat)}" x2="${x(R.psmHat)}" y1="${m.t - 6}" y2="${H - m.b}" stroke="${B.amber}" stroke-width="2"/>
+    <text x="${Math.min(W - 60, Math.max(60, x(R.psmHat)))}" y="${m.t - 8 + 6}" text-anchor="middle" font-size="10" font-family="Source Code Pro" fill="${B.amber}">this flat</text>
+    ${x.ticks(5).map((t) => `<text x="${x(t)}" y="${H - 5}" text-anchor="middle" font-size="9.5" font-family="Source Code Pro" fill="${B.fog}">${d3.format('.1f')(t / 1000)}k</text>`).join('')}
+  </svg>
+  <p class="text-[11px] text-muted-foreground">Higher per m² than ${d3.format('.0%')(rank)} of ${d3.format(',')(vals.length)} ${title(V.type).toLowerCase()} sales in ${esc(TOWNS[BLOCKS[V.blk].town].n)} over the last 12 months.</p>`;
+}
+// 3. model value as lease left falls, other features held at this flat's values
+function leaseChart() {
+  const el = $('#v-lease'), R = V.res, W = el.clientWidth || 340, H = 150, m = { t: 12, r: 10, b: 24, l: 44 };
+  const [l0, l1] = d3.extent(R.rows, (r) => r.x.lease), now = R.me.lease;
+  const xs = d3.range(Math.max(5, Math.floor(Math.min(l0, now - 25))), Math.ceil(Math.max(l1, now)) + 1);
+  const val = (L) => Math.exp(R.pred({ ...R.me, lease: L })) * R.me.area;
+  const x = d3.scaleLinear([d3.max(xs), d3.min(xs)], [m.l, W - m.r]), y = d3.scaleLinear([0, d3.max(xs, val) * 1.08], [H - m.b, m.t]).nice();
+  const line = (pts) => d3.line().x((L) => x(L)).y((L) => y(val(L)))(pts);
+  const inside = xs.filter((L) => L >= l0 && L <= l1);
+  const marks = [[now, 'today'], [now - 10, '+10 yrs'], [now - 20, '+20 yrs']].filter(([L]) => L >= d3.min(xs));
+  el.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="Model value against lease left">
+    ${y.ticks(4).map((t) => `<line x1="${m.l}" x2="${W - m.r}" y1="${y(t)}" y2="${y(t)}" stroke="${B.line}"/><text x="${m.l - 5}" y="${y(t) + 3}" text-anchor="end" font-size="9.5" font-family="Source Code Pro" fill="${B.fog}">${t >= 1e6 ? `${t / 1e6}M` : `${t / 1000}k`}</text>`).join('')}
+    ${[60, 30].filter((L) => L >= d3.min(xs) && L <= d3.max(xs)).map((L) => `<line x1="${x(L)}" x2="${x(L)}" y1="${m.t}" y2="${H - m.b}" stroke="${B.fog}" stroke-dasharray="3 3"/><text x="${x(L) > W - 70 ? x(L) - 3 : x(L) + 3}" y="${m.t + 8}" text-anchor="${x(L) > W - 70 ? 'end' : 'start'}" font-size="9.5" fill="${B.fog}">${L} yrs left</text>`).join('')}
+    <path d="${line(xs)}" fill="none" stroke="${B.signal}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"/>
+    ${inside.length > 1 ? `<path d="${line(inside)}" fill="none" stroke="${B.signal}" stroke-width="2"/>` : ''}
+    ${marks.map(([L, t]) => `<circle cx="${x(L)}" cy="${y(val(L))}" r="4" fill="${t === 'today' ? B.amber : B.paper}" stroke="${B.amber}" stroke-width="1.5"/><text x="${x(L)}" y="${y(val(L)) - 8}" text-anchor="middle" font-size="9.5" font-family="Source Code Pro" fill="${B.amber}">${t}</text>`).join('')}
+    ${x.ticks(6).map((t) => `<text x="${x(t)}" y="${H - 8}" text-anchor="middle" font-size="9.5" font-family="Source Code Pro" fill="${B.fog}">${t}</text>`).join('')}
+    <text x="${W - m.r}" y="${H}" text-anchor="end" font-size="9.5" fill="${B.fog}">years of lease left</text>
+  </svg>
+  <p class="text-[11px] text-muted-foreground">Today’s money, other features held. Dashed where the town has no sales that old to learn from. In 10 years: ${sgd(val(now - 10))} (${fmtPct(val(now - 10) / val(now) - 1)}). Lenders and CPF rules look at remaining lease; check HDB’s current rules before relying on a long tenure.</p>`;
+}
+// 4. outlook: town median history for this type, then three paces applied to this flat, less lease decay
+function outlook() {
+  const el = $('#v-outlook'), R = V.res, W = el.clientWidth || 340, H = 170, m = { t: 12, r: 44, b: 22, l: 44 };
+  const t = TOWNS[BLOCKS[V.blk].town], ti = DATA.types.indexOf(V.type);
+  const hist = ti >= 0 ? YEARS.map((y, k) => ({ y, v: t.y[k][3][ti] * 1000 })).filter((d) => d.v) : [];
+  const yNow = +DATA.lastMonth.slice(0, 4);
+  const cagr = (a, b, n) => (a && b && n > 0 ? (b / a) ** (1 / n) - 1 : null);
+  const h3 = hist.find((d) => d.y === yNow - 3), h0 = hist[0], hN = hist.at(-1);
+  const paces = [
+    { name: 'Recent pace', g: h3 && hN ? cagr(h3.v, hN.v, 3) : R.perUnit.ago * -12, col: '#e58fb0' },
+    { name: 'Long-run pace', g: h0 && hN && hN.y > h0.y ? cagr(h0.v, hN.v, hN.y - h0.y) : 0.02, col: B.amber },
+    { name: 'Flat market', g: 0, col: '#7cc4dc' },
+  ];
+  const decay = Math.exp(-R.perUnit.lease);   // one year less lease, from the model
+  const proj = paces.map((p) => ({ ...p, pts: d3.range(0, 6).map((i) => ({ y: yNow + i, v: R.value * ((1 + p.g) * decay) ** i })) }));
+  const all = [...hist, ...proj.flatMap((p) => p.pts)];
+  const x = d3.scaleLinear([d3.min(all, (d) => d.y), yNow + 5], [m.l, W - m.r]), y = d3.scaleLinear([0, d3.max(all, (d) => d.v) * 1.08], [H - m.b, m.t]).nice();
+  const ln = d3.line().x((d) => x(d.y)).y((d) => y(d.v));
+  const lo = proj.map((p) => p.pts.at(-1).v);
+  const band = d3.area().x((d) => x(d.y)).y0((d, i) => y(d3.min(proj, (p) => p.pts[i].v))).y1((d, i) => y(d3.max(proj, (p) => p.pts[i].v)))(proj[0].pts);
+  el.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="Price history and five-year projection">
+    ${y.ticks(4).map((v) => `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="${B.line}"/><text x="${m.l - 5}" y="${y(v) + 3}" text-anchor="end" font-size="9.5" font-family="Source Code Pro" fill="${B.fog}">${v >= 1e6 ? `${v / 1e6}M` : `${v / 1000}k`}</text>`).join('')}
+    <rect x="${x(yNow)}" y="${m.t}" width="${x(yNow + 5) - x(yNow)}" height="${H - m.b - m.t}" fill="${B.raise}"/>
+    <path d="${band}" fill="${B.amber}" opacity="0.12"/>
+    ${hist.length ? `<path d="${ln(hist)}" fill="none" stroke="${B.ink2}" stroke-width="1.5"/>` : ''}
+    ${proj.map((p) => `<path d="${ln(p.pts)}" fill="none" stroke="${p.col}" stroke-width="1.5" ${p.g === 0 ? 'stroke-dasharray="4 3"' : ''}/>`).join('')}
+    ${endLabels(proj.map((p) => ({ y: y(p.pts.at(-1).v), text: sgd(p.pts.at(-1).v).replace('S$', ''), col: p.col }))).map((l) => `<text x="${x(yNow + 5) + 4}" y="${l.y + 3}" font-size="9.5" font-family="Source Code Pro" fill="${l.col}">${l.text}</text>`).join('')}
+    <circle cx="${x(yNow)}" cy="${y(R.value)}" r="4" fill="${B.amber}"/>
+    ${x.ticks(5).filter(Number.isInteger).map((v) => `<text x="${x(v)}" y="${H - 6}" text-anchor="middle" font-size="9.5" font-family="Source Code Pro" fill="${B.fog}">${String(v).slice(2)}</text>`).join('')}
+  </svg>
+  <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground"><span class="inline-flex items-center gap-1"><span class="inline-block h-0.5 w-3 bg-[#b8b5ac]"></span>Town median, ${title(V.type).toLowerCase()}</span>${proj.map((p) => `<span class="inline-flex items-center gap-1"><span class="inline-block h-0.5 w-3" style="background:${p.col}"></span>${p.name} ${fmtPct(p.g)}</span>`).join('')}</div>
+  <p class="mt-1 text-[11px] text-muted-foreground">Each line grows this flat’s estimate at that yearly pace, less ${d3.format('.1%')(1 - decay)} a year for the lease running down. In ${yNow + 5}: ${sgd(d3.min(lo))} to ${sgd(d3.max(lo))}.</p>`;
+}
+// Nudge end-of-line labels apart so they don't overlap (11px minimum gap).
+function endLabels(ls) {
+  const out = d3.sort(ls, (l) => l.y).map((l) => ({ ...l }));
+  for (let i = 1; i < out.length; i++) if (out[i].y - out[i - 1].y < 11) out[i].y = out[i - 1].y + 11;
+  return out;
+}
+// 5. blocks whose sales came in below the model: possible value picks
+function picks() {
+  const el = $('#v-picks'), R = V.res;
+  const g = d3.rollups(R.rows, (v) => ({ n: v.length, res: d3.mean(v, (r) => r.res), psm: d3.median(v, (r) => r.psm), lease: d3.mean(v, (r) => r.x.lease), dist: v[0].x.dist }), (r) => r.cb)
+    .filter(([cb, d]) => d.n >= 2 && d.res < 0 && cb !== BLOCKS[V.blk]).sort((a, b) => a[1].res - b[1].res).slice(0, 6);
+  el.innerHTML = g.length ? `<div class="space-y-1">${g.map(([cb, d]) => `<button data-vblock="${cb.i}" class="flex w-full items-center gap-2 rounded px-1.5 py-1 text-left text-xs hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+      <span class="min-w-0 flex-1"><span class="block truncate text-ink-2">${esc(blockName(cb))}</span><span class="block text-[11px] text-muted-foreground">${d.n} sales · ${Math.round(d.lease)} yrs lease · ${d3.format('.1f')(d.dist)} km away</span></span>
+      <span class="shrink-0 text-right font-mono"><span class="block text-[#7cc4dc]">${fmtPct(Math.exp(d.res) - 1)}</span><span class="block text-[11px] text-muted-foreground">${psmF(d.psm).replace('/m²', '')}</span></span></button>`).join('')}</div>
+    <p class="mt-1 text-[11px] text-muted-foreground">Average gap between what each block’s flats sold for and what the model expected for them. Click one to value a flat there.</p>`
+    : '<p class="text-xs text-muted-foreground">No block had two or more sales below the model.</p>';
+}
+// 6. same flat type, every town, against this estimate
+function townBudget() {
+  const el = $('#v-towns'), ti = DATA.types.indexOf(V.type), k = YEARS.length - 1, here = BLOCKS[V.blk].town;
+  if (ti < 0) { el.innerHTML = '<p class="text-xs text-muted-foreground">No town medians for this flat type.</p>'; return; }
+  const rows = d3.sort(TOWNS.map((t, i) => ({ i, n: t.n, v: t.y[k][3][ti] * 1000 })).filter((d) => d.v), (d) => d.v);
+  const W = el.clientWidth || 340, rowH = 15, H = rows.length * rowH + 18, m = { l: 104, r: 52 };
+  const x = d3.scaleLinear([0, d3.max([...rows.map((d) => d.v), V.res.value])], [m.l, W - m.r]);
+  const cheaper = rows.filter((d) => d.v < V.res.value).length;
+  el.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="Median price of this flat type by town">
+    ${rows.map((d, j) => `<text x="${m.l - 6}" y="${j * rowH + 11}" text-anchor="end" font-size="10" fill="${d.i === here ? B.amber : B.ink2}">${esc(d.n)}</text>
+      <rect x="${m.l}" y="${j * rowH + 3}" width="${x(d.v) - m.l}" height="${rowH - 5}" rx="2" fill="${d.i === here ? B.amber : d.v < V.res.value ? '#3d6d7d' : '#4a4f59'}"><title>${esc(d.n)}: ${sgd(d.v)}</title></rect>
+      <text x="${x(d.v) + 4}" y="${j * rowH + 11}" font-size="9.5" font-family="Source Code Pro" fill="${B.fog}">${sgd(d.v).replace('S$', '')}</text>`).join('')}
+    <line x1="${x(V.res.value)}" x2="${x(V.res.value)}" y1="0" y2="${rows.length * rowH + 2}" stroke="${B.amber}" stroke-dasharray="3 2"/>
+    <text x="${x(V.res.value)}" y="${H - 2}" text-anchor="middle" font-size="9.5" font-family="Source Code Pro" fill="${B.amber}">this flat</text>
+  </svg>
+  <p class="text-[11px] text-muted-foreground">In ${cheaper} of ${rows.length} towns the median ${title(V.type).toLowerCase()} sold for less than this estimate this year.</p>`;
+}
+
+// ---------- 3D: comparable blocks as bars, coloured by how far they sold from the model ----------
+VIEWS.value = {
+  tab: 'Value', icon: 'fi-rr-home',
+  title: 'What is a flat worth?',
+  blurb: 'Pick a block by postal code or name. The town’s sales of the same flat type over the last two years are fetched live and a small model values the flat, then shows what moves the price and where it could go.',
+  how: ['A least-squares model on log price per m², fitted in the browser; histogram, lease curve, outlook and town bars.', 'Comparable blocks as instanced bars around this one, coloured by how far their sales landed from the model.'],
+  camera: [-1.5, 13.5, 15.5], target: [0.5, 0, 0.8],
+  build() {
+    island(true);
+    this.marker = new THREE.Group();
+    this.marker.add(new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 1, 6).translate(0, 0.5, 0), new THREE.MeshBasicMaterial({ color: B.amber })));
+    const halo = new THREE.Mesh(new THREE.RingGeometry(0.09, 0.12, 32).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: B.amber, side: THREE.DoubleSide })); halo.position.y = 0.01;
+    this.marker.add(halo); this.marker.visible = false;
+    this.markLbl = lbl('', new THREE.Vector3(0, 1.15, 0), 'sel bg', this.marker);
+    group.add(this.marker);
+    this.mesh = null;
+    this.update();
+  },
+  update() {
+    if (this.mesh) { group.remove(this.mesh); this.mesh.geometry.dispose?.(); this.mesh.material.dispose(); pickables = pickables.filter((p) => p !== this.mesh); this.mesh = null; }
+    const b = V.blk != null ? BLOCKS[V.blk] : null;
+    this.marker.visible = !!b;
+    if (b) { const [x, z] = P(b.lon, b.lat); this.marker.position.set(x, 0, z); this.markLbl.element.textContent = blockName(b); }
+    if (!V.res) { legend(); return; }
+    const g = d3.rollups(V.res.rows, (v) => ({ n: v.length, res: d3.mean(v, (r) => r.res), psm: d3.median(v, (r) => r.psm) }), (r) => r.cb);
+    const mesh = new THREE.InstancedMesh(BOX, new THREE.MeshStandardMaterial({ roughness: 0.5 }), g.length);
+    const h = d3.scaleLinear([0, d3.max(g, (d) => d[1].psm)], [0, 0.9]), col = d3.scaleDiverging([-0.12, 0, 0.12], (t) => d3.interpolateRgbBasis(['#7cc4dc', '#3a3f48', '#e58fb0'])(t)).clamp(true);
+    const m4 = new THREE.Matrix4(), c = new THREE.Color();
+    g.forEach(([cb, d], i) => { const [x, z] = P(cb.lon, cb.lat); m4.makeScale(0.05, Math.max(0.02, h(d.psm)), 0.05); m4.setPosition(x, 0, z); mesh.setMatrixAt(i, m4); mesh.setColorAt(i, c.set(cb === b ? B.amber : col(d.res))); });
+    mesh.computeBoundingSphere();
+    mesh.userData.pick = (hit) => { const [cb, d] = g[hit.instanceId]; return `<div class="font-medium text-foreground">${esc(blockName(cb))}</div><div class="text-muted-foreground">${d.n} ${title(V.type).toLowerCase()} sale${d.n > 1 ? 's' : ''} in 24 months</div><div class="mt-1 font-mono">${psmF(d.psm)} median · ${fmtPct(Math.exp(d.res) - 1)} vs model</div><div class="text-[11px] text-muted-foreground">Click to value a flat here</div>`; };
+    mesh.userData.valueAt = (hit) => g[hit.instanceId][0].i;
+    group.add(mesh); pickables.push(mesh); this.mesh = mesh;
+    this.ext = d3.max(g, ([cb]) => kmBetween(cb, b));
+    legend();
+  },
+};
+function flyValue() {
+  const v = VIEWS.value;
+  if (V.blk == null) return;
+  const b = BLOCKS[V.blk], [x, z] = P(b.lon, b.lat);
+  const t = new THREE.Vector3(x, 0.3, z), size = V.res ? Math.max(2.6, (v.ext ?? 1.5) * 2 * (24 / 50)) : 2.6;   // ~0.48 world units per km
+  const dir = new THREE.Vector3(...v.camera).sub(new THREE.Vector3(...v.target)).normalize();
+  flyCam(t, t.clone().add(dir.multiplyScalar(size * 1.3 + 2.2)));
+}
+
+// ---------- form events ----------
+let vResults = [], vActive = -1;
+function vSuggest(q) {
+  vResults = q.trim() ? searchLocal(q).filter((r) => r.kind === 'block').slice(0, 8) : [];
+  vActive = vResults.length ? 0 : -1;
+  const list = $('#v-list'); if (!list) return;
+  list.hidden = !vResults.length; $('#v-search').setAttribute('aria-expanded', String(!!vResults.length));
+  list.innerHTML = vResults.map((r, i) => `<button type="button" role="option" aria-selected="${i === vActive}" data-vpick="${i}" class="flex w-full items-start gap-2 rounded px-2 py-1.5 text-left text-sm ${i === vActive ? 'bg-accent text-foreground' : 'text-ink-2'} hover:bg-accent focus-visible:outline-none"><i class="fi fi-rr-building mt-0.5 text-muted-foreground"></i><span class="min-w-0"><span class="block truncate">${esc(r.label)}</span><span class="block truncate text-[11px] text-muted-foreground">${esc(r.sub)}</span></span></button>`).join('');
+}
+function vKey(e) {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { if (!vResults.length) return; e.preventDefault(); vActive = (vActive + (e.key === 'ArrowDown' ? 1 : -1) + vResults.length) % vResults.length; const items = document.querySelectorAll('[data-vpick]'); items.forEach((it, i) => { it.setAttribute('aria-selected', i === vActive); it.classList.toggle('bg-accent', i === vActive); }); }
+  else if (e.key === 'Enter') { e.preventDefault(); if (!vResults.length) vSuggest(e.target.value); if (vResults.length) valueBlock(vResults[Math.max(0, vActive)].i); }
+  else if (e.key === 'Escape') { vResults = []; const l = $('#v-list'); if (l) l.hidden = true; }
+}
+
+// ================= switching, selection, playback =================
+let building = 0;
+async function show(view, { keepCamera = false } = {}) {
+  const ticket = ++building;
+  state.view = view;
+  document.querySelectorAll('[data-tab]').forEach((b) => { b.dataset.state = b.dataset.tab === view ? 'active' : ''; b.setAttribute('aria-selected', b.dataset.tab === view); });
+  clearScene();
+  renderPanel();
+  try { await dataReady; } catch { $('#panel').innerHTML = '<p class="text-sm text-muted-foreground">The resale data didn’t load. Reload the page to try again.</p>'; return; }
+  if (ticket !== building) return;
+  if (!proj) setupProjection();
+  renderPanel();
+  const v = VIEWS[view];
+  v.build();
+  if (!keepCamera) { camera.position.set(...v.camera); controls.target.set(...v.target); controls.autoRotate = false; }
+  if (view === 'value' && !keepCamera) flyValue();
+  if (view === 'blocks' && !keepCamera) { if (state.block != null) flyTo(state.block); else if (state.focus != null) flyToFocus(); }
+  try { history.replaceState(null, '', `?view=${view}`); } catch { /* sandboxed */ }
+}
+function setYear(y) {
+  state.year = y;
+  VIEWS[state.view].update();
+  refreshDetail();
+}
+function play() {
+  if (playTimer) { clearInterval(playTimer); playTimer = null; }
+  else {
+    if (state.year === YEARS.at(-1)) setYear(YEARS[0]);
+    playTimer = setInterval(() => { if (state.year >= YEARS.at(-1)) { play(); return; } setYear(state.year + 1); }, reduceMotion ? 1400 : 900);
+  }
+  const b = $('#play'); if (b) { b.innerHTML = `<i class="fi ${playTimer ? 'fi-rr-pause' : 'fi-rr-play'}"></i>`; b.setAttribute('aria-label', playTimer ? 'Pause' : 'Play the years'); }
+}
+function selectArea(i) {
+  state.area = state.area === i ? null : i;
+  VIEWS.areas.update(); renderDetail();
+}
+function selectBlock(i, { fly: doFly = false } = {}) {
+  state.block = i;
+  VIEWS.blocks.update(); renderDetail();
+  if (doFly && i != null) flyTo(i);
+}
+function openBlock(i, opts = {}) {
+  if (state.view !== 'blocks') { state.block = i; show('blocks'); return; }
+  selectBlock(i, opts);
+}
+function flyTo(i) {
+  const [x, z] = P(BLOCKS[i].lon, BLOCKS[i].lat);
+  const t = new THREE.Vector3(x, 0.4, z);
+  flyCam(t, t.clone().add(new THREE.Vector3(-1.2, 3.2, 4.2)));
+}
+// Ease the camera and its target together to a new view.
+function flyCam(target, pos, dur = 1200) {
+  controls.autoRotate = false;
+  if (reduceMotion) { controls.target.copy(target); camera.position.copy(pos); return; }
+  fly = { t0: performance.now(), dur, ft: controls.target.clone(), fp: camera.position.clone(), tt: target, tp: pos };
+}
+
+$('#tabs').onclick = (e) => { const b = e.target.closest('[data-tab]'); if (b && b.dataset.tab !== state.view) show(b.dataset.tab); };
+$('#panel').addEventListener('input', (e) => { if (e.target.id === 'year') { if (playTimer) play(); setYear(+e.target.value); } });
+$('#panel').addEventListener('change', (e) => {
+  const id = e.target.id, v = e.target.value;
+  if (id === 'focus') setFocus(v);
+  if (id === 'v-type') { V.type = v; setTypeDefaults(); runValuation(); }
+  if (id === 'v-storey') { V.storey = v; runValuation(); }
+  if (id === 'v-area') { const a = +v.replace(/[^\d.]/g, ''); if (a >= 20 && a <= 300) { V.area = Math.round(a); runValuation(); } else e.target.value = V.area; }
+  if (id === 'v-buy' || id === 'v-buyyear') { V.buy = $('#v-buy').value; V.buyYear = $('#v-buyyear').value; renderDetail(); }
+});
+$('#panel').addEventListener('input', (e) => { if (e.target.id === 'search') searchSuggest(e.target.value); if (e.target.id === 'v-search') vSuggest(e.target.value); });
+$('#panel').addEventListener('keydown', (e) => { if (e.target.id === 'search') searchKey(e); if (e.target.id === 'v-search') vKey(e); });
+$('#panel').addEventListener('focusout', (e) => { if (e.target.id === 'search') setTimeout(() => { if (!$('#panel').contains(document.activeElement) || document.activeElement.id !== 'search') closeSuggest(); }, 150); });
+$('#panel').addEventListener('click', (e) => {
+  if (e.target.closest('#play')) { play(); return; }
+  if (e.target.closest('#sync')) { if (playTimer) play(); syncLatest(); return; }
+  if (e.target.closest('#sync-reset')) { resetSync(); return; }
+  const c = e.target.closest('[data-color]'); if (c) { state.color = c.dataset.color; document.querySelectorAll('[data-color]').forEach((b) => { b.dataset.state = b === c ? 'active' : ''; }); VIEWS.areas.update(); if (state.area == null) renderDetail(); return; }
+  const ga = e.target.closest('[data-area]'); if (ga) { selectArea(+ga.dataset.area); return; }
+  const m = e.target.closest('[data-metric]'); if (m) { state.metric = m.dataset.metric; document.querySelectorAll('[data-metric]').forEach((b) => { b.dataset.state = b === m ? 'active' : ''; }); VIEWS.blocks.update(); return; }
+  if (e.target.closest('#million')) { state.million = !state.million; renderPanel(); VIEWS.blocks.update(); return; }
+  if (e.target.closest('[data-clear]')) { if (state.view === 'areas') selectArea(state.area); else selectBlock(null); return; }
+  if (e.target.closest('[data-retry]')) { const b = BLOCKS[state.block]; liveCache.delete(`${b.blk}|${b.street}`); $('#live').textContent = 'Fetching from data.gov.sg…'; liveSales(b); return; }
+  const sr = e.target.closest('[data-pick]'); if (sr) { pickResult(+sr.dataset.pick); return; }
+  const vp = e.target.closest('[data-vpick]'); if (vp) { valueBlock(vResults[+vp.dataset.vpick].i); return; }
+  const vb = e.target.closest('[data-vblock]'); if (vb) { valueBlock(+vb.dataset.vblock); return; }
+  const tr = e.target.closest('[data-try]'); if (tr) { const inp = $('#v-search'); inp.value = tr.dataset.try; inp.focus(); vSuggest(tr.dataset.try); return; }
+  const fb = e.target.closest('[data-focus]'); if (fb) { setFocus(fb.dataset.focus); return; }
+  const yb = e.target.closest('[data-year]'); if (yb) { if (playTimer) play(); setYear(+yb.dataset.year); return; }
+  const bk = e.target.closest('[data-block]'); if (bk) { openBlock(+bk.dataset.block, { fly: true }); }
+});
+
+// ================= hover and click on the 3D map =================
+const tip = $('#tip'), ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+let hover = null;
+function pickAt(ev) {
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  return ray.intersectObjects(pickables, false).find((h) => h.object.visible && (h.instanceId == null || h.object.userData.alive?.(h.instanceId) !== false));
+}
+renderer.domElement.addEventListener('pointermove', (ev) => {
+  const hit = pickAt(ev), obj = hit?.object ?? null;
+  if (hover && hover !== obj && hover.userData.area != null && hover.userData.area !== state.area) hover.material[0].emissive.set('#000000');
+  if (obj?.userData.area != null && obj.userData.area !== state.area) obj.material[0].emissive.set('#2a2618');
+  hover = obj;
+  renderer.domElement.style.cursor = hit ? 'pointer' : '';
+  if (!hit) { tip.hidden = true; return; }
+  tip.innerHTML = obj.userData.pick(hit);
+  tip.hidden = false;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = `${ev.clientX + 14 + w > innerWidth ? ev.clientX - w - 14 : ev.clientX + 14}px`;
+  tip.style.top = `${ev.clientY + 14 + h > innerHeight ? ev.clientY - h - 14 : ev.clientY + 14}px`;
+});
+renderer.domElement.addEventListener('pointerleave', () => { if (hover?.userData.area != null && hover.userData.area !== state.area) hover.material[0].emissive.set('#000000'); hover = null; tip.hidden = true; });
+let down = null;
+renderer.domElement.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  const h = pickAt(e);
+  if (state.view === 'areas') { if (h?.object.userData.area != null) selectArea(h.object.userData.area); else if (state.area != null) selectArea(state.area); return; }
+  if (state.view === 'blocks') { if (h?.instanceId != null) selectBlock(h.instanceId); else if (state.block != null) selectBlock(null); }
+  if (state.view === 'value') { const i = h?.object.userData.valueAt?.(h); if (i != null && i !== V.blk) valueBlock(i); }
+});
+
+// ================= loop =================
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h); labelR.setSize(w, h);
+  camera.aspect = w / h; camera.fov = w < 700 ? 52 : 34;
+  if (w >= 900) camera.setViewOffset(w, h, -195, 0, w, h); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+renderer.setAnimationLoop(() => {
+  tickers.forEach((f) => f());
+  if (fly) {
+    const k = Math.min(1, (performance.now() - fly.t0) / fly.dur), e = d3.easeCubicInOut(k);
+    controls.target.lerpVectors(fly.ft, fly.tt, e); camera.position.lerpVectors(fly.fp, fly.tp, e);
+    if (k === 1) fly = null;
+  }
+  controls.update(); renderer.render(scene, camera); labelR.render(scene, camera);
+});
+const initial = new URLSearchParams(location.search).get('view');
+renderTabs();   // after every view (including Value, defined further down) exists
+document.fonts.ready.then(() => show(ORDER.includes(initial) ? initial : 'areas'));
+</script>
+</body>
+</html>

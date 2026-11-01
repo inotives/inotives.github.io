@@ -55,6 +55,14 @@ export const PLAYGROUND_LIBRARIES = [
     repo: 'thesysdev/openui',
   },
   {
+    id: 'leaflet',
+    name: 'Leaflet',
+    kind: 'Maps',
+    description: 'Lightweight interactive maps: tile layers, markers, vector shapes and GeoJSON, with pan and zoom that work on mobile.',
+    site: 'https://leafletjs.com',
+    repo: 'Leaflet/Leaflet',
+  },
+  {
     id: 'flaticon',
     name: 'Flaticon UIcons',
     kind: 'Icon set',
@@ -245,6 +253,23 @@ export const PLAYGROUND_MOCKS = [
       { name: 'US Treasury yield curve', href: 'https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve' },
       { name: 'Deribit public API', href: 'https://docs.deribit.com/#public-get_book_summary_by_currency' },
       { name: 'UN World Population Prospects 2024', href: 'https://population.un.org/wpp/' },
+    ],
+  },
+  {
+    id: 'sg-hdb-3d',
+    project: 'Data in 3D',
+    name: 'Singapore HDB resale in 3D',
+    date: '2026-11-01',
+    href: '/mocks/sg-hdb-3d.html',
+    preview: '/mocks/previews/sg-hdb-3d.jpg',
+    description:
+      'Every HDB resale sale since 2017 (about 244,000) on a 3D Singapore. One view raises each planning area by its median price per square metre, with a slider to play the years, colour by the change on the year, or colour by million-dollar sales to show the gold-mine areas; the island panel adds the year’s biggest movers, the million-dollar share since 2017, the floor premium and flat age against price. The other puts all 9,768 resale blocks on the map as bars, height for median price and colour for the lease left; a switch shows only blocks with a million-dollar sale, which went from 46 sales in 2017 to over 1,700 in 2026. Pick any of the 26 HDB towns to fly in: a sunburst ring laid out by D3 circles the town and splits its year of sales by flat type and floor level, or search by block, street or postal code (anything else goes to OneMap and lands on the nearest HDB block). Select an area, a town or a block for a Leaflet street map on OneMap tiles, a price-per-m² against lease scatter, a diverging stacked bar chart of flat age against the area’s median price, and the block’s latest sales fetched live from data.gov.sg. A Value tab prices any flat by postal code: it fetches the town’s last two years of sales for that flat type and fits a small model in the browser for an estimate and range, what moves the price, a lease runway, a five-year outlook, blocks that sold below the model, and the same flat type in every town. A sync button pulls the latest months from the HDB API, recomputes every figure in the browser and keeps it in the browser’s IndexedDB.',
+    libraries: ['threejs', 'd3', 'leaflet', 'shadcn', 'tailwind', 'flaticon'],
+    sources: [
+      { name: 'HDB resale prices (data.gov.sg)', href: 'https://data.gov.sg/datasets/d_8b84c4ee58e3cfc0ece0d773c8ca6abc/view' },
+      { name: 'HDB building footprints (data.gov.sg)', href: 'https://data.gov.sg/datasets/d_16b157c52ed637edd6ba1232e026258d/view' },
+      { name: 'URA Master Plan 2019 planning areas', href: 'https://data.gov.sg/datasets/d_4765db0e87b9c86336792efe8a1f7a66/view' },
+      { name: 'OneMap', href: 'https://www.onemap.gov.sg/' },
     ],
   },
 ]
