@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>D3 in 3D</title>
+<!--
+  Playground mock: four 3D charts where D3 does the data work and Three.js does the drawing.
+  D3 supplies scales, ticks, color scales, the graticule, the map projection and the Sankey layout;
+  Three.js turns those numbers into geometry. UI recreates shadcn/ui in Tailwind with the inoTives brand kit.
+  Views: a chain profile on a sphere (a 3D radar with metrics grouped by direction), the US Treasury yield curve stacked month by month, a 3D bubble chart, and a world map of
+  2026 GDP with a Sankey of GDP by sector flowing into each country's bar.
+  GDP figures: IMF World Economic Outlook, October 2026 (projections for 2026, nominal US$).
+  Sector shares: approximate, from World Bank value-added shares (latest available year), scaled to 100%.
+  Yield curves: US Treasury daily par yield curve rates (real). Profile and bubble data are mock.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-ink-2: #b8b5ac;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base { *, ::before, ::after { border-color: var(--color-border); } }
+</style>
+<style>
+  body { margin: 0; background: #15171b; }
+  .fi { display: inline-flex; line-height: 1; }
+  #stage { isolation: isolate; background: radial-gradient(ellipse 80% 70% at 62% 45%, #1b1e24 0%, #15171b 72%); }
+  #stage canvas { display: block; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+  .lbl { font: 400 10.5px "Source Code Pro", monospace; color: #8b9099; white-space: nowrap; }
+  .lbl.bg { padding: 1px 5px; border-radius: 4px; background: rgb(21 23 27 / 0.65); }
+  .lbl.strong { color: #e4e1d8; font: 500 12px "IBM Plex Sans Condensed", sans-serif; }
+  .lbl.sel { color: #f6c453; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
+  .slider { -webkit-appearance: none; appearance: none; width: 100%; height: 16px; background: transparent; cursor: pointer; }
+  .slider::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: linear-gradient(#f6c453, #f6c453) 0 / var(--fill, 50%) 100% no-repeat, #2a2e36; }
+  .slider::-moz-range-track { height: 6px; border-radius: 999px; background: #2a2e36; }
+  .slider::-moz-range-progress { height: 6px; border-radius: 999px; background: #f6c453; }
+  .slider::-webkit-slider-thumb { -webkit-appearance: none; margin-top: -5px; width: 16px; height: 16px; border-radius: 999px; background: #15171b; border: 1px solid rgb(246 196 83 / 0.7); }
+  .slider::-moz-range-thumb { width: 14px; height: 14px; border-radius: 999px; background: #15171b; border: 1px solid rgb(246 196 83 / 0.7); }
+  .slider:focus-visible { outline: none; }
+  .slider:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgb(246 196 83 / 0.35); }
+  @media (min-width: 900px) { #panel { left: 1.5rem; top: 4.5rem; width: 340px; max-height: calc(100% - 6rem); } }
+  @media (max-width: 899px) { #panel { left: 0.75rem; right: 0.75rem; bottom: 0.75rem; max-height: 44vh; } }
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+<div class="fixed inset-0 overflow-hidden">
+  <div id="stage" class="absolute inset-0"></div>
+  <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
+    <a href="/playground" class="pointer-events-auto rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <span class="hidden text-sm text-muted-foreground lg:inline">Playground · D3 in 3D</span>
+    <div role="tablist" aria-label="Chart types" id="tabs" class="pointer-events-auto mx-auto inline-flex h-9 max-w-full items-center overflow-x-auto rounded-lg bg-muted p-1 text-muted-foreground"></div>
+    <span class="hidden w-[150px] lg:block"></span>
+  </header>
+  <aside id="panel" class="scroll-thin absolute z-10 overflow-auto rounded-xl border bg-card/90 p-4 shadow backdrop-blur"></aside>
+  <footer class="pointer-events-none absolute bottom-3 right-4 z-10 hidden text-xs text-muted-foreground md:block"><i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Drag to turn · scroll to zoom · hover for values</footer>
+</div>
+<div id="tip" hidden class="pointer-events-none fixed z-40 rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const B = { paper: '#15171b', raise: '#1d2026', muted: '#23262d', line: '#2b2f37', ink: '#e4e1d8', ink2: '#b8b5ac', fog: '#8b9099', signal: '#1fefd7', amber: '#f6c453' };
+const PAL = ['#1fefd7', '#f6c453', '#c9a4f5', '#9ccf7f', '#e58fb0', '#7cc4dc', '#e9a66c'];
+const rnd = d3.randomLcg(11), gauss = d3.randomNormal.source(rnd)(0, 1);
+const tn = (v) => (v >= 1 ? `$${v.toFixed(2)}T` : `$${Math.round(v * 1000)}B`);
+
+// ================= stage =================
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.appendChild(renderer.domElement);
+const labelR = new CSS2DRenderer(); labelR.domElement.className = 'labels'; stage.appendChild(labelR.domElement);
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(B.paper, 34, 80);
+scene.add(new THREE.HemisphereLight('#cfe9ff', B.paper, 1.15));
+const key = new THREE.DirectionalLight('#ffffff', 1.5); key.position.set(-8, 14, 10); scene.add(key);
+const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 300);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.minDistance = 5; controls.maxDistance = 70; controls.autoRotateSpeed = 0.45;
+controls.addEventListener('start', () => { controls.autoRotate = false; });
+let group = new THREE.Group(); scene.add(group);
+let pickables = [], tickers = [];
+
+function lbl(text, pos, cls = '', parent = group) { const d = document.createElement('div'); d.className = `lbl ${cls}`; d.textContent = text; const o = new CSS2DObject(d); o.position.copy(pos); parent.add(o); return o; }
+function clearScene() {
+  group.traverse((o) => {
+    o.geometry?.dispose();
+    (Array.isArray(o.material) ? o.material : o.material ? [o.material] : []).forEach((m) => { m.map?.dispose(); m.dispose(); });
+    if (o.isCSS2DObject) o.element.remove();
+  });
+  scene.remove(group); group = new THREE.Group(); scene.add(group);
+  pickables = []; tickers = [];
+}
+const solid = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.1, ...o });
+const lineMat = (color, opacity = 1) => new THREE.LineBasicMaterial({ color, transparent: opacity < 1, opacity });
+const polyline = (pts, color, opacity) => new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat(color, opacity));
+const segments = (pairs, color, opacity) => new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pairs), lineMat(color, opacity));
+
+// A D3-scaled 3D frame: floor, back wall and side wall with gridlines at d3 ticks.
+// sx, sy, sz map data to world; the box spans their ranges.
+function frame3D({ sx, sy, sz, names, fmt = {} }) {
+  const [x0, x1] = sx.range(), [y0, y1] = sy.range(), [z0, z1] = sz.range();
+  const g = new THREE.Group();
+  const pairs = [];
+  const tx = (sx.ticks ? sx.ticks(6) : sx.domain()), ty = sy.ticks(5), tz = sz.ticks(5);
+  tx.forEach((t) => { const x = sx(t); pairs.push(new THREE.Vector3(x, y0, z0), new THREE.Vector3(x, y1, z0), new THREE.Vector3(x, y0, z0), new THREE.Vector3(x, y0, z1)); });
+  ty.forEach((t) => { const y = sy(t); pairs.push(new THREE.Vector3(x0, y, z0), new THREE.Vector3(x1, y, z0), new THREE.Vector3(x0, y, z0), new THREE.Vector3(x0, y, z1)); });
+  tz.forEach((t) => { const z = sz(t); pairs.push(new THREE.Vector3(x0, y0, z), new THREE.Vector3(x1, y0, z), new THREE.Vector3(x0, y0, z), new THREE.Vector3(x0, y1, z)); });
+  g.add(segments(pairs, B.line, 0.9));
+  const walls = [[x1 - x0, y1 - y0, [(x0 + x1) / 2, (y0 + y1) / 2, z0], [0, 0, 0]], [x1 - x0, z1 - z0, [(x0 + x1) / 2, y0, (z0 + z1) / 2], [-Math.PI / 2, 0, 0]], [z1 - z0, y1 - y0, [x0, (y0 + y1) / 2, (z0 + z1) / 2], [0, Math.PI / 2, 0]]];
+  walls.forEach(([w, h, p, r]) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: B.raise, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false })); m.position.set(...p); m.rotation.set(...r); g.add(m); });
+  const f = (k) => fmt[k] ?? ((v) => d3.format('~s')(v));
+  tx.forEach((t) => lbl(f('x')(t), new THREE.Vector3(sx(t), y0 - 0.25, z1 + 0.25), '', g));
+  ty.forEach((t) => lbl(f('y')(t), new THREE.Vector3(x0 - 0.35, sy(t), z1), '', g));
+  tz.forEach((t) => lbl(f('z')(t), new THREE.Vector3(x1 + 0.35, y0, sz(t)), '', g));
+  lbl(names.x, new THREE.Vector3((x0 + x1) / 2, y0 - 0.7, z1 + 0.5), 'strong', g);
+  lbl(names.y, new THREE.Vector3(x0 - 0.4, y1 + 0.45, z0), 'strong', g);
+  lbl(names.z, new THREE.Vector3(x1 + 0.9, y0, (z0 + z1) / 2), 'strong', g);
+  group.add(g);
+}
+
+// ================= data =================
+// US Treasury daily par yield curve rates (%), first trading day of each month plus the latest day.
+// Maturities: 1M 3M 6M 1Y 2Y 3Y 5Y 7Y 10Y 20Y 30Y. Source: home.treasury.gov, Daily Treasury Par Yield Curve Rates.
+const YC = [["2019-01-02",[2.4,2.42,2.51,2.6,2.5,2.47,2.49,2.56,2.66,2.83,2.97]],["2019-02-01",[2.41,2.4,2.46,2.56,2.52,2.5,2.51,2.59,2.7,2.88,3.03]],["2019-03-01",[2.44,2.44,2.52,2.55,2.55,2.54,2.56,2.67,2.76,2.97,3.13]],["2019-04-01",[2.42,2.43,2.46,2.41,2.33,2.29,2.31,2.4,2.49,2.71,2.89]],["2019-05-01",[2.42,2.43,2.44,2.39,2.31,2.28,2.31,2.41,2.52,2.74,2.92]],["2019-06-03",[2.36,2.35,2.31,2.11,1.82,1.79,1.83,1.95,2.07,2.34,2.53]],["2019-07-01",[2.17,2.21,2.1,1.94,1.78,1.74,1.79,1.9,2.03,2.34,2.55]],["2019-08-01",[2.11,2.07,2.04,1.88,1.73,1.67,1.68,1.77,1.9,2.21,2.44]],["2019-09-03",[2.06,1.98,1.88,1.72,1.47,1.38,1.35,1.42,1.47,1.77,1.95]],["2019-10-01",[1.79,1.82,1.81,1.73,1.56,1.51,1.51,1.59,1.65,1.93,2.11]],["2019-11-01",[1.58,1.52,1.55,1.53,1.56,1.55,1.55,1.63,1.73,2.03,2.21]],["2019-12-02",[1.6,1.6,1.62,1.6,1.61,1.63,1.65,1.77,1.83,2.15,2.28]],["2020-01-02",[1.53,1.54,1.57,1.56,1.58,1.59,1.67,1.79,1.88,2.19,2.33]],["2020-02-03",[1.56,1.57,1.56,1.46,1.36,1.34,1.35,1.45,1.54,1.84,2.01]],["2020-03-02",[1.41,1.13,0.95,0.89,0.84,0.85,0.88,1.01,1.1,1.46,1.66]],["2020-04-01",[0.03,0.09,0.14,0.16,0.23,0.28,0.37,0.51,0.62,1.04,1.27]],["2020-05-01",[0.1,0.12,0.12,0.17,0.2,0.25,0.36,0.53,0.64,1.04,1.27]],["2020-06-01",[0.12,0.14,0.18,0.17,0.14,0.2,0.31,0.5,0.66,1.22,1.46]],["2020-07-01",[0.12,0.14,0.17,0.16,0.17,0.19,0.31,0.52,0.69,1.2,1.43]],["2020-08-03",[0.09,0.1,0.11,0.12,0.11,0.13,0.22,0.4,0.56,1.01,1.23]],["2020-09-01",[0.09,0.12,0.13,0.12,0.13,0.14,0.26,0.46,0.68,1.2,1.43]],["2020-10-01",[0.09,0.09,0.1,0.12,0.14,0.16,0.27,0.46,0.68,1.23,1.45]],["2020-11-02",[0.09,0.09,0.11,0.13,0.16,0.2,0.38,0.63,0.87,1.41,1.63]],["2020-12-01",[0.07,0.09,0.1,0.12,0.17,0.22,0.42,0.68,0.92,1.46,1.66]],["2021-01-04",[0.09,0.09,0.09,0.1,0.11,0.16,0.36,0.64,0.93,1.46,1.66]],["2021-02-01",[0.06,0.07,0.08,0.08,0.11,0.17,0.42,0.76,1.09,1.66,1.84]],["2021-03-01",[0.03,0.05,0.07,0.08,0.13,0.27,0.71,1.12,1.45,2.11,2.23]],["2021-04-01",[0.02,0.02,0.04,0.06,0.17,0.35,0.9,1.37,1.69,2.24,2.34]],["2021-05-03",[0.02,0.04,0.04,0.06,0.16,0.33,0.84,1.29,1.63,2.18,2.3]],["2021-06-01",[0.01,0.02,0.04,0.04,0.16,0.31,0.81,1.28,1.62,2.22,2.3]],["2021-07-01",[0.05,0.05,0.05,0.09,0.25,0.47,0.89,1.24,1.48,2.01,2.07]],["2021-08-02",[0.05,0.05,0.06,0.07,0.17,0.33,0.66,0.96,1.2,1.77,1.86]],["2021-09-01",[0.04,0.05,0.06,0.07,0.2,0.42,0.78,1.08,1.31,1.84,1.92]],["2021-10-01",[0.08,0.04,0.05,0.09,0.27,0.49,0.93,1.26,1.48,1.99,2.04]],["2021-11-01",[0.05,0.05,0.06,0.15,0.5,0.79,1.2,1.46,1.58,2.01,1.98]],["2021-12-01",[0.09,0.06,0.1,0.25,0.56,0.85,1.15,1.35,1.43,1.84,1.77]],["2022-01-03",[0.05,0.08,0.22,0.4,0.78,1.04,1.37,1.55,1.63,2.05,2.01]],["2022-02-01",[0.04,0.19,0.48,0.78,1.18,1.39,1.63,1.76,1.81,2.19,2.12]],["2022-03-01",[0.11,0.32,0.6,0.91,1.31,1.47,1.56,1.67,1.72,2.19,2.11]],["2022-04-01",[0.15,0.53,1.09,1.72,2.44,2.61,2.55,2.5,2.39,2.6,2.44]],["2022-05-02",[0.41,0.9,1.49,2.1,2.73,2.93,3.01,3.04,2.99,3.26,3.07]],["2022-06-01",[0.77,1.15,1.63,2.16,2.66,2.84,2.94,2.98,2.94,3.31,3.09]],["2022-07-01",[1.27,1.73,2.52,2.79,2.84,2.85,2.88,2.92,2.88,3.35,3.11]],["2022-08-01",[2.22,2.56,2.96,2.98,2.9,2.82,2.66,2.64,2.6,3.12,2.92]],["2022-09-01",[2.53,2.97,3.34,3.51,3.51,3.54,3.39,3.36,3.26,3.64,3.37]],["2022-10-03",[2.87,3.46,3.97,4.01,4.12,4.12,3.9,3.79,3.67,4,3.73]],["2022-11-01",[3.72,4.23,4.58,4.75,4.54,4.48,4.27,4.18,4.07,4.37,4.14]],["2022-12-01",[4.04,4.33,4.65,4.66,4.25,3.98,3.68,3.62,3.53,3.85,3.64]],["2023-01-03",[4.17,4.53,4.77,4.72,4.4,4.18,3.94,3.89,3.79,4.06,3.88]],["2023-02-01",[4.59,4.66,4.79,4.66,4.09,3.75,3.48,3.43,3.39,3.67,3.55]],["2023-03-01",[4.67,4.9,5.2,5.06,4.89,4.61,4.27,4.17,4.01,4.17,3.97]],["2023-04-03",[4.7,4.9,4.88,4.6,3.97,3.73,3.52,3.48,3.43,3.78,3.64]],["2023-05-01",[4.49,5.27,5.14,4.86,4.14,3.85,3.64,3.62,3.59,3.95,3.84]],["2023-06-01",[5.3,5.5,5.44,5.11,4.33,3.98,3.7,3.66,3.61,3.98,3.84]],["2023-07-03",[5.27,5.44,5.53,5.43,4.94,4.56,4.19,4.03,3.86,4.08,3.87]],["2023-08-01",[5.49,5.54,5.54,5.38,4.92,4.57,4.24,4.15,4.05,4.3,4.11]],["2023-09-01",[5.51,5.53,5.47,5.36,4.87,4.57,4.29,4.27,4.18,4.48,4.29]],["2023-10-02",[5.56,5.62,5.58,5.49,5.12,4.88,4.72,4.73,4.69,5,4.81]],["2023-11-01",[5.56,5.57,5.51,5.37,4.95,4.76,4.67,4.75,4.77,5.13,4.96]],["2023-12-01",[5.55,5.43,5.33,5.05,4.56,4.31,4.14,4.22,4.22,4.58,4.4]],["2024-01-02",[5.55,5.46,5.24,4.8,4.33,4.09,3.93,3.95,3.95,4.25,4.08]],["2024-02-01",[5.49,5.42,5.15,4.68,4.2,3.96,3.8,3.83,3.87,4.21,4.1]],["2024-03-01",[5.54,5.42,5.27,4.94,4.54,4.32,4.17,4.2,4.19,4.46,4.33]],["2024-04-01",[5.49,5.44,5.36,5.06,4.72,4.51,4.34,4.33,4.33,4.58,4.47]],["2024-05-01",[5.47,5.46,5.43,5.21,4.96,4.79,4.64,4.64,4.63,4.85,4.74]],["2024-06-03",[5.49,5.52,5.39,5.14,4.82,4.62,4.42,4.41,4.41,4.63,4.55]],["2024-07-01",[5.48,5.47,5.37,5.1,4.77,4.58,4.44,4.45,4.48,4.76,4.64]],["2024-08-01",[5.55,5.37,5.08,4.62,4.16,3.96,3.84,3.89,3.99,4.35,4.27]],["2024-09-03",[5.38,5.19,4.8,4.35,3.88,3.73,3.65,3.73,3.84,4.21,4.13]],["2024-10-01",[4.96,4.71,4.36,3.96,3.61,3.52,3.51,3.6,3.74,4.14,4.08]],["2024-11-01",[4.75,4.61,4.42,4.28,4.21,4.18,4.22,4.3,4.37,4.68,4.57]],["2024-12-02",[4.75,4.51,4.43,4.3,4.17,4.11,4.08,4.13,4.19,4.46,4.36]],["2025-01-02",[4.45,4.36,4.25,4.17,4.25,4.29,4.38,4.47,4.57,4.86,4.79]],["2025-02-03",[4.37,4.34,4.28,4.2,4.26,4.28,4.35,4.45,4.54,4.82,4.77]],["2025-03-03",[4.38,4.35,4.31,4.06,3.96,3.93,3.97,4.06,4.16,4.49,4.45]],["2025-04-01",[4.38,4.32,4.23,4.01,3.87,3.85,3.91,4.03,4.17,4.56,4.52]],["2025-05-01",[4.38,4.31,4.22,3.92,3.7,3.69,3.81,4.02,4.25,4.75,4.74]],["2025-06-02",[4.33,4.44,4.31,4.12,3.94,3.91,4.01,4.22,4.46,5,4.99]],["2025-07-01",[4.32,4.4,4.29,3.98,3.78,3.75,3.84,4.03,4.26,4.79,4.78]],["2025-08-01",[4.49,4.35,4.16,3.87,3.69,3.67,3.77,3.97,4.23,4.79,4.81]],["2025-09-02",[4.4,4.2,3.99,3.82,3.66,3.63,3.74,3.98,4.28,4.92,4.97]],["2025-10-01",[4.17,4.01,3.8,3.62,3.55,3.56,3.68,3.88,4.12,4.69,4.72]],["2025-11-03",[4.06,3.98,3.8,3.7,3.6,3.61,3.72,3.9,4.13,4.67,4.69]],["2025-12-01",[3.98,3.81,3.75,3.62,3.54,3.55,3.67,3.86,4.09,4.71,4.74]],["2026-01-02",[3.72,3.65,3.58,3.47,3.47,3.55,3.74,3.95,4.19,4.81,4.86]],["2026-02-02",[3.72,3.69,3.62,3.49,3.57,3.64,3.83,4.05,4.29,4.85,4.9]],["2026-03-02",[3.74,3.72,3.68,3.54,3.47,3.49,3.62,3.82,4.05,4.64,4.7]],["2026-04-01",[3.74,3.7,3.72,3.68,3.81,3.84,3.97,4.15,4.33,4.91,4.91]],["2026-05-01",[3.71,3.68,3.71,3.73,3.88,3.91,4.02,4.2,4.39,4.96,4.97]],["2026-06-01",[3.72,3.78,3.79,3.83,4.05,4.09,4.18,4.32,4.47,4.99,4.99]],["2026-07-01",[3.67,3.85,4,4,4.17,4.19,4.24,4.35,4.48,4.97,4.97]],["2026-08-03",[3.79,3.91,4.02,4.07,4.25,4.32,4.4,4.54,4.7,5.23,5.23]],["2026-09-01",[3.85,3.92,4,4.18,4.39,4.46,4.55,4.66,4.79,5.27,5.27]],["2026-10-01",[4.06,4.17,4.27,4.44,4.78,4.91,5.01,5.12,5.24,5.64,5.61]],["2026-10-30",[4.06,4.16,4.25,4.36,4.56,4.65,4.71,4.8,4.94,5.34,5.31]]];
+// Bubble chart: 30 tokens (mock)
+const SECTORS_T = ['L1', 'L2', 'DeFi', 'AI', 'Meme'];
+const TOKENS = d3.range(32).map((i) => {
+  const s = SECTORS_T[i % 5];
+  const cap = Math.exp(Math.log(0.4) + rnd() * Math.log(2000 / 0.4)) * (s === 'L1' ? 1.6 : s === 'Meme' ? 0.5 : 1);
+  return { id: `${s}-${i}`, name: ['ARC', 'NOVA', 'FLUX', 'ORB', 'ZEN', 'KITE', 'MOSS', 'RUNE', 'LUMA', 'VOLT', 'PIKE', 'ECHO', 'SAGE', 'TIDE', 'NEON', 'WISP'][i % 16] + (i >= 16 ? '2' : ''), sector: s, cap: Math.min(cap, 2000), ret: (s === 'AI' ? 18 : s === 'Meme' ? 6 : 2) + (s === 'Meme' ? 38 : 16) * gauss(), vol: (s === 'Meme' ? 110 : s === 'L1' ? 55 : 75) + 15 * gauss(), volume: Math.max(0.05, cap * (0.03 + 0.08 * rnd())) };
+});
+TOKENS[0] = { ...TOKENS[0], name: 'BTC', cap: 1950, ret: 6.2, vol: 38, volume: 42 };
+TOKENS[5] = { ...TOKENS[5], name: 'ETH', cap: 420, ret: -3.1, vol: 52, volume: 21 };
+// GDP 2026 (IMF WEO Oct 2026, nominal US$ trillions) and sector shares (approx. World Bank, scaled to 100)
+const GDP = [
+  ['United States', 'United States of America', 32.64, 2.33, [-98, 39], [0.9, 17.6, 81.5]],
+  ['China', 'China', 21.55, 4.47, [104, 34], [7.1, 38.3, 54.6]],
+  ['Germany', 'Germany', 5.47, 1.32, [10.4, 51.2], [0.8, 27.3, 71.9]],
+  ['Japan', 'Japan', 4.34, 0.75, [138.5, 36.5], [1.0, 28.9, 70.1]],
+  ['United Kingdom', 'United Kingdom', 4.27, 1.27, [-2, 53.5], [0.6, 17.9, 81.5]],
+  ['India', 'India', 4.06, 7.01, [79, 22], [17.0, 27.0, 56.0]],
+  ['France', 'France', 3.55, 0.41, [2.4, 46.6], [1.7, 17.6, 80.7]],
+  ['Russia', 'Russia', 2.86, 0.87, [95, 61], [4.0, 33.0, 63.0]],
+  ['Italy', 'Italy', 2.70, 0.78, [12.6, 42.8], [2.0, 23.6, 74.4]],
+  ['Brazil', 'Brazil', 2.65, 2.18, [-52, -10], [6.8, 22.0, 71.2]],
+  ['Canada', 'Canada', 2.49, 1.12, [-102, 57], [1.9, 24.9, 73.2]],
+  ['South Korea', 'South Korea', 2.25, 3.33, [127.8, 36.3], [1.6, 32.0, 66.4]],
+  ['Mexico', 'Mexico', 2.18, 1.51, [-102, 23.6], [3.8, 31.5, 64.7]],
+  ['Australia', 'Australia', 2.11, 1.93, [134, -25], [2.4, 27.4, 70.2]],
+  ['Spain', 'Spain', 2.09, 2.51, [-3.7, 40.2], [2.6, 20.4, 77.0]],
+  ['Turkey', 'Turkey', 1.82, 2.65, [35, 39], [6.2, 31.4, 62.4]],
+  ['Indonesia', 'Indonesia', 1.48, 5.14, [117, -2], [12.5, 41.0, 46.5]],
+  ['Netherlands', 'Netherlands', 1.42, 1.53, [5.3, 52.2], [1.5, 19.5, 79.0]],
+  ['Saudi Arabia', 'Saudi Arabia', 1.34, -3.31, [45, 24], [2.6, 46.0, 51.4]],
+  ['Switzerland', 'Switzerland', 1.14, 1.85, [8.2, 46.8], [0.6, 25.5, 73.9]],
+].map(([name, geo, gdp, growth, ll, sh]) => { const t = d3.sum(sh); return { name, geo, gdp, growth, ll, share: sh.map((v) => v / t) }; });
+const SECT = [{ name: 'Services', color: PAL[0] }, { name: 'Industry', color: PAL[1] }, { name: 'Agriculture', color: PAL[3] }];
+const shareIdx = { Services: 2, Industry: 1, Agriculture: 0 };
+let worldTopo = null;
+const topoReady = fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then((r) => r.json()).then((t) => { worldTopo = t; }).catch(() => {});
+
+// ================= views =================
+const state = { view: 'gdp', chain: 'Ethereum', compare: 'median', ycIndex: 94, sectors: Object.fromEntries(SECTORS_T.map((s) => [s, true])), country: null, sector: null };
+const VIEWS = {};
+
+// ---------- 1. chain profile on a sphere ----------
+// Twelve scores, grouped so direction means something: adoption on top, security at the bottom,
+// cost on the left, speed on the right. Scores are 0-100, higher is better (mock, illustrative).
+const PGROUPS = [
+  { name: 'Adoption', dir: [0, 1, 0], metrics: ['Users', 'Apps', 'TVL'] },
+  { name: 'Speed', dir: [1, 0, 0], metrics: ['Throughput', 'Block time', 'Finality'] },
+  { name: 'Security', dir: [0, -1, 0], metrics: ['Decentralization', 'Uptime', 'Client diversity'] },
+  { name: 'Cost', dir: [-1, 0, 0], metrics: ['Low fees', 'Fee stability', 'Cheap storage'] },
+];
+const CHAINS = {
+  Ethereum: [64, 90, 95, 30, 40, 45, 94, 98, 85, 20, 45, 25],
+  Solana: [91, 78, 66, 96, 95, 90, 52, 82, 40, 92, 70, 75],
+  Base: [80, 70, 48, 78, 85, 70, 28, 96, 30, 88, 72, 70],
+  Arbitrum: [55, 72, 52, 74, 85, 68, 35, 95, 35, 82, 70, 65],
+  'BNB Chain': [78, 66, 60, 80, 80, 82, 30, 92, 40, 80, 80, 72],
+  Avalanche: [40, 52, 35, 70, 82, 92, 60, 93, 45, 78, 74, 68],
+};
+const PMETRICS = PGROUPS.flatMap((g, gi) => {
+  const c = new THREE.Vector3(...g.dir);
+  const t1 = Math.abs(c.y) > 0.9 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
+  const t2 = new THREE.Vector3().crossVectors(c, t1);
+  const a = (34 * Math.PI) / 180;
+  return g.metrics.map((name, k) => {
+    const phi = ((90 + 120 * k) * Math.PI) / 180;
+    const dir = c.clone().multiplyScalar(Math.cos(a)).addScaledVector(t1.clone().multiplyScalar(Math.cos(phi)).add(t2.clone().multiplyScalar(Math.sin(phi))), Math.sin(a)).normalize();
+    return { name, group: g.name, gi, dir };
+  });
+});
+const MEDIAN = PMETRICS.map((_, i) => d3.median(Object.values(CHAINS), (v) => v[i]));
+const pRadius = d3.scaleLinear([0, 100], [0.6, 4.2]);
+const pDelta = d3.scaleDiverging([-25, 0, 25], d3.interpolateRgbBasis(['#e58fb0', '#3a3f48', '#1fefd7'])).clamp(true);
+// Smooth the 12 scores over the sphere: each direction blends nearby metrics (von Mises kernel)
+function blend(dir, vals, k = 16) {
+  let sw = 0, sv = 0;
+  PMETRICS.forEach((m, i) => { const w = Math.exp(k * (dir.dot(m.dir) - 1)); sw += w; sv += w * vals[i]; });
+  return sv / sw;
+}
+const benchOf = () => (state.compare === 'median' ? MEDIAN : CHAINS[state.compare]);
+const benchName = () => (state.compare === 'median' ? 'the median chain' : state.compare);
+
+VIEWS.profile = {
+  tab: 'Chain profile', icon: 'fi-rr-globe',
+  title: 'A chain’s shape',
+  blurb: 'Twelve scores wrapped around a sphere, grouped so direction means something: adoption at the top, security at the bottom, cost on the left, speed on the right. Cyan bulges beat the benchmark; rose dents fall short. The faint shell is the benchmark itself.',
+  how: ['scaleLinear maps scores to radius, d3.median builds the benchmark, and scaleDiverging colors each point by how far it sits above or below it.', 'Bends a smooth sphere into the profile by blending nearby scores, adds the benchmark as a faint shell, and labels only the biggest gaps and strengths.'],
+  note: 'Scores are mock and illustrative, 0–100, higher is better.',
+  camera: [4.5, 2.6, 18.5], target: [0, 0.5, 0],
+  autoRotate: false,
+  build() {
+    const vals = CHAINS[state.chain], bench = benchOf();
+    const delta = vals.map((v, i) => v - bench[i]);
+    // the profile: one matte solid colored by difference from the benchmark
+    const geo = new THREE.SphereGeometry(1, 128, 64);
+    const pos = geo.getAttribute('position'), col = new Float32Array(pos.count * 3), c = new THREE.Color(), d = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i++) {
+      d.fromBufferAttribute(pos, i).normalize();
+      const v = blend(d, vals), b = blend(d, bench), r = pRadius(v);
+      pos.setXYZ(i, d.x * r, d.y * r, d.z * r);
+      c.set(pDelta(v - b)); col.set([c.r, c.g, c.b], i * 3);
+    }
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    geo.computeVertexNormals();
+    const shape = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7, metalness: 0.05 }));
+    shape.userData.pick = (hit) => {
+      const p = hit.point.clone().normalize();
+      const i = d3.maxIndex(PMETRICS, (m) => m.dir.dot(p)), m = PMETRICS[i];
+      return metricTip(m, vals[i], bench[i]);
+    };
+    shape.userData.metricAt = (hit) => d3.maxIndex(PMETRICS, (m) => m.dir.dot(hit.point.clone().normalize()));
+    group.add(shape); pickables.push(shape);
+    // the benchmark: a faint wire shell
+    const bgeo = new THREE.SphereGeometry(1, 32, 16), bp = bgeo.getAttribute('position');
+    for (let i = 0; i < bp.count; i++) { d.fromBufferAttribute(bp, i).normalize(); const r = pRadius(blend(d, bench)); bp.setXYZ(i, d.x * r, d.y * r, d.z * r); }
+    group.add(new THREE.LineSegments(new THREE.WireframeGeometry(bgeo), lineMat(B.ink2, 0.06)));
+    bgeo.dispose();
+    // group names, quiet, outside the shape
+    PGROUPS.forEach((g) => lbl(g.name, new THREE.Vector3(...g.dir).multiplyScalar(5.3), 'strong'));
+    // labels only for the three biggest strengths and three biggest gaps
+    const order = d3.range(12).sort((a, b) => delta[b] - delta[a]);
+    [...order.slice(0, 3), ...order.slice(-3)].forEach((i) => {
+      if (Math.abs(delta[i]) < 3) return;
+      const m = PMETRICS[i], r = pRadius(blend(m.dir, vals));
+      const o = lbl(`${m.name} ${d3.format('+')(delta[i])}`, m.dir.clone().multiplyScalar(r + 0.35), 'bg');
+      o.element.style.color = delta[i] > 0 ? B.signal : '#e58fb0';
+    });
+    // spoke for the metric under the cursor or in the list
+    const spoke = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), lineMat(B.amber, 0.9));
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), new THREE.MeshBasicMaterial({ color: B.amber }));
+    const tag = lbl('', new THREE.Vector3(), 'strong bg sel');
+    spoke.visible = dot.visible = tag.visible = false;
+    group.add(spoke, dot);
+    this.focus = (i) => {
+      document.querySelectorAll('[data-metric]').forEach((el) => el.toggleAttribute('data-on', +el.dataset.metric === i));
+      if (i == null || i < 0) { spoke.visible = dot.visible = tag.visible = false; return; }
+      const m = PMETRICS[i], tip = m.dir.clone().multiplyScalar(pRadius(blend(m.dir, vals)) + 0.02);
+      spoke.geometry.setFromPoints([new THREE.Vector3(), tip]);
+      dot.position.copy(tip);
+      tag.position.copy(m.dir.clone().multiplyScalar(pRadius(blend(m.dir, vals)) + 0.7));
+      tag.element.textContent = `${m.name} ${vals[i]} · ${benchName() === 'the median chain' ? 'median' : state.compare} ${bench[i]}`;
+      spoke.visible = dot.visible = tag.visible = true;
+    };
+  },
+  controls() {
+    const vals = CHAINS[state.chain], bench = benchOf();
+    const rows = d3.range(12).map((i) => ({ i, m: PMETRICS[i], d: vals[i] - bench[i] })).sort((a, b) => b.d - a.d);
+    const span = 50;
+    const chip = (name, attr, on) => `<button ${attr} aria-pressed="${on}" class="rounded-md border px-2.5 py-1 text-sm text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-pressed:border-foreground/30 aria-pressed:bg-accent aria-pressed:text-foreground">${esc(name)}</button>`;
+    return `<div>
+      <p class="mb-1.5 text-xs text-muted-foreground">Chain</p>
+      <div class="flex flex-wrap gap-1.5">${Object.keys(CHAINS).map((k) => chip(k, `data-chain="${esc(k)}"`, state.chain === k)).join('')}</div>
+      <p class="mb-1.5 mt-3 text-xs text-muted-foreground">Compare with</p>
+      <select data-compare class="h-8 w-full rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+        <option value="median" ${state.compare === 'median' ? 'selected' : ''}>Median of all six chains</option>
+        ${Object.keys(CHAINS).filter((k) => k !== state.chain).map((k) => `<option value="${esc(k)}" ${state.compare === k ? 'selected' : ''}>${esc(k)}</option>`).join('')}
+      </select>
+      <p class="mb-1.5 mt-4 text-xs text-muted-foreground">${esc(state.chain)} against ${esc(benchName())}, strongest first</p>
+      <ol class="space-y-0.5" id="metric-list">${rows.map(({ i, m, d }) => `
+        <li data-metric="${i}" class="grid cursor-default grid-cols-[1fr_96px_34px] items-center gap-2 rounded-md px-2 py-1 text-sm data-[on]:bg-amber/10 data-[on]:text-amber hover:bg-accent">
+          <span class="min-w-0 truncate">${m.name} <span class="text-xs text-muted-foreground">${m.group.toLowerCase()}</span></span>
+          <span class="relative h-2"><span class="absolute inset-y-0 left-1/2 w-px bg-border"></span><span class="absolute inset-y-0 rounded-sm" style="${d >= 0 ? `left:50%;width:${(Math.min(d, span) / span) * 50}%;background:#1fefd7` : `right:50%;width:${(Math.min(-d, span) / span) * 50}%;background:#e58fb0`}"></span></span>
+          <span class="text-right font-mono text-xs">${d3.format('+')(d)}</span>
+        </li>`).join('')}</ol>
+    </div>`;
+  },
+};
+function metricTip(m, v, b) {
+  const dlt = v - b;
+  return `<div class="font-medium">${m.name} <span class="text-muted-foreground">· ${m.group.toLowerCase()}</span></div><div class="font-mono">${esc(state.chain)} ${v} · ${state.compare === 'median' ? 'median' : esc(state.compare)} ${b}</div><div class="font-mono" style="color:${dlt >= 0 ? '#1fefd7' : '#e58fb0'}">${d3.format('+')(dlt)}</div>`;
+}
+
+// ---------- 2. the Treasury yield curve, stacked month by month ----------
+const box = { x: [-5.5, 5.5], y: [0, 5], z: [-3, 3] };
+const YC_TENORS = ['1M', '3M', '6M', '1Y', '2Y', '3Y', '5Y', '7Y', '10Y', '20Y', '30Y'];
+const YC_YEARS = [1 / 12, 0.25, 0.5, 1, 2, 3, 5, 7, 10, 20, 30];
+const YC_DATES = YC.map(([d]) => new Date(`${d}T00:00:00Z`));
+const ycSpread = (k) => YC[k][1][8] - YC[k][1][1];   // 10-year minus 3-month
+const ycColor = d3.scaleDiverging([-1.5, 0, 1.5], d3.interpolateRgbBasis(['#e58fb0', '#4a4f58', '#1fefd7'])).clamp(true);
+const YC_NOTES = [
+  ['2020-04-01', 'Apr 2020: short rates cut to zero'],
+  ['2022-07-01', '2022: the fastest hikes in 40 years'],
+  ['2023-06-01', 'Mid 2023: deepest inversion'],
+];
+VIEWS.lines = {
+  tab: 'Yield curve', icon: 'fi-rr-chart-line-up',
+  title: 'The yield curve, 2019 to now',
+  blurb: 'Each line is one month’s US Treasury yield curve: what the government pays to borrow for a month, a year or thirty years. Normally longer loans pay more and the line slopes up. Stack seven years of them and you can see 2022 lift the whole curve and turn it upside down.',
+  how: ['scaleLog spaces the maturities, scaleUtc sets each month’s depth, and scaleDiverging colors a curve by the gap between 10-year and 3-month yields.', 'Draws one line per month with a faint surface joining them, and moves an amber highlight through the stack as you scrub or play.'],
+  note: 'Real data: US Treasury daily par yield curve rates, first trading day of each month.',
+  camera: [3, 8.5, 21.5], target: [0.8, 1.4, -0.8],
+  autoRotate: false,
+  build() {
+    const sx = d3.scaleLog([1 / 12, 30], box.x);
+    const sy = d3.scaleLinear([0, 6], box.y);
+    const sz = d3.scaleUtc(d3.extent(YC_DATES), [-5, 5]);
+    sx.ticks = () => YC_YEARS;
+    sz.ticks = () => d3.utcYear.range(new Date(Date.UTC(2019, 0, 1)), new Date(Date.UTC(2027, 0, 1)));
+    frame3D({ sx, sy, sz, names: { x: 'Maturity', y: 'Yield', z: 'Month' }, fmt: { x: (v) => YC_TENORS[YC_YEARS.indexOf(v)], y: (v) => `${v}%`, z: d3.utcFormat('%Y') } });
+    const P = (k, i) => new THREE.Vector3(sx(YC_YEARS[i]), sy(YC[k][1][i]), sz(YC_DATES[k]));
+    // the faint surface between consecutive curves, colored like the lines
+    const pos = [], col = [], idx = [], c = new THREE.Color(), nT = YC_TENORS.length;
+    YC.forEach((_, k) => { c.set(ycColor(ycSpread(k))); YC_TENORS.forEach((__, i) => { pos.push(...P(k, i).toArray()); col.push(c.r, c.g, c.b); }); });
+    for (let k = 0; k < YC.length - 1; k++) for (let i = 0; i < nT - 1; i++) { const a = k * nT + i, b = a + 1, d = a + nT, e = d + 1; idx.push(a, b, e, a, e, d); }
+    const sg = new THREE.BufferGeometry();
+    sg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); sg.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); sg.setIndex(idx);
+    const surface = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false }));
+    surface.userData.pick = (hit) => {
+      const k = d3.minIndex(YC_DATES, (d) => Math.abs(sz(d) - hit.point.z)), i = d3.minIndex(YC_YEARS, (y) => Math.abs(sx(y) - hit.point.x));
+      return `<div class="font-medium">${d3.utcFormat('%b %-d, %Y')(YC_DATES[k])}</div><div class="font-mono">${YC_TENORS[i]} ${YC[k][1][i].toFixed(2)}%</div><div class="font-mono" style="color:${ycColor(ycSpread(k))}">10Y − 3M ${d3.format('+.2f')(ycSpread(k))}</div>`;
+    };
+    surface.userData.monthAt = (hit) => d3.minIndex(YC_DATES, (d) => Math.abs(sz(d) - hit.point.z));
+    group.add(surface); pickables.push(surface);
+    // one line per month
+    YC.forEach((_, k) => group.add(polyline(YC_TENORS.map((__, i) => P(k, i)), ycColor(ycSpread(k)), 0.75)));
+    // a few notes, pinned to the 3-month end of their month
+    YC_NOTES.forEach(([d, text]) => { const k = YC.findIndex(([x]) => x === d); if (k >= 0) lbl(text, P(k, 1).add(new THREE.Vector3(-0.2, 0.45, 0)), 'bg'); });
+    // the selected month: an amber tube that moves through the stack
+    let tube = null;
+    const tag = lbl('', new THREE.Vector3(), 'strong bg sel');
+    this.select = (k) => {
+      state.ycIndex = k;
+      if (tube) { group.remove(tube); tube.geometry.dispose(); }
+      const pts = YC_TENORS.map((_, i) => P(k, i).add(new THREE.Vector3(0, 0.01, 0)));
+      tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 80, 0.045, 8), new THREE.MeshBasicMaterial({ color: B.amber }));
+      group.add(tube);
+      tag.position.copy(pts.at(-1).clone().add(new THREE.Vector3(0.5, 0.25, 0)));
+      tag.element.textContent = d3.utcFormat('%b %Y')(YC_DATES[k]);
+      ycPanel(k);
+    };
+    this.select(state.ycIndex);
+  },
+  controls() {
+    const k = state.ycIndex;
+    return `<div>
+      <div class="flex items-center gap-2">
+        <button id="yc-play" class="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-input bg-background hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Play through the months"><i class="fi ${ycTimer ? 'fi-rr-pause' : 'fi-rr-play'} text-xs"></i></button>
+        <input id="yc-range" type="range" class="slider" min="0" max="${YC.length - 1}" step="1" value="${k}" aria-label="Month" style="--fill:${(k / (YC.length - 1)) * 100}%" />
+      </div>
+      <div class="mt-3 flex items-baseline justify-between"><span id="yc-date" class="font-semibold"></span><span id="yc-state" class="text-xs"></span></div>
+      <div id="yc-mini" class="mt-2 h-[150px]"></div>
+      <div id="yc-tiles" class="mt-2 grid grid-cols-3 gap-2"></div>
+      <p class="mt-3 text-xs leading-relaxed text-muted-foreground">An inverted curve, short loans paying more than long ones, has come before most US recessions since the 1960s. Rose lines are the months it was inverted.</p>
+    </div>`;
+  },
+};
+let ycTimer = null;
+// panel: date, inversion state, a flat chart of the month against a year earlier, and three readouts
+function ycPanel(k) {
+  const el = $('#yc-mini');
+  if (!el) return;
+  const s = ycSpread(k);
+  $('#yc-date').textContent = d3.utcFormat('%B %-d, %Y')(YC_DATES[k]);
+  $('#yc-state').innerHTML = `<span style="color:${ycColor(s)}">${s < 0 ? 'Inverted' : 'Normal'} · 10Y − 3M ${d3.format('+.2f')(s)}</span>`;
+  const r = $('#yc-range'); if (r) { r.value = k; r.style.setProperty('--fill', `${(k / (YC.length - 1)) * 100}%`); }
+  $('#yc-tiles').innerHTML = [[1, '3 months'], [4, '2 years'], [8, '10 years']].map(([i, l]) => `<div class="rounded-lg border bg-background/60 px-2.5 py-1.5"><p class="text-[11px] text-muted-foreground">${l}</p><p class="font-mono text-sm">${YC[k][1][i].toFixed(2)}%</p></div>`).join('');
+  el.innerHTML = '';
+  const w = el.clientWidth || 300, h = 150, m = { t: 8, r: 8, b: 20, l: 30 };
+  const x = d3.scaleLog([1 / 12, 30], [m.l, w - m.r]), y = d3.scaleLinear([0, 6], [h - m.b, m.t]);
+  const svg = d3.select(el).append('svg').attr('width', w).attr('height', h);
+  svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(3).tickSize(-(w - m.l - m.r)).tickFormat((v) => `${v}%`)).call((g) => { g.select('.domain').remove(); g.selectAll('line').attr('stroke', B.line); g.selectAll('text').attr('fill', B.fog).style('font', '10px "Source Code Pro", monospace'); });
+  svg.append('g').attr('transform', `translate(0,${h - m.b})`).call(d3.axisBottom(x).tickValues([1 / 12, 1, 2, 5, 10, 30]).tickFormat((v) => YC_TENORS[YC_YEARS.indexOf(v)]).tickSizeOuter(0)).call((g) => { g.select('.domain').attr('stroke', B.line); g.selectAll('line').attr('stroke', B.line); g.selectAll('text').attr('fill', B.fog).style('font', '10px "Source Code Pro", monospace'); });
+  const line = d3.line().x((_, i) => x(YC_YEARS[i])).y((v) => y(v)).curve(d3.curveMonotoneX);
+  const prev = Math.max(0, k - 12);
+  if (prev !== k) {
+    svg.append('path').attr('d', line(YC[prev][1])).attr('fill', 'none').attr('stroke', B.fog).attr('stroke-dasharray', '3 3').attr('stroke-width', 1.25);
+    svg.append('text').attr('x', w - m.r).attr('y', y(YC[prev][1][10]) - 5).attr('text-anchor', 'end').attr('fill', B.fog).style('font', '10px "Source Code Pro", monospace').text(d3.utcFormat('%b %Y')(YC_DATES[prev]));
+  }
+  svg.append('path').attr('d', line(YC[k][1])).attr('fill', 'none').attr('stroke', B.amber).attr('stroke-width', 2);
+}
+function ycPlay() {
+  if (ycTimer) { clearInterval(ycTimer); ycTimer = null; }
+  else {
+    if (state.ycIndex >= YC.length - 1) state.ycIndex = 0;
+    ycTimer = setInterval(() => {
+      if (state.view !== 'lines' || state.ycIndex >= YC.length - 1) { clearInterval(ycTimer); ycTimer = null; const b = $('#yc-play i'); if (b) b.className = 'fi fi-rr-play text-xs'; return; }
+      VIEWS.lines.select(state.ycIndex + 1);
+    }, reduceMotion ? 400 : 140);
+  }
+  const b = $('#yc-play i'); if (b) b.className = `fi ${ycTimer ? 'fi-rr-pause' : 'fi-rr-play'} text-xs`;
+}
+
+// ---------- 3. bubbles ----------
+VIEWS.bubbles = {
+  tab: '3D bubbles', icon: 'fi-rr-chart-scatter',
+  title: 'Bubbles in a box',
+  blurb: 'Market cap, return and volatility on three axes, 24h volume as size, sector as color. A drop line to the floor shows where each token sits on the cap–volatility plane, so depth stays readable as you turn it.',
+  how: ['scaleLog spreads market cap from $0.4B to $2T, scaleSqrt sizes bubbles by area, and scaleOrdinal colors sectors.', 'Places a sphere per token with a drop line to the floor, inside the same D3-ticked frame as the line chart.'],
+  camera: [-9, 7.5, 19.5], target: [0, 2.2, 0],
+  build() {
+    const on = TOKENS.filter((t) => state.sectors[t.sector]);
+    const sx = d3.scaleLog([0.3, 2500], box.x);
+    const sy = d3.scaleLinear(d3.extent(TOKENS, (t) => t.ret), box.y).nice();
+    const sz = d3.scaleLinear([0, d3.max(TOKENS, (t) => t.vol)], box.z).nice();
+    const sr = d3.scaleSqrt([0, d3.max(TOKENS, (t) => t.volume)], [0.08, 0.6]);
+    const color = d3.scaleOrdinal(SECTORS_T, PAL);
+    sx.ticks = () => [1, 10, 100, 1000];
+    frame3D({ sx, sy, sz, names: { x: 'Market cap (log)', y: 'Return, 30d', z: 'Volatility' }, fmt: { x: (v) => (v >= 1000 ? `$${v / 1000}T` : `$${v}B`), y: (v) => `${v > 0 ? '+' : ''}${v}%`, z: (v) => `${v}%` } });
+    const drops = [];
+    on.forEach((t) => {
+      const p = new THREE.Vector3(sx(t.cap), sy(t.ret), sz(t.vol));
+      const m = new THREE.Mesh(new THREE.SphereGeometry(sr(t.volume), 24, 16), solid(color(t.sector), { transparent: true, opacity: 0.85 }));
+      m.position.copy(p);
+      m.userData.html = `<div class="font-medium">${esc(t.name)} <span class="text-muted-foreground">· ${t.sector}</span></div><div class="font-mono">cap ${t.cap >= 1000 ? `$${(t.cap / 1000).toFixed(2)}T` : `$${t.cap.toFixed(1)}B`}</div><div class="font-mono">30d ${d3.format('+.1f')(t.ret)}% · vol ${t.vol.toFixed(0)}%</div><div class="font-mono">24h volume $${t.volume.toFixed(2)}B</div>`;
+      group.add(m); pickables.push(m);
+      drops.push(p, new THREE.Vector3(p.x, box.y[0], p.z));
+      if (t.cap > 300) lbl(t.name, p.clone().add(new THREE.Vector3(0, sr(t.volume) + 0.2, 0)), 'strong');
+    });
+    group.add(segments(drops, B.fog, 0.35));
+  },
+  controls: () => toggles('sectors', SECTORS_T, (k, i) => PAL[i], 'Sectors'),
+};
+
+// ---------- 4. GDP world: bars on a map, Sankey from sectors into each bar ----------
+VIEWS.gdp = {
+  tab: 'GDP world', icon: 'fi-rr-earth-americas',
+  title: 'GDP 2026, by sector',
+  blurb: 'The twenty largest economies by projected 2026 GDP, as bars on a flat map. Behind it, a Sankey splits their combined output into services, industry and agriculture and sends each flow down into the country it comes from. Bars are stacked in the same three colors.',
+  how: ['geoNaturalEarth1 projects the map and bar positions, d3-sankey lays out sector-to-country flows (countries ordered west to east), and scaleLinear sets bar heights.', 'Draws the map to a texture on the floor, builds stacked bars at each country, and turns every Sankey link into a ribbon in a standing plane, with a drop ribbon into each bar.'],
+  camera: [0, 12.5, 25], target: [0, 4.6, -2.5],
+  async build() {
+    await topoReady;
+    const W = 18, D = 9, cw = 2048, ch = 1024;
+    const proj = d3.geoNaturalEarth1().fitExtent([[20, 20], [cw - 20, ch - 20]], { type: 'Sphere' });
+    const toWorld = ([px, py]) => new THREE.Vector3((px / cw - 0.5) * W, 0, (py / ch - 0.5) * D);
+    // map texture
+    const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+    const ctx = cv.getContext('2d'), path = d3.geoPath(proj, ctx);
+    ctx.beginPath(); path({ type: 'Sphere' }); ctx.fillStyle = '#191b20'; ctx.fill();
+    ctx.beginPath(); path(d3.geoGraticule10()); ctx.strokeStyle = '#22252b'; ctx.lineWidth = 1.5; ctx.stroke();
+    // with a sector selected, shade each top-20 country by that sector's share of its GDP
+    const sec = state.sector ? SECT.find((s) => s.name === state.sector) : null;
+    const si = sec ? shareIdx[sec.name] : -1;
+    const shareMax = sec ? d3.max(GDP, (c) => c.share[si]) : 1;
+    const tint = sec ? d3.scaleLinear([0, shareMax], [0.12, 0.85]) : null;
+    if (worldTopo) {
+      const byGeo = new Map(GDP.map((c) => [c.geo, c]));
+      topojson.feature(worldTopo, worldTopo.objects.countries).features.forEach((f) => {
+        ctx.beginPath(); path(f);
+        const c = byGeo.get(f.properties.name), sel = c && state.country === c.name;
+        ctx.fillStyle = sec && c ? d3.interpolateRgb('#24272e', sec.color)(tint(c.share[si])) : sel ? '#4a4129' : c ? '#2f343d' : '#24272e';
+        ctx.fill();
+        ctx.strokeStyle = '#15171b'; ctx.lineWidth = 1.2; ctx.stroke();
+      });
+    }
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+    const map = new THREE.Mesh(new THREE.PlaneGeometry(W, D), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
+    map.rotation.x = -Math.PI / 2; group.add(map);
+    // stacked bars
+    const hScale = d3.scaleLinear([0, d3.max(GDP, (c) => c.gdp)], [0, 4.2]);
+    const bw = 0.22;
+    const barTop = new Map();
+    GDP.forEach((c) => {
+      const p = toWorld(proj(c.ll)), dim = state.country && state.country !== c.name;
+      let y = 0;
+      [2, 1, 0].forEach((k) => {
+        const h = hScale(c.gdp * c.share[k]);
+        if (h < 0.002) return;
+        const off = dim || (sec && k !== si);
+        const m = new THREE.Mesh(new THREE.BoxGeometry(bw, h, bw), solid(SECT[2 - k].color, { transparent: !!off, opacity: off ? 0.15 : 1 }));
+        m.position.set(p.x, y + h / 2, p.z);
+        m.userData = { country: c.name, html: countryTip(c) };
+        group.add(m); pickables.push(m);
+        y += h;
+      });
+      barTop.set(c.name, new THREE.Vector3(p.x, y, p.z));
+    });
+    // labels: the biggest economies, or with a sector selected, the biggest producers of that sector
+    const labelled = sec ? [...GDP].sort((a, b) => b.gdp * b.share[si] - a.gdp * a.share[si]).slice(0, 5) : GDP.filter((c) => c.gdp > 4.3);
+    GDP.forEach((c) => {
+      if (!labelled.includes(c) && c.name !== state.country) return;
+      const top = barTop.get(c.name);
+      const text = sec ? `${c.name} ${tn(c.gdp * c.share[si])} · ${Math.round(c.share[si] * 100)}%` : `${c.name} ${tn(c.gdp)}`;
+      const o = lbl(text, new THREE.Vector3(top.x, top.y + 0.25, top.z), `bg ${c.name === state.country ? 'sel' : ''}`);
+      if (sec) o.element.style.color = sec.color;
+    });
+    // Sankey: sectors (top) to countries (bottom), in a standing plane behind the map
+    const total = d3.sum(GDP, (c) => c.gdp);
+    const order = [...GDP].sort((a, b) => a.ll[0] - b.ll[0]);
+    const nodes = [...SECT.map((s) => ({ id: s.name, kind: 'sector', color: s.color })), ...order.map((c) => ({ id: c.name, kind: 'country', c }))];
+    const links = GDP.flatMap((c) => SECT.map((s) => ({ source: s.name, target: c.name, value: c.gdp * c.share[shareIdx[s.name]], sector: s })));
+    const SW = W * 0.96, SH = 5.2, ztop = -D / 2 - 0.6, ybase = 5.0;
+    const sk = d3.sankey().nodeId((d) => d.id).nodeWidth(0.18).nodePadding(0.05).nodeSort((a, b) => (a.kind === 'country' && b.kind === 'country' ? a.c.ll[0] - b.c.ll[0] : SECT.findIndex((s) => s.name === a.id) - SECT.findIndex((s) => s.name === b.id))).extent([[0, 0], [SH, SW]]);
+    const graph = sk({ nodes: nodes.map((d) => ({ ...d })), links: links.map((d) => ({ ...d })) });
+    // sankey x is depth (sector -> country) -> world height; sankey y is spread -> world x
+    const P = (sxv, syv) => new THREE.Vector3(syv - SW / 2, ybase + SH - sxv, ztop);
+    graph.nodes.forEach((n) => {
+      const isC = n.kind === 'country', dim = isC ? state.country && n.id !== state.country : sec && n.id !== sec.name;
+      const w = n.y1 - n.y0, h = n.x1 - n.x0;
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.12), solid(isC ? B.ink2 : n.color, { transparent: !!dim, opacity: dim ? 0.3 : 1 }));
+      m.position.copy(P((n.x0 + n.x1) / 2, (n.y0 + n.y1) / 2));
+      m.userData = isC ? { country: n.id, html: countryTip(n.c) } : { sector: n.id, html: `<div class="font-medium">${n.id}</div><div class="font-mono">${tn(n.value)} · ${((n.value / total) * 100).toFixed(1)}% of the top 20</div><div class="mt-1 text-muted-foreground">Click to highlight</div>` };
+      group.add(m); pickables.push(m);
+      if (!isC) {
+        const o = lbl(`${n.id} ${tn(n.value)}`, P(n.x0 - (n.id === 'Agriculture' ? 0.75 : 0.3), (n.y0 + n.y1) / 2), 'strong bg');
+        o.element.style.color = n.color;
+        if (dim) o.element.style.opacity = '0.45';
+      }
+      // drop ribbon from the country node down into its bar
+      if (isC) {
+        const top = barTop.get(n.id), a = P(n.x1, (n.y0 + n.y1) / 2);
+        const curve = new THREE.CubicBezierCurve3(a, new THREE.Vector3(a.x, a.y - 1.6, a.z), new THREE.Vector3(top.x, top.y + 1.4, top.z), top);
+        group.add(ribbonAlong(curve, [Math.max(0.04, w * 0.9), bw], dim ? B.line : B.fog, dim ? 0.12 : 0.3, n.id));
+      }
+    });
+    graph.links.forEach((l) => {
+      const dim = (state.country && l.target.id !== state.country) || (sec && l.source.id !== sec.name);
+      const x0 = l.source.x1, x1 = l.target.x0, xm = (x0 + x1) / 2;
+      const curve = new THREE.CubicBezierCurve3(P(x0, l.y0), P(xm, l.y0), P(xm, l.y1), P(x1, l.y1));
+      const rib = ribbonAlong(curve, l.width, l.sector.color, dim ? 0.06 : state.country || sec ? 0.8 : 0.42, l.target.id);
+      rib.userData = { country: l.target.id, html: `<div class="font-medium">${l.sector.name} → ${esc(l.target.id)}</div><div class="font-mono">${tn(l.value)} · ${((l.value / l.target.c.gdp) * 100).toFixed(0)}% of its GDP</div>` };
+      group.add(rib); pickables.push(rib);
+    });
+    lbl(`Top 20 economies · ${tn(total)} combined`, new THREE.Vector3(-SW / 4, ybase + SH + 0.75, ztop), 'strong bg');
+  },
+  controls() {
+    const sec = state.sector ? SECT.find((s) => s.name === state.sector) : null;
+    const si = sec ? shareIdx[sec.name] : -1;
+    const val = (c) => (sec ? c.gdp * c.share[si] : c.gdp);
+    const rows = sec ? [...GDP].sort((a, b) => val(b) - val(a)) : GDP;
+    const max = d3.max(rows, val), secTotal = sec ? d3.sum(GDP, val) : 0;
+    const topShare = sec ? [...GDP].sort((a, b) => b.share[si] - a.share[si])[0] : null;
+    return `<div>
+      <p class="mb-1.5 text-xs text-muted-foreground">Sector</p>
+      <div class="flex flex-wrap gap-1.5">${SECT.map((s) => `<button data-sector="${s.name}" aria-pressed="${state.sector === s.name}" class="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-pressed:border-foreground/30 aria-pressed:bg-accent aria-pressed:text-foreground"><span class="size-2 rounded-sm" style="background:${s.color}"></span>${s.name}</button>`).join('')}</div>
+      ${sec ? `<p class="mt-2 text-xs leading-relaxed text-ink-2"><span style="color:${sec.color}">${sec.name}</span> adds up to ${tn(secTotal)} across the top 20. The map is shaded by its share of each country’s GDP; ${esc(topShare.name)} leans on it most at ${Math.round(topShare.share[si] * 100)}%.</p>` : ''}
+      <p class="mb-1.5 mt-4 text-xs text-muted-foreground">${sec ? `Ranked by ${sec.name.toLowerCase()} output` : 'Click a country to trace its flows'}</p>
+      <ol class="max-h-64 space-y-0.5 overflow-auto pr-1 scroll-thin">${rows.map((c, i) => `<li><button data-country="${esc(c.name)}" aria-pressed="${state.country === c.name}" class="grid w-full grid-cols-[18px_1fr_auto] items-center gap-2 rounded-md px-2 py-1 text-left text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-pressed:bg-amber/10 aria-pressed:text-amber">
+        <span class="font-mono text-[11px] text-muted-foreground">${i + 1}</span>
+        <span class="min-w-0"><span class="block truncate">${esc(c.name)}</span>${sec
+          ? `<span class="mt-1 block h-1.5 rounded-full" style="width:${(val(c) / max) * 100}%;background:${sec.color}"></span>`
+          : `<span class="mt-1 flex h-1.5 overflow-hidden rounded-full bg-muted" style="width:${(c.gdp / max) * 100}%">${[2, 1, 0].map((k) => `<span style="width:${c.share[k] * 100}%;background:${SECT[2 - k].color}"></span>`).join('')}</span>`}</span>
+        <span class="text-right font-mono text-xs">${tn(val(c))}${sec ? `<span class="block text-[10.5px] text-muted-foreground">${Math.round(c.share[si] * 100)}% of GDP</span>` : ''}</span></button></li>`).join('')}</ol>
+      <div class="mt-3 rounded-lg border bg-background/60 p-3 text-xs leading-relaxed text-muted-foreground">
+        <p><span class="text-foreground">GDP:</span> IMF World Economic Outlook, October 2026, projections for 2026 in current US$ (<a class="text-primary hover:underline" href="https://www.imf.org/en/publications/weo/issues/2026/10/13/world-economic-outlook-october-2026" target="_blank" rel="noopener noreferrer">IMF</a>, table via <a class="text-primary hover:underline" href="https://www.worldometers.info/gdp/gdp-by-country/?region=worldwide&year=2026&metric=nominal" target="_blank" rel="noopener noreferrer">Worldometer</a>).</p>
+        <p class="mt-1.5"><span class="text-foreground">Sector split:</span> approximate shares from World Bank value added by sector (latest available year, <a class="text-primary hover:underline" href="https://data.worldbank.org/indicator/NV.SRV.TOTL.ZS" target="_blank" rel="noopener noreferrer">WDI</a>), scaled to 100%, applied to 2026 GDP. Illustrative, not an official breakdown.</p>
+      </div></div>`;
+  },
+};
+function countryTip(c) {
+  return `<div class="font-medium">${esc(c.name)}</div><div class="font-mono">${tn(c.gdp)} · growth ${d3.format('+.2f')(c.growth)}%</div>${SECT.map((s) => `<div class="flex items-center gap-2 font-mono"><span class="size-2 rounded-sm" style="background:${s.color}"></span>${s.name}<span class="ml-auto pl-3">${tn(c.gdp * c.share[shareIdx[s.name]])}</span></div>`).join('')}`;
+}
+// A flat ribbon along a curve, always spanning world x (the Sankey plane's spread axis).
+// width is a number, or [start, end] to taper, e.g. from a wide Sankey node into a thin bar.
+function ribbonAlong(curve, width, color, opacity, country) {
+  const [w0, w1] = Array.isArray(width) ? width : [width, width];
+  const n = 48, pos = [], idx = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, p = curve.getPoint(t);
+    const e = t * t * (3 - 2 * t), w = w0 + (w1 - w0) * e;
+    pos.push(p.x - w / 2, p.y, p.z, p.x + w / 2, p.y, p.z);
+    if (i < n) idx.push(2 * i, 2 * i + 1, 2 * i + 2, 2 * i + 1, 2 * i + 3, 2 * i + 2);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
+  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color, transparent: true, opacity, side: THREE.DoubleSide, depthWrite: false }));
+  m.userData.country = country;
+  return m;
+}
+
+// ================= panel =================
+function toggles(key, names, colorOf, label) {
+  return `<div><p class="mb-1.5 text-xs text-muted-foreground">${label}</p><div class="flex flex-wrap gap-1.5">${names.map((n, i) => `<button data-toggle="${key}" data-name="${esc(n)}" aria-pressed="${state[key][n]}" class="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-pressed:border-foreground/30 aria-pressed:text-foreground"><span class="size-2 rounded-full" style="background:${colorOf(n, i)}"></span>${esc(n)}</button>`).join('')}</div></div>`;
+}
+const ORDER = ['gdp', 'profile', 'lines', 'bubbles'];
+$('#tabs').innerHTML = ORDER.map((k) => `<button role="tab" data-tab="${k}" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi ${VIEWS[k].icon} text-xs"></i>${VIEWS[k].tab}</button>`).join('');
+function renderPanel() {
+  const v = VIEWS[state.view];
+  $('#panel').innerHTML = `
+    <h1 class="text-lg font-semibold leading-tight">${v.title}</h1>
+    <p class="mt-1.5 text-sm leading-relaxed text-ink-2">${v.blurb}</p>
+    <div class="mt-4">${v.controls()}</div>
+    <div class="mt-4 space-y-2 border-t pt-3 text-sm">
+      <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">How it’s built</p>
+      <p class="flex gap-2 text-ink-2"><span class="mt-0.5 inline-flex h-5 shrink-0 items-center rounded bg-amber/15 px-1.5 font-mono text-[10.5px] text-amber">D3</span><span>${v.how[0]}</span></p>
+      <p class="flex gap-2 text-ink-2"><span class="mt-0.5 inline-flex h-5 shrink-0 items-center rounded bg-primary/15 px-1.5 font-mono text-[10.5px] text-primary">Three.js</span><span>${v.how[1]}</span></p>
+    </div>
+    ${state.view === 'gdp' ? '' : `<p class="mt-3 text-xs text-muted-foreground"><i class="fi fi-rr-info mr-1 align-[-1px]"></i>${v.note ?? 'Mock data.'}</p>`}`;
+}
+let building = 0;
+async function show(view, { keepCamera = false } = {}) {
+  const ticket = ++building;
+  state.view = view;
+  document.querySelectorAll('[data-tab]').forEach((b) => { b.dataset.state = b.dataset.tab === view ? 'active' : ''; b.setAttribute('aria-selected', b.dataset.tab === view); });
+  renderPanel();
+  clearScene();
+  const v = VIEWS[view];
+  await v.build();
+  if (ticket !== building) return;
+  if (!keepCamera) { camera.position.set(...v.camera); controls.target.set(...v.target); controls.autoRotate = !reduceMotion && view !== 'gdp' && v.autoRotate !== false; }
+  try { history.replaceState(null, '', `?view=${view}`); } catch { /* sandboxed */ }
+}
+$('#tabs').onclick = (e) => { const b = e.target.closest('[data-tab]'); if (b) show(b.dataset.tab); };
+$('#panel').addEventListener('input', (e) => {
+  if (e.target.id === 'yc-range') { if (ycTimer) ycPlay(); VIEWS.lines.select(+e.target.value); }
+});
+$('#panel').addEventListener('change', (e) => {
+  const sel = e.target.closest('[data-compare]');
+  if (sel) { state.compare = sel.value; show('profile', { keepCamera: true }); }
+});
+$('#panel').addEventListener('pointerover', (e) => { const li = e.target.closest('[data-metric]'); if (li && state.view === 'profile') VIEWS.profile.focus?.(+li.dataset.metric); });
+$('#panel').addEventListener('pointerleave', () => { if (state.view === 'profile') VIEWS.profile.focus?.(null); });
+$('#panel').addEventListener('click', (e) => {
+  if (e.target.closest('#yc-play')) { ycPlay(); return; }
+  const ch = e.target.closest('[data-chain]');
+  if (ch) { state.chain = ch.dataset.chain; if (state.compare === state.chain) state.compare = 'median'; show('profile', { keepCamera: true }); return; }
+  const t = e.target.closest('[data-toggle]'), c = e.target.closest('[data-country]'), sc = e.target.closest('[data-sector]');
+  if (sc) { state.sector = state.sector === sc.dataset.sector ? null : sc.dataset.sector; state.country = null; show('gdp', { keepCamera: true }); }
+  if (t) {
+    const set = state[t.dataset.toggle];
+    set[t.dataset.name] = !set[t.dataset.name];
+    if (!Object.values(set).some(Boolean)) set[t.dataset.name] = true;
+    show(state.view, { keepCamera: true });
+  }
+  if (c) { state.country = state.country === c.dataset.country ? null : c.dataset.country; state.sector = null; show('gdp', { keepCamera: true }); }
+});
+
+// ================= hover and click =================
+const tip = $('#tip'), ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+let hover = null;
+const glow = (o, on) => { if (o?.material?.emissive && !o.userData.pts && !o.userData.pick) o.material.emissive.set(on ? '#3a3220' : '#000000'); };
+function pickAt(ev) {
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  return ray.intersectObjects(pickables, false)[0];
+}
+renderer.domElement.addEventListener('pointermove', (ev) => {
+  const hit = pickAt(ev), obj = hit?.object ?? null;
+  if (hover !== obj) { glow(hover, false); glow(obj, true); hover = obj; }
+  renderer.domElement.style.cursor = obj?.userData.country || obj?.userData.sector ? 'pointer' : '';
+  if (state.view === 'profile') VIEWS.profile.focus?.(obj?.userData.metricAt ? obj.userData.metricAt(hit) : null);
+  if (!hit) { tip.hidden = true; return; }
+  tip.innerHTML = obj.userData.pick ? obj.userData.pick(hit) : obj.userData.html;
+  tip.hidden = false;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = `${ev.clientX + 14 + w > innerWidth ? ev.clientX - w - 14 : ev.clientX + 14}px`;
+  tip.style.top = `${ev.clientY + 14 + h > innerHeight ? ev.clientY - h - 14 : ev.clientY + 14}px`;
+});
+renderer.domElement.addEventListener('pointerleave', () => { glow(hover, false); hover = null; tip.hidden = true; if (state.view === 'profile') VIEWS.profile.focus?.(null); });
+let down = null;
+renderer.domElement.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  if (state.view === 'lines') { const h = pickAt(e); if (h?.object.userData.monthAt) { if (ycTimer) ycPlay(); VIEWS.lines.select(h.object.userData.monthAt(h)); } return; }
+  if (state.view !== 'gdp') return;
+  const ud = pickAt(e)?.object.userData ?? {};
+  if (ud.sector) { state.sector = ud.sector === state.sector ? null : ud.sector; state.country = null; }
+  else { state.country = ud.country && ud.country !== state.country ? ud.country : null; state.sector = null; }
+  show('gdp', { keepCamera: true });
+});
+
+// ================= loop =================
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h); labelR.setSize(w, h);
+  camera.aspect = w / h; camera.fov = w < 700 ? 50 : 34;
+  if (w >= 900) camera.setViewOffset(w, h, -185, 0, w, h); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); labelR.render(scene, camera); });
+const initial = new URLSearchParams(location.search).get('view');
+document.fonts.ready.then(() => show(ORDER.includes(initial) ? initial : 'gdp'));
+</script>
+</body>
+</html>

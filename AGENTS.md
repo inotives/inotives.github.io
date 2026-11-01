@@ -138,4 +138,15 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+### 5. Git: One Working Branch at a Time
+
+**Branch off `master` once, then keep working on that branch until it is merged.**
+
+- On `master`: create a branch before committing. Do not commit straight to `master`.
+- On a branch that is not merged yet: keep committing new tasks to it. Do not create another branch per task or per feature. Branches built in parallel end up editing the same files (e.g. `src/data/playground.js`) and need merge conflicts fixed by hand.
+- On a branch that is already merged into `master`: switch to an up-to-date `master` and create one new branch from it.
+- Check before branching: `git branch --merged master` (or the PR state on GitHub) tells you whether the current branch is merged.
+- Create extra branches, or switch between unmerged ones, only when a human explicitly asks.
+- One task, one commit. When a human approves a finished task, commit it on the working branch. Each commit is a save point the branch can return to, so don't hold several tasks in one uncommitted pile, and don't commit a task before it is approved.
+
 ---

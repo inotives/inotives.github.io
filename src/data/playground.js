@@ -13,6 +13,14 @@ export const PLAYGROUND_LIBRARIES = [
     repo: 'd3/d3',
   },
   {
+    id: 'chartjs',
+    name: 'Chart.js',
+    kind: 'Charting',
+    description: 'Canvas charts from a config object: scales, legends and tooltips out of the box. Here its layout drives 3D geometry in Three.js.',
+    site: 'https://www.chartjs.org',
+    repo: 'chartjs/Chart.js',
+  },
+  {
     id: 'threejs',
     name: 'Three.js',
     kind: '3D graphics',
@@ -185,6 +193,56 @@ export const PLAYGROUND_MOCKS = [
       { name: 'SEC S-1', href: 'https://www.sec.gov/Archives/edgar/data/0002130357/000162828026067168/anthropicpbc-sx1.htm' },
       { name: 'CNBC', href: 'https://www.cnbc.com/2026/10/26/anthropic-ipo-live-updates-ai-s-1-filing.html' },
       { name: 'Polymarket odds', href: 'https://finance.yahoo.com/markets/stocks/articles/polymarket-traders-cool-2-trillion-110000808.html' },
+    ],
+  },
+  {
+    id: 'chart-agent',
+    project: 'Chat analytics',
+    name: 'Chart agent',
+    date: '2026-11-01',
+    href: '/mocks/chart-agent.html',
+    preview: '/mocks/previews/chart-agent.jpg',
+    description:
+      'A chat window where an analytics agent answers with charts. It calls tools on the MCP servers you have connected, then writes its reply in OpenUI Lang, which renders line by line into a card with a D3 or Three.js chart. Open a chart to explore it, save it to My charts and pull it back later with fresh data. A mock: replies are scripted and every figure is generated.',
+    libraries: ['openui', 'd3', 'threejs', 'shadcn', 'tailwind', 'flaticon'],
+  },
+  {
+    id: 'brand-kit',
+    project: 'inoTives',
+    name: 'Brand kit',
+    date: '2026-11-01',
+    href: '/mocks/brand-kit.html',
+    preview: '/mocks/previews/brand-kit.jpg',
+    description:
+      'The inoTives design system written down, as an example of the brand kit every company should keep: concept, color tokens with live contrast checks, the data palette and ramps, fonts and type scale, and number and date formats. Then the same brand applied in shadcn/ui tokens, a D3 theme helper and Three.js scene rules, with toggles that show each library’s defaults, plus a Flaticon base icon set. Copy any value or download the tokens.',
+    libraries: ['shadcn', 'd3', 'threejs', 'tailwind', 'flaticon'],
+  },
+  {
+    id: 'chartjs-3d',
+    project: 'Data in 3D',
+    name: 'Chart.js in 3D',
+    date: '2026-11-01',
+    href: '/mocks/chartjs-3d.html',
+    preview: '/mocks/previews/chartjs-3d.jpg',
+    description:
+      'Chart.js charts lifted into 3D: a radar lofted across six months, a multi-axis line chart with each axis on its own panel, a polar area with sectors extruded by a second value, and grouped bars set out in rows. Chart.js lays out scales, labels and every point on hidden canvases; Three.js uses those canvases as textures and builds the geometry from the positions Chart.js computed. Each view opens the original interactive Chart.js chart.',
+    libraries: ['chartjs', 'threejs', 'shadcn', 'tailwind', 'flaticon'],
+  },
+  {
+    id: 'd3-3d',
+    project: 'Data in 3D',
+    name: 'D3 in 3D',
+    date: '2026-11-01',
+    href: '/mocks/d3-3d.html',
+    preview: '/mocks/previews/d3-3d.jpg',
+    description:
+      'Four 3D charts where D3 does the data work and Three.js draws: a chain profile wrapped around a sphere, with scores grouped by direction and colored against a benchmark, seven years of real US Treasury yield curves stacked month by month (watch 2022 turn the curve upside down), a bubble chart in a box, and a world map of 2026 GDP as stacked bars with a Sankey that splits the top 20 economies into services, industry and agriculture and flows each part into its country. GDP from the IMF’s October 2026 outlook; sector shares approximate.',
+    libraries: ['d3', 'threejs', 'shadcn', 'tailwind', 'flaticon'],
+    sources: [
+      { name: 'IMF WEO, Oct 2026', href: 'https://www.imf.org/en/publications/weo/issues/2026/10/13/world-economic-outlook-october-2026' },
+      { name: 'Worldometer table', href: 'https://www.worldometers.info/gdp/gdp-by-country/?region=worldwide&year=2026&metric=nominal' },
+      { name: 'World Bank WDI', href: 'https://data.worldbank.org/indicator/NV.SRV.TOTL.ZS' },
+      { name: 'US Treasury yield curve', href: 'https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve' },
     ],
   },
 ]

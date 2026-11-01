@@ -1,0 +1,1140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Chart agent</title>
+<!--
+  Playground mock: a chat window where an analytics agent answers with charts. There is no model behind it:
+  replies are scripted by keyword, the MCP servers are simulated and every figure is generated mock data.
+  The flow follows OpenUI's generative UI pattern: the agent calls tools, then writes its answer in
+  OpenUI Lang (root = Card([...]) and one statement per line), and a renderer turns each line into
+  components as it streams in. The renderer here is a small hand-written parser for that line format,
+  not the @openuidev React packages. D3 draws the 2D charts, Three.js the 3D ones and the agent orb;
+  the UI recreates shadcn/ui components in Tailwind with the site's palette; icons are Flaticon UIcons.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  /* shadcn/ui token names mapped to the site's palette */
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-card-foreground: #e4e1d8;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-accent-foreground: #e4e1d8;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-ink-2: #b8b5ac;
+    --color-good: #9ccf7f;
+    --color-bad: #f2706b;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base {
+    *, ::before, ::after { border-color: var(--color-border); }
+  }
+</style>
+<style>
+  html, body { height: 100%; }
+  body { margin: 0; background: #15171b; }
+  .fi { display: inline-flex; line-height: 1; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
+
+  #sidebar { transition: transform 0.2s ease; }
+  @media (max-width: 899px) {
+    #sidebar { position: fixed; inset: 0 auto 0 0; z-index: 40; width: min(320px, 88vw); transform: translateX(-100%); }
+    body[data-sidebar="open"] #sidebar { transform: none; }
+    body[data-sidebar="open"] #scrim { display: block; }
+  }
+
+  .orb-slot canvas { display: block; }
+
+  .spinner { width: 12px; height: 12px; border-radius: 999px; border: 2px solid #343943; border-top-color: #1fefd7; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .caret::after { content: "▍"; color: #1fefd7; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .skeleton { background: linear-gradient(90deg, #23262d 0%, #2a2e36 50%, #23262d 100%); background-size: 200% 100%; animation: shimmer 1.3s linear infinite; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+  .fade-in { animation: fadein 0.25s ease both; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(4px); } }
+
+  .chart-slot { position: relative; }
+  .chart-slot svg text { font: 400 10.5px "Source Code Pro", monospace; fill: #8b9099; }
+  .chart-slot .axis line, .chart-slot .axis path { stroke: #2b2f37; }
+  .chart-slot .grid line { stroke: #23262d; }
+  .chart-slot .grid path { display: none; }
+  .chart-slot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+  .lang { font: 400 11.5px/1.55 "Source Code Pro", monospace; white-space: pre-wrap; word-break: break-all; }
+  .lang .k { color: #c9a4f5; } .lang .s { color: #9ccf7f; } .lang .c { color: #1fefd7; } .lang .n { color: #e9a66c; }
+
+  #tip { position: fixed; z-index: 70; pointer-events: none; }
+  .lbl3 { font: 400 10.5px "Source Code Pro", monospace; color: #8b9099; white-space: nowrap; }
+
+  .switch { position: relative; width: 32px; height: 18px; border-radius: 999px; background: #343943; transition: background 0.15s; flex-shrink: 0; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 999px; background: #e4e1d8; transition: transform 0.15s; }
+  .switch[aria-checked="true"] { background: #1fefd7; }
+  .switch[aria-checked="true"]::after { transform: translateX(14px); background: #0c1614; }
+
+  @media (prefers-reduced-motion: reduce) { *, ::before, ::after { transition: none !important; animation-duration: 0.01ms !important; } }
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+<div class="flex h-dvh overflow-hidden">
+  <!-- sidebar: MCP servers and saved charts -->
+  <aside id="sidebar" class="flex w-[290px] shrink-0 flex-col border-r bg-card" aria-label="Connections and saved charts">
+    <div class="flex h-14 items-center gap-3 border-b px-4">
+      <a href="/playground" class="rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+      <span class="text-sm text-muted-foreground">Playground</span>
+      <button id="close-sidebar" class="ml-auto inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-[900px]:hidden" aria-label="Close sidebar"><i class="fi fi-rr-cross-small"></i></button>
+    </div>
+    <div class="scroll-thin flex-1 overflow-y-auto px-3 py-4">
+      <section>
+        <div class="flex items-baseline justify-between px-1">
+          <h2 class="text-xs font-medium uppercase tracking-wider text-muted-foreground">MCP servers</h2>
+          <span id="mcp-count" class="font-mono text-[11px] text-muted-foreground"></span>
+        </div>
+        <ul id="mcp-list" class="mt-2 space-y-1"></ul>
+      </section>
+      <section class="mt-6">
+        <div class="flex items-baseline justify-between px-1">
+          <h2 class="text-xs font-medium uppercase tracking-wider text-muted-foreground">My charts</h2>
+          <span id="saved-count" class="font-mono text-[11px] text-muted-foreground"></span>
+        </div>
+        <ul id="saved-list" class="mt-2 space-y-1"></ul>
+      </section>
+    </div>
+    <p class="border-t px-4 py-3 text-xs leading-relaxed text-muted-foreground"><i class="fi fi-rr-info mr-1 align-[-1px]"></i>A mock: no model is connected. Replies are scripted, the servers are simulated and every figure is generated.</p>
+  </aside>
+  <div id="scrim" class="fixed inset-0 z-30 hidden bg-black/50"></div>
+
+  <!-- chat -->
+  <main class="flex min-w-0 flex-1 flex-col">
+    <header class="flex h-14 shrink-0 items-center gap-2 border-b px-3 sm:px-5">
+      <button id="open-sidebar" class="inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-[900px]:hidden" aria-label="Open sidebar"><i class="fi fi-rr-menu-burger"></i></button>
+      <div id="head-orb" class="orb-slot size-8 shrink-0"></div>
+      <div class="min-w-0">
+        <h1 class="text-[15px] font-semibold leading-tight">Chart agent</h1>
+        <p id="agent-status" class="truncate text-xs text-muted-foreground">Ready</p>
+      </div>
+      <span class="ml-auto hidden items-center rounded-md border px-2 py-0.5 text-xs font-medium text-muted-foreground sm:inline-flex">Mock data</span>
+      <button id="new-chat" class="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-sm:ml-auto"><i class="fi fi-rr-edit text-xs"></i>New chat</button>
+    </header>
+
+    <div id="thread-scroll" class="scroll-thin flex-1 overflow-y-auto">
+      <div id="empty" class="mx-auto flex max-w-3xl flex-col items-center px-4 pb-6 pt-8 text-center sm:pt-14">
+        <div id="hero-orb" class="orb-slot size-[180px]"></div>
+        <h2 class="mt-2 text-2xl font-semibold tracking-tight">What do you want to look at?</h2>
+        <p class="mt-2 max-w-md text-sm text-muted-foreground">Ask for an analysis. The agent picks a connected MCP server, pulls the data and answers with a chart you can open and keep.</p>
+        <div id="starters" class="mt-6 grid w-full gap-2 sm:grid-cols-2"></div>
+      </div>
+      <ol id="thread" class="mx-auto max-w-3xl space-y-6 px-4 py-6" aria-live="polite"></ol>
+    </div>
+
+    <form id="composer" class="shrink-0 px-3 pb-3 sm:px-5 sm:pb-5">
+      <div class="mx-auto max-w-3xl rounded-xl border bg-card shadow-sm focus-within:ring-1 focus-within:ring-ring">
+        <textarea id="input" rows="1" placeholder="Ask for a chart, e.g. “Which chains hold the most TVL?”" class="block max-h-40 w-full resize-none bg-transparent px-4 pt-3 text-sm placeholder:text-muted-foreground focus:outline-none" aria-label="Message"></textarea>
+        <div class="flex items-center gap-2 px-3 pb-2.5 pt-1">
+          <span id="composer-mcp" class="truncate text-xs text-muted-foreground"></span>
+          <button id="send" type="submit" class="ml-auto inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground shadow transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-40" aria-label="Send"><i class="fi fi-rr-paper-plane text-sm"></i></button>
+        </div>
+      </div>
+    </form>
+  </main>
+</div>
+
+<!-- chart viewer -->
+<div id="viewer" hidden class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 backdrop-blur-sm sm:p-6">
+  <div role="dialog" aria-modal="true" aria-labelledby="v-title" class="flex h-full max-h-[760px] w-full max-w-[1120px] flex-col overflow-hidden rounded-xl border bg-card shadow-lg">
+    <div class="flex flex-wrap items-start gap-3 border-b px-4 py-3 sm:px-5">
+      <div class="min-w-0 flex-1">
+        <h2 id="v-title" class="truncate text-lg font-semibold"></h2>
+        <p id="v-meta" class="mt-0.5 truncate text-xs text-muted-foreground"></p>
+      </div>
+      <div id="v-actions" class="flex flex-wrap items-center gap-2"></div>
+      <button id="v-close" class="inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Close"><i class="fi fi-rr-cross-small"></i></button>
+    </div>
+    <div class="flex items-center gap-3 px-4 pt-3 sm:px-5">
+      <div role="tablist" class="inline-flex h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground">
+        <button role="tab" data-vtab="chart" class="vtab inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi fi-rr-chart-line-up text-xs"></i>Chart</button>
+        <button role="tab" data-vtab="data" class="vtab inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi fi-rr-database text-xs"></i>Data</button>
+        <button role="tab" data-vtab="lang" class="vtab inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi fi-rr-code-simple text-xs"></i>OpenUI Lang</button>
+      </div>
+      <span id="v-hint" class="hidden text-xs text-muted-foreground sm:inline"></span>
+    </div>
+    <div id="v-body" class="relative min-h-0 flex-1 px-4 pb-4 pt-3 sm:px-5"></div>
+  </div>
+</div>
+
+<div id="tip" hidden class="rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
+<div id="toast" hidden class="fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-md border bg-card px-3 py-2 text-sm shadow-lg"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait = (ms) => new Promise((r) => setTimeout(r, reduceMotion ? Math.min(ms, 40) : ms));
+const COLORS = ['#1fefd7', '#f6c453', '#c9a4f5', '#9ccf7f', '#e58fb0', '#7cc4dc', '#e9a66c'];
+const fmtNum = (v) => (Math.abs(v) >= 100 ? d3.format(',.0f')(v) : Math.abs(v) >= 10 ? d3.format(',.1f')(v) : d3.format(',.2f')(v));
+const pct = (v) => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
+const store = {
+  get(k, fb) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch { return fb; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable: keep in memory */ } },
+};
+
+// ---------- seeded randomness, so each answer is stable but a refresh gets new numbers ----------
+function rngFrom(seed) {
+  let a = seed >>> 0;
+  return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+const gauss = (r) => Math.sqrt(-2 * Math.log(r() || 1e-9)) * Math.cos(2 * Math.PI * r());
+const N = (a, d = 2) => `[${a.map((v) => +v.toFixed(d)).join(', ')}]`;
+const S = (s) => JSON.stringify(s);
+const SA = (a) => `[${a.map(S).join(', ')}]`;
+const TODAY = new Date(2026, 10, 1);
+const dayLabels = (n) => d3.range(n).map((i) => d3.timeFormat('%b %-d')(d3.timeDay.offset(TODAY, i - n + 1)));
+
+// ---------- MCP servers (simulated) ----------
+const SERVERS = [
+  { id: 'coingecko', name: 'CoinGecko', desc: 'Prices and market data', icon: 'fi-rr-chart-line-up', tools: ['get_market_chart', 'get_coins_markets'], on: true },
+  { id: 'defillama', name: 'DefiLlama', desc: 'DeFi TVL and stablecoins', icon: 'fi-rr-layers', tools: ['get_chains_tvl', 'get_stablecoins'], on: true },
+  { id: 'binance', name: 'Binance', desc: 'Spot klines and volume', icon: 'fi-rr-exchange', tools: ['get_klines'], on: false },
+  { id: 'warehouse', name: 'Warehouse', desc: 'Postgres, read-only', icon: 'fi-rr-database', tools: ['run_query'], on: true },
+  { id: 'charts', name: 'My charts', desc: 'Saved chart store', icon: 'fi-rr-bookmark', tools: ['save_chart', 'get_chart'], on: true, fixed: true },
+];
+const serverOn = (id) => SERVERS.find((s) => s.id === id)?.on;
+const savedState = store.get('chart-agent:servers', null);
+if (savedState) for (const s of SERVERS) if (!s.fixed && s.id in savedState) s.on = savedState[s.id];
+
+// ---------- scenarios: what the scripted agent can answer ----------
+// Each build() returns the parts of an OpenUI Lang answer plus the tool calls that "fetched" the data.
+const SCENARIOS = {
+  prices: {
+    server: 'coingecko', kind: 'LineChart',
+    match: /\b(btc|bitcoin|eth|ether|ethereum|price|perform)/i,
+    prompt: 'Compare BTC and ETH over the last 90 days',
+    plan: 'I’ll pull 90 days of daily closes for BTC and ETH from CoinGecko and rebase both to 100 so they share one axis.',
+    build(r) {
+      const n = 91, labels = dayLabels(n);
+      const walk = (vol, drift) => { let v = 100; return d3.range(n).map((i) => (i ? (v *= Math.exp(drift + vol * gauss(r))) : v)); };
+      const btc = walk(0.022, 0.0009), eth = walk(0.033, 0.0004);
+      const db = btc[n - 1] - 100, de = eth[n - 1] - 100;
+      const lead = db > de ? 'BTC' : 'ETH';
+      return {
+        title: 'BTC vs ETH, last 90 days', subtitle: `Daily close rebased to 100 on ${labels[0]} · coingecko`,
+        summary: `Over 90 days BTC moved ${pct(db)} and ETH ${pct(de)}, so ${lead} led by ${Math.abs(db - de).toFixed(1)} points. ETH swung harder: its daily moves were about 1.5 times the size of BTC’s.`,
+        chart: `LineChart("BTC vs ETH, rebased", labels, [btc, eth], "Index (start = 100)")`,
+        data: [`labels = ${SA(labels)}`, `btc = Series("BTC", ${N(btc, 1)})`, `eth = Series("ETH", ${N(eth, 1)})`],
+        note: ['info', 'Rebasing hides price levels. Open the chart and switch to Data for the index values by day.'],
+        follow: ['Show the correlation matrix for the top coins', 'Show BTC trading volume by hour and weekday in 3D'],
+        calls: [
+          { tool: 'get_market_chart', args: { id: 'bitcoin', vs_currency: 'usd', days: 90, interval: 'daily' }, result: `${n} rows` },
+          { tool: 'get_market_chart', args: { id: 'ethereum', vs_currency: 'usd', days: 90, interval: 'daily' }, result: `${n} rows` },
+        ],
+      };
+    },
+  },
+  tvl: {
+    server: 'defillama', kind: 'BarChart',
+    match: /\b(tvl|chains?|locked)\b/i,
+    prompt: 'Which chains hold the most TVL?',
+    plan: 'DefiLlama has TVL per chain. I’ll take the top ten and rank them.',
+    build(r) {
+      const base = [['Ethereum', 61.8], ['Solana', 11.9], ['Bitcoin', 6.4], ['BSC', 6.9], ['Base', 5.7], ['Tron', 4.8], ['Arbitrum', 3.3], ['Hyperliquid L1', 2.6], ['Sui', 1.7], ['Avalanche', 1.4]];
+      const rows = base.map(([k, v]) => [k, v * (1 + 0.06 * gauss(r))]).sort((a, b) => b[1] - a[1]);
+      const total = d3.sum(rows, (d) => d[1]);
+      return {
+        title: 'TVL by chain, top 10', subtitle: 'US$ billions locked in DeFi · defillama',
+        summary: `${rows[0][0]} holds $${rows[0][1].toFixed(1)}B, ${Math.round((rows[0][1] / total) * 100)}% of the top ten combined and ${rows[0][1] > total - rows[0][1] ? 'more than' : 'close to'} the other nine together. ${rows[1][0]} is a distant second at $${rows[1][1].toFixed(1)}B.`,
+        chart: `BarChart("TVL by chain", chains, [tvl], "US$ B")`,
+        data: [`chains = ${SA(rows.map((d) => d[0]))}`, `tvl = Series("TVL", ${N(rows.map((d) => d[1]), 2)})`],
+        note: ['info', 'TVL counts bridged assets on the chain they sit on, so some value appears on two chains.'],
+        follow: ['What is the stablecoin market share?', 'Net BTC exchange flows from our warehouse, last 30 days'],
+        calls: [{ tool: 'get_chains_tvl', args: { limit: 10, sort: 'tvl_desc' }, result: '10 rows' }],
+      };
+    },
+  },
+  stable: {
+    server: 'defillama', kind: 'PieChart',
+    match: /\b(stable|stablecoins?|usdt|usdc|tether)\b/i,
+    prompt: 'What is the stablecoin market share?',
+    plan: 'I’ll pull circulating supply per stablecoin from DefiLlama and show each one’s share of the total.',
+    build(r) {
+      const base = [['USDT', 182], ['USDC', 76], ['USDe', 12.4], ['USDS + DAI', 9.6], ['PYUSD', 2.9], ['FDUSD', 1.7], ['Other', 9.2]];
+      const rows = base.map(([k, v]) => [k, v * (1 + 0.04 * gauss(r))]);
+      const total = d3.sum(rows, (d) => d[1]);
+      return {
+        title: 'Stablecoin market share', subtitle: `$${total.toFixed(0)}B circulating · defillama`,
+        summary: `USDT and USDC together are ${Math.round(((rows[0][1] + rows[1][1]) / total) * 100)}% of the $${total.toFixed(0)}B supply. USDT alone is ${Math.round((rows[0][1] / total) * 100)}%.`,
+        chart: `PieChart("Stablecoin share", coins, supply, "US$ B")`,
+        data: [`coins = ${SA(rows.map((d) => d[0]))}`, `supply = ${N(rows.map((d) => d[1]), 1)}`],
+        note: ['info', 'Supply is circulating supply across all chains, net of bridged double counts.'],
+        follow: ['Which chains hold the most TVL?', 'Compare BTC and ETH over the last 90 days'],
+        calls: [{ tool: 'get_stablecoins', args: { include_chains: false }, result: '186 coins, grouped to 7' }],
+      };
+    },
+  },
+  corr: {
+    server: 'coingecko', kind: 'HeatMap',
+    match: /\b(correl\w*|relationship|move together)/i,
+    prompt: 'Show the correlation matrix for the top coins',
+    plan: 'I’ll fetch 90 days of closes for six large coins, turn them into daily returns and correlate every pair.',
+    build(r) {
+      const coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'DOGE'];
+      const load = [0.95, 0.85, 0.8, 0.7, 0.55, 0.65];
+      const n = 90, mkt = d3.range(n).map(() => gauss(r));
+      const rets = load.map((b) => mkt.map((m) => b * m + Math.sqrt(1 - b * b) * gauss(r)));
+      const corr = (a, b) => { const ma = d3.mean(a), mb = d3.mean(b); let s = 0, sa = 0, sb = 0; for (let i = 0; i < a.length; i++) { s += (a[i] - ma) * (b[i] - mb); sa += (a[i] - ma) ** 2; sb += (b[i] - mb) ** 2; } return s / Math.sqrt(sa * sb); };
+      const m = rets.map((a) => rets.map((b) => corr(a, b)));
+      let lo = [1, 0, 0];
+      m.forEach((row, i) => row.forEach((v, j) => { if (i < j && v < lo[0]) lo = [v, i, j]; }));
+      return {
+        title: 'Correlation of daily returns', subtitle: 'Six large coins, last 90 days · coingecko',
+        summary: `Everything moves with BTC: ETH correlates at ${m[0][1].toFixed(2)}. The loosest pair is ${coins[lo[1]]} and ${coins[lo[2]]} at ${lo[0].toFixed(2)}, which is still well above zero.`,
+        chart: `HeatMap("Return correlation", coins, coins, matrix)`,
+        data: [`coins = ${SA(coins)}`, `matrix = [${m.map((row) => N(row, 2)).join(', ')}]`],
+        note: ['warn', 'Correlation from 90 days of data shifts a lot in a selloff, when most pairs move toward 1.'],
+        follow: ['Compare BTC and ETH over the last 90 days', 'Show BTC trading volume by hour and weekday in 3D'],
+        calls: [{ tool: 'get_coins_markets', args: { ids: coins.map((c) => c.toLowerCase()), days: 90 }, result: `6 × ${n + 1} closes` }],
+      };
+    },
+  },
+  volume: {
+    server: 'binance', kind: 'Bar3D',
+    match: /\b(volume|hour\w*|weekday|3d|when .* trade)/i,
+    prompt: 'Show BTC trading volume by hour and weekday in 3D',
+    plan: 'I’ll pull four weeks of hourly BTCUSDT klines from Binance and average the volume for each weekday and hour.',
+    build(r) {
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], hours = d3.range(24).map((h) => `${String(h).padStart(2, '0')}h`);
+      const m = days.map((_, d) => hours.map((_, h) => {
+        const us = Math.exp(-((h - 14.5) ** 2) / 8), asia = 0.55 * Math.exp(-((h - 2) ** 2) / 6), eu = 0.45 * Math.exp(-((h - 8) ** 2) / 5);
+        const wk = d >= 5 ? 0.55 : 1;
+        return Math.max(40, (180 + 620 * (us + asia + eu)) * wk * (1 + 0.12 * gauss(r)));
+      }));
+      let top = [0, 0, 0];
+      m.forEach((row, d) => row.forEach((v, h) => { if (v > top[0]) top = [v, d, h]; }));
+      const wkd = d3.mean(m.slice(0, 5).flat()), wke = d3.mean(m.slice(5).flat());
+      return {
+        title: 'BTC volume by hour and weekday', subtitle: 'Average hourly volume, US$ millions, UTC · binance',
+        summary: `Volume peaks at ${hours[top[2]]} UTC on ${days[top[1]]} (about $${Math.round(top[0])}M an hour), when US trading opens. Weekends run ${Math.round((1 - wke / wkd) * 100)}% below weekdays.`,
+        chart: `Bar3D("Hourly volume", hours, days, volume, "US$ M")`,
+        data: [`hours = ${SA(hours)}`, `days = ${SA(days)}`, `volume = [${m.map((row) => N(row, 0)).join(', ')}]`],
+        note: ['info', 'Open the chart and drag to turn it. The tallest ridge is the US session.'],
+        follow: ['Net BTC exchange flows from our warehouse, last 30 days', 'Compare BTC and ETH over the last 90 days'],
+        calls: [{ tool: 'get_klines', args: { symbol: 'BTCUSDT', interval: '1h', limit: 672 }, result: '672 klines → 7 × 24 cells' }],
+      };
+    },
+  },
+  flows: {
+    server: 'warehouse', kind: 'AreaChart',
+    match: /\b(flows?|inflows?|outflows?|warehouse|sql|exchange)/i,
+    prompt: 'Net BTC exchange flows from our warehouse, last 30 days',
+    plan: 'Our warehouse has exchange wallet transfers. I’ll sum BTC moving into and out of exchange wallets per day.',
+    build(r) {
+      const n = 30, labels = dayLabels(n);
+      const inflow = d3.range(n).map((i) => 21000 + 5200 * Math.sin(i / 4) + 3800 * gauss(r));
+      const outflow = d3.range(n).map((i) => 23500 + 4200 * Math.cos(i / 5) + 3600 * gauss(r));
+      const net = d3.sum(inflow) - d3.sum(outflow);
+      return {
+        title: 'BTC exchange flows, last 30 days', subtitle: 'Daily BTC into and out of exchange wallets · warehouse',
+        summary: `Net ${net < 0 ? 'outflow' : 'inflow'} of ${d3.format(',.0f')(Math.abs(net))} BTC over 30 days. ${net < 0 ? 'More coins left exchanges than arrived, which usually reads as holders moving to cold storage.' : 'More coins arrived than left, which can come before selling.'}`,
+        chart: `AreaChart("Exchange flows", labels, [inflow, outflow], "BTC per day")`,
+        data: [`labels = ${SA(labels)}`, `inflow = Series("Inflow", ${N(inflow, 0)})`, `outflow = Series("Outflow", ${N(outflow, 0)})`],
+        note: ['warn', 'Exchange wallets are labeled heuristically, so internal moves between an exchange’s own wallets can slip in.'],
+        follow: ['Which chains hold the most TVL?', 'Show the correlation matrix for the top coins'],
+        calls: [{ tool: 'run_query', args: { sql: "select day, sum(amount) filter (where direction = 'in') as inflow,\n       sum(amount) filter (where direction = 'out') as outflow\nfrom exchange_transfers\nwhere asset = 'BTC' and day > current_date - 30\ngroup by day order by day" }, result: `${n} rows · 1.2M transfers scanned` }],
+      };
+    },
+  },
+};
+const ORDER = ['corr', 'volume', 'flows', 'stable', 'tvl', 'prices'];
+
+// OpenUI Lang for a chart answer. The root comes first so the card's structure renders before the data arrives.
+function composeLang(p) {
+  return [
+    'root = Card([header, summary, chart, note, follow])',
+    `header = CardHeader(${S(p.title)}, ${S(p.subtitle)})`,
+    `summary = TextContent(${S(p.summary)})`,
+    `chart = ${p.chart}`,
+    ...p.data,
+    `note = Callout(${S(p.note[0])}, ${S(p.note[1])})`,
+    `follow = FollowUpBlock(${SA(p.follow)})`,
+  ];
+}
+
+// ---------- OpenUI Lang: a small line parser ----------
+// Each line is `name = expression`; expressions are Component(args), [lists], "strings", numbers or references.
+function parseLine(line) {
+  const re = /\s*(?:("(?:[^"\\]|\\.)*")|(-?\d+(?:\.\d+)?(?:e[-+]?\d+)?)|([A-Za-z_]\w*)|([[\](),=]))/y;
+  const toks = [];
+  re.lastIndex = 0;
+  while (re.lastIndex < line.length) {
+    const m = re.exec(line);
+    if (!m) { if (/^\s*$/.test(line.slice(re.lastIndex))) break; throw new Error('bad token'); }
+    if (m[1]) toks.push({ t: 'str', v: JSON.parse(m[1]) });
+    else if (m[2]) toks.push({ t: 'num', v: +m[2] });
+    else if (m[3]) toks.push({ t: 'id', v: m[3] });
+    else if (m[4]) toks.push({ t: m[4] });
+  }
+  let i = 0;
+  const peek = () => toks[i], take = (t) => { if (toks[i]?.t !== t) throw new Error(`expected ${t}`); return toks[i++]; };
+  const expr = () => {
+    const tk = toks[i++];
+    if (!tk) throw new Error('unexpected end');
+    if (tk.t === 'str' || tk.t === 'num') return tk.v;
+    if (tk.t === '[') { const out = []; while (peek()?.t !== ']') { out.push(expr()); if (peek()?.t === ',') i++; } take(']'); return out; }
+    if (tk.t === 'id') {
+      if (peek()?.t === '(') { i++; const args = []; while (peek()?.t !== ')') { args.push(expr()); if (peek()?.t === ',') i++; } take(')'); return { comp: tk.v, args }; }
+      return { ref: tk.v };
+    }
+    throw new Error('unexpected token');
+  };
+  const name = take('id').v; take('=');
+  return { name, expr: expr() };
+}
+function parseLang(text) {
+  const stmts = new Map();
+  for (const line of text.split('\n')) { if (!line.trim()) continue; try { const s = parseLine(line); s.src = line; stmts.set(s.name, s); } catch { /* incomplete or malformed line: skip */ } }
+  return stmts;
+}
+// Resolve references; anything not streamed yet becomes { pending }.
+function resolve(v, stmts, seen = new Set()) {
+  if (Array.isArray(v)) return v.map((x) => resolve(x, stmts, seen));
+  if (v && typeof v === 'object') {
+    if ('ref' in v) {
+      const s = stmts.get(v.ref);
+      if (!s || seen.has(v.ref)) return { pending: v.ref };
+      const out = resolve(s.expr, stmts, new Set(seen).add(v.ref));
+      if (out && typeof out === 'object' && !Array.isArray(out)) out.id = v.ref;
+      return out;
+    }
+    if ('comp' in v) return { comp: v.comp, args: v.args.map((a) => resolve(a, stmts, seen)) };
+  }
+  return v;
+}
+const isDone = (v) => (Array.isArray(v) ? v.every(isDone) : v && typeof v === 'object' ? !('pending' in v) && (!v.args || v.args.every(isDone)) : true);
+// The statements a node depends on, for saving one chart on its own.
+function closure(stmts, name, acc = new Set()) {
+  if (acc.has(name) || !stmts.has(name)) return acc;
+  acc.add(name);
+  const walk = (v) => { if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object') { if ('ref' in v) closure(stmts, v.ref, acc); if (v.args) v.args.forEach(walk); } };
+  walk(stmts.get(name).expr);
+  return acc;
+}
+const highlight = (src) => esc(src).replace(/(&quot;(?:[^&]|&(?!quot;))*?&quot;)|\b([A-Z]\w*)(?=\()|(^\w+)(?= =)|(-?\b\d+(?:\.\d+)?\b)/gm, (m, s, c, k, n) => (s ? `<span class="s">${s}</span>` : c ? `<span class="c">${c}</span>` : k ? `<span class="k">${k}</span>` : `<span class="n">${n}</span>`));
+
+// ---------- chart data helpers ----------
+const CHART_KINDS = ['LineChart', 'AreaChart', 'BarChart', 'PieChart', 'HeatMap', 'Bar3D'];
+const KIND_ICON = { LineChart: 'fi-rr-chart-line-up', AreaChart: 'fi-rr-chart-line-up', BarChart: 'fi-rr-chart-histogram', PieChart: 'fi-rr-chart-pie', HeatMap: 'fi-rr-apps', Bar3D: 'fi-rr-cube' };
+const seriesOf = (list) => list.map((s, i) => ({ name: s.args[0], values: s.args[1], color: COLORS[i % COLORS.length] }));
+function tableOf(node) {
+  const a = node.args;
+  switch (node.comp) {
+    case 'LineChart': case 'AreaChart': case 'BarChart': {
+      const ser = seriesOf(a[2]);
+      return { head: ['', ...ser.map((s) => s.name)], rows: a[1].map((l, i) => [l, ...ser.map((s) => fmtNum(s.values[i]))]) };
+    }
+    case 'PieChart': { const tot = d3.sum(a[2]); return { head: ['', a[3], 'Share'], rows: a[1].map((l, i) => [l, fmtNum(a[2][i]), `${((a[2][i] / tot) * 100).toFixed(1)}%`]) }; }
+    case 'HeatMap': return { head: ['', ...a[2]], rows: a[1].map((l, i) => [l, ...a[3][i].map((v) => v.toFixed(2))]) };
+    case 'Bar3D': return { head: ['', ...a[1]], rows: a[2].map((l, i) => [l, ...a[3][i].map((v) => Math.round(v))]) };
+  }
+  return { head: [], rows: [] };
+}
+
+// ---------- tooltip ----------
+const tip = $('#tip');
+function showTip(html, ev) {
+  tip.innerHTML = html; tip.hidden = false;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - 14;
+  if (y + h > innerHeight - 8) y = ev.clientY - h - 14;
+  tip.style.left = `${x}px`; tip.style.top = `${y}px`;
+}
+const hideTip = () => { tip.hidden = true; };
+
+// ---------- D3 charts ----------
+function drawChart(el, node, opts = {}) {
+  el.innerHTML = '';
+  const w = el.clientWidth || 600, h = el.clientHeight || 220;
+  if (node.comp === 'Bar3D') return draw3D(el, node, { ...opts, w, h });
+  const svg = d3.select(el).append('svg').attr('width', w).attr('height', h).attr('role', 'img').attr('aria-label', node.args[0]);
+  ({ LineChart: drawLine, AreaChart: drawLine, BarChart: drawBar, PieChart: drawPie, HeatMap: drawHeat })[node.comp](svg, node, { ...opts, w, h });
+}
+
+function legend(svg, items, x, y) {
+  const g = svg.append('g').attr('transform', `translate(${x},${y})`);
+  let off = 0;
+  for (const it of items) {
+    const gi = g.append('g').attr('transform', `translate(${off},0)`);
+    gi.append('rect').attr('width', 10).attr('height', 3).attr('y', -4).attr('rx', 1.5).attr('fill', it.color);
+    const t = gi.append('text').attr('x', 15).attr('y', 0).text(it.name).style('fill', '#b8b5ac');
+    off += 15 + t.node().getComputedTextLength() + 16;
+  }
+}
+
+function drawLine(svg, node, { w, h, interactive }) {
+  const [, labels, list, unit] = node.args;
+  const ser = seriesOf(list), area = node.comp === 'AreaChart';
+  const m = { t: 26, r: 26, b: 24, l: interactive ? 56 : 44 };
+  const x = d3.scaleLinear([0, labels.length - 1], [m.l, w - m.r]);
+  const all = ser.flatMap((s) => s.values);
+  const y = d3.scaleLinear(area ? [0, d3.max(all) * 1.08] : d3.extent(all), [h - m.b, m.t]).nice();
+  svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(interactive ? 6 : 4).tickSize(-(w - m.l - m.r)).tickFormat(''));
+  svg.append('g').attr('class', 'axis').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(interactive ? 6 : 4).tickFormat(d3.format('~s')).tickSizeOuter(0));
+  const nx = Math.max(2, Math.floor((w - m.l) / 90));
+  svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${h - m.b})`).call(d3.axisBottom(x).tickValues(d3.range(nx).map((k) => Math.round((k * (labels.length - 1)) / (nx - 1)))).tickFormat((i) => labels[i]).tickSizeOuter(0));
+  for (const s of ser) {
+    if (area) svg.append('path').attr('fill', s.color).attr('fill-opacity', 0.12).attr('d', d3.area().x((_, i) => x(i)).y0(y(0)).y1((v) => y(v)).curve(d3.curveMonotoneX)(s.values));
+    svg.append('path').attr('fill', 'none').attr('stroke', s.color).attr('stroke-width', 1.75).attr('d', d3.line().x((_, i) => x(i)).y((v) => y(v)).curve(d3.curveMonotoneX)(s.values));
+  }
+  legend(svg, ser, m.l, 12);
+  if (interactive) svg.append('text').attr('x', w - m.r).attr('y', 12).attr('text-anchor', 'end').text(unit);
+  if (!interactive) return;
+  const rule = svg.append('line').attr('y1', m.t).attr('y2', h - m.b).attr('stroke', '#8b9099').attr('stroke-dasharray', '3 3').style('display', 'none');
+  const dots = ser.map((s) => svg.append('circle').attr('r', 4).attr('fill', s.color).attr('stroke', '#15171b').attr('stroke-width', 2).style('display', 'none'));
+  svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', w - m.l - m.r).attr('height', h - m.t - m.b).attr('fill', 'transparent')
+    .on('pointermove', (ev) => {
+      const i = Math.max(0, Math.min(labels.length - 1, Math.round(x.invert(d3.pointer(ev)[0]))));
+      rule.attr('x1', x(i)).attr('x2', x(i)).style('display', null);
+      dots.forEach((d, k) => d.attr('cx', x(i)).attr('cy', y(ser[k].values[i])).style('display', null));
+      showTip(`<div class="mb-1 font-medium">${esc(labels[i])}</div>${ser.map((s) => `<div class="flex items-center gap-2"><span class="size-2 rounded-full" style="background:${s.color}"></span>${esc(s.name)}<span class="ml-auto pl-3 font-mono">${fmtNum(s.values[i])}</span></div>`).join('')}`, ev);
+    })
+    .on('pointerleave', () => { rule.style('display', 'none'); dots.forEach((d) => d.style('display', 'none')); hideTip(); });
+}
+
+function drawBar(svg, node, { w, h, interactive }) {
+  const [, labels, list, unit] = node.args;
+  const s = seriesOf(list)[0];
+  const m = { t: 8, r: interactive ? 56 : 44, b: interactive ? 24 : 8, l: interactive ? 124 : 108 };
+  const y = d3.scaleBand(labels, [m.t, h - m.b]).padding(0.28);
+  const x = d3.scaleLinear([0, d3.max(s.values)], [m.l, w - m.r]).nice();
+  if (interactive) {
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(0,${h - m.b})`).call(d3.axisBottom(x).ticks(6).tickSize(-(h - m.t - m.b)).tickFormat(''));
+    svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${h - m.b})`).call(d3.axisBottom(x).ticks(6).tickFormat((v) => `${v}`).tickSizeOuter(0));
+  }
+  svg.append('g').attr('class', 'axis').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).tickSize(0).tickPadding(8)).call((g) => g.select('.domain').remove()).selectAll('text').style('fill', '#b8b5ac');
+  svg.append('g').selectAll('rect').data(s.values).join('rect')
+    .attr('x', m.l).attr('y', (_, i) => y(labels[i])).attr('height', y.bandwidth()).attr('width', (v) => x(v) - m.l).attr('rx', 2)
+    .attr('fill', '#1fefd7').attr('fill-opacity', (_, i) => (i === 0 ? 0.95 : 0.55))
+    .on('pointermove', interactive ? (ev, v) => showTip(`<div class="font-medium">${esc(labels[s.values.indexOf(v)])}</div><div class="font-mono">${fmtNum(v)} ${esc(unit)}</div>`, ev) : null)
+    .on('pointerleave', interactive ? hideTip : null);
+  svg.append('g').selectAll('text').data(s.values).join('text').attr('x', (v) => x(v) + 5).attr('y', (_, i) => y(labels[i]) + y.bandwidth() / 2).attr('dy', '0.35em').text((v) => fmtNum(v));
+}
+
+function drawPie(svg, node, { w, h, interactive }) {
+  const [, labels, values, unit] = node.args;
+  const total = d3.sum(values);
+  const r = Math.min(h / 2 - 8, w / 4);
+  const cx = Math.min(w / 2 - 70, r + 16 + (interactive ? 40 : 0)), cy = h / 2;
+  const g = svg.append('g').attr('transform', `translate(${cx},${cy})`);
+  const arcs = d3.pie().sort(null).padAngle(0.012)(values);
+  const arc = d3.arc().innerRadius(r * 0.62).outerRadius(r).cornerRadius(2);
+  g.selectAll('path').data(arcs).join('path').attr('d', arc).attr('fill', (_, i) => COLORS[i % COLORS.length])
+    .on('pointermove', interactive ? (ev, a) => showTip(`<div class="font-medium">${esc(labels[a.index])}</div><div class="font-mono">${fmtNum(a.value)} ${esc(unit)} · ${((a.value / total) * 100).toFixed(1)}%</div>`, ev) : null)
+    .on('pointerleave', interactive ? hideTip : null);
+  g.append('text').attr('text-anchor', 'middle').attr('dy', '-0.1em').style('font-size', interactive ? '22px' : '16px').style('fill', '#e4e1d8').text(fmtNum(total));
+  g.append('text').attr('text-anchor', 'middle').attr('dy', '1.4em').text(unit);
+  const lx = cx + r + 28, step = Math.min(22, (h - 16) / labels.length);
+  const lg = svg.append('g').attr('transform', `translate(${lx},${cy - (step * labels.length) / 2 + step / 2})`);
+  labels.forEach((l, i) => {
+    const row = lg.append('g').attr('transform', `translate(0,${i * step})`);
+    row.append('rect').attr('width', 9).attr('height', 9).attr('y', -5).attr('rx', 2).attr('fill', COLORS[i % COLORS.length]);
+    row.append('text').attr('x', 16).attr('dy', '0.32em').text(l).style('fill', '#b8b5ac');
+    row.append('text').attr('x', 16 + (interactive ? 120 : 84)).attr('dy', '0.32em').text(`${((values[i] / total) * 100).toFixed(1)}%`);
+  });
+}
+
+function drawHeat(svg, node, { w, h, interactive }) {
+  const [, rows, cols, mat] = node.args;
+  const m = { t: 10, r: 10, b: 22, l: 44 };
+  const size = Math.min((w - m.l - m.r) / cols.length, (h - m.t - m.b) / rows.length);
+  m.l += Math.max(0, (w - m.l - m.r - size * cols.length) / 2);
+  const x = d3.scaleBand(cols, [m.l, m.l + size * cols.length]).padding(0.06);
+  const y = d3.scaleBand(rows, [m.t, m.t + size * rows.length]).padding(0.06);
+  const color = d3.scaleLinear([-1, 0, 1], ['#e58fb0', '#23262d', '#1fefd7']).clamp(true);
+  rows.forEach((rn, i) => cols.forEach((cn, j) => {
+    const v = mat[i][j];
+    svg.append('rect').attr('x', x(cn)).attr('y', y(rn)).attr('width', x.bandwidth()).attr('height', y.bandwidth()).attr('rx', 3).attr('fill', color(v))
+      .on('pointermove', interactive ? (ev) => showTip(`<div class="font-medium">${esc(rn)} × ${esc(cn)}</div><div class="font-mono">${v.toFixed(2)}</div>`, ev) : null)
+      .on('pointerleave', interactive ? hideTip : null);
+    if (x.bandwidth() > 30) svg.append('text').attr('x', x(cn) + x.bandwidth() / 2).attr('y', y(rn) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'middle').style('fill', Math.abs(v) > 0.6 ? '#0c1614' : '#e4e1d8').style('pointer-events', 'none').text(v.toFixed(2));
+  }));
+  svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${m.t + size * rows.length})`).call(d3.axisBottom(x).tickSize(0).tickPadding(6)).select('.domain').remove();
+  svg.append('g').attr('class', 'axis').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).tickSize(0).tickPadding(6)).select('.domain').remove();
+}
+
+// ---------- Three.js: 3D bars ----------
+const valueColor = d3.scaleSequential([0, 1], d3.interpolateRgbBasis(['#24434a', '#1fefd7', '#f6c453']));
+function buildBars(node) {
+  const [, xs, ys, mat] = node.args;
+  const max = d3.max(mat.flat());
+  const group = new THREE.Group();
+  const geo = new THREE.BoxGeometry(0.82, 1, 0.82);
+  geo.translate(0, 0.5, 0);
+  const meshes = [];
+  ys.forEach((yl, j) => xs.forEach((xl, i) => {
+    const v = mat[j][i], t = v / max;
+    const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: valueColor(t), roughness: 0.55, metalness: 0.1 }));
+    mesh.position.set(i - (xs.length - 1) / 2, 0, j - (ys.length - 1) / 2);
+    mesh.scale.y = Math.max(0.05, t * 7);
+    mesh.userData = { v, xl, yl, t };
+    group.add(mesh); meshes.push(mesh);
+  }));
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(xs.length + 1.2, ys.length + 1.2), new THREE.MeshStandardMaterial({ color: '#1d2026', roughness: 1 }));
+  floor.rotation.x = -Math.PI / 2; floor.position.y = -0.01;
+  group.add(floor);
+  return { group, meshes };
+}
+function sceneWith(group) {
+  const scene = new THREE.Scene();
+  scene.add(new THREE.HemisphereLight('#cfe9ff', '#15171b', 1.1));
+  const sun = new THREE.DirectionalLight('#ffffff', 1.6); sun.position.set(-8, 14, 10); scene.add(sun);
+  scene.add(group);
+  return scene;
+}
+// One shared offscreen renderer turns 3D thumbnails into images, so chat cards don't each hold a WebGL context.
+let thumbR;
+function draw3D(el, node, { w, h, interactive }) {
+  if (interactive) return viewer3D(el, node, w, h);
+  thumbR ??= new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  thumbR.setPixelRatio(Math.min(devicePixelRatio, 2));
+  thumbR.setSize(w, h, false);
+  const { group } = buildBars(node);
+  const scene = sceneWith(group);
+  const cam = new THREE.PerspectiveCamera(32, w / h, 0.1, 200);
+  cam.position.set(-14, 17, 30); cam.lookAt(0, 1.5, 0);
+  thumbR.render(scene, cam);
+  const img = new Image(); img.alt = node.args[0]; img.src = thumbR.domElement.toDataURL('image/png');
+  el.appendChild(img);
+  group.traverse((o) => { if (o.material) o.material.dispose(); });
+}
+let v3 = null;
+function viewer3D(el, node, w, h) {
+  stop3D();
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(w, h);
+  el.appendChild(renderer.domElement);
+  const labels = new CSS2DRenderer();
+  labels.setSize(w, h);
+  Object.assign(labels.domElement.style, { position: 'absolute', inset: '0', pointerEvents: 'none' });
+  el.appendChild(labels.domElement);
+  const { group, meshes } = buildBars(node);
+  const [, xs, ys, , unit] = node.args;
+  const lbl = (text, x, y, z) => { const d = document.createElement('div'); d.className = 'lbl3'; d.textContent = text; const o = new CSS2DObject(d); o.position.set(x, y, z); group.add(o); };
+  xs.forEach((t, i) => { if (i % 3 === 0) lbl(t, i - (xs.length - 1) / 2, 0, ys.length / 2 + 0.9); });
+  ys.forEach((t, j) => lbl(t, -xs.length / 2 - 1.2, 0, j - (ys.length - 1) / 2));
+  const scene = sceneWith(group);
+  const cam = new THREE.PerspectiveCamera(34, w / h, 0.1, 200);
+  cam.position.set(-13, 15, 24);
+  const controls = new OrbitControls(cam, renderer.domElement);
+  controls.target.set(0, 1.8, 0); controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.48; controls.minDistance = 8; controls.maxDistance = 60;
+  controls.autoRotate = !reduceMotion; controls.autoRotateSpeed = 0.5;
+  controls.addEventListener('start', () => { controls.autoRotate = false; });
+  const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+  let hover = null;
+  renderer.domElement.addEventListener('pointermove', (ev) => {
+    const r = renderer.domElement.getBoundingClientRect();
+    ptr.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ptr, cam);
+    const hit = ray.intersectObjects(meshes)[0]?.object ?? null;
+    if (hover && hover !== hit) hover.material.emissive.set('#000000');
+    hover = hit;
+    if (hit) { hit.material.emissive.set('#3a3220'); const u = hit.userData; showTip(`<div class="font-medium">${esc(u.yl)} ${esc(u.xl)}</div><div class="font-mono">${fmtNum(u.v)} ${esc(unit)}</div>`, ev); }
+    else hideTip();
+  });
+  renderer.domElement.addEventListener('pointerleave', () => { if (hover) hover.material.emissive.set('#000000'); hover = null; hideTip(); });
+  v3 = { renderer, labels, controls, scene, cam, el, raf: 0 };
+  const loop = () => { controls.update(); renderer.render(scene, cam); labels.render(scene, cam); v3.raf = requestAnimationFrame(loop); };
+  loop();
+}
+function stop3D() {
+  if (!v3) return;
+  cancelAnimationFrame(v3.raf);
+  v3.controls.dispose();
+  v3.scene.traverse((o) => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose(); });
+  v3.renderer.dispose();
+  v3.renderer.domElement.remove(); v3.labels.domElement.remove();
+  v3 = null;
+}
+
+// ---------- the agent orb (Three.js) ----------
+const orb = (() => {
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(40, 1, 0.1, 50);
+  cam.position.z = 6.4;
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(1.05, 1), new THREE.MeshBasicMaterial({ color: '#1fefd7', wireframe: true, transparent: true, opacity: 0.75 }));
+  const inner = new THREE.Mesh(new THREE.IcosahedronGeometry(0.62, 0), new THREE.MeshBasicMaterial({ color: '#1fefd7', transparent: true, opacity: 0.22 }));
+  const pts = new THREE.BufferGeometry();
+  const P = new Float32Array(240 * 3);
+  for (let i = 0; i < 240; i++) { const v = new THREE.Vector3().randomDirection().multiplyScalar(1.6 + Math.random() * 0.7); P.set([v.x, v.y, v.z], i * 3); }
+  pts.setAttribute('position', new THREE.BufferAttribute(P, 3));
+  const shell = new THREE.Points(pts, new THREE.PointsMaterial({ color: '#c9a4f5', size: 0.045, transparent: true, opacity: 0.85 }));
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.75, 0.012, 6, 120), new THREE.MeshBasicMaterial({ color: '#f6c453', transparent: true, opacity: 0.5 }));
+  ring.rotation.x = Math.PI / 2.4;
+  scene.add(core, inner, shell, ring);
+  let busy = false, spin = 0;
+  const amber = new THREE.Color('#f6c453'), cyan = new THREE.Color('#1fefd7');
+  const loop = (t) => {
+    const k = busy ? 4 : 1;
+    spin += (reduceMotion ? 0.002 : 0.006) * k;
+    core.rotation.set(spin * 0.7, spin, 0); inner.rotation.set(-spin, spin * 0.5, 0);
+    shell.rotation.y = -spin * 0.4; ring.rotation.z = spin * 1.3;
+    const pulse = 1 + (busy && !reduceMotion ? Math.sin(t / 140) * 0.06 : Math.sin(t / 900) * 0.02);
+    core.scale.setScalar(pulse);
+    core.material.color.lerp(busy ? amber : cyan, 0.08); inner.material.color.copy(core.material.color);
+    renderer.render(scene, cam);
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+  return {
+    mount(slot) { slot.appendChild(renderer.domElement); const s = slot.clientWidth; renderer.setSize(s, s); },
+    set busy(v) { busy = v; },
+  };
+})();
+
+// ---------- app state ----------
+const thread = $('#thread'), scroller = $('#thread-scroll'), input = $('#input');
+let busy = false, msgSeq = 0;
+const charts = new Map(); // chart key -> { node, lang, meta }
+let saved = store.get('chart-agent:saved', null);
+
+function seedLibrary() {
+  // One chart saved "earlier", so the library has something to pull.
+  const sc = SCENARIOS.stable, p = sc.build(rngFrom(1028));
+  const lang = composeLang(p).join('\n');
+  saved = [savedFrom(parseLang(lang), 'chart', { title: 'Stablecoin share, end of October', scenario: 'stable', source: 'defillama.get_stablecoins', savedAt: '2026-10-28' })];
+  persist();
+}
+function savedFrom(stmts, chartId, meta) {
+  const ids = [...closure(stmts, chartId)];
+  const lang = [`root = Card([${chartId}])`, ...ids.map((id) => stmts.get(id).src)].join('\n');
+  return { id: `c${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, kind: stmts.get(chartId).expr.comp, lang, ...meta };
+}
+const persist = () => store.set('chart-agent:saved', saved);
+if (!Array.isArray(saved)) seedLibrary();
+
+// ---------- sidebar ----------
+function renderServers() {
+  $('#mcp-list').innerHTML = SERVERS.map((s) => `
+    <li class="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-accent/60">
+      <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-md border ${s.on ? 'text-primary' : 'text-muted-foreground'}"><i class="fi ${s.icon} text-sm"></i></span>
+      <span class="min-w-0 flex-1">
+        <span class="flex items-center gap-1.5 text-sm font-medium">${esc(s.name)}<span class="size-1.5 rounded-full ${s.on ? 'bg-good' : 'bg-muted-foreground/50'}"></span></span>
+        <span class="block truncate text-xs text-muted-foreground">${esc(s.desc)} · ${s.tools.length} tool${s.tools.length > 1 ? 's' : ''}</span>
+      </span>
+      ${s.fixed ? '<span class="text-[11px] text-muted-foreground">built-in</span>' : `<button class="switch focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" role="switch" aria-checked="${s.on}" aria-label="${s.on ? 'Disconnect' : 'Connect'} ${esc(s.name)}" data-server="${s.id}"></button>`}
+    </li>`).join('');
+  const on = SERVERS.filter((s) => s.on);
+  $('#mcp-count').textContent = `${on.length}/${SERVERS.length} on`;
+  $('#composer-mcp').innerHTML = `<i class="fi fi-rr-plug-connection mr-1 align-[-1px]"></i>${on.map((s) => esc(s.name)).join(' · ')}`;
+}
+function setServer(id, on) {
+  const s = SERVERS.find((x) => x.id === id);
+  if (!s || s.fixed) return;
+  s.on = on;
+  store.set('chart-agent:servers', Object.fromEntries(SERVERS.filter((x) => !x.fixed).map((x) => [x.id, x.on])));
+  renderServers(); renderStarters();
+}
+$('#mcp-list').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-server]');
+  if (b) { setServer(b.dataset.server, b.getAttribute('aria-checked') !== 'true'); toast(`${SERVERS.find((s) => s.id === b.dataset.server).name} ${serverOn(b.dataset.server) ? 'connected' : 'disconnected'}`); }
+});
+
+function renderSaved() {
+  $('#saved-count').textContent = saved.length;
+  $('#saved-list').innerHTML = saved.length ? saved.map((c) => `
+    <li class="group flex items-center gap-1 rounded-md hover:bg-accent/60">
+      <button data-open-saved="${c.id}" class="flex min-w-0 flex-1 items-center gap-3 rounded-md px-2 py-2 text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Open">
+        <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-amber"><i class="fi ${KIND_ICON[c.kind] || 'fi-rr-chart-line-up'} text-sm"></i></span>
+        <span class="min-w-0">
+          <span class="block truncate text-sm font-medium">${esc(c.title)}</span>
+          <span class="block truncate text-xs text-muted-foreground">${esc(d3.timeFormat('%b %-d')(new Date(c.savedAt)))} · ${esc(c.source)}</span>
+        </span>
+      </button>
+      <button data-pull="${c.id}" class="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-background hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Pull into chat" aria-label="Pull ${esc(c.title)} into chat"><i class="fi fi-rr-refresh text-xs"></i></button>
+      <button data-del="${c.id}" class="mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground opacity-60 hover:bg-background hover:text-bad hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Remove" aria-label="Remove ${esc(c.title)}"><i class="fi fi-rr-trash text-xs"></i></button>
+    </li>`).join('') : '<li class="px-2 py-3 text-sm text-muted-foreground">No saved charts yet. Open a chart from the chat and save it.</li>';
+}
+$('#saved-list').addEventListener('click', (e) => {
+  const open = e.target.closest('[data-open-saved]'), pull = e.target.closest('[data-pull]'), del = e.target.closest('[data-del]');
+  if (open) { const c = saved.find((x) => x.id === open.dataset.openSaved); if (c) openSaved(c); }
+  if (pull) { const c = saved.find((x) => x.id === pull.dataset.pull); if (c) { closeSidebar(); send(`Pull my saved chart “${c.title}” and refresh it`, { pullId: c.id }); } }
+  if (del) {
+    const i = saved.findIndex((x) => x.id === del.dataset.del);
+    if (i < 0) return;
+    const [gone] = saved.splice(i, 1); persist(); renderSaved();
+    toast(`Removed “${gone.title}”`, { label: 'Undo', fn: () => { saved.splice(i, 0, gone); persist(); renderSaved(); } });
+  }
+});
+
+const closeSidebar = () => { document.body.dataset.sidebar = ''; };
+$('#open-sidebar').onclick = () => { document.body.dataset.sidebar = 'open'; };
+$('#close-sidebar').onclick = closeSidebar;
+$('#scrim').onclick = closeSidebar;
+
+// ---------- toast ----------
+let toastT;
+function toast(text, action) {
+  const t = $('#toast');
+  t.innerHTML = `<span>${esc(text)}</span>${action ? `<button class="ml-3 font-medium text-primary hover:underline">${esc(action.label)}</button>` : ''}`;
+  if (action) t.querySelector('button').onclick = () => { action.fn(); t.hidden = true; };
+  t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3200);
+}
+
+// ---------- starters ----------
+function renderStarters() {
+  $('#starters').innerHTML = ORDER.slice().reverse().map((k) => {
+    const sc = SCENARIOS[k], s = SERVERS.find((x) => x.id === sc.server);
+    return `<button data-ask="${esc(sc.prompt)}" class="group flex items-center gap-3 rounded-lg border bg-card px-3 py-2.5 text-left text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+      <i class="fi ${KIND_ICON[sc.kind]} text-muted-foreground group-hover:text-primary"></i>
+      <span class="min-w-0 flex-1">${esc(sc.prompt)}<span class="mt-0.5 block text-xs ${s.on ? 'text-muted-foreground' : 'text-amber'}">${esc(s.name)}${s.on ? '' : ' · not connected'}</span></span>
+    </button>`;
+  }).join('');
+}
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('[data-ask]');
+  if (a && !busy) send(a.dataset.ask);
+});
+
+// ---------- messages ----------
+const scrollDown = (force) => { if (force || scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 160) scroller.scrollTop = scroller.scrollHeight; };
+function addUser(text) {
+  const li = document.createElement('li');
+  li.className = 'fade-in flex justify-end';
+  li.innerHTML = `<div class="max-w-[85%] rounded-2xl rounded-br-md bg-accent px-4 py-2.5 text-sm">${esc(text)}</div>`;
+  thread.appendChild(li); scrollDown(true);
+}
+function addAgent() {
+  const id = `m${++msgSeq}`;
+  const li = document.createElement('li');
+  li.className = 'fade-in flex gap-3';
+  li.innerHTML = `
+    <span class="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full border bg-card text-primary"><i class="fi fi-rr-sparkles text-xs"></i></span>
+    <div class="min-w-0 flex-1 space-y-3">
+      <p class="plan text-sm text-ink-2"></p>
+      <details class="steps hidden rounded-lg border bg-card/50 text-sm" open>
+        <summary class="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground"><i class="fi fi-rr-settings-sliders"></i><span class="steps-label">Behind the scenes</span><i class="fi fi-rr-angle-small-down ml-auto"></i></summary>
+        <ol class="steps-list space-y-2 border-t px-3 py-2.5"></ol>
+      </details>
+      <div class="answer"></div>
+      <div class="lang-wrap hidden">
+        <button class="lang-toggle inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-code-simple"></i><span>Show OpenUI Lang</span></button>
+        <pre class="lang scroll-thin mt-2 hidden max-h-64 overflow-auto rounded-lg border bg-background p-3"></pre>
+      </div>
+    </div>`;
+  thread.appendChild(li); scrollDown(true);
+  const m = { id, li, text: '', stmts: new Map(), meta: {} };
+  li.querySelector('.lang-toggle').onclick = (e) => {
+    const pre = li.querySelector('.lang'); pre.classList.toggle('hidden');
+    e.currentTarget.querySelector('span').textContent = pre.classList.contains('hidden') ? 'Show OpenUI Lang' : 'Hide OpenUI Lang';
+  };
+  return m;
+}
+async function typePlan(m, text) {
+  const p = m.li.querySelector('.plan');
+  p.classList.add('caret');
+  const words = text.split(' ');
+  for (let i = 0; i < words.length; i++) { p.textContent = words.slice(0, i + 1).join(' '); if (i % 2) await wait(28); }
+  p.classList.remove('caret');
+}
+async function runCalls(m, server, calls) {
+  const box = m.li.querySelector('.steps'), list = m.li.querySelector('.steps-list');
+  box.classList.remove('hidden');
+  let n = 0;
+  for (const c of calls) {
+    const row = document.createElement('li');
+    const argText = JSON.stringify(c.args, null, 2);
+    row.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="status inline-flex size-4 items-center justify-center"><span class="spinner"></span></span>
+        <code class="font-mono text-xs"><span class="text-muted-foreground">${esc(c.server ?? server)}.</span><span class="text-primary">${esc(c.tool)}</span></code>
+        <span class="res ml-auto shrink-0 font-mono text-[11px] text-muted-foreground">running</span>
+      </div>
+      <pre class="scroll-thin ml-6 mt-1 max-h-32 overflow-auto font-mono text-[11px] leading-snug text-muted-foreground">${esc(argText)}</pre>`;
+    list.appendChild(row); scrollDown();
+    const ms = 500 + Math.round(Math.random() * 700);
+    await wait(ms);
+    row.querySelector('.status').innerHTML = '<i class="fi fi-rr-check text-[11px] text-good"></i>';
+    row.querySelector('.res').textContent = `${c.result} · ${ms} ms`;
+    n++;
+  }
+  m.li.querySelector('.steps-label').textContent = `Behind the scenes · ${n} tool call${n > 1 ? 's' : ''}`;
+}
+// Stream OpenUI Lang a few characters at a time; re-render whenever a line completes.
+async function streamLang(m, lines) {
+  const wrap = m.li.querySelector('.lang-wrap'), pre = m.li.querySelector('.lang');
+  wrap.classList.remove('hidden');
+  const full = lines.join('\n');
+  let pos = 0, done = 0;
+  pre.classList.add('caret');
+  while (pos < full.length) {
+    const nl = full.indexOf('\n', pos);
+    const lineEnd = nl < 0 ? full.length : nl;
+    const isData = /^\w+ = (\[|Series\()/.test(full.slice(pos, lineEnd));
+    const step = isData ? 48 : 7;
+    pos = Math.min(full.length, pos + step);
+    m.text = full.slice(0, pos);
+    pre.innerHTML = highlight(m.text);
+    pre.scrollTop = pre.scrollHeight;
+    const complete = m.text.split('\n').length - (pos < full.length ? 1 : 0);
+    if (complete > done) { done = complete; m.stmts = parseLang(m.text.split('\n').slice(0, complete).join('\n')); renderAnswer(m); }
+    await wait(isData ? 14 : 22);
+  }
+  pre.classList.remove('caret');
+  m.stmts = parseLang(full); renderAnswer(m, true);
+}
+
+// ---------- the renderer: OpenUI Lang nodes -> components ----------
+const skeleton = (h = 'h-4', w = 'w-full') => `<div class="skeleton ${h} ${w} rounded-md"></div>`;
+function renderNode(v, m) {
+  if (v == null) return '';
+  if (Array.isArray(v)) return v.map((x) => renderNode(x, m)).join('');
+  if (typeof v !== 'object') return esc(v);
+  if ('pending' in v) return skeleton('h-5', 'w-2/3');
+  const a = v.args;
+  switch (v.comp) {
+    case 'Card': return `<div class="rounded-xl border bg-card p-4 text-card-foreground shadow-sm sm:p-5"><div class="space-y-4">${renderNode(a[0], m)}</div></div>`;
+    case 'CardHeader': return `<div><h3 class="text-base font-semibold leading-tight">${esc(a[0])}</h3>${a[1] != null ? `<p class="mt-1 text-xs text-muted-foreground">${esc(a[1])}</p>` : ''}</div>`;
+    case 'TextContent': return `<p class="text-sm leading-relaxed text-ink-2">${esc(a[0])}</p>`;
+    case 'Callout': return `<div class="flex gap-2 rounded-lg border px-3 py-2 text-xs leading-relaxed ${a[0] === 'warn' ? 'border-amber/30 bg-amber/5 text-amber' : 'text-muted-foreground'}"><i class="fi ${a[0] === 'warn' ? 'fi-rr-triangle-warning' : 'fi-rr-info'} mt-0.5"></i><span>${esc(a[1])}</span></div>`;
+    case 'FollowUpBlock': return Array.isArray(a[0]) ? `<div class="flex flex-wrap gap-2 border-t pt-3">${a[0].map((q) => (typeof q === 'string' ? `<button data-ask="${esc(q)}" class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs text-ink-2 transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-arrow-small-right"></i>${esc(q)}</button>` : '')).join('')}</div>` : '';
+    case 'ConnectButton': return `<button data-connect="${esc(a[0])}" data-retry="${esc(a[1] ?? '')}" class="inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-plug-connection text-xs"></i>Connect ${esc(SERVERS.find((s) => s.id === a[0])?.name ?? a[0])}</button>`;
+    case 'SavedPick': return `<div class="flex flex-wrap gap-2">${saved.map((c) => `<button data-pull-pick="${c.id}" class="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi ${KIND_ICON[c.kind]} text-xs text-amber"></i>${esc(c.title)}</button>`).join('')}</div>`;
+  }
+  if (CHART_KINDS.includes(v.comp)) {
+    const key = `${m.id}:${v.id ?? 'chart'}`;
+    if (!isDone(v)) return `<div class="space-y-2">${skeleton('h-[200px]')}<p class="text-xs text-muted-foreground">Streaming chart data…</p></div>`;
+    charts.set(key, { node: v, m, stmtId: v.id ?? 'chart' });
+    const isSaved = saved.some((c) => c.origin === key);
+    return `<div>
+      <button data-open-chart="${key}" class="chart-slot group block h-[210px] w-full overflow-hidden rounded-lg border bg-background/60 text-left transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Open ${esc(a[0])}">
+        <span class="pointer-events-none absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-md border bg-card/90 px-2 py-0.5 text-[11px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"><i class="fi fi-rr-expand"></i>Open</span>
+        <span class="plot block h-full w-full"></span>
+      </button>
+      <div class="mt-2 flex flex-wrap items-center gap-2">
+        <button data-open-chart="${key}" class="inline-flex h-7 items-center gap-1.5 rounded-md border border-input bg-background px-2.5 text-xs font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-expand"></i>Open</button>
+        <button data-save-chart="${key}" ${isSaved ? 'disabled' : ''} class="inline-flex h-7 items-center gap-1.5 rounded-md border border-input bg-background px-2.5 text-xs font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-default disabled:text-good disabled:hover:bg-background"><i class="fi ${isSaved ? 'fi-rr-check' : 'fi-rr-bookmark'}"></i>${isSaved ? 'Saved' : 'Save to My charts'}</button>
+        <span class="ml-auto font-mono text-[11px] text-muted-foreground">${esc(v.comp)}</span>
+      </div>
+    </div>`;
+  }
+  return `<div class="rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">Unknown component ${esc(v.comp)}</div>`;
+}
+function renderAnswer(m) {
+  const box = m.li.querySelector('.answer');
+  const root = m.stmts.has('root') ? resolve({ ref: 'root' }, m.stmts) : null;
+  if (!root || 'pending' in root) { box.innerHTML = `<div class="rounded-xl border bg-card p-4">${skeleton('h-5', 'w-1/2')}</div>`; return; }
+  box.innerHTML = renderNode(root, m);
+  box.querySelectorAll('.chart-slot').forEach((slot) => { const c = charts.get(slot.dataset.openChart); if (c) drawChart(slot.querySelector('.plot'), c.node); });
+  scrollDown();
+}
+
+// re-fit chat thumbnails when the column width changes
+let lastW = thread.clientWidth;
+new ResizeObserver(() => {
+  if (Math.abs(thread.clientWidth - lastW) < 24) return;
+  lastW = thread.clientWidth;
+  thread.querySelectorAll('.chart-slot').forEach((slot) => { const c = charts.get(slot.dataset.openChart); if (c) drawChart(slot.querySelector('.plot'), c.node); });
+}).observe(thread);
+
+thread.addEventListener('click', (e) => {
+  const open = e.target.closest('[data-open-chart]'), save = e.target.closest('[data-save-chart]'), con = e.target.closest('[data-connect]'), pick = e.target.closest('[data-pull-pick]');
+  if (open) { const c = charts.get(open.dataset.openChart); if (c) openViewer({ node: c.node, lang: chartLang(c), meta: c.m.meta, origin: open.dataset.openChart, title: c.m.stmts.get('header')?.expr.args[0] }); }
+  if (save && !save.disabled) saveChart(save.dataset.saveChart);
+  if (con && !busy) { setServer(con.dataset.connect, true); toast(`${SERVERS.find((s) => s.id === con.dataset.connect).name} connected`); con.disabled = true; if (con.dataset.retry) send(con.dataset.retry); }
+  if (pick && !busy) { const c = saved.find((x) => x.id === pick.dataset.pullPick); if (c) send(`Pull my saved chart “${c.title}” and refresh it`, { pullId: c.id }); }
+});
+const chartLang = (c) => [`root = Card([${c.stmtId}])`, ...[...closure(c.m.stmts, c.stmtId)].map((id) => c.m.stmts.get(id).src)].join('\n');
+
+function saveChart(key, title) {
+  const c = charts.get(key);
+  if (!c || saved.some((x) => x.origin === key)) return;
+  const name = title?.trim() || c.m.stmts.get('header')?.expr.args[0] || c.node.args[0];
+  saved.unshift({ ...savedFrom(c.m.stmts, c.stmtId, { title: name, scenario: c.m.meta.scenario, source: c.m.meta.source, savedAt: new Date().toISOString() }), origin: key });
+  persist(); renderSaved();
+  thread.querySelectorAll(`[data-save-chart="${CSS.escape(key)}"]`).forEach((b) => { b.disabled = true; b.innerHTML = '<i class="fi fi-rr-check"></i>Saved'; });
+  toast(`charts.save_chart → “${name}” saved to My charts`);
+}
+
+// ---------- the scripted agent ----------
+function pickScenario(text) { return ORDER.find((k) => SCENARIOS[k].match.test(text)); }
+
+async function send(text, opts = {}) {
+  text = text.trim();
+  if (!text || busy) return;
+  setBusy(true);
+  $('#empty').hidden = true; orb.mount($('#head-orb'));
+  addUser(text);
+  const m = addAgent();
+  try {
+    const pullId = opts.pullId ?? (/\b(pull|load|saved|my charts?)\b/i.test(text) ? findSaved(text)?.id ?? 'pick' : null);
+    if (pullId) await answerPull(m, pullId);
+    else {
+      const key = pickScenario(text);
+      if (!key) await answerHelp(m);
+      else await answerScenario(m, key, text);
+    }
+  } finally { setBusy(false); input.focus(); }
+}
+function findSaved(text) { const t = text.toLowerCase(); return saved.find((c) => t.includes(c.title.toLowerCase())) ?? (saved.length === 1 ? saved[0] : null); }
+
+async function answerScenario(m, key, text, override) {
+  const sc = SCENARIOS[key], server = SERVERS.find((s) => s.id === sc.server);
+  if (!server.on) {
+    await typePlan(m, `That needs the ${server.name} server, which isn’t connected.`);
+    await streamLang(m, [
+      'root = Card([header, body, action])',
+      `header = CardHeader(${S(`Connect ${server.name} to continue`)}, ${S(`${server.desc} · ${server.tools.map((t) => `${server.id}.${t}`).join(', ')}`)})`,
+      `body = TextContent(${S(`I can only use tools from connected MCP servers. Connect ${server.name} and I’ll run the analysis right away, or ask for something the connected servers cover.`)})`,
+      `action = ConnectButton(${S(server.id)}, ${S(text)})`,
+    ]);
+    return;
+  }
+  await typePlan(m, override?.plan ?? sc.plan);
+  const p = sc.build(rngFrom(override?.seed ?? hash(text)));
+  if (override) Object.assign(p, override.parts(p));
+  m.meta = { scenario: key, source: `${sc.server}.${p.calls[0].tool}` };
+  await runCalls(m, sc.server, [...(override?.preCalls ?? []), ...p.calls]);
+  await streamLang(m, composeLang(p));
+}
+async function answerPull(m, pullId) {
+  const c = saved.find((x) => x.id === pullId);
+  if (!c) {
+    await typePlan(m, saved.length ? 'Which saved chart do you want? Here’s your library.' : 'Your library is empty. Open any chart in the chat and save it, then you can pull it back here.');
+    if (saved.length) await streamLang(m, ['root = Card([header, pick])', `header = CardHeader("My charts", ${S(`${saved.length} saved · charts.get_chart`)})`, 'pick = SavedPick()']);
+    return;
+  }
+  const sc = SCENARIOS[c.scenario];
+  const getCall = { server: 'charts', tool: 'get_chart', args: { id: c.id }, result: `1 ${c.kind}, saved ${d3.timeFormat('%b %-d')(new Date(c.savedAt))}` };
+  if (!sc || !serverOn(sc.server)) {
+    // Data source is offline: show the snapshot exactly as saved.
+    await typePlan(m, sc ? `Here’s “${c.title}” as you saved it. ${SERVERS.find((s) => s.id === sc.server).name} isn’t connected, so I can’t refresh it.` : `Here’s “${c.title}” as you saved it.`);
+    m.meta = { scenario: c.scenario, source: c.source };
+    await runCalls(m, 'charts', [getCall]);
+    const stmts = parseLang(c.lang), chartId = stmts.get('root').expr.args[0][0].ref;
+    await streamLang(m, ['root = Card([header, ' + chartId + ', note])', `header = CardHeader(${S(c.title)}, ${S(`Saved snapshot · ${c.source}`)})`, ...c.lang.split('\n').slice(1), `note = Callout("warn", ${S('Snapshot only. Connect the data source to refresh it with current numbers.')})`]);
+    return;
+  }
+  await answerScenario(m, c.scenario, c.title, {
+    plan: `Pulling “${c.title}” from My charts, then re-running its query on ${SERVERS.find((s) => s.id === sc.server).name} for current numbers.`,
+    seed: Date.now() & 0xffffff,
+    preCalls: [getCall],
+    parts: () => ({ title: c.title, subtitle: `Refreshed just now · saved ${d3.timeFormat('%b %-d')(new Date(c.savedAt))} · ${c.source}`, note: ['info', 'Same query and chart as the saved version, with today’s data. Save it again to keep this version.'] }),
+  });
+}
+async function answerHelp(m) {
+  const on = ORDER.filter((k) => serverOn(SCENARIOS[k].server));
+  await typePlan(m, 'I’m not sure which data that needs. With the servers you have connected, I can chart these:');
+  await streamLang(m, [
+    'root = Card([header, body, follow])',
+    `header = CardHeader("What I can chart right now", ${S(SERVERS.filter((s) => s.on && !s.fixed).map((s) => s.name).join(' · '))})`,
+    `body = TextContent(${S('Pick one, or ask in your own words. Connect more MCP servers in the sidebar to widen what I can reach. Saved charts can be pulled back with “pull my chart”.')})`,
+    `follow = FollowUpBlock(${SA(on.map((k) => SCENARIOS[k].prompt))})`,
+  ]);
+}
+const hash = (s) => [...s].reduce((h, ch) => (Math.imul(h, 31) + ch.charCodeAt(0)) | 0, 7);
+
+function setBusy(v) {
+  busy = v; orb.busy = v;
+  $('#send').disabled = v;
+  $('#agent-status').textContent = v ? 'Working…' : 'Ready';
+}
+
+// ---------- viewer ----------
+const viewer = $('#viewer');
+let vState = null, lastFocus = null;
+function openViewer(state) {
+  vState = { tab: 'chart', ...state };
+  lastFocus = document.activeElement;
+  viewer.hidden = false;
+  $('#v-title').textContent = state.title ?? state.node.args[0];
+  $('#v-meta').textContent = `${state.node.comp} · ${state.meta?.source ?? 'chart'}${state.savedAt ? ` · saved ${d3.timeFormat('%b %-d, %Y')(new Date(state.savedAt))}` : ''}`;
+  renderViewerActions();
+  setVTab('chart');
+  $('#v-close').focus();
+}
+function openSaved(c) {
+  const stmts = parseLang(c.lang);
+  const id = stmts.get('root').expr.args[0][0].ref;
+  closeSidebar();
+  openViewer({ node: resolve({ ref: id }, stmts), lang: c.lang, meta: { source: c.source, scenario: c.scenario }, savedId: c.id, title: c.title, savedAt: c.savedAt });
+}
+function renderViewerActions() {
+  const box = $('#v-actions');
+  if (vState.savedId) {
+    box.innerHTML = `<button id="v-pull" class="inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-refresh text-xs"></i>Pull into chat</button>`;
+    $('#v-pull').onclick = () => { const c = saved.find((x) => x.id === vState.savedId); closeViewer(); if (c && !busy) send(`Pull my saved chart “${c.title}” and refresh it`, { pullId: c.id }); };
+    return;
+  }
+  const done = saved.find((x) => x.origin === vState.origin);
+  box.innerHTML = done
+    ? `<span class="inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-sm text-good"><i class="fi fi-rr-check text-xs"></i>Saved as “${esc(done.title)}”</span>`
+    : `<form id="v-save" class="flex items-center gap-2"><input id="v-name" value="${esc(vState.title ?? vState.node.args[0])}" aria-label="Chart name" class="h-8 w-44 rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:w-56" /><button class="inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-bookmark text-xs"></i>Save</button></form>`;
+  if (!done) $('#v-save').onsubmit = (e) => { e.preventDefault(); saveChart(vState.origin, $('#v-name').value); renderViewerActions(); };
+}
+function setVTab(tab) {
+  vState.tab = tab;
+  stop3D(); hideTip();
+  document.querySelectorAll('.vtab').forEach((b) => b.dataset.state = b.dataset.vtab === tab ? 'active' : '');
+  const body = $('#v-body'), node = vState.node;
+  $('#v-hint').textContent = tab === 'chart' ? (node.comp === 'Bar3D' ? 'Drag to turn, scroll to zoom, hover a bar' : 'Hover for values') : tab === 'lang' ? 'The saved form of a chart is its OpenUI Lang' : '';
+  if (tab === 'chart') { body.innerHTML = '<div class="chart-slot h-full w-full"></div>'; drawChart(body.firstChild, node, { interactive: true }); }
+  if (tab === 'data') {
+    const t = tableOf(node);
+    body.innerHTML = `<div class="scroll-thin h-full overflow-auto rounded-lg border"><table class="w-full text-sm"><thead class="sticky top-0 bg-muted"><tr>${t.head.map((h) => `<th class="whitespace-nowrap px-3 py-2 text-left font-medium text-muted-foreground">${esc(h)}</th>`).join('')}</tr></thead><tbody>${t.rows.map((r) => `<tr class="border-t hover:bg-accent/40">${r.map((c, i) => `<td class="whitespace-nowrap px-3 py-1.5 ${i ? 'text-right font-mono text-xs' : ''}">${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  }
+  if (tab === 'lang') body.innerHTML = `<pre class="lang scroll-thin h-full overflow-auto rounded-lg border bg-background p-4">${highlight(vState.lang)}</pre>`;
+}
+function closeViewer() { stop3D(); hideTip(); viewer.hidden = true; vState = null; lastFocus?.focus?.(); }
+document.querySelectorAll('.vtab').forEach((b) => (b.onclick = () => setVTab(b.dataset.vtab)));
+$('#v-close').onclick = closeViewer;
+viewer.addEventListener('click', (e) => { if (e.target === viewer) closeViewer(); });
+let vResize;
+addEventListener('resize', () => { clearTimeout(vResize); vResize = setTimeout(() => { if (vState?.tab === 'chart') setVTab('chart'); }, 150); });
+addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (!viewer.hidden) closeViewer(); else closeSidebar(); } });
+
+// ---------- composer ----------
+const autosize = () => { input.style.height = 'auto'; input.style.height = `${Math.min(input.scrollHeight, 160)}px`; };
+input.addEventListener('input', autosize);
+input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#composer').requestSubmit(); } });
+$('#composer').addEventListener('submit', (e) => { e.preventDefault(); if (busy) return; const t = input.value; input.value = ''; autosize(); send(t); });
+$('#new-chat').onclick = () => {
+  if (busy) return;
+  thread.innerHTML = ''; charts.clear();
+  $('#empty').hidden = false; orb.mount($('#hero-orb'));
+  input.focus();
+};
+
+renderServers(); renderSaved(); renderStarters();
+orb.mount($('#hero-orb'));
+</script>
+</body>
+</html>

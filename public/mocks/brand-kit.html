@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>inoTives brand kit</title>
+<!--
+  Playground mock: the inoTives design system written down as an example of a company brand kit.
+  The tokens are the ones the site (src/index.css) and the other playground mocks already use.
+  Sections: concept, color, type, formatting, then how the brand is applied in shadcn/ui (tokens),
+  D3 (a theme helper) and Three.js (scene conventions), and Flaticon UIcons as the base icon set.
+  Every demo on the page is drawn with the same tokens it documents.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-card-foreground: #e4e1d8;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-accent-foreground: #e4e1d8;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-destructive: #f2706b;
+    --color-amber: #f6c453;
+    --color-ink-2: #b8b5ac;
+    --color-good: #9ccf7f;
+    --color-bad: #f2706b;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-serif: "Source Serif 4", Georgia, serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base {
+    *, ::before, ::after { border-color: var(--color-border); }
+  }
+</style>
+<style>
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+  body { margin: 0; background: #15171b; }
+  ::selection { background: #1fefd7; color: #15171b; }
+  .fi { display: inline-flex; line-height: 1; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
+  .code { font: 400 12px/1.6 "Source Code Pro", monospace; white-space: pre; tab-size: 2; }
+  .code .k { color: #c9a4f5; } .code .s { color: #9ccf7f; } .code .n { color: #e9a66c; } .code .c { color: #8b9099; font-style: italic; } .code .p { color: #1fefd7; }
+  .demo svg text { font: 400 10.5px "Source Code Pro", monospace; }
+  .lbl3 { font: 400 10.5px "Source Code Pro", monospace; color: #8b9099; white-space: nowrap; }
+  .lbl3.on { color: #f6c453; }
+  .nav-link[aria-current="true"] { color: #e4e1d8; border-color: #1fefd7; }
+  .swatch-btn:focus-visible { outline: 2px solid #1fefd7; outline-offset: 2px; }
+  .switch { position: relative; width: 32px; height: 18px; border-radius: 999px; background: #343943; transition: background 0.15s; flex-shrink: 0; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 999px; background: #e4e1d8; transition: transform 0.15s; }
+  .switch[aria-checked="true"] { background: #1fefd7; }
+  .switch[aria-checked="true"]::after { transform: translateX(14px); background: #0c1614; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, ::before, ::after { transition: none !important; } }
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+
+<header class="sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
+  <div class="mx-auto flex h-14 max-w-[1240px] items-center gap-3 px-4 sm:px-6">
+    <a href="/playground" class="rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <span class="text-sm text-muted-foreground">Brand kit</span>
+    <span class="ml-1 hidden rounded-md border px-2 py-0.5 font-mono text-[11px] text-muted-foreground sm:inline">v1.0 · Nov 2026</span>
+    <div class="ml-auto flex items-center gap-2">
+      <button data-download="json" class="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-download text-xs"></i><span class="hidden sm:inline">tokens.json</span><span class="sm:hidden">JSON</span></button>
+      <button data-download="css" class="inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-download text-xs"></i><span class="hidden sm:inline">theme.css</span><span class="sm:hidden">CSS</span></button>
+    </div>
+  </div>
+</header>
+
+<div class="mx-auto flex max-w-[1240px] gap-10 px-4 sm:px-6">
+  <nav class="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-48 shrink-0 overflow-y-auto py-8 lg:block" aria-label="Sections">
+    <ol id="toc" class="space-y-0.5 text-sm"></ol>
+  </nav>
+
+  <main class="min-w-0 flex-1 pb-24">
+    <!-- 01 concept -->
+    <section id="concept" data-title="Concept" class="pt-10">
+      <p class="font-mono text-xs text-primary">01 · Concept</p>
+      <h1 class="mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">A research notebook, at night.</h1>
+      <p class="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-ink-2">The inoTives brand is a working notebook for data and agents: dark paper, warm ink, and one bright signal color that only ever means <em>“this is live, or this is where you are.”</em> Everything else stays quiet so the data can be loud.</p>
+      <div class="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" id="principles"></div>
+    </section>
+
+    <!-- 02 color -->
+    <section id="color" data-title="Color" class="pt-20">
+      <p class="font-mono text-xs text-primary">02 · Color</p>
+      <h2 class="mt-2 text-3xl font-semibold tracking-tight">Color</h2>
+      <p class="mt-3 max-w-2xl text-ink-2">Eight core tokens carry the interface. Signal cyan and amber are the only saturated interface colors, and each has one job. Click a swatch to copy its hex.</p>
+
+      <h3 class="mt-8 text-sm font-medium uppercase tracking-wider text-muted-foreground">Core</h3>
+      <div id="core-swatches" class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4"></div>
+
+      <h3 class="mt-10 text-sm font-medium uppercase tracking-wider text-muted-foreground">Contrast on paper</h3>
+      <p class="mt-1 text-sm text-muted-foreground">WCAG 2 contrast ratios, computed live on this page. Body text needs 4.5:1; large text and UI marks need 3:1.</p>
+      <div class="mt-3 overflow-x-auto rounded-xl border"><table id="contrast" class="w-full text-sm"></table></div>
+
+      <h3 class="mt-10 text-sm font-medium uppercase tracking-wider text-muted-foreground">Data palette</h3>
+      <p class="mt-1 text-sm text-muted-foreground">For charts only, used in this order. Cyan leads because the first series is usually the one being asked about.</p>
+      <div id="data-swatches" class="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-7"></div>
+      <div class="mt-6 grid gap-6 md:grid-cols-2">
+        <div><h4 class="text-sm font-medium">Sequential · “heat”</h4><p class="text-xs text-muted-foreground">Low to high. Ends in amber so the peak reads as selected.</p><div id="ramp-seq" class="mt-2 h-8 rounded-md"></div></div>
+        <div><h4 class="text-sm font-medium">Diverging · “balance”</h4><p class="text-xs text-muted-foreground">Negative pink, zero is the card color, positive cyan.</p><div id="ramp-div" class="mt-2 h-8 rounded-md"></div></div>
+      </div>
+
+      <h3 class="mt-10 text-sm font-medium uppercase tracking-wider text-muted-foreground">Rules</h3>
+      <div id="color-rules" class="mt-3 grid gap-3 md:grid-cols-2"></div>
+    </section>
+
+    <!-- 03 type -->
+    <section id="type" data-title="Typography" class="pt-20">
+      <p class="font-mono text-xs text-primary">03 · Typography</p>
+      <h2 class="mt-2 text-3xl font-semibold tracking-tight">Typography</h2>
+      <p class="mt-3 max-w-2xl text-ink-2">Four families, each with one role. All are open source on Google Fonts.</p>
+      <div id="fonts" class="mt-6 grid gap-3 md:grid-cols-2"></div>
+
+      <h3 class="mt-10 text-sm font-medium uppercase tracking-wider text-muted-foreground">Scale</h3>
+      <div id="scale" class="mt-3 divide-y rounded-xl border"></div>
+    </section>
+
+    <!-- 04 formatting -->
+    <section id="format" data-title="Formatting" class="pt-20">
+      <p class="font-mono text-xs text-primary">04 · Formatting</p>
+      <h2 class="mt-2 text-3xl font-semibold tracking-tight">Numbers, dates and units</h2>
+      <p class="mt-3 max-w-2xl text-ink-2">One way to write each kind of value, everywhere: in copy, tables, tooltips and chart axes. The specifiers are d3-format and d3-time-format, so charts and text agree.</p>
+      <div class="mt-6 flex flex-wrap items-end gap-3">
+        <label class="text-sm">Try a value
+          <input id="fmt-in" type="number" step="any" value="1234567.891" class="mt-1 block h-9 w-48 rounded-md border border-input bg-background px-3 font-mono text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+        </label>
+        <div class="flex gap-1" id="fmt-presets"></div>
+      </div>
+      <div class="mt-4 overflow-x-auto rounded-xl border"><table id="fmt-table" class="w-full text-sm"></table></div>
+      <div id="fmt-rules" class="mt-4 grid gap-3 md:grid-cols-3"></div>
+    </section>
+
+    <!-- 05 shadcn -->
+    <section id="shadcn" data-title="shadcn/ui" class="pt-20">
+      <p class="font-mono text-xs text-primary">05 · shadcn/ui</p>
+      <h2 class="mt-2 text-3xl font-semibold tracking-tight">Components through tokens</h2>
+      <p class="mt-3 max-w-2xl text-ink-2">shadcn/ui components read a fixed set of CSS variables, so a brand is applied once by mapping its tokens onto those names. Nothing inside a component hardcodes a color. Every component below is styled only through these tokens.</p>
+      <div class="mt-6 grid gap-6 xl:grid-cols-[1fr_1.1fr]">
+        <div class="overflow-x-auto rounded-xl border"><table id="token-map" class="w-full text-sm"></table></div>
+        <div id="components" class="space-y-4 rounded-xl border bg-card p-5"></div>
+      </div>
+      <div class="mt-6" data-snippet="shadcn"></div>
+    </section>
+
+    <!-- 06 d3 -->
+    <section id="d3" data-title="D3" class="pt-20">
+      <p class="font-mono text-xs text-primary">06 · D3</p>
+      <h2 class="mt-2 text-3xl font-semibold tracking-tight">Charts in D3</h2>
+      <p class="mt-3 max-w-2xl text-ink-2">D3 has no theme, so the brand ships as a small helper: scales get the palette, axes get quiet ink and no outer ticks, gridlines sit one step above the card, lines are 1.75px monotone curves, and tooltips use the formatting rules above.</p>
+      <div class="mt-6 flex items-center gap-3">
+        <button id="d3-toggle" class="switch focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" role="switch" aria-checked="true" aria-label="Apply brand theme"></button>
+        <span class="text-sm"><span id="d3-mode">Brand theme</span> <span class="text-muted-foreground">· switch off to see D3’s defaults</span></span>
+      </div>
+      <div class="mt-4 grid gap-4 lg:grid-cols-3">
+        <figure class="rounded-xl border bg-card p-4"><figcaption class="text-sm font-medium">Line · rebased index</figcaption><div id="d3-line" class="demo mt-2 h-56"></div></figure>
+        <figure class="rounded-xl border bg-card p-4"><figcaption class="text-sm font-medium">Bar · ranking</figcaption><div id="d3-bar" class="demo mt-2 h-56"></div></figure>
+        <figure class="rounded-xl border bg-card p-4"><figcaption class="text-sm font-medium">Scatter · categories</figcaption><div id="d3-scatter" class="demo mt-2 h-56"></div></figure>
+      </div>
+      <div id="d3-rules" class="mt-4 grid gap-3 md:grid-cols-3"></div>
+      <div class="mt-6" data-snippet="d3"></div>
+    </section>
+
+    <!-- 07 three -->
+    <section id="three" data-title="Three.js" class="pt-20">
+      <p class="font-mono text-xs text-primary">07 · Three.js</p>
+      <h2 class="mt-2 text-3xl font-semibold tracking-tight">Scenes in Three.js</h2>
+      <p class="mt-3 max-w-2xl text-ink-2">3D follows the same notebook: the page shows through a transparent canvas, light is soft and slightly cool, solids are matte, and the signal cyan only appears as wireframe or glow on what is live. Labels are HTML (CSS2D), so they use the brand fonts and stay sharp.</p>
+      <div class="mt-6 flex items-center gap-3">
+        <button id="three-toggle" class="switch focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" role="switch" aria-checked="true" aria-label="Apply brand scene"></button>
+        <span class="text-sm"><span id="three-mode">Brand scene</span> <span class="text-muted-foreground">· drag to turn, hover a bar</span></span>
+      </div>
+      <div id="three-stage" class="relative mt-4 h-[380px] overflow-hidden rounded-xl border bg-[radial-gradient(ellipse_80%_70%_at_60%_40%,#1b1e24_0%,#15171b_72%)]"></div>
+      <div id="three-rules" class="mt-4 grid gap-3 md:grid-cols-3"></div>
+      <div class="mt-6" data-snippet="three"></div>
+    </section>
+
+    <!-- 08 icons -->
+    <section id="icons" data-title="Icons" class="pt-20">
+      <p class="font-mono text-xs text-primary">08 · Icons</p>
+      <h2 class="mt-2 text-3xl font-semibold tracking-tight">Icons: Flaticon UIcons</h2>
+      <p class="mt-3 max-w-2xl text-ink-2">One style only: <span class="font-mono text-sm">uicons-regular-rounded</span> (class prefix <span class="font-mono text-sm">fi-rr-</span>). Its rounded 1.5px strokes match Plex’s soft corners. Icons inherit text color and size, so they follow the type scale. Below is the base set; the full library has over 4,000 icons in the same style. Click an icon to copy its markup.</p>
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <div class="relative">
+          <i class="fi fi-rr-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"></i>
+          <input id="icon-q" type="search" placeholder="Filter icons" aria-label="Filter icons" class="h-9 w-56 rounded-md border border-input bg-background pl-8 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+        </div>
+        <div role="radiogroup" aria-label="Icon size" id="icon-sizes" class="inline-flex h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground"></div>
+        <span id="icon-count" class="font-mono text-xs text-muted-foreground"></span>
+      </div>
+      <div id="icon-groups" class="mt-5 space-y-6"></div>
+      <div id="icon-rules" class="mt-6 grid gap-3 md:grid-cols-3"></div>
+    </section>
+  </main>
+</div>
+
+<div id="tip" hidden class="pointer-events-none fixed z-50 rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
+<div id="toast" hidden role="status" class="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-md border bg-card px-3 py-2 text-sm shadow-lg"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ================= the brand, as data =================
+const BRAND = {
+  color: {
+    paper:  { hex: '#15171b', name: 'Paper',  role: 'Page background. Never pure black.' },
+    raise:  { hex: '#1d2026', name: 'Raise',  role: 'Cards, panels, popovers.' },
+    line:   { hex: '#2b2f37', name: 'Line',   role: 'Borders, dividers, axes.' },
+    ink:    { hex: '#e4e1d8', name: 'Ink',    role: 'Headings and body text. Warm, not white.' },
+    ink2:   { hex: '#b8b5ac', name: 'Ink 2',  role: 'Secondary text, long-form reading.' },
+    fog:    { hex: '#8b9099', name: 'Fog',    role: 'Captions, meta, tick labels.' },
+    signal: { hex: '#1fefd7', name: 'Signal', role: 'Links, focus, active and live state. Nothing else.' },
+    amber:  { hex: '#f6c453', name: 'Amber',  role: 'New or selected. Draws the eye once.' },
+  },
+  status: { good: '#9ccf7f', bad: '#f2706b' },
+  data: ['#1fefd7', '#f6c453', '#c9a4f5', '#9ccf7f', '#e58fb0', '#7cc4dc', '#e9a66c'],
+  dataNames: ['Signal', 'Amber', 'Violet', 'Moss', 'Rose', 'Sky', 'Clay'],
+  sequential: ['#203236', '#1fefd7', '#f6c453'],
+  diverging: ['#e58fb0', '#23262d', '#1fefd7'],
+  font: {
+    brand: '"VT323", "Source Code Pro", monospace',
+    head: '"IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif',
+    read: '"Source Serif 4", Georgia, serif',
+    mono: '"Source Code Pro", ui-monospace, Consolas, monospace',
+  },
+  radius: { sm: '4px', md: '6px', lg: '8px', xl: '12px' },
+};
+const C = Object.fromEntries(Object.entries(BRAND.color).map(([k, v]) => [k, v.hex]));
+
+// ================= small utilities =================
+let toastT;
+function toast(text) { const t = $('#toast'); t.textContent = text; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 1800); }
+async function copy(text, label) {
+  try { await navigator.clipboard.writeText(text); toast(`Copied ${label ?? text}`); } catch { toast('Copy is blocked in this browser'); }
+}
+const tip = $('#tip');
+function showTip(html, ev) {
+  tip.innerHTML = html; tip.hidden = false;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - 14;
+  if (y + h > innerHeight - 8) y = ev.clientY - h - 14;
+  tip.style.left = `${x}px`; tip.style.top = `${y}px`;
+}
+const hideTip = () => { tip.hidden = true; };
+const rule = (kind, text) => `<div class="flex gap-2.5 rounded-lg border bg-card p-3 text-sm leading-relaxed"><i class="fi ${kind === 'do' ? 'fi-rr-check text-good' : kind === 'dont' ? 'fi-rr-cross-small text-bad' : 'fi-rr-info text-muted-foreground'} mt-1 shrink-0 text-xs"></i><span class="text-ink-2">${text}</span></div>`;
+
+// tiny syntax highlighter for the snippets
+function hl(src, lang) {
+  const re = lang === 'css'
+    ? /(\/\*[\s\S]*?\*\/)|(--[\w-]+)|(#[0-9a-fA-F]{6})|(@[\w-]+)/g
+    : /(\/\/[^\n]*)|('[^'\n]*')|\b(const|let|export|function|return|import|from|new)\b|\b(\d+(?:\.\d+)?)\b/g;
+  const cls = lang === 'css' ? ['c', 'k', 'n', 'p'] : ['c', 's', 'k', 'n'];
+  let out = '', last = 0;
+  for (const m of src.matchAll(re)) {
+    const g = m.slice(1).findIndex((x) => x !== undefined);
+    out += esc(src.slice(last, m.index)) + `<span class="${cls[g]}">${esc(m[0])}</span>`;
+    last = m.index + m[0].length;
+  }
+  return out + esc(src.slice(last));
+}
+function snippet(el, title, file, code, lang = 'js') {
+  el.innerHTML = `<div class="overflow-hidden rounded-xl border bg-background">
+    <div class="flex items-center gap-2 border-b bg-card px-4 py-2 text-xs"><i class="fi fi-rr-file-code text-muted-foreground"></i><span class="font-medium">${esc(title)}</span><span class="font-mono text-muted-foreground">${esc(file)}</span>
+      <button class="cp ml-auto inline-flex h-7 items-center gap-1.5 rounded-md border border-input px-2.5 font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-copy"></i>Copy</button></div>
+    <pre class="code scroll-thin max-h-96 overflow-auto p-4">${hl(code, lang)}</pre></div>`;
+  el.querySelector('.cp').onclick = () => copy(code, file);
+}
+
+// WCAG relative luminance and contrast
+const lum = (hex) => { const c = d3.rgb(hex); return [c.r, c.g, c.b].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }).reduce((a, v, i) => a + v * [0.2126, 0.7152, 0.0722][i], 0); };
+const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+
+// ================= 01 concept =================
+$('#principles').innerHTML = [
+  ['fi-rr-moon', 'Dark paper', 'A warm near-black page and raised cards. Long sessions, low glare, and charts that glow.'],
+  ['fi-rr-bolt', 'One signal', 'Cyan only means live, active, linked or focused. If everything is cyan, nothing is.'],
+  ['fi-rr-text', 'Plain words', 'Sentence case, short labels, no exclamation marks. Name things by what they are.'],
+  ['fi-rr-stats', 'Data first', 'Chrome stays grey so the data palette can carry meaning. Numbers are always set in mono.'],
+].map(([icon, h, p]) => `<div class="rounded-xl border bg-card p-4"><i class="fi ${icon} text-lg text-primary"></i><h3 class="mt-3 font-semibold">${h}</h3><p class="mt-1 text-sm leading-relaxed text-muted-foreground">${p}</p></div>`).join('');
+
+// ================= 02 color =================
+$('#core-swatches').innerHTML = Object.entries(BRAND.color).map(([key, c]) => `
+  <button class="swatch-btn group flex flex-col overflow-hidden rounded-xl border bg-card text-left" data-copy="${c.hex}" aria-label="Copy ${c.name} ${c.hex}">
+    <div class="relative h-20 w-full shrink-0 border-b" style="background:${c.hex}">
+      <span class="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded bg-black/40 px-1.5 py-0.5 font-mono text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100"><i class="fi fi-rr-copy"></i>copy</span>
+    </div>
+    <div class="p-3">
+      <div class="flex items-baseline justify-between gap-2"><span class="font-medium">${c.name}</span><span class="font-mono text-xs text-muted-foreground">${c.hex}</span></div>
+      <p class="mt-1 text-xs leading-snug text-muted-foreground">${c.role}</p>
+      <p class="mt-1.5 font-mono text-[10.5px] text-muted-foreground/80">--${key}</p>
+    </div>
+  </button>`).join('');
+
+$('#data-swatches').innerHTML = BRAND.data.map((hex, i) => `
+  <button class="swatch-btn rounded-lg border bg-card p-2 text-left" data-copy="${hex}" aria-label="Copy ${BRAND.dataNames[i]} ${hex}">
+    <div class="h-10 rounded-md" style="background:${hex}"></div>
+    <div class="mt-1.5 flex items-baseline justify-between gap-1"><span class="text-xs font-medium">${i + 1}. ${BRAND.dataNames[i]}</span></div>
+    <span class="font-mono text-[10.5px] text-muted-foreground">${hex}</span>
+  </button>`).join('');
+$('#ramp-seq').style.background = `linear-gradient(90deg, ${BRAND.sequential.join(', ')})`;
+$('#ramp-div').style.background = `linear-gradient(90deg, ${BRAND.diverging.join(', ')})`;
+
+{
+  const fgs = ['ink', 'ink2', 'fog', 'signal', 'amber'];
+  const bgs = ['paper', 'raise'];
+  const badge = (r) => (r >= 7 ? ['AAA', 'text-good'] : r >= 4.5 ? ['AA', 'text-good'] : r >= 3 ? ['AA large', 'text-amber'] : ['Fail', 'text-bad']);
+  $('#contrast').innerHTML = `<thead class="bg-muted text-muted-foreground"><tr><th class="px-4 py-2 text-left font-medium">Text color</th>${bgs.map((b) => `<th class="px-4 py-2 text-left font-medium">on ${BRAND.color[b].name}</th>`).join('')}</tr></thead><tbody>${fgs.map((f) => `<tr class="border-t"><td class="px-4 py-2"><span class="inline-flex items-center gap-2"><span class="size-3 rounded-full" style="background:${C[f]}"></span>${BRAND.color[f].name}</span></td>${bgs.map((b) => { const r = contrast(C[f], C[b]); const [l, cls] = badge(r); return `<td class="px-4 py-2"><span class="mr-3 rounded px-2 py-0.5 text-[13px]" style="background:${C[b]};color:${C[f]}">Aa sample</span><span class="font-mono text-xs">${r.toFixed(2)}:1</span> <span class="ml-1 text-xs font-medium ${cls}">${l}</span></td>`; }).join('')}</tr>`).join('')}</tbody>`;
+}
+
+$('#color-rules').innerHTML = [
+  rule('do', 'Use <b class="text-primary">Signal</b> for links, focus rings, the active tab and anything updating live.'),
+  rule('dont', 'Don’t fill large areas with Signal or use it for decoration. Primary buttons are the one filled use.'),
+  rule('do', 'Use <b class="text-amber">Amber</b> for the selected item in a chart or list, and for new items.'),
+  rule('dont', 'Don’t use the data palette for interface chrome, or interface colors as chart series.'),
+  rule('do', 'Show good and bad as <b class="text-good">Moss</b> and <b class="text-bad">Coral</b>, always with a sign or label too, never color alone.'),
+  rule('dont', 'Don’t use pure white or pure black. Ink and Paper are warm on purpose.'),
+].join('');
+
+document.addEventListener('click', (e) => { const b = e.target.closest('[data-copy]'); if (b) copy(b.dataset.copy); });
+
+// ================= 03 type =================
+$('#fonts').innerHTML = [
+  ['VT323', 'Brand mark', BRAND.font.brand, 'The wordmark only. Never for headings or UI.', '<span class="font-brand text-5xl leading-none">inoTives</span>'],
+  ['IBM Plex Sans Condensed', 'Headings and UI · 400 500 600', BRAND.font.head, 'Everything in the interface: headings, labels, buttons, tables. Sentence case.', '<span class="text-3xl font-semibold leading-tight">Weekly pre-open report</span>'],
+  ['Source Serif 4', 'Long-form reading · 400 600 italic', BRAND.font.read, 'Notes and articles longer than a few paragraphs.', '<span class="font-serif text-xl leading-snug text-ink-2">Markets opened quiet, but the order book told a different story.</span>'],
+  ['Source Code Pro', 'Numbers and code · 400 500', BRAND.font.mono, 'Every number in a table or chart, hex values, tickers, code.', '<span class="font-mono text-2xl">$62.1B <span class="text-good">+4.2%</span></span>'],
+].map(([name, role, stack, use, sample]) => `
+  <div class="flex min-w-0 flex-col rounded-xl border bg-card p-5">
+    <div class="min-h-16">${sample}</div>
+    <div class="mt-4 border-t pt-3">
+      <div class="flex flex-wrap items-baseline justify-between gap-2"><span class="font-semibold">${name}</span><span class="text-xs text-muted-foreground">${role}</span></div>
+      <p class="mt-1 text-sm text-muted-foreground">${use}</p>
+      <button class="mt-2 max-w-full truncate rounded font-mono text-[11px] text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" data-copy='${stack}' title="Copy font stack">${esc(stack)}</button>
+    </div>
+  </div>`).join('');
+
+$('#scale').innerHTML = [
+  ['Display', '48 / 1.05 · 600', 'text-5xl font-semibold leading-[1.05] tracking-tight', 'Notebook, at night'],
+  ['H1', '36 / 1.1 · 600', 'text-4xl font-semibold leading-tight tracking-tight', 'Exchange flows, October'],
+  ['H2', '30 / 1.2 · 600', 'text-3xl font-semibold tracking-tight', 'What changed this week'],
+  ['H3', '20 / 1.3 · 600', 'text-xl font-semibold', 'Funding rates by venue'],
+  ['Body', '16 / 1.5 · 400', 'text-base', 'Net outflows continued for a third week, led by the two largest venues.'],
+  ['Reading', '18 / 1.65 · serif', 'font-serif text-lg leading-relaxed text-ink-2', 'The cleanest read on positioning is still the basis.'],
+  ['Small', '14 / 1.45 · 400', 'text-sm text-ink-2', 'Updated 2 minutes ago from three sources.'],
+  ['Caption', '12 / 1.4 · 400', 'text-xs text-muted-foreground', 'Source: DefiLlama, Nov 1, 2026'],
+  ['Data', '12 / 1.4 · mono', 'font-mono text-xs', '1,234,568 · $1.23M · +4.2% · 14:30 UTC'],
+].map(([n, spec, cls, txt]) => `<div class="grid items-baseline gap-2 px-4 py-3 sm:grid-cols-[110px_130px_1fr]"><span class="text-sm font-medium">${n}</span><span class="font-mono text-[11px] text-muted-foreground">${spec}</span><span class="${cls} min-w-0 truncate">${txt}</span></div>`).join('');
+
+// ================= 04 formatting =================
+const FMT = [
+  ['Count', ',.0f', (v) => d3.format(',.0f')(v), 'Thousands separators, no decimals.'],
+  ['Decimal', ',.2f', (v) => d3.format(',.2f')(v), 'Two places for prices under 1,000.'],
+  ['Compact', '$.3~s', (v) => d3.format('$.3~s')(v).replace('G', 'B'), 'Big money in copy and axes. G becomes B.'],
+  ['Currency', '$,.2f', (v) => d3.format('$,.2f')(v), 'Exact amounts in tables.'],
+  ['Change', '+.1%', (v) => d3.format('+.1%')(v / 1e7), 'Always signed. Shown here as value ÷ 10M.'],
+  ['Basis points', '+,.0f bp', (v) => `${d3.format('+,.0f')(v / 1e4)} bp`, 'Spreads and rate moves. Value ÷ 10k.'],
+  ['Multiple', '.1f×', (v) => `${d3.format('.1f')(v / 1e6)}×`, 'Ratios. Value ÷ 1M.'],
+];
+const DATES = [
+  ['Date', '%b %-d, %Y', 'Nov 1, 2026'],
+  ['Axis day', '%b %-d', 'Nov 1'],
+  ['Axis month', '%b ’%y', 'Nov ’26'],
+  ['Time', '%H:%M UTC', '14:30 UTC'],
+  ['ISO in data', '%Y-%m-%d', '2026-11-01'],
+];
+$('#fmt-presets').innerHTML = [['1.2M', 1234567.891], ['−84k', -84210.5], ['42', 42], ['9.8B', 9.8e9]].map(([l, v]) => `<button data-v="${v}" class="h-9 rounded-md border border-input px-3 font-mono text-xs hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">${l}</button>`).join('');
+$('#fmt-presets').onclick = (e) => { const b = e.target.closest('[data-v]'); if (b) { $('#fmt-in').value = b.dataset.v; renderFmt(); } };
+function renderFmt() {
+  const v = +$('#fmt-in').value || 0;
+  const now = new Date(Date.UTC(2026, 10, 1, 14, 30));
+  const row = (a, b, c, d) => `<tr class="border-t"><td class="px-4 py-2 font-medium">${a}</td><td class="px-4 py-2 font-mono text-xs text-primary">${esc(b)}</td><td class="px-4 py-2 font-mono">${esc(c)}</td><td class="px-4 py-2 text-xs text-muted-foreground">${d}</td></tr>`;
+  $('#fmt-table').innerHTML = `<thead class="bg-muted text-muted-foreground"><tr><th class="px-4 py-2 text-left font-medium">Kind</th><th class="px-4 py-2 text-left font-medium">Specifier</th><th class="px-4 py-2 text-left font-medium">Output</th><th class="px-4 py-2 text-left font-medium">When</th></tr></thead><tbody>
+    ${FMT.map(([k, s, f, w]) => row(k, s, f(v), w)).join('')}
+    ${DATES.map(([k, s]) => row(k, s, d3.utcFormat(s.replace(' UTC', ''))(now) + (s.includes('UTC') ? ' UTC' : ''), k === 'Time' ? 'Times are 24-hour UTC unless the reader is local.' : k === 'ISO in data' ? 'Files, URLs and exports.' : 'Copy, tooltips and table rows.')).join('')}
+  </tbody>`;
+}
+$('#fmt-in').addEventListener('input', renderFmt);
+renderFmt();
+$('#fmt-rules').innerHTML = [
+  rule('do', 'Set numbers in Source Code Pro with tabular figures so columns line up.'),
+  rule('do', 'Use the real minus sign (−), which d3-format writes by default. Units go after the value: 4.2 bp, 12 ms.'),
+  rule('dont', 'Don’t mix precisions in one column, or write “1.20M” next to “980K”. Pick one unit per axis.'),
+].join('');
+
+// ================= 05 shadcn =================
+const TOKMAP = [
+  ['--background', 'paper'], ['--foreground', 'ink'], ['--card', 'raise'], ['--card-foreground', 'ink'], ['--popover', 'raise'],
+  ['--muted', null, '#23262d'], ['--muted-foreground', 'fog'], ['--accent', null, '#2a2e36'], ['--border', 'line'], ['--input', null, '#343943'],
+  ['--primary', 'signal'], ['--primary-foreground', null, '#0c1614'], ['--ring', 'signal'], ['--destructive', null, BRAND.status.bad],
+  ['--chart-1 … 5', 'data', BRAND.data.slice(0, 5)], ['--radius', null, '0.5rem'],
+];
+$('#token-map').innerHTML = `<thead class="bg-muted text-muted-foreground"><tr><th class="px-4 py-2 text-left font-medium">shadcn variable</th><th class="px-4 py-2 text-left font-medium">Brand token</th><th class="px-4 py-2 text-left font-medium">Value</th></tr></thead><tbody>${TOKMAP.map(([v, tok, raw]) => {
+  const val = Array.isArray(raw) ? raw : raw ?? C[tok];
+  const sw = Array.isArray(val) ? `<span class="inline-flex gap-0.5">${val.map((h) => `<span class="size-3 rounded-sm" style="background:${h}"></span>`).join('')}</span>` : val.startsWith('#') ? `<span class="inline-flex items-center gap-2"><span class="size-3 rounded-sm border" style="background:${val}"></span><span class="font-mono text-xs">${val}</span></span>` : `<span class="font-mono text-xs">${val}</span>`;
+  return `<tr class="border-t"><td class="px-4 py-1.5 font-mono text-xs">${v}</td><td class="px-4 py-1.5 text-xs text-muted-foreground">${tok === 'data' ? 'data 1–5' : tok ? BRAND.color[tok].name : 'derived'}</td><td class="px-4 py-1.5">${sw}</td></tr>`;
+}).join('')}</tbody>`;
+
+$('#components').innerHTML = `
+  <div class="flex flex-wrap gap-2">
+    <button class="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-paper-plane text-xs"></i>Primary</button>
+    <button class="inline-flex h-9 items-center rounded-md border border-input bg-background px-4 text-sm font-medium shadow-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">Outline</button>
+    <button class="inline-flex h-9 items-center rounded-md bg-accent px-4 text-sm font-medium hover:bg-accent/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">Secondary</button>
+    <button class="inline-flex h-9 items-center rounded-md px-4 text-sm font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">Ghost</button>
+    <button class="inline-flex h-9 items-center rounded-md bg-destructive px-4 text-sm font-medium text-background hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">Destructive</button>
+  </div>
+  <div class="flex flex-wrap items-center gap-2">
+    <span class="rounded-md bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground">Live</span>
+    <span class="rounded-md border border-amber/40 bg-amber/10 px-2 py-0.5 text-xs font-medium text-amber">New</span>
+    <span class="rounded-md border px-2 py-0.5 text-xs font-medium text-muted-foreground">Draft</span>
+    <span class="rounded-md bg-good/15 px-2 py-0.5 font-mono text-xs text-good">+4.2%</span>
+    <span class="rounded-md bg-bad/15 px-2 py-0.5 font-mono text-xs text-bad">−1.8%</span>
+  </div>
+  <div role="tablist" class="inline-flex h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground" id="demo-tabs">
+    ${['Overview', 'Flows', 'Venues'].map((t, i) => `<button role="tab" data-state="${i ? '' : 'active'}" class="rounded-md px-3 py-1 text-sm font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow">${t}</button>`).join('')}
+  </div>
+  <div class="rounded-xl border bg-background p-4">
+    <div class="flex items-start justify-between gap-3">
+      <div><p class="text-xs text-muted-foreground">Net exchange flow · 30d</p><p class="mt-1 font-mono text-2xl">−84,210 <span class="text-sm text-muted-foreground">BTC</span></p></div>
+      <span class="rounded-md bg-good/15 px-2 py-0.5 font-mono text-xs text-good">outflow</span>
+    </div>
+    <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"><div class="h-full w-[64%] rounded-full bg-primary"></div></div>
+    <p class="mt-2 text-xs text-muted-foreground">64% of the 90-day high</p>
+  </div>
+  <div class="grid gap-3 sm:grid-cols-2">
+    <label class="text-sm">Ticker<input value="BTCUSDT" class="mt-1 block h-9 w-full rounded-md border border-input bg-background px-3 font-mono text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" /></label>
+    <div class="text-sm">Alerts<div class="mt-1 flex h-9 items-center gap-2"><button class="switch demo-switch focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" role="switch" aria-checked="true" aria-label="Alerts"></button><span class="text-muted-foreground">Notify on large flows</span></div></div>
+  </div>
+  <div class="flex gap-2.5 rounded-lg border border-amber/30 bg-amber/5 px-3 py-2.5 text-sm text-amber"><i class="fi fi-rr-triangle-warning mt-0.5 text-xs"></i><span>Heuristic labels. Internal moves between an exchange’s own wallets can slip in.</span></div>`;
+$('#demo-tabs').onclick = (e) => { const b = e.target.closest('[role=tab]'); if (b) $('#demo-tabs').querySelectorAll('[role=tab]').forEach((t) => { t.dataset.state = t === b ? 'active' : ''; }); };
+document.querySelectorAll('.demo-switch').forEach((s) => (s.onclick = () => s.setAttribute('aria-checked', s.getAttribute('aria-checked') !== 'true')));
+
+const SHADCN_CSS = `/* globals.css: inoTives theme for shadcn/ui (Tailwind v4) */
+:root {
+  --background: #15171b;          /* paper */
+  --foreground: #e4e1d8;          /* ink */
+  --card: #1d2026;                /* raise */
+  --card-foreground: #e4e1d8;
+  --popover: #1d2026;
+  --popover-foreground: #e4e1d8;
+  --primary: #1fefd7;             /* signal */
+  --primary-foreground: #0c1614;
+  --secondary: #2a2e36;
+  --secondary-foreground: #e4e1d8;
+  --muted: #23262d;
+  --muted-foreground: #8b9099;    /* fog */
+  --accent: #2a2e36;
+  --accent-foreground: #e4e1d8;
+  --destructive: #f2706b;
+  --border: #2b2f37;              /* line */
+  --input: #343943;
+  --ring: #1fefd7;
+  --chart-1: #1fefd7;
+  --chart-2: #f6c453;
+  --chart-3: #c9a4f5;
+  --chart-4: #9ccf7f;
+  --chart-5: #e58fb0;
+  --radius: 0.5rem;
+  --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-mono: "Source Code Pro", ui-monospace, monospace;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-amber: #f6c453;         /* brand extra: selection */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}`;
+snippet($('[data-snippet=shadcn]'), 'shadcn theme', 'globals.css', SHADCN_CSS, 'css');
+
+// ================= 06 d3 =================
+// The helper, as shipped. The demos below call these functions.
+const brandD3 = {
+  palette: d3.scaleOrdinal(BRAND.data),
+  sequential: d3.scaleSequential(d3.interpolateRgbBasis(BRAND.sequential)),
+  diverging: d3.scaleDiverging(d3.interpolateRgbBasis(BRAND.diverging)),
+  axis(g) {
+    g.call((s) => s.select('.domain').attr('stroke', C.line));
+    g.selectAll('.tick line').attr('stroke', C.line);
+    g.selectAll('.tick text').attr('fill', C.fog).style('font', `400 10.5px ${BRAND.font.mono}`);
+  },
+  grid(g) { g.call((s) => s.select('.domain').remove()); g.selectAll('.tick line').attr('stroke', '#23262d'); g.selectAll('.tick text').remove(); },
+  line: { width: 1.75, curve: d3.curveMonotoneX },
+  money: (v) => d3.format('$.3~s')(v).replace('G', 'B'),
+};
+const D3_SNIPPET = `// brand-d3.js: the inoTives theme for D3
+export const brand = {
+  palette: d3.scaleOrdinal(['#1fefd7', '#f6c453', '#c9a4f5', '#9ccf7f', '#e58fb0', '#7cc4dc', '#e9a66c']),
+  sequential: d3.scaleSequential(d3.interpolateRgbBasis(['#203236', '#1fefd7', '#f6c453'])),
+  diverging: d3.scaleDiverging(d3.interpolateRgbBasis(['#e58fb0', '#23262d', '#1fefd7'])),
+
+  // call on any axis group: quiet lines, fog mono labels
+  axis(g) {
+    g.select('.domain').attr('stroke', '#2b2f37');
+    g.selectAll('.tick line').attr('stroke', '#2b2f37');
+    g.selectAll('.tick text').attr('fill', '#8b9099')
+      .style('font', '400 10.5px "Source Code Pro", monospace');
+  },
+  // gridlines one step above the card, no labels
+  grid(g) {
+    g.select('.domain').remove();
+    g.selectAll('.tick line').attr('stroke', '#23262d');
+    g.selectAll('.tick text').remove();
+  },
+  line: { width: 1.75, curve: d3.curveMonotoneX },
+  money: (v) => d3.format('$.3~s')(v).replace('G', 'B'),
+};
+
+// usage
+svg.append('g').call(d3.axisLeft(y).ticks(5).tickSizeOuter(0)).call(brand.axis);
+svg.append('path')
+  .attr('stroke', brand.palette(series.name))
+  .attr('stroke-width', brand.line.width)
+  .attr('d', d3.line().curve(brand.line.curve).x((d) => x(d.t)).y((d) => y(d.v)));`;
+snippet($('[data-snippet=d3]'), 'D3 theme helper', 'brand-d3.js', D3_SNIPPET);
+
+// demo data, seeded so it is stable
+const rnd = d3.randomLcg(42);
+const gauss = d3.randomNormal.source(rnd)(0, 1);
+const lineData = ['BTC', 'ETH', 'SOL'].map((name, k) => { let v = 100; return { name, values: d3.range(60).map((i) => (i ? (v *= Math.exp(0.0006 * (2 - k) + (0.018 + 0.008 * k) * gauss())) : v)) }; });
+const barData = [['Ethereum', 61.8e9], ['Solana', 11.9e9], ['BSC', 6.9e9], ['Bitcoin', 6.4e9], ['Base', 5.7e9], ['Tron', 4.8e9], ['Arbitrum', 3.3e9]];
+const scatterData = d3.range(90).map(() => { const c = Math.floor(rnd() * 4); return { c: ['L1', 'L2', 'DeFi', 'Meme'][c], x: 0.2 + c * 0.25 + 0.6 * rnd(), y: 0.5 + c * 0.6 + gauss() * 0.5 }; });
+let branded = true;
+
+function drawD3() {
+  const B = branded;
+  const ax = (g) => (B ? brandD3.axis(g) : g);
+  const col = B ? brandD3.palette : d3.scaleOrdinal(d3.schemeCategory10);
+  const textFill = B ? C.fog : '#000';
+  const frame = (id) => {
+    const el = $(id); el.innerHTML = '';
+    const w = el.clientWidth, h = el.clientHeight;
+    const svg = d3.select(el).append('svg').attr('width', w).attr('height', h);
+    if (!B) svg.style('background', '#fff').style('border-radius', '6px');
+    return { svg, w, h };
+  };
+  // line
+  {
+    const { svg, w, h } = frame('#d3-line');
+    const m = { t: 22, r: 12, b: 22, l: 36 };
+    const x = d3.scaleLinear([0, 59], [m.l, w - m.r]);
+    const y = d3.scaleLinear(d3.extent(lineData.flatMap((s) => s.values)), [h - m.b, m.t]).nice();
+    if (B) svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickSize(-(w - m.l - m.r))).call(brandD3.grid);
+    svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickSizeOuter(B ? 0 : 6)).call(ax);
+    svg.append('g').attr('transform', `translate(0,${h - m.b})`).call(d3.axisBottom(x).ticks(4).tickFormat((i) => d3.utcFormat('%b %-d')(d3.utcDay.offset(new Date(Date.UTC(2026, 8, 3)), i))).tickSizeOuter(B ? 0 : 6)).call(ax);
+    lineData.forEach((s) => svg.append('path').attr('fill', 'none').attr('stroke', col(s.name)).attr('stroke-width', B ? 1.75 : 1).attr('d', d3.line().x((_, i) => x(i)).y((v) => y(v)).curve(B ? brandD3.line.curve : d3.curveLinear)(s.values)));
+    let off = m.l;
+    lineData.forEach((s) => { const g = svg.append('g').attr('transform', `translate(${off},10)`); g.append('rect').attr('width', 10).attr('height', 3).attr('y', -3).attr('rx', 1.5).attr('fill', col(s.name)); const t = g.append('text').attr('x', 14).attr('dy', '0.15em').attr('fill', B ? C.ink2 : '#000').style('font', B ? `400 10.5px ${BRAND.font.mono}` : '10px sans-serif').text(s.name); off += 30 + t.node().getComputedTextLength(); });
+    if (B) {
+      const rule = svg.append('line').attr('y1', m.t).attr('y2', h - m.b).attr('stroke', C.fog).attr('stroke-dasharray', '3 3').style('display', 'none');
+      svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', w - m.l - m.r).attr('height', h - m.t - m.b).attr('fill', 'transparent')
+        .on('pointermove', (ev) => { const i = Math.round(x.invert(d3.pointer(ev)[0])); rule.attr('x1', x(i)).attr('x2', x(i)).style('display', null); showTip(`<div class="mb-1 font-medium">${d3.utcFormat('%b %-d, %Y')(d3.utcDay.offset(new Date(Date.UTC(2026, 8, 3)), i))}</div>${lineData.map((s) => `<div class="flex items-center gap-2"><span class="size-2 rounded-full" style="background:${col(s.name)}"></span>${s.name}<span class="ml-auto pl-3 font-mono">${d3.format('+.1%')(s.values[i] / 100 - 1)}</span></div>`).join('')}`, ev); })
+        .on('pointerleave', () => { rule.style('display', 'none'); hideTip(); });
+    }
+  }
+  // bar
+  {
+    const { svg, w, h } = frame('#d3-bar');
+    const m = { t: 4, r: 44, b: 4, l: 70 };
+    const y = d3.scaleBand(barData.map((d) => d[0]), [m.t, h - m.b]).padding(0.3);
+    const x = d3.scaleLinear([0, d3.max(barData, (d) => d[1])], [m.l, w - m.r]);
+    svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).tickSize(B ? 0 : 6).tickPadding(6)).call(ax).call((g) => { if (B) { g.select('.domain').remove(); g.selectAll('text').attr('fill', C.ink2); } });
+    svg.append('g').selectAll('rect').data(barData).join('rect').attr('x', m.l).attr('y', (d) => y(d[0])).attr('height', y.bandwidth()).attr('width', (d) => x(d[1]) - m.l).attr('rx', B ? 2 : 0)
+      .attr('fill', (d, i) => (B ? (i === 0 ? C.amber : C.signal) : 'steelblue')).attr('fill-opacity', (d, i) => (B && i ? 0.55 : 1))
+      .on('pointermove', B ? (ev, d) => showTip(`<div class="font-medium">${d[0]}</div><div class="font-mono">${brandD3.money(d[1])} TVL</div>`, ev) : null).on('pointerleave', B ? hideTip : null);
+    svg.append('g').selectAll('text').data(barData).join('text').attr('x', (d) => x(d[1]) + 5).attr('y', (d) => y(d[0]) + y.bandwidth() / 2).attr('dy', '0.35em').attr('fill', textFill).style('font', B ? `400 10.5px ${BRAND.font.mono}` : '10px sans-serif').text((d) => (B ? brandD3.money(d[1]) : d[1]));
+  }
+  // scatter
+  {
+    const { svg, w, h } = frame('#d3-scatter');
+    const m = { t: 22, r: 12, b: 22, l: 30 };
+    const x = d3.scaleLinear([0, 1.6], [m.l, w - m.r]), y = d3.scaleLinear(d3.extent(scatterData, (d) => d.y), [h - m.b, m.t]).nice();
+    if (B) svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickSize(-(w - m.l - m.r))).call(brandD3.grid);
+    svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickSizeOuter(B ? 0 : 6)).call(ax);
+    svg.append('g').attr('transform', `translate(0,${h - m.b})`).call(d3.axisBottom(x).ticks(4).tickSizeOuter(B ? 0 : 6)).call(ax);
+    svg.append('g').selectAll('circle').data(scatterData).join('circle').attr('cx', (d) => x(d.x)).attr('cy', (d) => y(d.y)).attr('r', B ? 3.5 : 3)
+      .attr('fill', (d) => col(d.c)).attr('fill-opacity', B ? 0.85 : 1).attr('stroke', B ? C.raise : 'none').attr('stroke-width', 1)
+      .on('pointermove', B ? (ev, d) => showTip(`<div class="font-medium">${d.c}</div><div class="font-mono">x ${d.x.toFixed(2)} · y ${d.y.toFixed(2)}</div>`, ev) : null).on('pointerleave', B ? hideTip : null);
+    let off = m.l;
+    ['L1', 'L2', 'DeFi', 'Meme'].forEach((c) => { const g = svg.append('g').attr('transform', `translate(${off},10)`); g.append('circle').attr('r', 3.5).attr('cy', -1).attr('fill', col(c)); const t = g.append('text').attr('x', 8).attr('dy', '0.15em').attr('fill', B ? C.ink2 : '#000').style('font', B ? `400 10.5px ${BRAND.font.mono}` : '10px sans-serif').text(c); off += 22 + t.node().getComputedTextLength(); });
+  }
+}
+$('#d3-toggle').onclick = (e) => { branded = !branded; e.currentTarget.setAttribute('aria-checked', branded); $('#d3-mode').textContent = branded ? 'Brand theme' : 'D3 defaults'; drawD3(); };
+$('#d3-rules').innerHTML = [
+  rule('do', 'Remove outer ticks and the y domain line. Gridlines are horizontal only.'),
+  rule('do', 'Highlight one mark in Amber and mute the rest to 55%, so the answer is the first thing seen.'),
+  rule('dont', 'Don’t add chart titles inside the SVG. The card heading names the chart; the SVG holds data.'),
+].join('');
+
+// ================= 07 three =================
+const THREE_SNIPPET = `// brand-three.js: inoTives scene conventions
+export function brandScene(container) {
+  // transparent canvas: the page gradient is the background
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog('#15171b', 18, 42);        // fade into paper
+
+  // soft, slightly cool light from above, one key light
+  scene.add(new THREE.HemisphereLight('#cfe9ff', '#15171b', 1.1));
+  const key = new THREE.DirectionalLight('#ffffff', 1.6);
+  key.position.set(-8, 14, 10);
+  scene.add(key);
+
+  const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 200); // narrow lens, little distortion
+  return { renderer, scene, camera };
+}
+
+export const materials = {
+  solid: (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.1 }),
+  floor: () => new THREE.MeshStandardMaterial({ color: '#1d2026', roughness: 1 }),
+  live: () => new THREE.MeshBasicMaterial({ color: '#1fefd7', wireframe: true, transparent: true, opacity: 0.75 }),
+  points: () => new THREE.PointsMaterial({ color: '#c9a4f5', size: 0.05, transparent: true, opacity: 0.85 }),
+  selected: '#3a3220',   // emissive tint for hover and selection
+};
+
+// labels are HTML via CSS2DRenderer: Source Code Pro 10.5px in fog, amber when selected`;
+snippet($('[data-snippet=three]'), 'Three.js conventions', 'brand-three.js', THREE_SNIPPET);
+
+const three = (() => {
+  const el = $('#three-stage');
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  el.appendChild(renderer.domElement);
+  const labels = new CSS2DRenderer();
+  Object.assign(labels.domElement.style, { position: 'absolute', inset: '0', pointerEvents: 'none' });
+  el.appendChild(labels.domElement);
+  const scene = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(34, 2, 0.1, 200);
+  cam.position.set(-7, 6.5, 11);
+  const controls = new OrbitControls(cam, renderer.domElement);
+  controls.target.set(1.5, 1.4, 0); controls.enableDamping = true; controls.enableZoom = false; controls.maxPolarAngle = Math.PI * 0.47;
+  controls.autoRotate = !reduceMotion; controls.autoRotateSpeed = 0.6;
+  controls.addEventListener('start', () => { controls.autoRotate = false; });
+
+  const hemi = new THREE.HemisphereLight('#cfe9ff', '#15171b', 1.1);
+  const key = new THREE.DirectionalLight('#ffffff', 1.6); key.position.set(-8, 14, 10);
+  const flat = new THREE.AmbientLight('#ffffff', 0.4), dflt = new THREE.DirectionalLight('#ffffff', 3); dflt.position.set(5, 5, 5);
+  scene.add(hemi, key, flat, dflt);
+
+  // bars: 7 x 5 grid of values on the sequential ramp
+  const geo = new THREE.BoxGeometry(0.8, 1, 0.8); geo.translate(0, 0.5, 0);
+  const bars = [], seq = d3.scaleSequential(d3.interpolateRgbBasis(BRAND.sequential));
+  const rows = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], cols = ['00h', '04h', '08h', '12h', '16h', '20h', '24h'];
+  rows.forEach((r, j) => cols.forEach((c, i) => {
+    const v = 0.25 + 0.75 * Math.exp(-((i - 3.6) ** 2) / 3) * (1 - j * 0.08) + 0.08 * rnd();
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial());
+    m.position.set(i - 3, 0, j - 2); m.scale.y = v * 4; m.userData = { v, label: `${r} ${c}`, base: seq(Math.min(1, v)), basic: BRAND.data[(i + j) % 7] };
+    scene.add(m); bars.push(m);
+  }));
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 6.2), new THREE.MeshStandardMaterial());
+  floor.rotation.x = -Math.PI / 2; floor.position.y = -0.01; scene.add(floor);
+  // the "live" object: a wireframe orb in signal cyan with a point shell
+  const orb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.9, 1), new THREE.MeshBasicMaterial({ color: C.signal, wireframe: true, transparent: true, opacity: 0.75 }));
+  orb.position.set(5.6, 2.6, 0);
+  const P = new Float32Array(180 * 3);
+  for (let i = 0; i < 180; i++) { const v = new THREE.Vector3().randomDirection().multiplyScalar(1.3 + Math.random() * 0.5); P.set([v.x, v.y, v.z], i * 3); }
+  const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(P, 3));
+  const shell = new THREE.Points(pg, new THREE.PointsMaterial({ color: '#c9a4f5', size: 0.05, transparent: true, opacity: 0.85 }));
+  shell.position.copy(orb.position);
+  scene.add(orb, shell);
+  const lbls = [];
+  const lbl = (t, x, y, z) => { const d = document.createElement('div'); d.className = 'lbl3'; d.textContent = t; const o = new CSS2DObject(d); o.position.set(x, y, z); scene.add(o); lbls.push(d); return d; };
+  cols.forEach((c, i) => lbl(c, i - 3, 0, 3.2));
+  rows.forEach((r, j) => lbl(r, -4.3, 0, j - 2));
+  const liveLbl = lbl('live', 5.6, 4.3, 0);
+
+  let branded = true, hover = null;
+  function apply() {
+    renderer.setClearColor(branded ? 0x000000 : 0x000000, branded ? 0 : 1);
+    scene.fog = branded ? new THREE.Fog('#15171b', 18, 42) : null;
+    hemi.visible = key.visible = branded; flat.visible = dflt.visible = !branded;
+    for (const b of bars) { b.material.dispose(); b.material = branded ? new THREE.MeshStandardMaterial({ color: b.userData.base, roughness: 0.55, metalness: 0.1 }) : new THREE.MeshNormalMaterial(); }
+    floor.material = branded ? new THREE.MeshStandardMaterial({ color: C.raise, roughness: 1 }) : new THREE.MeshBasicMaterial({ color: '#888888' });
+    orb.material.color.set(branded ? C.signal : '#00ff00'); shell.material.color.set(branded ? '#c9a4f5' : '#ff00ff');
+    lbls.forEach((d) => { d.style.font = branded ? '' : '12px Times New Roman, serif'; d.style.color = branded ? '' : '#ffffff'; });
+    el.style.background = branded ? '' : '#000';
+  }
+  apply();
+  const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+  renderer.domElement.addEventListener('pointermove', (ev) => {
+    const r = renderer.domElement.getBoundingClientRect();
+    ptr.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ptr, cam);
+    const hit = ray.intersectObjects(bars)[0]?.object ?? null;
+    if (hover && hover !== hit && hover.material.emissive) hover.material.emissive.set('#000000');
+    hover = hit;
+    if (hit) { if (branded) hit.material.emissive.set('#3a3220'); showTip(`<div class="font-medium">${hit.userData.label}</div><div class="font-mono">${d3.format('.0%')(hit.userData.v)} of peak</div>`, ev); } else hideTip();
+  });
+  renderer.domElement.addEventListener('pointerleave', () => { if (hover?.material.emissive) hover.material.emissive.set('#000000'); hover = null; hideTip(); });
+  function size() { const w = el.clientWidth, h = el.clientHeight; renderer.setSize(w, h); labels.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+  new ResizeObserver(size).observe(el); size();
+  let visible = true;
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(el);
+  const loop = (t) => {
+    if (visible) {
+      controls.update();
+      orb.rotation.y = t / 3000; shell.rotation.y = -t / 5000;
+      liveLbl.classList.toggle('on', branded);
+      renderer.render(scene, cam); labels.render(scene, cam);
+    }
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+  return { toggle() { branded = !branded; apply(); return branded; } };
+})();
+$('#three-toggle').onclick = (e) => { const b = three.toggle(); e.currentTarget.setAttribute('aria-checked', b); $('#three-mode').textContent = b ? 'Brand scene' : 'Three.js defaults'; };
+$('#three-rules').innerHTML = [
+  rule('do', 'Use a transparent canvas over the page gradient, and fog that fades into Paper.'),
+  rule('do', 'Keep solids matte (roughness 0.55). Color them from the data palette or the sequential ramp.'),
+  rule('dont', 'Don’t draw text as 3D geometry. Use CSS2D labels in Source Code Pro so they stay readable.'),
+].join('');
+
+// ================= 08 icons =================
+const ICONS = {
+  Navigation: ['home', 'menu-burger', 'search', 'arrow-small-left', 'arrow-small-right', 'angle-small-down', 'angle-small-right', 'expand', 'compress', 'link', 'globe', 'map-marker'],
+  Actions: ['plus', 'minus', 'edit', 'pencil', 'copy', 'trash', 'download', 'upload', 'share', 'refresh', 'filter', 'sort-alt', 'paper-plane', 'check', 'cross-small'],
+  Data: ['chart-line-up', 'chart-histogram', 'chart-pie', 'chart-candlestick', 'chart-network', 'chart-tree', 'stats', 'dashboard', 'database', 'layers', 'cube', 'apps', 'grid'],
+  Agents: ['sparkles', 'robot', 'brain', 'magic-wand', 'bulb', 'terminal', 'code-simple', 'file-code', 'plug-connection', 'settings', 'settings-sliders', 'comment-alt', 'comments'],
+  Markets: ['coins', 'wallet', 'bank', 'exchange', 'rocket-lunch', 'flame', 'bolt', 'time-past', 'clock', 'calendar'],
+  Status: ['info', 'triangle-warning', 'interrogation', 'shield-check', 'lock', 'key', 'eye', 'bell', 'star', 'heart', 'flag', 'bookmark'],
+  Content: ['document', 'book', 'text', 'palette', 'brush', 'envelope', 'user', 'users', 'cloud', 'moon', 'sun'],
+};
+let iconSize = 20;
+$('#icon-sizes').innerHTML = [16, 20, 24].map((s) => `<button role="radio" data-size="${s}" class="rounded-md px-3 py-1 font-mono text-xs hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow">${s}px</button>`).join('');
+$('#icon-sizes').onclick = (e) => { const b = e.target.closest('[data-size]'); if (b) { iconSize = +b.dataset.size; renderIcons(); } };
+function renderIcons() {
+  const q = $('#icon-q').value.trim().toLowerCase();
+  document.querySelectorAll('[data-size]').forEach((b) => { b.dataset.state = +b.dataset.size === iconSize ? 'active' : ''; b.setAttribute('aria-checked', +b.dataset.size === iconSize); });
+  let n = 0;
+  $('#icon-groups').innerHTML = Object.entries(ICONS).map(([g, list]) => {
+    const hits = list.filter((i) => !q || i.includes(q) || g.toLowerCase().includes(q));
+    n += hits.length;
+    if (!hits.length) return '';
+    return `<div><h3 class="text-xs font-medium uppercase tracking-wider text-muted-foreground">${g} <span class="font-mono normal-case">· ${hits.length}</span></h3>
+      <div class="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-8">${hits.map((i) => `
+        <button data-icon="${i}" class="group flex flex-col items-center gap-2 rounded-lg border bg-card px-1 py-3 text-ink-2 transition-colors hover:border-primary/50 hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Copy fi-rr-${i}">
+          <i class="fi fi-rr-${i}" style="font-size:${iconSize}px"></i>
+          <span class="w-full truncate text-center font-mono text-[10px] text-muted-foreground group-hover:text-foreground">${i}</span>
+        </button>`).join('')}</div></div>`;
+  }).join('') || '<p class="text-sm text-muted-foreground">No icon in the base set matches. The full UIcons library has more.</p>';
+  $('#icon-count').textContent = `${n} icons`;
+}
+$('#icon-q').addEventListener('input', renderIcons);
+$('#icon-groups').onclick = (e) => { const b = e.target.closest('[data-icon]'); if (b) copy(`<i class="fi fi-rr-${b.dataset.icon}"></i>`, `fi-rr-${b.dataset.icon}`); };
+renderIcons();
+$('#icon-rules').innerHTML = [
+  rule('do', 'Load one stylesheet: <span class="font-mono text-xs">uicons-regular-rounded.css</span>. Icons are text, so set size with font-size and color with the text color.'),
+  rule('do', 'Pair an icon with a label. Icon-only buttons need an aria-label.'),
+  rule('dont', 'Don’t mix in solid, bold or brand UIcons styles, or icons from another set.'),
+].join('');
+
+// ================= downloads =================
+function download(name, text, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast(`Downloaded ${name}`);
+}
+document.querySelectorAll('[data-download]').forEach((b) => (b.onclick = () => {
+  if (b.dataset.download === 'json') download('inotives-tokens.json', JSON.stringify({ name: 'inoTives', version: '1.0', ...BRAND, icons: { set: 'Flaticon UIcons', style: 'regular-rounded', prefix: 'fi-rr-', base: ICONS } }, null, 2), 'application/json');
+  else download('inotives-theme.css', SHADCN_CSS, 'text/css');
+}));
+
+// ================= table of contents =================
+const sections = [...document.querySelectorAll('main section')];
+$('#toc').innerHTML = sections.map((s, i) => `<li><a href="#${s.id}" class="nav-link block border-l-2 border-transparent py-1 pl-3 text-muted-foreground hover:text-foreground"><span class="mr-2 font-mono text-[11px]">${String(i + 1).padStart(2, '0')}</span>${s.dataset.title}</a></li>`).join('');
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries) if (e.isIntersecting) document.querySelectorAll('#toc a').forEach((a) => a.setAttribute('aria-current', a.getAttribute('href') === `#${e.target.id}`));
+}, { rootMargin: '-30% 0px -65% 0px' });
+sections.forEach((s) => io.observe(s));
+
+drawD3();
+let rT; addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(drawD3, 150); });
+document.fonts?.ready.then(drawD3);
+</script>
+</body>
+</html>
