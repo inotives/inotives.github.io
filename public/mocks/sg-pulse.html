@@ -283,8 +283,8 @@ function island() {
   return tiles;
 }
 // Upright bars as one InstancedMesh, base on the ground, heights eased by a ticker.
-function bars(n, { w = 0.08, round = false } = {}) {
-  const geo = round ? new THREE.CylinderGeometry(w / 2, w / 2, 1, 14) : new THREE.BoxGeometry(w, 1, w);
+function bars(n, { w = 0.08, round = false, hexagon = false } = {}) {
+  const geo = hexagon ? new THREE.CylinderGeometry(w / 2, w / 2, 1, 6) : round ? new THREE.CylinderGeometry(w / 2, w / 2, 1, 14) : new THREE.BoxGeometry(w, 1, w);
   geo.translate(0, 0.5, 0);
   const mesh = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.05 }), n);
   mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -308,7 +308,7 @@ function bars(n, { w = 0.08, round = false } = {}) {
 }
 
 // ================= state =================
-const state = { view: 'weather', wmode: 'temp', air: 'psi', taxi: 'points', cpFilter: 'all', area: null, region: null, cp: null, gauge: null };
+const state = { view: 'weather', wmode: 'temp', air: 'psi', taxi: 'points', txFrom: null, cpFilter: 'all', area: null, region: null, cp: null, gauge: null };
 const W = {};            // weather readings
 const AIR = {};          // psi, pm25, day series
 const TX = { hist: [], frames: [], hour: null, status: 'idle' };   // taxis
@@ -1154,92 +1154,227 @@ function pmGrid(el) {
 }
 
 // ---------- taxis ----------
+// Free taxis only, no IDs: what we can show is where free taxis are and how that shifts hour to hour.
+const CHANGI = [103.976, 1.332, 103.998, 1.368];   // lon/lat box around the airport terminals' taxi queues
+const HEX_R = 0.24;                                 // hex radius in world units (about 0.5 km)
+// Pointy-top hexagons in the x-z plane: axial coordinates by cube rounding.
+function hexOf(x, z) {
+  const q = ((Math.sqrt(3) / 3) * x - z / 3) / HEX_R, r = ((2 / 3) * z) / HEX_R, s = -q - r;
+  let rq = Math.round(q), rr = Math.round(r), rs = Math.round(s);
+  const dq = Math.abs(rq - q), dr = Math.abs(rr - r), ds = Math.abs(rs - s);
+  if (dq > dr && dq > ds) rq = -rr - rs; else if (dr > ds) rr = -rq - rs;
+  return `${rq},${rr}`;
+}
+const hexCentre = (k) => { const [q, r] = k.split(',').map(Number); return [HEX_R * Math.sqrt(3) * (q + r / 2), HEX_R * 1.5 * r]; };
+// Per frame, computed once: counts by planning area, at Changi Airport, and by hexagon.
+function txStats(fr) {
+  if (fr._s) return fr._s;
+  const byArea = new Int32Array(AREAS.length), hex = new Map();
+  let changi = 0;
+  fr.pts.forEach(([lon, lat]) => {
+    const a = areaAt(lon, lat); if (a >= 0) byArea[a]++;
+    if (lon >= CHANGI[0] && lon <= CHANGI[2] && lat >= CHANGI[1] && lat <= CHANGI[3]) changi++;
+    const [x, z] = P(lon, lat), k = hexOf(x, z); hex.set(k, (hex.get(k) ?? 0) + 1);
+  });
+  return (fr._s = { byArea, changi, hex });
+}
+// The frame to compare against: the one picked, or an hour before the frame shown.
+function txCompare() {
+  const B = VIEWS.taxis.shown(); if (!B || !TX.frames.length) return [null, B];
+  if (state.txFrom != null && TX.frames[state.txFrom] && TX.frames[state.txFrom] !== B) return [TX.frames[state.txFrom], B];
+  if (TX.hour != null) return [TX.frames[TX.hour - 1] ?? null, B];
+  const ref = [...TX.frames].reverse().find((f) => new Date(B.t) - new Date(f.t) >= 50 * 60e3);
+  return [ref ?? null, B];
+}
+const CHG = d3.interpolateRgbBasis(['#e58fb0', '#3a3f48', '#1fefd7']);
+const regionShort = (r) => r.replace(' Region', '');
+
 VIEWS.taxis = {
   tab: 'Taxis', icon: 'fi-rr-taxi',
   title: 'Every free taxi on the road',
-  blurb: 'The position of every taxi free for hire at the last sync, as LTA reports it. Switch to density to see where they gather, or scrub through today hour by hour.',
-  how: ['Point-in-polygon counts by planning area, the grid binning and the charts.', 'One point cloud for the taxis, or an instanced bar per grid cell.'],
+  blurb: 'Every taxi free for hire, as LTA reports it. See them as points, as glowing hexagons, grouped by town, or as the change since an earlier hour: where free taxis vanished, demand took them.',
+  how: ['Point-in-polygon counts by town, hexagonal binning, the change between hours, the area-by-hour heatmap and the Changi queue.', 'A point cloud, instanced hexagon columns that ease between hours, or extruded towns.'],
   camera: [-2, 17, 19], target: [0.5, 0, 0.6],
   shown() { return TX.hour != null && TX.frames[TX.hour] ? TX.frames[TX.hour] : TX.live; },
   build() {
     this.tiles = island();
     this.tiles.forEach((t) => { t.userData.pick = () => this.areaTip(t.userData.area); pickables.push(t); });
+    this.cloud = this.hex = this.ameshes = this.alabels = null; this.hexKey = '';
     this.update();
+  },
+  // Extruded towns, shared by the Areas and Change views; heights ease.
+  buildAreas() {
+    this.ameshes = AREAS.map((a) => {
+      const geo = new THREE.ExtrudeGeometry(a.p.map(shapeOf), { depth: 1, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
+      const m = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ color: B.signal, roughness: 0.6, metalness: 0.05 }), new THREE.MeshBasicMaterial({ color: B.signal })]);
+      m.scale.y = 0.001; m.userData = { area: a.i, h: 0.001, pick: () => this.areaTip(a.i) };
+      group.add(m); pickables.push(m); return m;
+    });
+    tickers.add(() => this.ameshes?.forEach((m) => { const d = m.userData.h - m.scale.y; if (Math.abs(d) > 1e-4) m.scale.y += reduceMotion ? d : d * 0.14; }));
   },
   update() {
     const fr = this.shown(); if (!fr || !this.tiles) return;
-    if (!fr.byArea) { fr.byArea = new Int32Array(AREAS.length); fr.pts.forEach(([lon, lat]) => { const a = areaAt(lon, lat); if (a >= 0) fr.byArea[a]++; }); }
+    const S = txStats(fr), mode = state.taxi;
     this.tiles.forEach((t) => t.material.color.set(state.area === t.userData.area ? '#4a4128' : '#262a31'));
+    if (this.alabels) dispose(this.alabels);
+    this.alabels = new THREE.Group(); group.add(this.alabels);
+    // points
     if (this.cloud) { dispose(this.cloud); this.cloud = null; }
-    if (this.grid) { tickers.delete(this.grid.tick); pickables = pickables.filter((p) => p !== this.grid.mesh); dispose(this.grid.mesh); this.grid = null; }
-    if (state.taxi === 'points') {
+    if (mode === 'points') {
       const xs = []; fr.pts.forEach(([lon, lat]) => { const [x, z] = P(lon, lat); xs.push(x, 0.03, z); });
       const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(xs, 3));
       this.cloud = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.17, map: DOT, color: B.amber, transparent: true, opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending }));
       group.add(this.cloud);
-    } else {
-      const S = 0.32, cells = new Map();
-      fr.pts.forEach(([lon, lat]) => { const [x, z] = P(lon, lat); const k = `${Math.floor(x / S)},${Math.floor(z / S)}`; cells.set(k, (cells.get(k) ?? 0) + 1); });
-      const list = [...cells].map(([k, n]) => { const [i, j] = k.split(',').map(Number); return { x: (i + 0.5) * S, z: (j + 0.5) * S, n }; });
-      const max = d3.max(list, (d) => d.n) || 1, col = d3.scaleSequentialSqrt([0, max], RAMP);
-      this.grid = bars(list.length, { w: S * 0.86 });
-      // sqrt heights so the airport taxi queue doesn't flatten the rest
-      list.forEach((d, i) => { this.grid.place(i, new THREE.Vector3(d.x, 0, d.z)); this.grid.set(i, 0.04 + Math.sqrt(d.n / max) * 2.4, col(d.n)); });
-      this.grid.commit();
-      this.grid.mesh.userData = { alive: () => true, pick: (h) => { const d = list[h.instanceId], [lon, lat] = proj.invert([d.x, d.z]), a = areaAt(lon, lat); return `<div class="font-mono text-foreground">${d.n} taxi${d.n > 1 ? 's' : ''}</div><div class="text-muted-foreground">${a >= 0 ? esc(AREAS[a].n) : 'at sea or the border'} · ${f1(S * kmPerUnit())} km square</div>`; } };
-      pickables.push(this.grid.mesh);
     }
+    // hexagons: one instance per hexagon seen in any frame today, so heights ease between hours
+    if (mode === 'hex') {
+      const key = `${TX.frames.length}|${TX.live?.t}`;
+      if (!this.hex || this.hexKey !== key) {
+        if (this.hex) { tickers.delete(this.hex.tick); pickables = pickables.filter((p) => p !== this.hex.mesh); dispose(this.hex.mesh); }
+        const keys = [...new Set([...TX.frames, TX.live].filter(Boolean).flatMap((f) => [...txStats(f).hex.keys()]))];
+        this.hex = bars(keys.length, { w: HEX_R * 1.84, hexagon: true }); this.hex.keys = keys; this.hexKey = key;
+        keys.forEach((k, i) => { const [x, z] = hexCentre(k); this.hex.place(i, new THREE.Vector3(x, 0, z)); });
+        this.hex.mesh.userData = { alive: (i) => this.hex.alive(i), pick: (h) => { const k = this.hex.keys[h.instanceId], n = txStats(this.shown()).hex.get(k) ?? 0, [x, z] = hexCentre(k), [lon, lat] = proj.invert([x, z]), a = areaAt(lon, lat); return `<div class="font-mono text-foreground">${n} free taxi${n === 1 ? '' : 's'}</div><div class="text-muted-foreground">${a >= 0 ? esc(AREAS[a].n) : 'at sea or the border'} · hexagon about ${f1(HEX_R * Math.sqrt(3) * kmPerUnit())} km across</div>`; } };
+        pickables.push(this.hex.mesh);
+      }
+      const max = d3.max([...TX.frames, TX.live].filter(Boolean), (f) => d3.max(txStats(f).hex.values())) || 1, col = d3.scaleSequentialSqrt([0, max], RAMP);
+      this.hex.keys.forEach((k, i) => { const n = S.hex.get(k) ?? 0; this.hex.set(i, n ? 0.05 + Math.sqrt(n / max) * 2.6 : 0, n ? col(n) : B.line); });
+      this.hex.commit();
+      this.hex.mesh.visible = true;
+    } else if (this.hex) this.hex.mesh.visible = false;
+    // towns: raised by free taxis, or by the change since the compared frame
+    if (mode === 'areas' || mode === 'change') {
+      if (!this.ameshes) this.buildAreas();
+      const [A] = mode === 'change' ? txCompare() : [null];
+      const SA = A ? txStats(A) : null;
+      const vals = AREAS.map((a) => (mode === 'areas' ? S.byArea[a.i] : SA ? S.byArea[a.i] - SA.byArea[a.i] : 0));
+      const max = d3.max(vals, (v) => Math.abs(v)) || 1, col = d3.scaleSequentialSqrt([0, max], RAMP), dv = d3.scaleDiverging([-max, 0, max], CHG);
+      this.ameshes.forEach((m, i) => {
+        const v = vals[i]; m.visible = true;
+        m.userData.h = mode === 'areas' ? (v ? 0.04 + Math.sqrt(v / max) * 2.6 : 0.001) : 0.03 + (Math.abs(v) / max) * 2.2;
+        const c = new THREE.Color(state.area === i ? B.amber : mode === 'areas' ? (v ? col(v) : '#2f333a') : dv(v));
+        m.material[0].color.copy(c); m.material[1].color.copy(c).multiplyScalar(0.55);
+      });
+      // labels on the biggest values (or the biggest moves both ways)
+      const order = d3.range(AREAS.length).filter((i) => vals[i]);
+      const pick = mode === 'areas' ? order.sort((a, b) => vals[b] - vals[a]).slice(0, 8) : [...order.sort((a, b) => vals[a] - vals[b]).slice(0, 4).filter((i) => vals[i] < 0), ...order.sort((a, b) => vals[b] - vals[a]).slice(0, 4).filter((i) => vals[i] > 0)];
+      if (state.area != null && !pick.includes(state.area)) pick.push(state.area);
+      pick.forEach((i) => { const a = AREAS[i], v = vals[i]; const o = lbl(`${a.n} ${mode === 'change' && v > 0 ? '+' : ''}${v}`, V3(...a.c, this.ameshes[i].userData.h + 0.3), `bg ${state.area === i ? 'sel' : ''}`, this.alabels); o.element.style.color = mode === 'change' ? (v < 0 ? B.pink : B.signal) : ''; });
+    } else this.ameshes?.forEach((m) => { m.visible = false; });
     legend();
   },
-  areaTip(i) { const fr = this.shown(); return `<div class="font-medium text-foreground">${esc(AREAS[i].n)}</div><div class="font-mono">${fr?.byArea ? fr.byArea[i] : '–'} free taxis</div>`; },
+  areaTip(i) {
+    const fr = this.shown(); if (!fr) return '';
+    const n = txStats(fr).byArea[i], [A] = txCompare(), d = A ? n - txStats(A).byArea[i] : null;
+    return `<div class="font-medium text-foreground">${esc(AREAS[i].n)}</div><div class="text-muted-foreground">${esc(AREAS[i].r)}</div><div class="font-mono">${n} free taxi${n === 1 ? '' : 's'}${TX.hour != null ? ` at ${hourLbl(fr.h)}` : ''}</div>${d != null ? `<div class="font-mono" style="color:${d < 0 ? B.pink : d > 0 ? B.signal : B.fog}">${d > 0 ? '+' : ''}${d} since ${hhmm(A.t)}${d < 0 ? ', taken' : d > 0 ? ', waiting' : ''}</div>` : ''}`;
+  },
   tilesHtml() {
-    const fr = this.shown(); if (!fr) return tile('Free taxis', '–') + tile('', '–');
-    const prev = TX.hist.length > 1 ? TX.hist.at(-2).n : null, n = fr.pts.length;
-    const busiest = fr.byArea ? d3.greatestIndex(fr.byArea) : -1;
-    return tile('Free taxis', f0(n), TX.hour != null ? `at ${hhmm(fr.t)}` : prev != null && TX.hour == null ? `${n - prev >= 0 ? '+' : '−'}${f0(Math.abs(n - prev))} on the last minute` : `as of ${hhmm(fr.t)}`)
-      + tile('Busiest area', busiest >= 0 ? esc(AREAS[busiest].n) : '–', busiest >= 0 ? `${fr.byArea[busiest]} taxis · ${pctF(fr.byArea[busiest] / n)}` : '');
+    const fr = this.shown(); if (!fr) return tile('Free taxis', '–', 'sync “Taxis now”') + tile('', '–');
+    const S = txStats(fr), n = fr.pts.length, busiest = d3.greatestIndex(S.byArea), [A] = txCompare(), d = A ? n - A.pts.length : null;
+    const prev = TX.hist.length > 1 ? TX.hist.at(-2).n : null;
+    return tile('Free taxis', f0(n), TX.hour != null ? `at ${hhmm(fr.t)}` : prev != null ? `${n - prev >= 0 ? '+' : '−'}${f0(Math.abs(n - prev))} since the last sync` : `as of ${hhmm(fr.t)}`)
+      + tile('Busiest town', busiest >= 0 ? esc(AREAS[busiest].n) : '–', busiest >= 0 ? `${S.byArea[busiest]} taxis · ${pctF(S.byArea[busiest] / n)}` : '')
+      + tile('At Changi Airport', f0(S.changi), `${pctF(S.changi / n)} of free taxis, queuing`)
+      + tile('Vs an hour earlier', d != null ? `<span style="color:${d < 0 ? B.pink : B.signal}">${d > 0 ? '+' : '−'}${f0(Math.abs(d))}</span>` : '–', d != null ? `since ${hhmm(A.t)} · ${d < 0 ? 'more taken' : 'more waiting'}` : 'sync “Taxis today”');
   },
   opts() {
-    return `<div class="mt-3 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Show</span>${seg('taxi', [['points', 'Taxis'], ['density', 'Density']], state.taxi)}</div><div id="txday" class="mt-3"></div>`;
+    const cmp = state.taxi === 'change' && TX.frames.length ? `<div class="mt-2 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Compare with</span>
+      <div class="relative"><select id="tx-from" class="h-8 w-[170px] appearance-none rounded-md border bg-background/60 pl-2.5 pr-8 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+        <option value="">An hour earlier</option>${TX.frames.map((f, i) => `<option value="${i}" ${state.txFrom === i ? 'selected' : ''}>${hourLbl(f.h)}</option>`).join('')}</select>
+      <i class="fi fi-rr-angle-small-down pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"></i></div></div>` : '';
+    return `<div class="mt-3 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Show</span>${seg('taxi', [['points', 'Taxis'], ['hex', 'Hexes'], ['areas', 'Towns'], ['change', 'Change']], state.taxi)}</div>${cmp}<div id="txday" class="mt-3"></div>`;
   },
   fill() {
     txDay();
     const el = $('#body'); if (!el) return;
-    const fr = this.shown(); if (!fr?.byArea) { el.innerHTML = ''; return; }
-    const top = d3.range(AREAS.length).filter((i) => fr.byArea[i]).sort((a, b) => fr.byArea[b] - fr.byArea[a]).slice(0, 10), max = fr.byArea[top[0]] || 1;
-    el.innerHTML = `${sec('Where they are', `${TX.hour != null ? hhmm(fr.t) : 'now'}, top 10 areas`)}
-      <div class="space-y-1">${top.map((i) => `<button data-area="${i}" class="group flex w-full items-center gap-2 rounded text-left text-xs hover:bg-accent/50 ${state.area === i ? 'text-amber' : ''}">
-        <span class="w-[104px] shrink-0 truncate ${state.area === i ? '' : 'text-ink-2'}">${esc(AREAS[i].n)}</span>
-        <span class="h-2.5 rounded-sm" style="width:${(fr.byArea[i] / max) * 100}%;max-width:calc(100% - 150px);background:${state.area === i ? B.amber : B.signal}"></span>
-        <span class="font-mono">${fr.byArea[i]}</span></button>`).join('')}</div>
-      ${TX.hist.length > 1 && TX.hour == null ? `${sec('Since you opened the page', 'each minute')}<div id="txhist"></div>` : ''}`;
+    const fr = this.shown(); if (!fr) { el.innerHTML = ''; return; }
+    el.innerHTML = `${state.taxi === 'change' ? `${sec('Where taxis got taken', '')}<div id="txchg"></div>` : ''}
+      ${sec('By town', `${TX.hour != null ? hourLbl(fr.h) : 'now'} · grouped by region`)}<div id="txtown"></div>
+      ${sec('Through the day, by town', 'free taxis on the hour')}<div id="txheat"></div>
+      ${sec('Changi Airport queue', 'free taxis at the terminals, on the hour')}<div id="txchangi"></div>
+      ${TX.hist.length > 1 && TX.hour == null ? `${sec('Since you opened the page', 'each sync')}<div id="txhist"></div>` : ''}`;
+    if ($('#txchg')) taxiChanges($('#txchg'));
+    taxiTowns($('#txtown'), fr); taxiHeat($('#txheat')); taxiChangi($('#txchangi'));
     if ($('#txhist')) spark($('#txhist'), TX.hist.map((d) => d.n), B.amber);
   },
   detail(el) {
-    if (state.area == null) { el.innerHTML = muted('<i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Click an area to see its share of free taxis.'); return; }
-    const fr = this.shown(), a = AREAS[state.area], n = fr?.byArea?.[state.area] ?? 0;
-    const series = TX.frames.length ? TX.frames.map((f) => (f.byArea ? f.byArea[state.area] : null)) : null;
+    if (state.area == null) { el.innerHTML = muted('<i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Click a town on the map, in a list or in the heatmap for its day.'); return; }
+    const fr = this.shown(), a = AREAS[state.area], n = fr ? txStats(fr).byArea[state.area] : 0;
+    const series = TX.frames.length ? TX.frames.map((f) => txStats(f).byArea[state.area]) : null;
     el.innerHTML = `${headRow(a.n, a.r)}<div class="mt-2 grid grid-cols-2 gap-2">${tile('Free taxis', f0(n))}${tile('Share of island', fr ? pctF(n / fr.pts.length) : '–')}</div>
-      ${series && series.every((v) => v != null) ? `<p class="mt-3 text-xs font-medium text-ink-2">Today, hour by hour</p><div id="tx-area"></div>` : ''}`;
-    if ($('#tx-area')) hourBars($('#tx-area'), series, B.amber);
+      ${series ? `<p class="mt-3 text-xs font-medium text-ink-2">Today, hour by hour</p><div id="tx-area"></div>` : ''}`;
+    if ($('#tx-area')) hourBars($('#tx-area'), series, B.amber, TX.hour, true);
   },
   legend() {
+    const st = (f) => d3.range(25).map((i) => f(i / 24)).join(',');
     if (state.taxi === 'points') return `<div class="flex items-center gap-2 text-foreground"><span class="inline-block size-2.5 rounded-full bg-amber"></span>A taxi free for hire</div>`;
-    const st = d3.range(25).map((i) => RAMP(i / 24)).join(',');
-    return `<div class="mb-1 text-foreground">Taxis per ${f1(0.32 * kmPerUnit())} km square</div><div class="h-2 w-48 rounded-full" style="background:linear-gradient(90deg,${st})"></div><div class="mt-1 flex w-48 justify-between font-mono text-[10.5px]"><span>1</span><span>most</span></div>`;
+    if (state.taxi === 'change') { const [A, Bf] = txCompare(); return `<div class="mb-1 text-foreground">Free taxis ${A ? `${hhmm(A.t)} → ${hhmm(Bf.t)}` : 'change'}</div><div class="h-2 w-48 rounded-full" style="background:linear-gradient(90deg,${st(CHG)})"></div><div class="mt-1 flex w-48 justify-between text-[10.5px]"><span>fewer: taken</span><span>more: waiting</span></div><div class="mt-1">height: size of the change</div>`; }
+    return `<div class="mb-1 text-foreground">${state.taxi === 'hex' ? `Free taxis per hexagon, about ${f1(HEX_R * Math.sqrt(3) * kmPerUnit())} km across` : 'Free taxis per town'}</div><div class="h-2 w-48 rounded-full" style="background:linear-gradient(90deg,${st(RAMP)})"></div><div class="mt-1 flex w-48 justify-between font-mono text-[10.5px]"><span>1</span><span>most</span></div>`;
   },
 };
 // km per world unit at Singapore's latitude
 const kmPerUnit = () => { const [a, b] = [proj.invert([0, 0]), proj.invert([1, 0])]; return d3.geoDistance(a, b) * 6371; };
 
-// Hourly frames of the synced day, kept in hour order, counted by area once.
+// By town, grouped into URA regions: a subtotal per region, its towns inside (open state remembered).
+function taxiTowns(el, fr) {
+  const S = txStats(fr), n = fr.pts.length || 1;
+  const regs = d3.groups(AREAS.filter((a) => S.byArea[a.i] > 0), (a) => a.r).map(([r, as]) => ({ r, as: as.sort((x, y) => S.byArea[y.i] - S.byArea[x.i]), n: d3.sum(as, (a) => S.byArea[a.i]) })).sort((a, b) => b.n - a.n);
+  const maxR = regs[0]?.n || 1, maxA = d3.max(AREAS, (a) => S.byArea[a.i]) || 1;
+  TX.openReg ??= new Set();
+  el.innerHTML = `<div class="space-y-0.5">${regs.map((g) => `<details class="group" data-reg="${esc(g.r)}" ${TX.openReg.has(g.r) || g.as.some((a) => a.i === state.area) ? 'open' : ''}>
+      <summary class="flex cursor-pointer list-none items-center gap-2 rounded px-1 py-1 text-xs hover:bg-accent/50 [&::-webkit-details-marker]:hidden">
+        <i class="fi fi-rr-angle-small-right shrink-0 text-muted-foreground transition-transform group-open:rotate-90"></i>
+        <span class="w-[78px] shrink-0 truncate font-medium text-foreground">${esc(regionShort(g.r))}</span>
+        <span class="h-2.5 rounded-sm" style="width:${(g.n / maxR) * 100}%;max-width:calc(100% - 200px);background:${B.signal}"></span>
+        <span class="font-mono">${f0(g.n)}</span><span class="ml-auto shrink-0 font-mono text-[11px] text-muted-foreground">${pctF(g.n / n)} · ${g.as.length} towns</span></summary>
+      <div class="mb-1 ml-5 space-y-0.5">${g.as.map((a) => `<button data-area="${a.i}" class="flex w-full items-center gap-2 rounded text-left text-xs hover:bg-accent/50 ${state.area === a.i ? 'text-amber' : ''}">
+        <span class="w-[104px] shrink-0 truncate ${state.area === a.i ? '' : 'text-ink-2'}">${esc(a.n)}</span>
+        <span class="h-2 rounded-sm" style="width:${(S.byArea[a.i] / maxA) * 100}%;max-width:calc(100% - 150px);background:${state.area === a.i ? B.amber : RAMP(0.35)}"></span>
+        <span class="font-mono">${S.byArea[a.i]}</span></button>`).join('')}</div></details>`).join('')}</div>`;
+  el.querySelectorAll('details').forEach((d) => d.addEventListener('toggle', () => { if (d.open) TX.openReg.add(d.dataset.reg); else TX.openReg.delete(d.dataset.reg); }));
+}
+// Towns by hour: the day's rhythm. Rows are the busiest towns over the day; click a column for that hour.
+function taxiHeat(el) {
+  const F = TX.frames;
+  if (!F.length) { el.innerHTML = muted('Sync “Taxis today” above for the hour-by-hour picture.'); return; }
+  const tot = AREAS.map((_, i) => d3.sum(F, (f) => txStats(f).byArea[i]));
+  const rows = d3.range(AREAS.length).filter((i) => tot[i] > 0).sort((a, b) => tot[b] - tot[a]).slice(0, 22);
+  const w = el.clientWidth || 340, m = { l: 92, r: 2, t: 2, b: 14 }, rowH = 11, H = m.t + rows.length * rowH + m.b;
+  const x = d3.scaleBand(d3.range(24), [m.l, w - m.r]).padding(0.06);
+  // each row against its own peak, so every town's rhythm shows (Changi's queue would flatten the rest)
+  const peak = new Map(rows.map((i) => [i, d3.max(F, (f) => txStats(f).byArea[i]) || 1]));
+  const cur = TX.hour != null ? F[TX.hour]?.h : null;
+  el.innerHTML = `<svg width="${w}" height="${H}" class="block">${rows.map((i, r) => {
+    const y = m.t + r * rowH;
+    return `<text data-area="${i}" x="${m.l - 4}" y="${y + rowH - 2.5}" text-anchor="end" font-size="9.5" fill="${state.area === i ? B.amber : '#b8b5ac'}" style="cursor:pointer">${esc(AREAS[i].n.length > 17 ? `${AREAS[i].n.slice(0, 16)}…` : AREAS[i].n)}</text>
+      ${F.map((f, fi) => { const v = txStats(f).byArea[i]; return `<rect data-hour="${fi}" x="${x(f.h)}" y="${y + 0.5}" width="${x.bandwidth()}" height="${rowH - 1}" rx="1" fill="${v ? RAMP(0.08 + 0.92 * (v / peak.get(i))) : '#1f2228'}" style="cursor:pointer"><title>${esc(AREAS[i].n)}, ${hourLbl(f.h)}: ${v} free taxis (${pctF(v / peak.get(i))} of its peak)</title></rect>`; }).join('')}`;
+  }).join('')}
+    ${cur != null ? `<rect x="${x(cur) - 1}" y="${m.t - 1}" width="${x.bandwidth() + 2}" height="${rows.length * rowH + 2}" fill="none" stroke="${B.amber}" stroke-width="1.2" rx="1.5"/>` : ''}
+    ${[0, 6, 12, 18].map((hh) => `<text x="${x(hh)}" y="${H - 2}" font-size="9" font-family="Source Code Pro" fill="#8b9099">${hourLbl(hh)}</text>`).join('')}</svg>
+    <p class="mt-1 text-[11px] text-muted-foreground">The ${rows.length} busiest towns over the day, each coloured against its own peak hour. Click a cell for that hour, a name for the town.</p>`;
+}
+function taxiChangi(el) {
+  if (!TX.frames.length) { const fr = VIEWS.taxis.shown(); el.innerHTML = muted(fr ? `${txStats(fr).changi} free taxis queuing at the terminals now. Sync “Taxis today” for the day.` : ''); return; }
+  hourBars(el, TX.frames.map((f) => txStats(f).changi), B.amber, TX.hour, true);
+}
+// The two lists for the Change view: biggest drops (taken) and rises (waiting).
+function taxiChanges(el) {
+  const [A, Bf] = txCompare();
+  if (!A) { el.innerHTML = muted(TX.frames.length ? 'No earlier hour to compare with. Pick one above.' : 'Sync “Taxis today” above to compare with earlier hours.'); return; }
+  const SA = txStats(A), SB = txStats(Bf), ds = AREAS.map((a) => ({ i: a.i, d: SB.byArea[a.i] - SA.byArea[a.i] }));
+  const taken = ds.filter((d) => d.d < 0).sort((a, b) => a.d - b.d).slice(0, 6), waiting = ds.filter((d) => d.d > 0).sort((a, b) => b.d - a.d).slice(0, 6);
+  const max = d3.max([...taken, ...waiting], (d) => Math.abs(d.d)) || 1, tot = Bf.pts.length - A.pts.length;
+  const list = (xs, c) => xs.length ? xs.map((d) => `<button data-area="${d.i}" class="flex w-full items-center gap-1.5 rounded text-left text-xs hover:bg-accent/50"><span class="w-[86px] shrink-0 truncate ${state.area === d.i ? 'text-amber' : 'text-ink-2'}">${esc(AREAS[d.i].n)}</span><span class="h-2 rounded-sm" style="width:${(Math.abs(d.d) / max) * 60}%;background:${c}"></span><span class="font-mono" style="color:${c}">${d.d > 0 ? '+' : ''}${d.d}</span></button>`).join('') : muted('none');
+  el.innerHTML = `<p class="mb-1.5 text-[11px] text-muted-foreground">${hhmm(A.t)} → ${hhmm(Bf.t)}: <span class="font-mono" style="color:${tot < 0 ? B.pink : B.signal}">${tot > 0 ? '+' : ''}${f0(tot)}</span> free taxis island-wide. Where free taxis vanished, fares took them (or drivers went off duty); where they piled up, they’re waiting.</p>
+    <div class="grid grid-cols-2 gap-3"><div><p class="mb-1 text-[11px] font-medium" style="color:${B.pink}">Fewer free: taken</p><div class="space-y-0.5">${list(taken, B.pink)}</div></div>
+      <div><p class="mb-1 text-[11px] font-medium" style="color:${B.signal}">More free: waiting</p><div class="space-y-0.5">${list(waiting, B.signal)}</div></div></div>`;
+}
+
+// Hourly frames of the synced day, in hour order (stats are computed on first use).
 function buildTaxiDay(frames) {
-  TX.frames = [...frames].sort((a, b) => a.h - b.h).map((f) => {
-    const byArea = new Int32Array(AREAS.length);
-    f.pts.forEach(([lon, lat]) => { const a = areaAt(lon, lat); if (a >= 0) byArea[a]++; });
-    return { ...f, byArea };
-  });
+  TX.frames = [...frames].sort((a, b) => a.h - b.h).map((f) => ({ ...f }));
   if (TX.hour != null && TX.hour >= TX.frames.length) TX.hour = null;
+  if (state.txFrom != null && state.txFrom >= TX.frames.length) state.txFrom = null;
 }
 function txDay() {
   const el = $('#txday'); if (!el) return;
@@ -1498,7 +1633,6 @@ const APPLY = {
   taxi: (j) => {
     const f = j.features?.[0]; if (!f) return;
     TX.live = { t: f.properties.timestamp, pts: f.geometry.coordinates };
-    if (AREAS.length) { TX.live.byArea = new Int32Array(AREAS.length); TX.live.pts.forEach(([lon, lat]) => { const a = areaAt(lon, lat); if (a >= 0) TX.live.byArea[a]++; }); }
     if (TX.hist.at(-1)?.t !== TX.live.t) TX.hist.push({ t: TX.live.t, n: TX.live.pts.length });
   },
   carparks: (j) => {
@@ -1722,7 +1856,7 @@ async function show(view) {
   try { await ready; } catch { $('#panel').innerHTML = '<p class="text-sm text-muted-foreground">The map didn’t load. Reload the page to try again.</p>'; return; }
   if (ticket !== building) return;
   if (!proj) setupProjection();
-  ORDER.forEach((k) => { const v = VIEWS[k]; v.tiles = v.meshes = v.bars = v.rain = v.grid = v.cloud = v.drops = v.trackG = v.markG = v.cols = v.borders = v.flow = undefined; v.rlabels = null; v.built = false; });
+  ORDER.forEach((k) => { const v = VIEWS[k]; v.tiles = v.meshes = v.bars = v.rain = v.grid = v.cloud = v.drops = v.trackG = v.markG = v.cols = v.borders = v.flow = v.hex = v.ameshes = v.alabels = undefined; v.rlabels = null; v.built = false; });
   const v = VIEWS[view];
   renderPanel();
   v.build(); v.built = true;
@@ -1782,6 +1916,7 @@ $('#panel').addEventListener('input', (e) => {
   if (e.target.id === 'tx-i') { if (playTimer) stopPlay(); setTaxiHour(+e.target.value); }
   if (e.target.id === 'cp-search') cpSearch(e.target.value);
 });
+$('#panel').addEventListener('change', (e) => { if (e.target.id === 'tx-from') { state.txFrom = e.target.value === '' ? null : +e.target.value; VIEWS.taxis.update(); refreshPanel(); } });
 $('#panel').addEventListener('keydown', (e) => {
   if (e.target.id === 'cp-search' && e.key === 'Enter' && cpResults[0]) { selectCp(cpResults[0].i, true); e.target.value = ''; cpSearch(''); }
   if (e.target.id === 'cp-search' && e.key === 'Escape') { e.target.value = ''; cpSearch(''); }
@@ -1802,7 +1937,7 @@ $('#panel').addEventListener('click', (e) => {
   if ((b = s('wmode'))) { state.wmode = b.dataset.wmode; markSeg('wmode', b); VIEWS.weather.update(); return; }
   if ((b = s('rpcum'))) { RP.cum = b.dataset.rpcum === '1'; markSeg('rpcum', b); VIEWS.weather.drawRain(); return; }
   if ((b = s('air'))) { state.air = b.dataset.air; markSeg('air', b); VIEWS.air.update(); refreshPanel(); return; }
-  if ((b = s('taxi'))) { state.taxi = b.dataset.taxi; markSeg('taxi', b); VIEWS.taxis.update(); return; }
+  if ((b = s('taxi'))) { state.taxi = b.dataset.taxi; renderPanel(); VIEWS.taxis.update(); return; }
   if ((b = s('cp'))) { state.cpFilter = b.dataset.cp; markSeg('cp', b); VIEWS.carparks.update(); return; }
   if ((b = s('cpick'))) { selectCp(cpResults[+b.dataset.cpick].i, true); $('#cp-search').value = ''; cpSearch(''); return; }
   if ((b = s('cp'))) return;
