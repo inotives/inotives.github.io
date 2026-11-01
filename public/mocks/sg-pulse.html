@@ -339,20 +339,26 @@ const FC_ICON = { fair: 'fi-rr-sun', night: 'fi-rr-moon', cloud: 'fi-rr-cloud', 
 const fcIcon = (s, cls = '') => `<i class="fi ${FC_ICON[fcCat(s)]} ${cls}"></i>`;
 
 // ---------- air quality bands (NEA) ----------
-const PSI_BANDS = [[50, 'Good', '#5fbf8f'], [100, 'Moderate', '#f6c453'], [200, 'Unhealthy', '#e8894a'], [300, 'Very unhealthy', '#e05d6f'], [Infinity, 'Hazardous', '#9b4fb0']];
-const PM_BANDS = [[55, 'Normal', '#5fbf8f'], [150, 'Elevated', '#f6c453'], [250, 'High', '#e8894a'], [Infinity, 'Very high', '#e05d6f']];
+// NEA's colours and bands (PSI forecast gauge): Good–Moderate 0–100 green, Unhealthy 101–200 yellow,
+// Very unhealthy 201–300 orange, Hazardous above 300 red. PM2.5 1-hour bands I–IV in the same colours.
+const NEA = { green: '#3f8f2f', yellow: '#f5c84a', orange: '#f0a03c', red: '#c9343a' };
+const PSI_BANDS = [[100, 'Good – Moderate', NEA.green], [200, 'Unhealthy', NEA.yellow], [300, 'Very Unhealthy', NEA.orange], [Infinity, 'Hazardous', NEA.red]];
+// PM2.5 descriptors carry NEA's band number (Band 1 to 4)
+const bandName = (bands, v) => { const i = bands.findIndex(([hi]) => v <= hi); return bands === PM_BANDS ? `Band ${i + 1} · ${bands[i][1]}` : bands[i][1]; };
+const PM_BANDS = [[55, 'Normal', NEA.green], [150, 'Elevated', NEA.yellow], [250, 'High', NEA.orange], [Infinity, 'Very High', NEA.red]];
 const UV_BANDS = [[2, 'Low', '#5fbf8f'], [5, 'Moderate', '#f6c453'], [7, 'High', '#e8894a'], [10, 'Very high', '#e05d6f'], [Infinity, 'Extreme', '#9b4fb0']];
 const band = (bands, v) => bands.find(([hi]) => v <= hi);
 // The band colour, dimmer at the bottom of the band and full at the top, so regions in one band still differ.
 const bandShade = (bands, v) => { const k = bands.findIndex(([hi]) => v <= hi), lo = k ? bands[k - 1][0] : 0, hi = bands[k][0] === Infinity ? lo * 1.5 : bands[k][0]; return d3.interpolateRgb('#3a3f48', bands[k][2])(0.4 + 0.6 * Math.min(1, (v - lo) / (hi - lo))); };
 const REGIONS = ['north', 'east', 'central', 'west', 'south'];
 const REG_COL = { north: B.signal, east: B.amber, central: B.ink, west: B.pink, south: B.sky };
+// NEA's health advisory by 24-hour PSI band, for its three groups.
+const ADVICE_GROUPS = ['Healthy persons', 'Elderly, pregnant women, children', 'Persons with chronic lung disease, heart disease'];
 const AIR_ADVICE = {
-  Good: 'Normal activities for everyone.',
-  Moderate: 'Normal activities for everyone.',
-  Unhealthy: 'Healthy people: cut down prolonged or strenuous outdoor exertion. Elderly, pregnant women, children and people with heart or lung disease: minimise it.',
-  'Very unhealthy': 'Everyone should avoid prolonged or strenuous outdoor exertion; vulnerable groups should avoid it entirely.',
-  Hazardous: 'Everyone should minimise outdoor activity.',
+  'Good – Moderate': ['Normal activities', 'Normal activities', 'Normal activities'],
+  Unhealthy: ['Reduce prolonged or strenuous outdoor physical exertion', 'Minimise prolonged or strenuous outdoor physical exertion', 'Avoid prolonged or strenuous outdoor physical exertion'],
+  'Very Unhealthy': ['Avoid prolonged or strenuous outdoor physical exertion', 'Minimise outdoor activity', 'Avoid outdoor activity'],
+  Hazardous: ['Minimise outdoor activity', 'Avoid outdoor activity', 'Avoid outdoor activity'],
 };
 
 // ================= views =================
@@ -808,109 +814,343 @@ function selectGauge(id, { fly: doFly = true, keep = false } = {}) {
 }
 
 // ---------- air quality ----------
+// NEA reports five regions, so the island is drawn as five regions (tinted, with their borders) and
+// each region gets one column at its centre. In PSI mode a ring of thin bars around the column shows
+// every pollutant's sub-index: the PSI is the highest of them, so the tallest bar is the one setting it.
+const POLL = [['pm25', 'PM2.5', '#e58fb0'], ['pm10', 'PM10', '#f6c453'], ['o3', 'Ozone', '#7cc4dc'], ['so2', 'SO₂', '#c9a4f5'], ['co', 'CO', '#9ccf7f']];
+const POLL_NAME = Object.fromEntries(POLL.map(([k, n]) => [k, n])), POLL_COL = Object.fromEntries(POLL.map(([k, , c]) => [k, c]));
+const cap = (r) => (r ? r[0].toUpperCase() + r.slice(1) : '');
+const subIndex = (r, k) => AIR.psi?.readings?.[`${k}_sub_index`]?.[r];
+function driver(r) { const s = POLL.map(([k]) => [k, subIndex(r, k)]).filter(([, v]) => v != null); return s.length ? d3.greatest(s, (d) => d[1]) : null; }
+const airKey = () => (state.air === 'psi' ? 'psi_twenty_four_hourly' : 'pm25_one_hourly');
+const airDay = () => (state.air === 'psi' ? AIR.psiDay : AIR.pmDay);
+function airSeries(r, items = airDay(), key = airKey()) {
+  return (items ?? []).map((it) => ({ t: new Date(it.timestamp), m: minsOfDay(it.timestamp), v: it.readings?.[key]?.[r] })).filter((p) => p.v != null).sort((a, b) => a.t - b.t);
+}
+// Rising or falling over the last three hours of today's series.
+function trend(r) {
+  const s = airSeries(r); if (s.length < 2) return null;
+  const last = s.at(-1), ref = s.filter((p) => last.t - p.t >= 3 * 3600e3).at(-1); if (!ref) return null;
+  const d = last.v - ref.v, th = state.air === 'psi' ? 3 : 5;
+  return { d, dir: d >= th ? 'up' : d <= -th ? 'down' : 'flat' };
+}
+const trendIcon = (tr, cls = '') => (!tr ? '' : tr.dir === 'up' ? `<i class="fi fi-rr-arrow-trend-up ${cls}" style="color:#e8894a" title="Up ${Math.round(tr.d)} in 3 hours"></i>` : tr.dir === 'down' ? `<i class="fi fi-rr-arrow-trend-down ${cls}" style="color:#5fbf8f" title="Down ${Math.round(-tr.d)} in 3 hours"></i>` : `<i class="fi fi-rr-arrow-right ${cls} text-muted-foreground" title="About steady over 3 hours"></i>`);
+const trendText = (tr) => (!tr ? '' : tr.dir === 'up' ? `up ${Math.round(tr.d)} in 3 h` : tr.dir === 'down' ? `down ${Math.round(-tr.d)} in 3 h` : 'steady over 3 h');
+// Planning-area edges shared by two areas in different regions: the region borders.
+function regionBorders() {
+  const seen = new Map(), out = [], key = (p) => `${p[0].toFixed(5)},${p[1].toFixed(5)}`;
+  AREAS.forEach((a) => {
+    const r = VIEWS.air.regionOf(a);
+    a.p.forEach((poly) => poly.forEach((ring) => ring.forEach((pt, i) => {
+      const q = ring[(i + 1) % ring.length], k = [key(pt), key(q)].sort().join('|'), o = seen.get(k);
+      if (o) { if (o !== r) out.push(pt, q); } else seen.set(k, r);
+    })));
+  });
+  return out;
+}
+
+// A soft glow shell: brightest where the surface faces the camera, fading towards the top.
+function glowMaterial() {
+  return new THREE.ShaderMaterial({
+    uniforms: { color: { value: new THREE.Color(B.signal) }, strength: { value: 1 } },
+    vertexShader: 'varying vec3 vN; varying vec3 vV; varying float vY; void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); vY = uv.y; gl_Position = projectionMatrix * mv; }',
+    fragmentShader: 'uniform vec3 color; uniform float strength; varying vec3 vN; varying vec3 vV; varying float vY; void main() { float f = pow(abs(dot(vN, vV)), 1.6); float fade = mix(1.0, 0.35, vY); gl_FragColor = vec4(color * (0.6 + f), (0.12 + f) * fade * 0.9 * strength); }',
+    transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+  });
+}
 VIEWS.air = {
   tab: 'Air', icon: 'fi-rr-wind',
   title: 'How clean the air is',
-  blurb: 'NEA reports air quality for five regions. Each planning area rises with its region’s 24-hour PSI, or the last hour of fine particles (PM2.5), coloured by NEA’s health bands. The chart traces today’s readings hour by hour.',
-  how: ['Region assignment by nearest NEA region centre, the health bands and today’s chart.', 'Each planning area extruded to its region’s reading; heights ease when you switch measure.'],
+  blurb: 'NEA measures air quality for five regions. Each region is a glowing pillar, as tall as its 24-hour PSI or the last hour of fine particles (PM2.5) and coloured by NEA’s health bands. At its foot, a sunburst: one petal per pollutant (the brightest sets the PSI) inside a ring that fills to the reading.',
+  how: ['Region assignment, the health bands, what sets the PSI, the island-wide wind, today’s small multiples and the hour-by-hour grid.', 'Regions tinted with their borders; a glow-shaded pillar and a flat sunburst per region; drifting particles carried by the wind interpolated between stations.'],
   camera: [-2, 17, 19], target: [0.5, 0, 0.6],
   regionOf(a) {
     if (a.reg) return a.reg;
+    if (!AIR.meta) return null;
     let best = null, bd = Infinity;
-    (AIR.meta ?? []).forEach((m) => { const d = (m.labelLocation.longitude - a.c[0]) ** 2 + (m.labelLocation.latitude - a.c[1]) ** 2; if (d < bd) { bd = d; best = m.name; } });
+    AIR.meta.forEach((m) => { const d = (m.labelLocation.longitude - a.c[0]) ** 2 + (m.labelLocation.latitude - a.c[1]) ** 2; if (d < bd) { bd = d; best = m.name; } });
     return (a.reg = best);
   },
   value(r) { return state.air === 'psi' ? AIR.psi?.readings?.psi_twenty_four_hourly?.[r] : AIR.pm?.readings?.pm25_one_hourly?.[r]; },
   bands() { return state.air === 'psi' ? PSI_BANDS : PM_BANDS; },
   build() {
-    island();
-    this.meshes = AREAS.map((a) => {
-      const geo = new THREE.ExtrudeGeometry(a.p.map(shapeOf), { depth: 1, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
-      const m = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ color: B.signal, roughness: 0.6, metalness: 0.05 }), new THREE.MeshBasicMaterial({ color: B.signal })]);
-      m.scale.y = 0.001; m.userData = { area: a.i, h: 0.001, pick: () => this.tip(a) };
-      const roof = [];
-      a.p.forEach((poly) => poly.forEach((r) => r.forEach((pt, k) => { const [ax, az] = P(...pt), [bx, bz] = P(...r[(k + 1) % r.length]); roof.push(new THREE.Vector3(ax, 1, az), new THREE.Vector3(bx, 1, bz)); })));
-      m.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(roof), new THREE.LineBasicMaterial({ color: '#15171b', transparent: true, opacity: 0.5 })));
-      group.add(m); pickables.push(m); return m;
-    });
-    this.rlabels = new Map();
-    tickers.add(() => this.meshes.forEach((m) => { const d = m.userData.h - m.scale.y; if (Math.abs(d) > 1e-4) m.scale.y += reduceMotion ? d : d * 0.12; }));
+    this.tiles = island();
+    this.tiles.forEach((t) => { t.userData.pick = () => this.tip(AREAS[t.userData.area]); pickables.push(t); });
+    this.cols = null; this.borders = null;
+    const t0 = performance.now();
+    tickers.add(() => this.cols?.forEach((c, i) => {
+      const d = c.h - c.cur; if (Math.abs(d) > 1e-4) c.cur += reduceMotion ? d : d * 0.12;
+      c.core.scale.y = c.shell.scale.y = Math.max(c.cur, 1e-3); c.cap.position.y = c.cur; c.label.position.y = c.cur + 0.5;
+      // a slow breath in the glow, out of step between regions
+      const p = reduceMotion ? 1 : 0.85 + 0.15 * Math.sin((performance.now() - t0) / 900 + i * 1.3);
+      c.shell.material.uniforms.strength.value = c.glow * p; c.cap.material.opacity = 0.9 * c.glow * p;
+      c.rose.forEach((m) => { m.scale.setScalar(m.scale.x + (m.userData.s - m.scale.x) * (reduceMotion ? 1 : 0.12)); });
+    }));
     this.update();
   },
+  // Per region: a glowing pillar (bright core, glow shell, light at the top, a pool of light on the ground)
+  // and a flat sunburst at its foot: an inner rose of the five pollutant sub-indices (one petal each,
+  // length by value) and an outer gauge that fills clockwise from north to the reading, over the bands.
+  buildCols() {
+    const cyl = (r, seg = 32) => { const g = new THREE.CylinderGeometry(r, r, 1, seg, 1, true); g.translate(0, 0.5, 0); return g; };
+    const coreG = cyl(0.07, 16), shellG = cyl(0.3, 40);
+    const flat = (m) => { m.rotation.x = -Math.PI / 2; return m; };
+    const add = (blend = true) => ({ transparent: true, depthWrite: false, side: THREE.DoubleSide, ...(blend ? { blending: THREE.AdditiveBlending } : {}) });
+    this.cols = AIR.meta.map((mt) => {
+      const r = mt.name, g = new THREE.Group(), ud = { pick: () => this.colTip(r), onClick: () => selectRegion(r) };
+      g.position.copy(V3(mt.labelLocation.longitude, mt.labelLocation.latitude, 0));
+      const core = new THREE.Mesh(coreG, new THREE.MeshBasicMaterial({ color: '#ffffff', ...add() }));
+      const shell = new THREE.Mesh(shellG, glowMaterial());
+      const cap = new THREE.Sprite(new THREE.SpriteMaterial({ map: DOT, color: '#ffffff', ...add() })); cap.scale.setScalar(0.9);
+      const pool = flat(new THREE.Mesh(new THREE.CircleGeometry(1.25, 48), new THREE.MeshBasicMaterial({ map: DOT, color: '#ffffff', opacity: 0.35, ...add() }))); pool.position.y = 0.015;
+      shell.userData = ud; core.userData = ud;
+      // sunburst: the rose petals (unit petals scaled per value) and the gauge ring
+      const R0 = 0.3, span = (Math.PI * 2) / POLL.length;
+      const rose = POLL.map(([k], i) => {
+        const m = flat(new THREE.Mesh(new THREE.RingGeometry(0.0001, 1, 20, 1, Math.PI / 2 - (i + 1) * span + 0.06, span - 0.12), new THREE.MeshBasicMaterial({ color: POLL_COL[k], opacity: 0.85, ...add(false) })));
+        m.position.y = 0.03; m.scale.setScalar(0.001); m.userData = { s: 0.001, pick: () => this.subTip(r, k), onClick: ud.onClick };
+        return m;
+      });
+      const hole = flat(new THREE.Mesh(new THREE.CircleGeometry(R0, 32), new THREE.MeshBasicMaterial({ color: '#15171b', opacity: 0.85, ...add(false) }))); hole.position.y = 0.035;
+      const gauge = new THREE.Group(); gauge.position.y = 0.04;
+      [core, shell, cap, pool, hole, gauge, ...rose].forEach((o) => g.add(o));
+      [shell, core, ...rose].forEach((o) => pickables.push(o));
+      const label = lbl('', new THREE.Vector3(0, 0.5, 0), 'bg', g, true);
+      group.add(g);
+      return { r, g, core, shell, cap, pool, rose, gauge, label, h: 0.001, cur: 0.001, glow: 1 };
+    });
+  },
   update() {
-    if (!this.meshes || !AIR.meta) return;
-    const bands = this.bands(), top = Math.max(state.air === 'psi' ? 100 : 60, d3.max(REGIONS, (r) => this.value(r) ?? 0));
-    const sh = d3.scaleLinear([0, top], [0.04, 2.4]);
-    this.meshes.forEach((m) => {
-      const a = AREAS[m.userData.area], r = this.regionOf(a), v = this.value(r);
-      m.userData.h = v != null ? sh(v) : 0.02;
-      let c = new THREE.Color(v != null ? bandShade(bands, v) : '#3a3f48');
-      if (state.region != null && state.region !== r) c = c.lerp(new THREE.Color('#23262d'), 0.7);
-      m.material[0].color.copy(c); m.material[1].color.copy(c).multiplyScalar(0.55);
+    if (!this.tiles) return;
+    if (AIR.meta && !this.cols) this.buildCols();
+    if (AIR.meta && !this.borders) {
+      const pts = regionBorders();
+      if (pts.length) { this.borders = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts.map(([lon, lat]) => V3(lon, lat, 0.012))), new THREE.LineBasicMaterial({ color: '#8b9099', transparent: true, opacity: 0.9 })); group.add(this.borders); }
+    }
+    // tiles: a soft tint per region, brighter for the selected one
+    this.tiles.forEach((t) => {
+      const r = this.regionOf(AREAS[t.userData.area]);
+      const k = r == null ? 0 : state.region == null ? 0.16 : state.region === r ? 0.32 : 0.06;
+      t.material.color.set(r == null ? '#262a31' : d3.interpolateRgb('#22252b', REG_COL[r])(k));
     });
-    AIR.meta.forEach((mt) => {
-      const r = mt.name, v = this.value(r);
-      let o = this.rlabels.get(r);
-      if (!o) { o = lbl('', V3(mt.labelLocation.longitude, mt.labelLocation.latitude, 0)); this.rlabels.set(r, o); }
-      o.position.y = (v != null ? sh(v) : 0.02) + 0.35;
-      o.element.className = `lbl bg ${state.region === r ? 'sel' : 'strong'}`;
-      o.element.innerHTML = `<span class="capitalize">${r}</span> <span style="font-family:Source Code Pro">${v ?? '–'}</span>`;
+    if (!this.cols) { legend(); return; }
+    const psi = state.air === 'psi', bands = this.bands();
+    const top = Math.max(psi ? 100 : 80, d3.max(this.cols, (c) => this.value(c.r) ?? 0) * 1.1);
+    const sh = d3.scaleLinear([0, top], [0.05, 3.4]);
+    const subTop = Math.max(100, d3.max(this.cols, (c) => d3.max(POLL, ([k]) => subIndex(c.r, k) ?? 0)));
+    const gaugeMax = psi ? 400 : 350, ang = (v) => (Math.min(v, gaugeMax) / gaugeMax) * Math.PI * 2;
+    const arc = (r0, r1, a0, a1, color, opacity) => { const m = new THREE.Mesh(new THREE.RingGeometry(r0, r1, Math.max(6, Math.ceil((a1 - a0) * 20)), 1, Math.PI / 2 - a1, a1 - a0), new THREE.MeshBasicMaterial({ color, opacity, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); m.rotation.x = -Math.PI / 2; return m; };
+    this.cols.forEach((c) => {
+      const v = this.value(c.r), dim = state.region != null && state.region !== c.r, dr = psi ? driver(c.r) : null;
+      const col = new THREE.Color(v != null ? band(bands, v)[2] : '#3a3f48');
+      c.h = v != null ? sh(v) : 0.02; c.glow = dim ? 0.3 : 1;
+      c.shell.material.uniforms.color.value.copy(col);
+      c.core.material.color.copy(col.clone().lerp(new THREE.Color('#ffffff'), 0.55)); c.core.material.opacity = dim ? 0.35 : 1;
+      c.cap.material.color.copy(col.clone().lerp(new THREE.Color('#ffffff'), 0.3));
+      c.pool.material.color.copy(col); c.pool.material.opacity = dim ? 0.12 : 0.35;
+      // rose: petal length by sub-index, the PSI-setting pollutant at full strength
+      c.rose.forEach((m, i) => {
+        const k = POLL[i][0], sv = subIndex(c.r, k);
+        m.visible = psi && sv != null; m.userData.s = psi && sv != null ? 0.3 + (sv / subTop) * 0.95 : 0.001;
+        m.material.opacity = dim ? 0.18 : dr && dr[0] === k ? 0.95 : 0.4;
+      });
+      // gauge: faint band segments all the way round, the reading filled bright
+      dispose(c.gauge); c.gauge = new THREE.Group(); c.gauge.position.y = 0.04; c.g.add(c.gauge);
+      const R1 = 1.38, R2 = 1.5;
+      bands.forEach(([hi, , bc], j, a) => { const lo = j ? a[j - 1][0] : 0; if (lo >= gaugeMax) return; c.gauge.add(arc(R1, R2, ang(lo) + 0.01, ang(Math.min(hi, gaugeMax)) - 0.01, bc, dim ? 0.05 : 0.14)); });
+      if (v != null) { const fill = arc(R1 - 0.02, R2 + 0.02, 0, Math.max(0.02, ang(v)), band(bands, v)[2], dim ? 0.25 : 0.95); fill.userData = { pick: () => this.colTip(c.r), onClick: () => selectRegion(c.r) }; c.gauge.add(fill); pickables = pickables.filter((p) => p.userData.gaugeOf !== c.r); fill.userData.gaugeOf = c.r; pickables.push(fill); }
+      c.label.element.className = `lbl bg ${state.region === c.r ? 'sel' : 'strong'}`;
+      c.label.element.style.opacity = dim ? 0.5 : 1;
+      c.label.element.innerHTML = `<div style="text-align:center">${cap(c.r)} <span style="font-family:Source Code Pro">${v ?? '–'}</span> ${trendIcon(trend(c.r))}</div>${dr ? `<div style="text-align:center;font:400 10px Source Code Pro;color:${POLL_COL[dr[0]]}">set by ${POLL_NAME[dr[0]]}</div>` : ''}`;
     });
+    this.drawFlow();
     legend();
   },
   tip(a) {
-    const r = this.regionOf(a), psi = AIR.psi?.readings, pm = AIR.pm?.readings?.pm25_one_hourly?.[r];
-    const p = psi?.psi_twenty_four_hourly?.[r];
-    return `<div class="font-medium text-foreground">${esc(a.n)}</div><div class="text-muted-foreground capitalize">${r} region</div>
-      ${p != null ? `<div class="font-mono">PSI ${p} · ${band(PSI_BANDS, p)[1]}</div>` : ''}${pm != null ? `<div class="font-mono">PM2.5 ${pm} µg/m³ · ${band(PM_BANDS, pm)[1]}</div>` : ''}`;
+    const r = this.regionOf(a); if (!r) return `<div class="font-medium text-foreground">${esc(a.n)}</div><div class="text-muted-foreground">Sync “Air quality now” for readings</div>`;
+    const p = AIR.psi?.readings?.psi_twenty_four_hourly?.[r], pm = AIR.pm?.readings?.pm25_one_hourly?.[r];
+    return `<div class="font-medium text-foreground">${esc(a.n)}</div><div class="text-muted-foreground">${cap(r)} region</div>
+      ${p != null ? `<div class="font-mono">PSI ${p} · ${band(PSI_BANDS, p)[1]}</div>` : ''}${pm != null ? `<div class="font-mono">PM2.5 ${pm} µg/m³ · ${bandName(PM_BANDS, pm)}</div>` : ''}`;
+  },
+  colTip(r) {
+    const v = this.value(r), tr = trend(r), dr = driver(r);
+    return `<div class="font-medium text-foreground">${cap(r)} region</div>
+      <div class="font-mono">${state.air === 'psi' ? 'PSI' : 'PM2.5'} ${v ?? '–'}${state.air === 'psi' ? '' : ' µg/m³'} · ${v != null ? bandName(this.bands(), v) : ''}</div>
+      ${tr ? `<div class="text-muted-foreground">${trendText(tr)}</div>` : ''}${state.air === 'psi' && dr ? `<div style="color:${POLL_COL[dr[0]]}">Set by ${POLL_NAME[dr[0]]}</div>` : ''}<div class="text-muted-foreground">Click for every pollutant</div>`;
+  },
+  subTip(r, k) {
+    const s = subIndex(r, k), dr = driver(r);
+    return `<div class="font-medium text-foreground">${POLL_NAME[k]}, ${cap(r)}</div><div class="font-mono">sub-index ${s ?? '–'}</div><div class="text-muted-foreground">${dr?.[0] === k ? 'The highest sub-index, so it sets the PSI' : `Below ${POLL_NAME[dr?.[0]] ?? 'the top'} (${dr?.[1] ?? '–'})`}</div>`;
   },
   tilesHtml() {
     const vals = REGIONS.map((r) => [r, this.value(r)]).filter(([, v]) => v != null);
-    if (!vals.length) return tile('Loading', '–') + tile('', '–');
+    if (!vals.length) return tile('Highest', '–', 'sync “Air quality now”') + tile('', '–');
     const [hr, hv] = d3.greatest(vals, (d) => d[1]), [lr, lv] = d3.least(vals, (d) => d[1]), bd = band(this.bands(), hv);
-    const unit = state.air === 'psi' ? '' : ' µg/m³', when = (state.air === 'psi' ? AIR.psi : AIR.pm)?.timestamp;
-    const cap = (r) => r[0].toUpperCase() + r.slice(1);
-    return tile(`Highest: ${cap(hr)}`, `<span style="color:${bd[2]}">${hv}</span>${unit ? `<span class="text-xs text-muted-foreground">${unit}</span>` : ''}`, bd[1])
-      + tile(`Lowest: ${cap(lr)}`, `${lv}${unit ? `<span class="text-xs text-muted-foreground">${unit}</span>` : ''}`, band(this.bands(), lv)[1])
-      + `<div class="col-span-2 rounded-lg border bg-background/40 p-2 text-xs text-ink-2"><span class="font-medium" style="color:${bd[2]}">${bd[1]}.</span> ${AIR_ADVICE[bd[1]] ?? 'Normal activities for everyone.'}${when ? ` <span class="text-muted-foreground">Reading for ${hhmm(when)}.</span>` : ''}</div>`;
+    const unit = state.air === 'psi' ? '' : '<span class="text-xs text-muted-foreground"> µg/m³</span>', when = (state.air === 'psi' ? AIR.psi : AIR.pm)?.timestamp;
+    const tr = trend(hr);
+    let second;
+    if (state.air === 'psi') {
+      const drs = REGIONS.map((r) => driver(r)?.[0]).filter(Boolean), [k, n] = d3.greatest(d3.rollups(drs, (v) => v.length, (d) => d), (d) => d[1]) ?? [];
+      second = tile('Main pollutant', k ? `<span style="color:${POLL_COL[k]}">${POLL_NAME[k]}</span>` : '–', k ? `sets the PSI in ${n} of ${drs.length} regions` : '');
+    } else second = tile(`Lowest: ${cap(lr)}`, `${lv}${unit}`, bandName(this.bands(), lv));
+    return tile(`Highest: ${cap(hr)}`, `<span style="color:${bd[2]}">${hv}</span>${unit} ${trendIcon(tr, 'text-[13px] align-[-1px]')}`, `${bandName(this.bands(), hv)}${tr ? ` · ${trendText(tr)}` : ''}`)
+      + second
+      + adviceBox();
   },
   opts() { return `<div class="mt-3 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Measure</span>${seg('air', [['psi', 'PSI, 24-hour'], ['pm25', 'PM2.5, 1-hour']], state.air)}</div>`; },
   fill() {
     const el = $('#body'); if (!el) return;
-    el.innerHTML = `${sec(state.air === 'psi' ? '24-hour PSI today' : 'PM2.5 today, hour by hour', 'by region')}<div id="airday"></div>`;
-    airChart($('#airday'));
+    const psi = state.air === 'psi';
+    el.innerHTML = `${sec('Where the air is coming from', 'wind across the stations')}<div id="airwind"></div>
+      ${psi ? `${sec('What sets the PSI', 'sub-index by pollutant · the highest wins')}<div id="airdrv"></div>` : ''}
+      ${sec(psi ? '24-hour PSI today' : 'PM2.5 today, 1-hour', 'one scale · bands shaded')}<div id="airsm"></div>
+      ${sec('PM2.5 hour by hour', 'NEA 1-hour bands')}<div id="airgrid"></div>`;
+    windCard($('#airwind'));
+    if (psi) driverChart($('#airdrv'));
+    airMultiples($('#airsm')); pmGrid($('#airgrid'));
   },
   detail(el) {
-    if (state.region == null) { el.innerHTML = muted('<i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Click an area to pick out its region.'); return; }
-    const r = state.region, rd = AIR.psi?.readings ?? {}, g = (k) => rd[k]?.[r];
-    const rows = [['PSI, 24-hour', g('psi_twenty_four_hourly'), ''], ['PM2.5, 1-hour', AIR.pm?.readings?.pm25_one_hourly?.[r], 'µg/m³'], ['PM2.5, 24-hour', g('pm25_twenty_four_hourly'), 'µg/m³'], ['PM10, 24-hour', g('pm10_twenty_four_hourly'), 'µg/m³'], ['Ozone, 8-hour max', g('o3_eight_hour_max'), 'µg/m³'], ['NO₂, 1-hour max', g('no2_one_hour_max'), 'µg/m³'], ['SO₂, 24-hour', g('so2_twenty_four_hourly'), 'µg/m³'], ['CO, 8-hour max', g('co_eight_hour_max'), 'mg/m³']];
+    if (state.region == null) { el.innerHTML = muted('<i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Click a region, a pillar or a chart row for every pollutant.'); return; }
+    const r = state.region, rd = AIR.psi?.readings ?? {}, g = (k) => rd[k]?.[r], dr = driver(r);
+    const rows = [['PSI, 24-hour', g('psi_twenty_four_hourly'), '', null], ['PM2.5, 1-hour', AIR.pm?.readings?.pm25_one_hourly?.[r], 'µg/m³', null], ['PM2.5, 24-hour', g('pm25_twenty_four_hourly'), 'µg/m³', 'pm25'], ['PM10, 24-hour', g('pm10_twenty_four_hourly'), 'µg/m³', 'pm10'], ['Ozone, 8-hour max', g('o3_eight_hour_max'), 'µg/m³', 'o3'], ['SO₂, 24-hour', g('so2_twenty_four_hourly'), 'µg/m³', 'so2'], ['CO, 8-hour max', g('co_eight_hour_max'), 'mg/m³', 'co'], ['NO₂, 1-hour max', g('no2_one_hour_max'), 'µg/m³', null]];
     const areas = AREAS.filter((a) => this.regionOf(a) === r).map((a) => a.n);
-    el.innerHTML = `${headRow(`${r[0].toUpperCase()}${r.slice(1)} region`, `${areas.length} planning areas`)}
-      <table class="mt-2 w-full text-xs">${rows.map(([k, v, u]) => `<tr class="border-t"><td class="py-1 text-ink-2">${k}</td><td class="py-1 text-right font-mono">${v ?? '–'} <span class="text-muted-foreground">${u}</span></td></tr>`).join('')}</table>
+    el.innerHTML = `${headRow(`${cap(r)} region`, `${areas.length} planning areas`)}
+      <table class="mt-2 w-full text-xs"><thead><tr class="text-[11px] text-muted-foreground"><th class="pb-1 text-left font-normal">Reading</th><th class="pb-1 text-right font-normal">Value</th><th class="pb-1 text-right font-normal">Sub-index</th></tr></thead>
+      <tbody>${rows.map(([n, v, u, k]) => `<tr class="border-t ${k && dr?.[0] === k ? 'text-foreground' : ''}"><td class="py-1 ${k && dr?.[0] === k ? '' : 'text-ink-2'}">${k ? `<span class="mr-1 inline-block size-2 rounded-full" style="background:${POLL_COL[k]}"></span>` : ''}${n}</td><td class="py-1 text-right font-mono">${v ?? '–'} <span class="text-muted-foreground">${u}</span></td><td class="py-1 text-right font-mono">${k ? `${subIndex(r, k) ?? '–'}${dr?.[0] === k ? ' <span class="text-amber">sets PSI</span>' : ''}` : ''}</td></tr>`).join('')}</tbody></table>
       <p class="mt-2 text-[11px] leading-relaxed text-muted-foreground">${esc(areas.join(', '))}</p>`;
   },
   legend() {
-    return `<div class="mb-1 text-foreground">${state.air === 'psi' ? '24-hour PSI' : 'PM2.5, 1-hour (µg/m³)'}</div>${this.bands().map(([hi, n, c], i, a) => `<div class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm" style="background:${c}"></span>${n} <span class="font-mono text-[10.5px]">${i ? a[i - 1][0] + 1 : 0}${hi === Infinity ? '+' : `–${hi}`}</span></div>`).join('')}`;
+    const b = `<div class="mb-1 text-foreground">${state.air === 'psi' ? '24-hour PSI' : 'PM2.5, 1-hour (µg/m³)'}</div>${this.bands().map(([hi, n, c], i, a) => `<div class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm" style="background:${c}"></span>${state.air === 'psi' ? n : `Band ${i + 1} · ${n}`} <span class="font-mono text-[10.5px]">${i ? a[i - 1][0] + 1 : 0}${hi === Infinity ? '+' : `–${hi}`}</span></div>`).join('')}`;
+    const flow = windField() ? '<div class="mt-2 border-t pt-1.5">Drifting light-blue dots: the wind, from the weather stations</div>' : '';
+    return state.air === 'psi' ? `${b}${flow}<div class="mb-1 mt-2 border-t pt-1.5 text-foreground">Sunburst petals: pollutant sub-indices</div><div class="flex flex-wrap gap-x-2.5 gap-y-0.5">${POLL.map(([, n, c]) => `<span class="flex items-center gap-1"><span class="inline-block size-2 rounded-full" style="background:${c}"></span>${n}</span>`).join('')}</div>` : b + flow;
   },
 };
-function airChart(el) {
-  const items = state.air === 'psi' ? AIR.psiDay : AIR.pmDay, key = state.air === 'psi' ? 'psi_twenty_four_hourly' : 'pm25_one_hourly';
-  if (!items?.length) { el.innerHTML = muted(sync.running ? 'Waiting for the sync…' : 'Sync “Air quality today” above for the hourly chart.'); return; }
-  const pts = items.map((it) => ({ m: minsOfDay(it.timestamp), r: it.readings?.[key] ?? {} })).sort((a, b) => a.m - b.m);
-  const w = el.clientWidth || 340, H = 140, m = { l: 26, r: 50, t: 8, b: 18 };
-  const max = d3.max(pts, (p) => d3.max(REGIONS, (r) => p.r[r] ?? 0)) || 1;
-  const x = d3.scaleLinear([0, 24 * 60], [m.l, w - m.r]), y = d3.scaleLinear([0, max * 1.15], [H - m.b, m.t]).nice();
-  const bands = state.air === 'psi' ? PSI_BANDS : PM_BANDS;
-  const line = (r) => d3.line().defined((p) => p.r[r] != null).x((p) => x(p.m)).y((p) => y(p.r[r])).curve(d3.curveMonotoneX)(pts);
-  const last = pts.at(-1), ends = REGIONS.filter((r) => last.r[r] != null).map((r) => ({ r, y: y(last.r[r]) })).sort((a, b) => a.y - b.y);
-  for (let i = 1; i < ends.length; i++) ends[i].y = Math.max(ends[i].y, ends[i - 1].y + 11.5);
-  el.innerHTML = `<svg width="${w}" height="${H}" class="block">
-    ${bands.filter(([hi]) => hi < y.domain()[1]).map(([hi, n, c]) => `<line x1="${m.l}" x2="${w - m.r}" y1="${y(hi)}" y2="${y(hi)}" stroke="${c}" stroke-opacity="0.45" stroke-dasharray="3 3"/><text x="${m.l + 3}" y="${y(hi) - 3}" font-size="9" fill="${c}">${n} to ${hi}</text>`).join('')}
-    ${y.ticks(4).map((t) => `<text x="${m.l - 4}" y="${y(t) + 3}" text-anchor="end" font-size="9.5" font-family="Source Code Pro" fill="#8b9099">${t}</text>`).join('')}
-    ${[0, 6, 12, 18, 24].map((h) => `<text x="${x(h * 60)}" y="${H - 4}" text-anchor="middle" font-size="9.5" font-family="Source Code Pro" fill="#8b9099">${hourLbl(h % 24)}</text>`).join('')}
-    ${REGIONS.map((r) => `<path d="${line(r)}" fill="none" stroke="${REG_COL[r]}" stroke-width="${state.region === r ? 2.4 : 1.4}" stroke-opacity="${state.region == null || state.region === r ? 1 : 0.3}"/>`).join('')}
-    ${ends.map((e) => `<text x="${x(last.m) + 4}" y="${e.y + 3}" font-size="10" fill="${REG_COL[e.r]}" class="capitalize">${e.r} ${last.r[e.r]}</text>`).join('')}
+// ---------- wind over the air map ----------
+// Wind from the Weather tab's stations (synced with "Weather now"), as vectors in world units:
+// x east, z south; meteorological direction is where the wind comes from.
+function windField() {
+  if (!W.wd || !W.ws) return null;
+  const vs = [];
+  W.wd.v.forEach((deg, id) => { const kn = W.ws.v.get(id), s = STN.get(id); if (!s || deg == null || kn == null) return; const to = ((deg + 180) * Math.PI) / 180, [x, z] = P(s.lon, s.lat); vs.push({ x, z, u: Math.sin(to) * kn, w: -Math.cos(to) * kn, kn }); });
+  if (!vs.length) return null;
+  const U = d3.mean(vs, (d) => d.u), Wz = d3.mean(vs, (d) => d.w), net = Math.hypot(U, Wz), avg = d3.mean(vs, (d) => d.kn);
+  const from = ((Math.atan2(U, -Wz) * 180) / Math.PI + 180 + 360) % 360;
+  return { vs, from, net, avg, steady: avg > 0 && net / avg > 0.45 && avg >= 2, ts: W.wd.ts };
+}
+const COMPASS_LONG = { N: 'north', NE: 'north-east', E: 'east', SE: 'south-east', S: 'south', SW: 'south-west', W: 'west', NW: 'north-west' };
+function windCard(el) {
+  const wf = windField();
+  if (!wf) { el.innerHTML = `<div class="flex items-center justify-between gap-2 rounded-lg border bg-background/40 p-2 text-xs text-muted-foreground"><span>Sync “Weather now” for the wind, to see where the air is coming from.</span><button data-sync-group="weather" class="inline-flex size-7 shrink-0 items-center justify-center rounded-md hover:bg-accent hover:text-foreground" aria-label="Sync Weather now"><i class="fi fi-rr-refresh"></i></button></div>`; return; }
+  const dir = COMPASS_LONG[compass(wf.from)], to = (wf.from + 180) % 360;
+  el.innerHTML = `<div class="flex items-center gap-3 rounded-lg border bg-background/40 p-2.5">
+    <svg width="44" height="44" viewBox="-22 -22 44 44" class="shrink-0"><circle r="20" fill="none" stroke="#2b2f37"/>${['N', 'E', 'S', 'W'].map((c, i) => { const a = (i * Math.PI) / 2; return `<text x="${Math.sin(a) * 15}" y="${-Math.cos(a) * 15 + 3}" text-anchor="middle" font-size="7" font-family="Source Code Pro" fill="#8b9099">${c}</text>`; }).join('')}
+      <g transform="rotate(${to})"><line x1="0" y1="9" x2="0" y2="-7" stroke="${wf.steady ? B.ink : '#8b9099'}" stroke-width="2"/><path d="M0 -12 L4.5 -5 L-4.5 -5 Z" fill="${wf.steady ? B.ink : '#8b9099'}"/></g></svg>
+    <div class="min-w-0 text-xs"><div class="text-sm font-medium text-foreground">${wf.steady ? `Wind from the ${dir}` : 'Light, variable wind'}</div>
+      <div class="font-mono text-muted-foreground">${f1(wf.avg)} knots on average · ${wf.vs.length} stations · ${hhmm(wf.ts)}</div>
+      <div class="mt-0.5 text-ink-2">${wf.steady ? `Air is reaching the island from the ${dir}: in haze season, smoke arrives on this side first.` : 'No steady direction, so air lingers rather than being carried across.'}</div></div></div>`;
+}
+VIEWS.air.drawFlow = function () {
+  if (this.flow) { tickers.delete(this.flow.tick); dispose(this.flow.pts); this.flow = null; }
+  const wf = windField(); if (!wf || !this.cols) return;
+  const N = 1100, X0 = -12.5, X1 = 12.5, Z0 = -8, Z1 = 8;
+  const pos = new Float32Array(N * 3), age = new Float32Array(N), life = new Float32Array(N);
+  const spawn = (i, fresh) => {
+    const x = X0 + Math.random() * (X1 - X0), z = Z0 + Math.random() * (Z1 - Z0);
+    pos[i * 3] = x; pos[i * 3 + 1] = 0.25 + Math.random() * 0.5; pos[i * 3 + 2] = z;
+    life[i] = 120 + Math.random() * 200; age[i] = fresh ? Math.random() * life[i] : 0;
+  };
+  for (let i = 0; i < N; i++) spawn(i, true);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.11, map: DOT, color: '#cfe9ff', transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending }));
+  group.add(pts);
+  // velocity at a point: inverse-distance mix of the station vectors
+  const vel = (x, z) => { let sw = 0, su = 0, sv = 0; for (const d of wf.vs) { const w = 1 / ((d.x - x) ** 2 + (d.z - z) ** 2 + 0.3); sw += w; su += w * d.u; sv += w * d.w; } return [su / sw, sv / sw]; };
+  const K = 0.0035, MIN = 0.006;   // world units per frame per knot; light winds still visibly drift
+  const tick = () => {
+    if (reduceMotion) return;
+    for (let i = 0; i < N; i++) {
+      const x = pos[i * 3], z = pos[i * 3 + 2], [u, w] = vel(x, z);
+      const sp = Math.hypot(u, w) * K, f = sp > 0 && sp < MIN ? MIN / sp : 1;
+      pos[i * 3] = x + u * K * f; pos[i * 3 + 2] = z + w * K * f; age[i]++;
+      if (age[i] > life[i] || pos[i * 3] < X0 || pos[i * 3] > X1 || pos[i * 3 + 2] < Z0 || pos[i * 3 + 2] > Z1) spawn(i, false);
+    }
+    geo.attributes.position.needsUpdate = true;
+  };
+  tickers.add(tick);
+  this.flow = { pts, tick };
+};
+// NEA's advice table, for the band of the highest 24-hour PSI across the regions.
+function adviceBox() {
+  const ps = REGIONS.map((r) => AIR.psi?.readings?.psi_twenty_four_hourly?.[r]).filter((v) => v != null);
+  if (!ps.length) return '';
+  const hi = d3.max(ps), [top, name, c] = band(PSI_BANDS, hi), i = PSI_BANDS.findIndex((b) => b[1] === name), lo = i ? PSI_BANDS[i - 1][0] + 1 : 0;
+  return `<div class="col-span-2 overflow-hidden rounded-lg border bg-background/40 text-xs">
+    <div class="flex items-center justify-between gap-2 border-b px-2.5 py-1.5"><span class="text-[10.5px] font-medium uppercase tracking-wide text-muted-foreground">Advice for</span>
+      <span class="flex items-center gap-2"><span class="h-6 w-1 rounded-full" style="background:${c}"></span><span class="text-right"><span class="block font-medium text-foreground">${name}</span><span class="block font-mono text-[10.5px] text-muted-foreground">PSI ${lo}${top === Infinity ? '+' : `–${top}`}</span></span></span></div>
+    ${ADVICE_GROUPS.map((g, k) => `<div class="grid grid-cols-[1fr_1fr] gap-2 px-2.5 py-1.5 ${k ? 'border-t' : ''}"><span class="font-medium text-ink-2">${g}</span><span class="text-muted-foreground">${AIR_ADVICE[name][k]}</span></div>`).join('')}
+    <p class="border-t px-2.5 py-1.5 text-[11px] text-muted-foreground"><i class="fi fi-rr-info mr-1 align-[-1px]"></i>NEA’s advisory, based on the highest 24-hour PSI now (${hi}).</p></div>`;
+}
+function selectRegion(r) {
+  state.region = state.region === r ? null : r; state.area = null;
+  VIEWS.air.update(); VIEWS.air.fill(); renderDetail();
+}
+// Each region's row: a dot per pollutant sub-index on the PSI scale, health bands behind; the highest is ringed.
+function driverChart(el) {
+  if (!AIR.psi) { el.innerHTML = muted('Sync “Air quality now” above.'); return; }
+  const rs = REGIONS.filter((r) => AIR.psi.readings.psi_twenty_four_hourly?.[r] != null).sort((a, b) => AIR.psi.readings.psi_twenty_four_hourly[b] - AIR.psi.readings.psi_twenty_four_hourly[a]);
+  const w = el.clientWidth || 340, m = { l: 62, r: 62, t: 4, b: 16 }, rowH = 22, H = m.t + rs.length * rowH + m.b;
+  const max = Math.max(100, d3.max(rs, (r) => d3.max(POLL, ([k]) => subIndex(r, k) ?? 0)) * 1.1);
+  const x = d3.scaleLinear([0, max], [m.l, w - m.r]);
+  el.innerHTML = `<div class="mb-1 flex flex-wrap gap-x-2.5 gap-y-0.5 text-[11px] text-muted-foreground">${POLL.map(([, n, c]) => `<span class="flex items-center gap-1"><span class="inline-block size-2 rounded-full" style="background:${c}"></span>${n}</span>`).join('')}</div>
+    <svg width="${w}" height="${H}" class="block">
+    ${PSI_BANDS.map(([hi, , c], i, a) => { const lo = i ? a[i - 1][0] : 0; if (lo >= max) return ''; return `<rect x="${x(lo)}" y="${m.t}" width="${x(Math.min(hi, max)) - x(lo)}" height="${rs.length * rowH}" fill="${c}" fill-opacity="0.07"/>`; }).join('')}
+    ${rs.map((r, i) => {
+      const y = m.t + i * rowH + rowH / 2, dr = driver(r), sel = state.region === r;
+      const dots = POLL.map(([k]) => [k, subIndex(r, k)]).filter(([, v]) => v != null).sort((a, b) => (a[0] === dr?.[0]) - (b[0] === dr?.[0]));
+      return `<g data-region="${r}" style="cursor:pointer"><rect x="0" y="${y - rowH / 2}" width="${w}" height="${rowH}" fill="${sel ? '#f6c453' : 'transparent'}" fill-opacity="${sel ? 0.08 : 0}"/>
+        <line x1="${m.l}" x2="${w - m.r}" y1="${y}" y2="${y}" stroke="#2b2f37"/>
+        <text x="4" y="${y + 3.5}" font-size="11" fill="${sel ? B.amber : '#b8b5ac'}">${cap(r)}</text><text x="${m.l - 6}" y="${y + 3.5}" text-anchor="end" font-size="10.5" font-family="Source Code Pro" fill="#e4e1d8">${AIR.psi.readings.psi_twenty_four_hourly[r]}</text>
+        ${dots.map(([k, v]) => `<circle cx="${x(v)}" cy="${y}" r="${k === dr?.[0] ? 5.5 : 3.5}" fill="${POLL_COL[k]}" stroke="${k === dr?.[0] ? '#e4e1d8' : 'none'}" stroke-width="1.2"><title>${POLL_NAME[k]}: ${v}</title></circle>`).join('')}
+        ${dr ? `<text x="${w - m.r + 6}" y="${y + 3.5}" font-size="10.5" fill="${POLL_COL[dr[0]]}">${POLL_NAME[dr[0]]}</text>` : ''}</g>`;
+    }).join('')}
+    ${[0, 50, 100, 200, 300].filter((t) => t <= max).map((t) => `<text x="${x(t)}" y="${H - 3}" text-anchor="middle" font-size="9" font-family="Source Code Pro" fill="#8b9099">${t}</text>`).join('')}
   </svg>`;
+}
+// Today per region, one small chart each on a shared scale, health bands shaded behind.
+function airMultiples(el) {
+  const items = airDay();
+  if (!items?.length) { el.innerHTML = muted(sync.running ? 'Waiting for the sync…' : 'Sync “Air quality today” above for today’s readings.'); return; }
+  const series = REGIONS.map((r) => ({ r, s: airSeries(r) })).filter((d) => d.s.length);
+  const w = el.clientWidth || 340, m = { l: 62, r: 62 }, h = 36, gap = 6, H = series.length * (h + gap) + 14;
+  const bands = state.air === 'psi' ? PSI_BANDS : PM_BANDS, max = Math.max(state.air === 'psi' ? 100 : 60, d3.max(series, (d) => d3.max(d.s, (p) => p.v)) * 1.1);
+  const x = d3.scaleLinear([0, 1440], [m.l, w - m.r]);
+  el.innerHTML = `<svg width="${w}" height="${H}" class="block">${series.map(({ r, s }, i) => {
+    const y0 = i * (h + gap), y = d3.scaleLinear([0, max], [y0 + h, y0 + 2]), last = s.at(-1), tr = trend(r), sel = state.region === r;
+    const bg = bands.map(([hi, , c], j, a) => { const lo = j ? a[j - 1][0] : 0; if (lo >= max) return ''; return `<rect x="${m.l}" y="${y(Math.min(hi, max))}" width="${w - m.l - m.r}" height="${y(lo) - y(Math.min(hi, max))}" fill="${c}" fill-opacity="0.1"/>`; }).join('');
+    const line = d3.line().x((p) => x(p.m)).y((p) => y(p.v)).curve(d3.curveMonotoneX)(s);
+    const arrow = tr ? (tr.dir === 'up' ? '▲' : tr.dir === 'down' ? '▼' : '▬') : '', ac = tr ? (tr.dir === 'up' ? '#e8894a' : tr.dir === 'down' ? '#5fbf8f' : '#8b9099') : '';
+    return `<g data-region="${r}" style="cursor:pointer">${bg}<path d="${line}" fill="none" stroke="${sel ? B.amber : '#e4e1d8'}" stroke-width="${sel ? 2 : 1.4}"/>
+      <circle cx="${x(last.m)}" cy="${y(last.v)}" r="3" fill="${band(bands, last.v)[2]}"/>
+      <text x="4" y="${y0 + h / 2 + 4}" font-size="11" fill="${sel ? B.amber : '#b8b5ac'}">${cap(r)}</text>
+      <text x="${w - m.r + 6}" y="${y0 + h / 2 + 4}" font-size="11" font-family="Source Code Pro" fill="#e4e1d8">${last.v} <tspan fill="${ac}" font-size="9">${arrow}</tspan></text>
+      <title>${cap(r)}: ${last.v} at ${hhmm(last.t)}${tr ? `, ${trendText(tr)}` : ''}</title></g>`;
+  }).join('')}
+  ${[0, 6, 12, 18, 24].map((hh) => `<text x="${x(hh * 60)}" y="${H - 2}" text-anchor="middle" font-size="9" font-family="Source Code Pro" fill="#8b9099">${hourLbl(hh % 24)}</text>`).join('')}</svg>`;
+}
+// Region by hour, each cell the PM2.5 1-hour band.
+function pmGrid(el) {
+  const items = AIR.pmDay;
+  if (!items?.length) { el.innerHTML = muted(sync.running ? 'Waiting for the sync…' : 'Sync “Air quality today” above for the hourly grid.'); return; }
+  const w = el.clientWidth || 340, m = { l: 62, r: 4, t: 2, b: 14 }, rowH = 14, H = m.t + REGIONS.length * rowH + m.b;
+  const x = d3.scaleBand(d3.range(24), [m.l, w - m.r]).padding(0.08);
+  const byH = new Map(items.map((it) => [sgHour(new Date(it.timestamp)), it.readings?.pm25_one_hourly ?? {}]));
+  el.innerHTML = `<svg width="${w}" height="${H}" class="block">${REGIONS.map((r, i) => {
+    const y = m.t + i * rowH;
+    return `<g data-region="${r}" style="cursor:pointer"><text x="4" y="${y + rowH - 4}" font-size="10.5" fill="${state.region === r ? B.amber : '#b8b5ac'}">${cap(r)}</text>
+      ${d3.range(24).map((hh) => { const v = byH.get(hh)?.[r]; return v == null ? `<rect x="${x(hh)}" y="${y + 1}" width="${x.bandwidth()}" height="${rowH - 2}" rx="1.5" fill="none" stroke="#2b2f37"/>` : `<rect x="${x(hh)}" y="${y + 1}" width="${x.bandwidth()}" height="${rowH - 2}" rx="1.5" fill="${bandShade(PM_BANDS, v)}"><title>${cap(r)}, ${hourLbl(hh)}: PM2.5 ${v} µg/m³ (${bandName(PM_BANDS, v)})</title></rect>`; }).join('')}</g>`;
+  }).join('')}
+  ${[0, 6, 12, 18].map((hh) => `<text x="${x(hh)}" y="${H - 2}" font-size="9" font-family="Source Code Pro" fill="#8b9099">${hourLbl(hh)}</text>`).join('')}</svg>`;
 }
 
 // ---------- taxis ----------
@@ -1313,7 +1553,7 @@ async function clearStore() {
 // Each group syncs on its own from its icon (in the Sync menu or the tab's panel), or all together.
 // Groups queue up and run one after another, since every call shares the rate-limited queue.
 const GROUPS = [
-  { id: 'weather', every: 5, view: 'weather', name: 'Weather now', icon: 'fi-rr-temperature-high', feeds: ['temp', 'rh', 'rain', 'ws', 'wd'], about: 'temperature, humidity, rain, wind' },
+  { id: 'weather', every: 5, view: 'weather', also: ['air'], name: 'Weather now', icon: 'fi-rr-temperature-high', feeds: ['temp', 'rh', 'rain', 'ws', 'wd'], about: 'temperature, humidity, rain, wind' },
   { id: 'forecast', every: 30, view: 'weather', name: 'Forecasts and UV', icon: 'fi-rr-cloud-sun', feeds: ['uv', 'f2', 'f24', 'f4'], about: 'UV, 2-hour, 24-hour, 4-day' },
   { id: 'rainDay', every: 10, view: 'weather', name: 'Today’s rain', icon: 'fi-rr-time-past', history: 'rain', about: 'five-minute history for the replay' },
   { id: 'air', every: 15, view: 'air', name: 'Air quality now', icon: 'fi-rr-wind', feeds: ['psi', 'pm25'], about: 'PSI and PM2.5 by region' },
@@ -1339,6 +1579,8 @@ function setAuto(on) { auto.on = on; syncUi(); autoTick(); }
 const nextIn = (g) => { const ms = (STORE.groupAt?.[g.id] ?? 0) + g.every * 60e3 - Date.now(); return ms < 60e3 ? 'next in under a minute' : `next in ${Math.ceil(ms / 60e3)} min`; };
 const FEED = Object.fromEntries(FEEDS.map(([k, label, url]) => [k, { label, url }]));
 const sync = { running: null, queue: [], done: 0, total: 0, step: '' };
+// a group redraws its own tab, plus any tab that also uses it (wind on the Air tab)
+const shows = (g) => g.view === state.view || (g.also ?? []).includes(state.view);
 const groupState = (id) => (sync.running === id ? 'running' : sync.queue.includes(id) ? 'queued' : 'idle');
 
 function newDay() {
@@ -1372,7 +1614,7 @@ async function syncLoop() {
     STORE.groupErr = { ...STORE.groupErr, [g.id]: errs.length ? errs.join('; ') : null };
     STORE.syncedAt = Date.now();
     await saveStore();
-    if (g.view === state.view && VIEWS[state.view].built) { VIEWS[state.view].update(); refreshPanel(); }
+    if (shows(g) && VIEWS[state.view].built) { VIEWS[state.view].update(); refreshPanel(); }
   }
   Object.assign(sync, { running: null, done: 0, total: 0, step: '' });
   syncUi();
@@ -1380,7 +1622,7 @@ async function syncLoop() {
 async function syncGroup(g) {
   newDay();
   const errs = [], today = STORE.day;
-  const touched = () => { if (g.view === state.view && VIEWS[state.view].built) { VIEWS[state.view].update(); refreshPanel(); } };
+  const touched = () => { if (shows(g) && VIEWS[state.view].built) { VIEWS[state.view].update(); refreshPanel(); } };
   const step = async (label, fn) => { sync.step = `${g.name} · ${label}`; syncUi(); try { await fn(); } catch (e) { errs.push(`${label}: ${e.message ?? e}`); } sync.done++; syncUi(); };
   if (g.feeds) {
     for (const k of g.feeds) await step(FEED[k].label, async () => { const j = await api(FEED[k].url(), { ttl: 0 }); STORE.feeds[k] = j; APPLY[k](j); touched(); });
@@ -1480,7 +1722,7 @@ async function show(view) {
   try { await ready; } catch { $('#panel').innerHTML = '<p class="text-sm text-muted-foreground">The map didn’t load. Reload the page to try again.</p>'; return; }
   if (ticket !== building) return;
   if (!proj) setupProjection();
-  ORDER.forEach((k) => { const v = VIEWS[k]; v.tiles = v.meshes = v.bars = v.rain = v.grid = v.cloud = v.drops = v.trackG = v.markG = undefined; v.rlabels = null; v.built = false; });
+  ORDER.forEach((k) => { const v = VIEWS[k]; v.tiles = v.meshes = v.bars = v.rain = v.grid = v.cloud = v.drops = v.trackG = v.markG = v.cols = v.borders = v.flow = undefined; v.rlabels = null; v.built = false; });
   const v = VIEWS[view];
   renderPanel();
   v.build(); v.built = true;
@@ -1514,7 +1756,7 @@ function flyCam(target, pos, dur = 1200) {
 function flyArea(i) { const a = AREAS[i], t = V3(...a.c, 0); flyCam(t, t.clone().add(new THREE.Vector3(-2, 7, 8.5))); }
 function selectArea(i) {
   state.area = state.area === i ? null : i; state.gauge = null;
-  if (state.view === 'air') { state.area = null; const r = i == null ? null : VIEWS.air.regionOf(AREAS[i]); state.region = state.region === r ? null : r; VIEWS.air.update(); VIEWS.air.fill(); renderDetail(); return; }
+  if (state.view === 'air') { state.area = null; const r = i == null ? null : VIEWS.air.regionOf(AREAS[i]); if (r) selectRegion(r); return; }
   if (state.view === 'carparks') state.cp = null;
   VIEWS[state.view].update(); VIEWS[state.view].fill(); renderDetail();
 }
@@ -1546,6 +1788,7 @@ $('#panel').addEventListener('keydown', (e) => {
 });
 $('#panel').addEventListener('click', (e) => {
   const t = e.target;
+  const rg = t.closest('[data-region]'); if (rg) { selectRegion(rg.dataset.region); return; }
   const gb = t.closest('[data-gauge]'); if (gb) { selectGauge(gb.dataset.gauge); return; }
   const tb = t.closest('[data-track]'); if (tb) { playTrack(+tb.dataset.track); return; }
   const sg = t.closest('[data-sync-group]'); if (sg) { runSync([sg.dataset.syncGroup]); return; }
