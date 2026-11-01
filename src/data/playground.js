@@ -292,4 +292,20 @@ export const PLAYGROUND_MOCKS = [
       { name: 'OneMap', href: 'https://www.onemap.gov.sg/' },
     ],
   },
+  {
+    id: 'block-explorer-3d',
+    project: 'Chain explorer',
+    name: 'Block explorer 3D',
+    date: '2026-11-02',
+    href: '/mocks/block-explorer.html',
+    preview: '/mocks/previews/block-explorer.jpg',
+    description:
+      'Bitcoin, Ethereum and Solana, each drawn its own way: mined blocks beside the mempool queue, gas columns against the target with blobs and the base fee, and slots on a spiral by leader. Open a block to see every transaction in it. Ships with a snapshot; Go live syncs the latest blocks into your browser.',
+    libraries: ['threejs', 'd3', 'shadcn', 'tailwind', 'flaticon'],
+    sources: [
+      { name: 'mempool.space API', href: 'https://mempool.space/docs/api/rest' },
+      { name: 'publicnode Ethereum RPC', href: 'https://ethereum-rpc.publicnode.com' },
+      { name: 'publicnode Solana RPC', href: 'https://solana-rpc.publicnode.com' },
+    ],
+  },
 ]
