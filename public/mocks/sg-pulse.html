@@ -308,11 +308,11 @@ function bars(n, { w = 0.08, round = false, hexagon = false } = {}) {
 }
 
 // ================= state =================
-const state = { view: 'weather', wmode: 'temp', air: 'psi', taxi: 'points', txFrom: null, cpFilter: 'all', area: null, region: null, cp: null, gauge: null };
+const state = { view: 'weather', wmode: 'temp', air: 'psi', taxi: 'points', txFrom: null, cpFilter: 'all', cpLot: 'C', cpView: 'bars', area: null, region: null, cp: null, gauge: null };
 const W = {};            // weather readings
 const AIR = {};          // psi, pm25, day series
 const TX = { hist: [], frames: [], hour: null, status: 'idle' };   // taxis
-const CP = { live: new Map(), hist: new Map(), ts: null };          // carparks
+const CP = { live: new Map(), hist: new Map(), ts: null, liveFrame: null, frames: [], hour: null };          // carparks
 const STN = new Map();   // weather stations by id
 const RP = { status: 'idle', frames: [], i: 0, cum: false, pages: 0 };   // today's rain replay
 let playTimer = null;
@@ -1393,104 +1393,244 @@ function txDay() {
 function setTaxiHour(i) { TX.hour = i; VIEWS.taxis.update(); refreshPanel(); }
 
 // ---------- carparks ----------
+// A frame (live, or one per hour today) holds free and total lots per lot type, one slot per carpark
+// (-1 where a carpark has none or isn't reporting). Car (C), motorcycle (Y) and heavy vehicle (H) lots.
+const LOTS = [['C', 'Cars', 'car'], ['Y', 'Motorcycles', 'motorcycle'], ['H', 'Heavy vehicles', 'heavy-vehicle']];
+const LOT_NAME = Object.fromEntries(LOTS.map(([k, , n]) => [k, n]));
+const FULL = d3.scaleLinear([0.25, 0.5, 0.75, 0.95], ['#2b6f8a', '#1fefd7', '#f6c453', '#e58fb0']).clamp(true);   // share of lots taken; most carparks sit between 40% and 80%
+let CP_INDEX = null;
+function cpFrame(it, h = null) {
+  CP_INDEX ??= new Map(CARPARKS.map((c) => [c.id, c.i]));
+  const f = {}, n = {};
+  LOTS.forEach(([k]) => { f[k] = new Int16Array(CARPARKS.length).fill(-1); n[k] = new Int16Array(CARPARKS.length).fill(-1); });
+  it.carpark_data.forEach((c) => {
+    const i = CP_INDEX.get(c.carpark_number); if (i == null) return;
+    c.carpark_info.forEach((l) => {
+      const k = l.lot_type; if (!f[k]) return;
+      const tot = Math.max(0, +l.total_lots || 0), fr = Math.max(0, Math.min(+l.lots_available || 0, tot));
+      n[k][i] = Math.max(0, n[k][i]) + tot; f[k][i] = Math.max(0, f[k][i]) + fr;
+    });
+  });
+  return { t: it.timestamp, h, f, n };
+}
+const occ = (fr, i, lot = state.cpLot) => (fr && fr.n[lot][i] > 0 ? { free: fr.f[lot][i], total: fr.n[lot][i] } : null);
+// Totals for a frame and lot type, island-wide and by town (cached on the frame).
+function cpStats(fr, lot = state.cpLot) {
+  fr._s ??= {};
+  if (fr._s[lot]) return fr._s[lot];
+  const byArea = AREAS.map(() => ({ free: 0, total: 0, n: 0, tight: 0 }));
+  let free = 0, total = 0, n = 0, tight = 0;
+  CARPARKS.forEach((c) => {
+    const o = occ(fr, c.i, lot); if (!o) return;
+    free += o.free; total += o.total; n++; const t = o.free / o.total < 0.1; if (t) tight++;
+    if (c.area >= 0) { const a = byArea[c.area]; a.free += o.free; a.total += o.total; a.n++; if (t) a.tight++; }
+  });
+  return (fr._s[lot] = { free, total, n, tight, byArea });
+}
+const taken = (s) => (s.total ? 1 - s.free / s.total : null);
+
 VIEWS.carparks = {
   tab: 'Carparks', icon: 'fi-rr-parking',
-  title: 'Free lots in HDB carparks',
-  blurb: 'Each of the HDB carparks as a bar: height for its car lots, colour for the share still free at the last sync. Switch to nearly full to see where parking is tight tonight.',
-  how: ['Carpark locations converted from SVY21, availability scales, area totals and the session chart.', 'One instanced bar per carpark; heights and colours ease on each refresh.'],
+  title: 'How full the HDB carparks are',
+  blurb: 'Each HDB carpark is a glass column: as tall as its lots, filled to how many are taken, and coloured from empty (teal) to full (pink). Switch to towns to compare neighbourhoods, or play today hour by hour.',
+  how: ['Carpark locations converted from SVY21, occupancy by town and hour, the day curve and the heatmap.', 'Two instanced columns per carpark, a glass shell for capacity and a solid fill for the lots taken; extruded towns.'],
   camera: [-2, 17, 19], target: [0.5, 0, 0.6],
+  shown() { return CP.hour != null && CP.frames[CP.hour] ? CP.frames[CP.hour] : CP.liveFrame; },
   build() {
     this.tiles = island();
     this.tiles.forEach((t) => { t.userData.pick = () => this.areaTip(t.userData.area); pickables.push(t); });
-    this.bars = bars(CARPARKS.length, { w: 0.075 });
-    CARPARKS.forEach((c, i) => this.bars.place(i, V3(c.lon, c.lat)));
-    this.bars.mesh.userData = { alive: (i) => this.bars.alive(i), pick: (h) => this.tip(CARPARKS[h.instanceId]) };
-    pickables.push(this.bars.mesh);
+    this.shell = bars(CARPARKS.length, { w: 0.1 });
+    Object.assign(this.shell.mesh.material, { transparent: true, opacity: 0.22, depthWrite: false });
+    this.glass = bars(CARPARKS.length, { w: 0.07 });
+    CARPARKS.forEach((c, i) => { const p = V3(c.lon, c.lat); this.shell.place(i, p); this.glass.place(i, p); });
+    const ud = { alive: (i) => this.shell.alive(i), pick: (h) => this.tip(CARPARKS[h.instanceId]) };
+    this.shell.mesh.userData = ud; this.glass.mesh.userData = ud;
+    pickables.push(this.shell.mesh, this.glass.mesh);
+    this.ameshes = null; this.alabels = null;
     this.update();
   },
-  update() {
-    if (!this.bars) return;
-    const maxT = d3.max(CP.live.values(), (l) => l.total) || 600, col = d3.scaleSequential([0, 0.5], FREE).clamp(true);
-    CARPARKS.forEach((c, i) => {
-      const l = CP.live.get(c.id), share = l && l.total ? l.free / l.total : null;
-      const tight = share != null && share < 0.1;
-      const show = state.cpFilter === 'all' || tight || state.cp === i;
-      const h = !show ? 0 : l && l.total ? 0.06 + Math.sqrt(l.total / maxT) * 1.5 : 0.03;
-      this.bars.set(i, h, state.cp === i ? B.ink : share == null ? '#3a3f48' : col(share));
+  buildAreas() {
+    this.ameshes = AREAS.map((a) => {
+      const geo = new THREE.ExtrudeGeometry(a.p.map(shapeOf), { depth: 1, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
+      const m = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ color: B.signal, roughness: 0.6, metalness: 0.05 }), new THREE.MeshBasicMaterial({ color: B.signal })]);
+      m.scale.y = 0.001; m.userData = { area: a.i, h: 0.001, pick: () => this.areaTip(a.i) };
+      group.add(m); pickables.push(m); return m;
     });
-    this.bars.commit();
+    tickers.add(() => this.ameshes?.forEach((m) => { const d = m.userData.h - m.scale.y; if (Math.abs(d) > 1e-4) m.scale.y += reduceMotion ? d : d * 0.14; }));
+  },
+  update() {
+    if (!this.shell) return;
+    const fr = this.shown(), towns = state.cpView === 'towns';
     this.tiles.forEach((t) => t.material.color.set(state.area === t.userData.area ? '#4a4128' : '#262a31'));
+    if (this.alabels) dispose(this.alabels);
+    this.alabels = new THREE.Group(); group.add(this.alabels);
+    // glass columns
+    const maxT = (fr && d3.max(fr.n[state.cpLot])) || 600;
+    CARPARKS.forEach((c, i) => {
+      const o = towns ? null : occ(fr, i), sel = state.cp === i;
+      const show = !towns && o && (state.cpFilter === 'all' || o.free / o.total < 0.1 || sel);
+      const h = show ? 0.08 + Math.sqrt(o.total / maxT) * 1.6 : 0, k = o ? 1 - o.free / o.total : 0;
+      this.shell.set(i, h, sel ? B.amber : '#9aa3ad');
+      this.glass.set(i, show ? Math.max(0.02, h * k) : 0, sel ? B.ink : FULL(k));
+    });
+    this.shell.commit(); this.glass.commit();
+    // towns: raised and coloured by the share of lots taken
+    if (towns && fr) {
+      if (!this.ameshes) this.buildAreas();
+      const st = cpStats(fr);
+      this.ameshes.forEach((m, i) => {
+        const a = st.byArea[i], k = taken(a); m.visible = a.total > 0;
+        m.userData.h = a.total ? 0.05 + Math.max(0, (k - 0.2) / 0.8) * 2.8 : 0.001;   // from 20% full, so differences between towns show
+        const c = new THREE.Color(state.area === i ? B.amber : a.total ? FULL(k) : '#2f333a');
+        m.material[0].color.copy(c); m.material[1].color.copy(c).multiplyScalar(0.55);
+      });
+      const top = d3.range(AREAS.length).filter((i) => st.byArea[i].total >= 200).sort((a, b) => taken(st.byArea[b]) - taken(st.byArea[a])).slice(0, 8);
+      if (state.area != null && !top.includes(state.area)) top.push(state.area);
+      top.forEach((i) => { const a = AREAS[i]; lbl(`${a.n} ${pctF(taken(st.byArea[i]))}`, V3(...a.c, this.ameshes[i].userData.h + 0.3), `bg ${state.area === i ? 'sel' : ''}`, this.alabels); });
+    } else this.ameshes?.forEach((m) => { m.visible = false; });
     legend();
   },
-  areaStats() {
-    const s = AREAS.map(() => ({ free: 0, total: 0, n: 0, tight: 0 }));
-    CARPARKS.forEach((c) => { const l = CP.live.get(c.id); if (!l || c.area < 0 || !l.total) return; const a = s[c.area]; a.free += l.free; a.total += l.total; a.n++; if (l.free / l.total < 0.1) a.tight++; });
-    return s;
+  areaTip(i) {
+    const fr = this.shown(); if (!fr) return `<div class="font-medium text-foreground">${esc(AREAS[i].n)}</div>`;
+    const a = cpStats(fr).byArea[i];
+    return `<div class="font-medium text-foreground">${esc(AREAS[i].n)}</div>${a.n ? `<div class="font-mono">${pctF(taken(a))} full · ${f0(a.free)} of ${f0(a.total)} ${LOT_NAME[state.cpLot]} lots free</div><div class="text-muted-foreground">${a.n} HDB carparks${a.tight ? `, ${a.tight} nearly full` : ''}${CP.hour != null ? ` · ${hourLbl(fr.h)}` : ''}</div>` : `<div class="text-muted-foreground">No HDB ${LOT_NAME[state.cpLot]} lots reporting</div>`}`;
   },
-  areaTip(i) { const a = this.areaStats()[i]; return `<div class="font-medium text-foreground">${esc(AREAS[i].n)}</div>${a.n ? `<div class="font-mono">${f0(a.free)} of ${f0(a.total)} car lots free · ${pctF(a.free / a.total)}</div><div class="text-muted-foreground">${a.n} HDB carparks${a.tight ? `, ${a.tight} nearly full` : ''}</div>` : '<div class="text-muted-foreground">No HDB carparks reporting</div>'}`; },
   tip(c) {
-    const l = CP.live.get(c.id);
+    const o = occ(this.shown(), c.i);
     return `<div class="font-medium text-foreground">${esc(title(c.address))}</div><div class="text-muted-foreground">${esc(c.id)} · ${esc(title(c.type))}</div>
-      ${l ? `<div class="font-mono">${f0(l.free)} of ${f0(l.total)} car lots free${l.total ? ` · ${pctF(l.free / l.total)}` : ''}</div>` : '<div class="text-muted-foreground">Not reporting live</div>'}`;
+      ${o ? `<div class="font-mono">${f0(o.free)} of ${f0(o.total)} ${LOT_NAME[state.cpLot]} lots free · ${pctF(1 - o.free / o.total)} full</div>` : `<div class="text-muted-foreground">No ${LOT_NAME[state.cpLot]} lots reporting</div>`}`;
   },
   tilesHtml() {
-    if (!CP.ts) return tile('Car lots free', '–') + tile('', '–');
-    const ls = [...CP.live.values()].filter((l) => l.total), free = d3.sum(ls, (l) => l.free), total = d3.sum(ls, (l) => l.total);
-    const tight = CARPARKS.filter((c) => { const l = CP.live.get(c.id); return l?.total && l.free / l.total < 0.1; }).length;
-    const rep = CARPARKS.filter((c) => CP.live.has(c.id)).length;
-    return tile('Car lots free', f0(free), `of ${f0(total)} · ${pctF(free / total)}`) + tile('Nearly full', f0(tight), `under 10% free · ${f0(rep)} carparks live`);
+    const fr = this.shown(); if (!fr) return tile('Lots free', '–', 'sync “Carparks”') + tile('', '–');
+    const st = cpStats(fr), prev = CP.hour != null ? CP.frames[CP.hour - 1] : [...CP.frames].reverse().find((f) => new Date(fr.t) - new Date(f.t) >= 50 * 60e3);
+    const d = prev ? taken(st) - taken(cpStats(prev)) : null;
+    const byA = st.byArea.map((a, i) => [i, a]).filter(([, a]) => a.total >= 200), fullest = byA.length ? d3.greatest(byA, ([, a]) => taken(a)) : null;
+    return tile(`${LOTS.find(([k]) => k === state.cpLot)[1]}: lots free`, f0(st.free), `of ${f0(st.total)}${CP.hour != null ? ` · ${hourLbl(fr.h)}` : ''}`)
+      + tile('How full', `${pctF(taken(st))}`, d != null ? `<span style="color:${d > 0 ? B.pink : B.signal}">${d > 0 ? '+' : '−'}${Math.abs(d * 100).toFixed(1)} pts</span> since ${hhmm(prev.t)}` : `${f0(st.n)} carparks reporting`)
+      + tile('Nearly full', f0(st.tight), 'carparks under 10% free')
+      + tile('Fullest town', fullest ? esc(AREAS[fullest[0]].n) : '–', fullest ? `${pctF(taken(fullest[1]))} full` : '');
   },
   opts() {
-    return `<div class="mt-3 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Show</span>${seg('cp', [['all', 'All carparks'], ['tight', 'Nearly full']], state.cpFilter)}</div>
+    return `<div class="mt-3 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Lots</span>${seg('cplot', LOTS.map(([k, n]) => [k, n]), state.cpLot)}</div>
+      <div class="mt-2 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Show</span><div class="flex gap-1.5">${state.cpView === 'bars' ? seg('cp', [['all', 'All'], ['tight', 'Nearly full']], state.cpFilter) : ''}${seg('cpview', [['bars', 'Carparks'], ['towns', 'Towns']], state.cpView)}</div></div>
       <div class="relative mt-3"><i class="fi fi-rr-search pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"></i>
         <input id="cp-search" type="search" autocomplete="off" spellcheck="false" placeholder="Find a carpark by block, street or code" aria-label="Find a carpark" class="h-9 w-full rounded-md border bg-background/60 pl-8 pr-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
-        <div id="cp-list" hidden class="absolute inset-x-0 top-10 z-20 max-h-72 overflow-auto rounded-md border bg-background p-1 shadow-lg"></div></div>`;
+        <div id="cp-list" hidden class="absolute inset-x-0 top-10 z-20 max-h-72 overflow-auto rounded-md border bg-background p-1 shadow-lg"></div></div>
+      <div id="cpday" class="mt-3"></div>`;
   },
   fill() {
+    cpDay();
     const el = $('#body'); if (!el) return;
-    if (!CP.ts) { el.innerHTML = muted(sync.running ? 'Waiting for the sync…' : 'Sync “Carparks” above for live availability.'); return; }
-    const s = this.areaStats(), rows = d3.range(AREAS.length).filter((i) => s[i].total >= 300).sort((a, b) => s[a].free / s[a].total - s[b].free / s[b].total).slice(0, 10);
-    const col = d3.scaleSequential([0, 0.5], FREE).clamp(true);
-    el.innerHTML = `${sec('Tightest areas', 'share of car lots free')}
-      <div class="space-y-1">${rows.map((i) => { const r = s[i].free / s[i].total; return `<button data-area="${i}" class="flex w-full items-center gap-2 rounded text-left text-xs hover:bg-accent/50 ${state.area === i ? 'text-amber' : ''}">
-        <span class="w-[104px] shrink-0 truncate ${state.area === i ? '' : 'text-ink-2'}">${esc(AREAS[i].n)}</span>
-        <span class="relative h-2.5 flex-1 overflow-hidden rounded-sm bg-muted"><span class="absolute inset-y-0 left-0" style="width:${r * 100}%;background:${col(r)}"></span></span>
-        <span class="w-9 text-right font-mono">${pctF(r)}</span></button>`; }).join('')}</div>`;
+    const fr = this.shown();
+    if (!fr) { el.innerHTML = muted(sync.running ? 'Waiting for the sync…' : 'Sync “Carparks” above for live availability.'); return; }
+    el.innerHTML = `${sec('By town', `${CP.hour != null ? hourLbl(fr.h) : 'now'} · how full, grouped by region`)}<div id="cptown"></div>
+      ${sec('Towns through the day', `share of ${LOT_NAME[state.cpLot]} lots taken`)}<div id="cpheat"></div>`;
+    cpTowns($('#cptown'), fr); cpHeat($('#cpheat'));
   },
   detail(el) {
     if (state.cp != null) return cpDetail(el, CARPARKS[state.cp]);
-    if (state.area != null) {
-      const a = AREAS[state.area], st = this.areaStats()[state.area];
-      const list = CARPARKS.filter((c) => c.area === state.area && CP.live.get(c.id)?.total).sort((x, y) => { const lx = CP.live.get(x.id), ly = CP.live.get(y.id); return lx.free / lx.total - ly.free / ly.total; }).slice(0, 8);
-      el.innerHTML = `${headRow(a.n, `${st.n} HDB carparks reporting`)}
-        <div class="mt-2 grid grid-cols-2 gap-2">${tile('Car lots free', f0(st.free), st.total ? `of ${f0(st.total)} · ${pctF(st.free / st.total)}` : '')}${tile('Nearly full', f0(st.tight), 'under 10% free')}</div>
-        <p class="mt-3 text-xs font-medium text-ink-2">Fullest here</p><div class="mt-1 space-y-0.5">${list.map((c) => { const l = CP.live.get(c.id); return `<button data-cp="${c.i}" class="flex w-full justify-between gap-2 rounded px-1 text-left text-xs hover:bg-accent/50"><span class="truncate text-ink-2">${esc(title(c.address))}</span><span class="shrink-0 font-mono">${l.free}/${l.total}</span></button>`; }).join('')}</div>`;
+    const fr = this.shown();
+    if (state.area != null && fr) {
+      const a = AREAS[state.area], st = cpStats(fr).byArea[state.area];
+      const list = CARPARKS.filter((c) => c.area === state.area && occ(fr, c.i)).sort((x, y) => { const ox = occ(fr, x.i), oy = occ(fr, y.i); return ox.free / ox.total - oy.free / oy.total; }).slice(0, 8);
+      const series = CP.frames.length ? CP.frames.map((f) => Math.round((taken(cpStats(f).byArea[state.area]) ?? 0) * 100)) : null;
+      el.innerHTML = `${headRow(a.n, `${st.n} HDB carparks with ${LOT_NAME[state.cpLot]} lots`)}
+        <div class="mt-2 grid grid-cols-2 gap-2">${tile('How full', st.total ? pctF(taken(st)) : '–', st.total ? `${f0(st.free)} of ${f0(st.total)} free` : '')}${tile('Nearly full', f0(st.tight), 'under 10% free')}</div>
+        ${series ? `<p class="mt-3 text-xs font-medium text-ink-2">How full today, by hour (%)</p><div id="cp-area"></div>` : ''}
+        <p class="mt-3 text-xs font-medium text-ink-2">Fullest here</p><div class="mt-1 space-y-0.5">${list.map((c) => { const o = occ(fr, c.i); return `<button data-cp="${c.i}" class="flex w-full justify-between gap-2 rounded px-1 text-left text-xs hover:bg-accent/50"><span class="truncate text-ink-2">${esc(title(c.address))}</span><span class="shrink-0 font-mono">${o.free}/${o.total}</span></button>`; }).join('')}</div>`;
+      if ($('#cp-area')) hourBars($('#cp-area'), series, B.pink, CP.hour, true);
       return;
     }
-    el.innerHTML = muted('<i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Click a bar for the carpark, or an area for its totals.');
+    el.innerHTML = muted('<i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Click a carpark, or a town, for its numbers and its day.');
   },
   legend() {
-    const st = d3.range(25).map((i) => FREE(i / 24)).join(',');
-    return `<div class="mb-1 text-foreground">Car lots free</div><div class="h-2 w-48 rounded-full" style="background:linear-gradient(90deg,${st})"></div><div class="mt-1 flex w-48 justify-between font-mono text-[10.5px]"><span>0%</span><span>25%</span><span>50%+</span></div>
-      <div class="mt-1 flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm bg-[#3a3f48]"></span>not reporting · height: lots</div>`;
+    const st = d3.range(25).map((i) => FULL(i / 24)).join(',');
+    return `<div class="mb-1 text-foreground">Share of ${LOT_NAME[state.cpLot]} lots taken</div><div class="h-2 w-48 rounded-full" style="background:linear-gradient(90deg,${st})"></div><div class="mt-1 flex w-48 justify-between font-mono text-[10.5px]"><span>25%</span><span>50%</span><span>75%</span><span>95%+</span></div>
+      ${state.cpView === 'bars' ? '<div class="mt-1.5 flex items-center gap-1.5"><span class="inline-block h-3 w-2 rounded-[2px] border border-[#9aa3ad]/60 bg-[#9aa3ad]/15"></span>glass: all lots · fill: lots taken</div>' : '<div class="mt-1.5">height: how full the town is</div>'}`;
   },
 };
+// By town, grouped into URA regions: how full each is, fullest first (open state remembered).
+function cpTowns(el, fr) {
+  const st = cpStats(fr);
+  const regs = d3.groups(AREAS.filter((a) => st.byArea[a.i].total > 0), (a) => a.r).map(([r, as]) => {
+    const free = d3.sum(as, (a) => st.byArea[a.i].free), total = d3.sum(as, (a) => st.byArea[a.i].total);
+    return { r, as: as.sort((x, y) => taken(st.byArea[y.i]) - taken(st.byArea[x.i])), k: total ? 1 - free / total : 0, total };
+  }).sort((a, b) => b.k - a.k);
+  CP.openReg ??= new Set();
+  const bar = (k, w = 'flex-1') => `<span class="relative h-2.5 ${w} overflow-hidden rounded-sm bg-muted"><span class="absolute inset-y-0 left-0" style="width:${k * 100}%;background:${FULL(k)}"></span></span>`;
+  el.innerHTML = `<div class="space-y-0.5">${regs.map((g) => `<details class="group" data-reg="${esc(g.r)}" ${CP.openReg.has(g.r) || g.as.some((a) => a.i === state.area) ? 'open' : ''}>
+      <summary class="flex cursor-pointer list-none items-center gap-2 rounded px-1 py-1 text-xs hover:bg-accent/50 [&::-webkit-details-marker]:hidden">
+        <i class="fi fi-rr-angle-small-right shrink-0 text-muted-foreground transition-transform group-open:rotate-90"></i>
+        <span class="w-[78px] shrink-0 truncate font-medium text-foreground">${esc(regionShort(g.r))}</span>${bar(g.k)}
+        <span class="w-9 shrink-0 text-right font-mono">${pctF(g.k)}</span><span class="w-[62px] shrink-0 text-right font-mono text-[11px] text-muted-foreground">${d3.format('.3~s')(g.total)} lots</span></summary>
+      <div class="mb-1 ml-5 space-y-0.5">${g.as.map((a) => { const s = st.byArea[a.i], k = taken(s); return `<button data-area="${a.i}" class="flex w-full items-center gap-2 rounded text-left text-xs hover:bg-accent/50 ${state.area === a.i ? 'text-amber' : ''}">
+        <span class="w-[104px] shrink-0 truncate ${state.area === a.i ? '' : 'text-ink-2'}">${esc(a.n)}</span>${bar(k)}
+        <span class="w-9 shrink-0 text-right font-mono">${pctF(k)}</span><span class="w-[44px] shrink-0 text-right font-mono text-[11px] text-muted-foreground">${s.tight ? `${s.tight} full` : ''}</span></button>`; }).join('')}</div></details>`).join('')}</div>`;
+  el.querySelectorAll('details').forEach((d) => d.addEventListener('toggle', () => { if (d.open) CP.openReg.add(d.dataset.reg); else CP.openReg.delete(d.dataset.reg); }));
+}
+// Towns by hour, the share of lots taken on one scale (0 to full); rows are the towns with the most lots.
+function cpHeat(el) {
+  const F = CP.frames;
+  if (!F.length) { el.innerHTML = muted('Sync “Carparks today” above for the hour-by-hour picture.'); return; }
+  const live = CP.liveFrame && cpStats(CP.liveFrame);
+  const rows = d3.range(AREAS.length).filter((i) => (live ?? cpStats(F.at(-1))).byArea[i].total >= 150).sort((a, b) => (live ?? cpStats(F.at(-1))).byArea[b].total - (live ?? cpStats(F.at(-1))).byArea[a].total).slice(0, 22);
+  const w = el.clientWidth || 340, m = { l: 92, r: 2, t: 2, b: 14 }, rowH = 11, H = m.t + rows.length * rowH + m.b;
+  const x = d3.scaleBand(d3.range(24), [m.l, w - m.r]).padding(0.06), cur = CP.hour != null ? F[CP.hour]?.h : null;
+  // colours stretched over the day's actual range, since towns sit within a few tens of points
+  const ks = rows.flatMap((i) => F.map((f) => taken(cpStats(f).byArea[i]))).filter((k) => k != null), [klo, khi] = d3.extent(ks);
+  const hc = d3.scaleSequential([klo, Math.max(klo + 0.05, khi)], d3.interpolateRgbBasis(['#2b6f8a', '#1fefd7', '#f6c453', '#e58fb0']));
+  el.innerHTML = `<svg width="${w}" height="${H}" class="block">${rows.map((i, r) => {
+    const y = m.t + r * rowH;
+    return `<text data-area="${i}" x="${m.l - 4}" y="${y + rowH - 2.5}" text-anchor="end" font-size="9.5" fill="${state.area === i ? B.amber : '#b8b5ac'}" style="cursor:pointer">${esc(AREAS[i].n.length > 17 ? `${AREAS[i].n.slice(0, 16)}…` : AREAS[i].n)}</text>
+      ${F.map((f, fi) => { const s = cpStats(f).byArea[i], k = taken(s); return `<rect data-hour="${fi}" x="${x(f.h)}" y="${y + 0.5}" width="${x.bandwidth()}" height="${rowH - 1}" rx="1" fill="${k != null ? hc(k) : '#1f2228'}" style="cursor:pointer"><title>${esc(AREAS[i].n)}, ${hourLbl(f.h)}: ${k != null ? `${pctF(k)} full, ${f0(s.free)} lots free` : 'no data'}</title></rect>`; }).join('')}`;
+  }).join('')}
+    ${cur != null ? `<rect x="${x(cur) - 1}" y="${m.t - 1}" width="${x.bandwidth() + 2}" height="${rows.length * rowH + 2}" fill="none" stroke="${B.amber}" stroke-width="1.2" rx="1.5"/>` : ''}
+    ${[0, 6, 12, 18].map((hh) => `<text x="${x(hh)}" y="${H - 2}" font-size="9" font-family="Source Code Pro" fill="#8b9099">${hourLbl(hh)}</text>`).join('')}</svg>
+    <div class="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground"><span class="font-mono">${pctF(klo)}</span><span class="h-1.5 w-24 rounded-full" style="background:linear-gradient(90deg,${d3.range(13).map((j) => hc(klo + ((khi - klo) * j) / 12)).join(',')})"></span><span class="font-mono">${pctF(khi)} full</span></div><p class="mt-1 text-[11px] text-muted-foreground">The ${rows.length} towns with the most ${LOT_NAME[state.cpLot]} lots, coloured over the day’s range. Click a cell for that hour, a name for the town.</p>`;
+}
+// The day control: island-wide occupancy by hour, a slider and play.
+function cpDay() {
+  const el = $('#cpday'); if (!el) return;
+  if (!CP.frames.length) { el.innerHTML = muted('<i class="fi fi-rr-time-past mr-1 align-[-1px]"></i>Sync “Carparks today” above to play the day hour by hour.'); return; }
+  const n = CP.frames.length, i = CP.hour ?? n - 1;
+  el.innerHTML = `<div class="rounded-lg border bg-background/40 p-2.5">
+    <div class="flex items-center justify-between text-xs"><span class="text-ink-2"><i class="fi fi-rr-time-past mr-1 align-[-1px]"></i>How full, island-wide, on the hour</span>
+      <button id="cp-live-btn" class="rounded px-1.5 py-0.5 ${CP.hour == null ? 'text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}">${CP.hour == null ? '● Live' : 'Back to live'}</button></div>
+    <div id="cp-bars" class="mt-1.5"></div>
+    <div class="mt-1 flex items-center gap-2">
+      <button id="play" class="inline-flex size-8 shrink-0 items-center justify-center rounded-md border bg-background/60 text-foreground transition-colors hover:bg-accent" aria-label="${playTimer ? 'Pause' : 'Play the day'}"><i class="fi ${playTimer ? 'fi-rr-pause' : 'fi-rr-play'}"></i></button>
+      <input id="cp-i" type="range" class="slider" min="0" max="${n - 1}" step="1" value="${i}" style="--fill:${n > 1 ? (i / (n - 1)) * 100 : 100}%" aria-label="Hour of day" />
+      <span class="w-[44px] shrink-0 text-right font-mono text-sm text-amber">${CP.hour != null ? hourLbl(CP.frames[CP.hour].h) : 'now'}</span></div></div>`;
+  const vals = CP.frames.map((f) => taken(cpStats(f)) ?? 0), lo = Math.max(0, d3.min(vals) - 0.05);
+  // bars from a floor just under the day's low, so a few points of change are visible; labels give the real share
+  const w = $('#cp-bars').clientWidth || 300, H = 64, xb = d3.scaleBand(d3.range(24), [0, w]).padding(0.15), y = d3.scaleLinear([lo, Math.max(lo + 0.05, d3.max(vals))], [H - 13, 4]);
+  $('#cp-bars').innerHTML = `<svg width="${w}" height="${H}" class="block">${CP.frames.map((f, fi) => `<rect data-hour="${fi}" style="cursor:pointer" x="${xb(f.h)}" y="${y(vals[fi])}" width="${xb.bandwidth()}" height="${Math.max(1, y(lo) - y(vals[fi]))}" rx="1.5" fill="${FULL(vals[fi])}" fill-opacity="${CP.hour == null || CP.hour === fi ? 0.95 : 0.4}"><title>${hourLbl(f.h)}: ${pctF(vals[fi])} full</title></rect>`).join('')}
+    ${[0, 6, 12, 18].map((hh) => `<text x="${xb(hh)}" y="${H - 2}" font-size="9" font-family="Source Code Pro" fill="#8b9099">${hourLbl(hh)}</text>`).join('')}
+    <text x="${w}" y="10" text-anchor="end" font-size="9" font-family="Source Code Pro" fill="#8b9099">${pctF(d3.min(vals))}–${pctF(d3.max(vals))} full</text></svg>`;
+}
+function setCpHour(i) { CP.hour = i; VIEWS.carparks.update(); refreshPanel(); }
+function buildCpDay(frames) {
+  CP.frames = [...frames].sort((a, b) => a.h - b.h).map((f) => ({ ...f, _s: undefined }));
+  if (CP.hour != null && CP.hour >= CP.frames.length) CP.hour = null;
+}
 function cpDetail(el, c) {
   const l = CP.live.get(c.id), LT = { C: 'Car', Y: 'Motorcycle', H: 'Heavy vehicle', L: 'Loading bay' };
   el.innerHTML = `${headRow(title(c.address), `${c.id} · ${title(c.type)}`, 'cp')}
     <div id="cp-live" class="mt-2"></div>
     <div class="mt-2 flex flex-wrap gap-1.5 text-[11px]">${c.free ? '<span class="rounded bg-primary/15 px-1.5 py-0.5 text-primary">Free parking Sun &amp; PH</span>' : ''}${c.night ? '<span class="rounded bg-muted px-1.5 py-0.5 text-ink-2">Night parking</span>' : ''}${l ? `<span class="rounded bg-muted px-1.5 py-0.5 text-muted-foreground">updated ${hhmm(`${l.upd}+08:00`)}</span>` : ''}</div>
+    ${CP.frames.length ? `<p class="mt-3 text-xs font-medium text-ink-2">${LOT_NAME[state.cpLot][0].toUpperCase()}${LOT_NAME[state.cpLot].slice(1)} lots free today, by hour</p><div id="cp-day1"></div>` : ''}
     <div id="lmap" class="mt-3 h-[190px] overflow-hidden rounded-lg border"></div>`;
   cpLive(c, LT);
+  if ($('#cp-day1')) hourBars($('#cp-day1'), CP.frames.map((f) => occ(f, c.i)?.free ?? 0), B.signal, CP.hour, true);
   cpMap(c);
 }
 function cpLive(c, LT = { C: 'Car', Y: 'Motorcycle', H: 'Heavy vehicle', L: 'Loading bay' }) {
   const el = $('#cp-live'); if (!el) return;
   const l = CP.live.get(c.id), h = CP.hist.get(c.id) ?? [];
   if (!l) { el.innerHTML = muted('This carpark isn’t reporting live availability.'); return; }
-  el.innerHTML = `<div class="space-y-1.5">${l.lots.map((x) => `<div class="text-xs"><div class="flex justify-between"><span class="text-ink-2">${LT[x.type] ?? x.type} lots</span><span class="font-mono">${f0(x.free)} free of ${f0(x.total)}</span></div>
-      <div class="mt-0.5 h-1.5 overflow-hidden rounded-full bg-muted"><div class="h-full" style="width:${x.total ? (x.free / x.total) * 100 : 0}%;background:${FREE(Math.min(1, x.total ? (x.free / x.total) * 2 : 0))}"></div></div></div>`).join('')}</div>
-    ${h.length > 1 ? `<p class="mt-2 text-[11px] text-muted-foreground">Car lots free since you opened the page</p><div id="cp-spark"></div>` : ''}`;
+  el.innerHTML = `<div class="space-y-1.5">${l.lots.map((x) => { const k = x.total ? 1 - x.free / x.total : 0; return `<div class="text-xs"><div class="flex justify-between"><span class="text-ink-2">${LT[x.type] ?? x.type} lots</span><span class="font-mono">${f0(x.free)} free of ${f0(x.total)} · ${pctF(k)} full</span></div>
+      <div class="mt-0.5 h-1.5 overflow-hidden rounded-full bg-muted"><div class="h-full" style="width:${k * 100}%;background:${FULL(k)}"></div></div></div>`; }).join('')}</div>
+    ${h.length > 1 ? `<p class="mt-2 text-[11px] text-muted-foreground">Car lots free at each sync</p><div id="cp-spark"></div>` : ''}`;
   if ($('#cp-spark')) spark($('#cp-spark'), h.map((d) => d.v), B.signal);
 }
 const ONEMAP = 'https://www.onemap.gov.sg/maps/tiles/Night/{z}/{x}/{y}.png';
@@ -1600,7 +1740,7 @@ function renderDetail() { const el = $('#detail'); if (!el) return; dropMap(); V
 // The feeds come in sync groups (see GROUPS): each syncs from its own icon, or all at once.
 // Raw responses go into STORE and are saved to this browser's IndexedDB, so a reload draws
 // straight from the store. Each feed is parsed by APPLY, the same way after a fetch or a restore.
-const STORE = { feeds: {}, day: null, rainDay: [], taxiDay: [], txHist: [], cpHist: [], syncedAt: null, groupAt: {}, groupErr: {} };
+const STORE = { feeds: {}, day: null, rainDay: [], taxiDay: [], cpDay: [], txHist: [], cpHist: [], syncedAt: null, groupAt: {}, groupErr: {} };
 const FEEDS = [
   ['temp', 'Temperature', () => `${RTB}air-temperature`],
   ['rh', 'Humidity', () => `${RTB}relative-humidity`],
@@ -1637,7 +1777,7 @@ const APPLY = {
   },
   carparks: (j) => {
     const it = j.items?.[0]; if (!it) return;
-    CP.ts = it.timestamp; CP.live = new Map();
+    CP.ts = it.timestamp; CP.live = new Map(); CP.liveFrame = cpFrame(it);
     it.carpark_data.forEach((c) => {
       const lots = c.carpark_info.map((l) => ({ type: l.lot_type, free: +l.lots_available, total: +l.total_lots }));
       const car = lots.filter((l) => l.type === 'C'), use = car.length ? car : lots;
@@ -1674,7 +1814,7 @@ async function restoreStore() {
   Object.assign(STORE, s);
   TX.hist = s.txHist ?? []; CP.hist = new Map(s.cpHist ?? []);
   Object.entries(STORE.feeds).forEach(([k, j]) => { try { APPLY[k]?.(j); } catch { /* a malformed stored feed is skipped */ } });
-  if (STORE.day === sgDate()) { buildReplay(STORE.rainDay); buildTaxiDay(STORE.taxiDay); }
+  if (STORE.day === sgDate()) { buildReplay(STORE.rainDay); buildTaxiDay(STORE.taxiDay); buildCpDay(STORE.cpDay ?? []); }
   return true;
 }
 async function clearStore() {
@@ -1695,6 +1835,7 @@ const GROUPS = [
   { id: 'taxis', every: 1, view: 'taxis', name: 'Taxis now', icon: 'fi-rr-taxi', feeds: ['taxi'], about: 'every free taxi' },
   { id: 'taxiDay', every: 30, view: 'taxis', name: 'Taxis today', icon: 'fi-rr-time-past', history: 'taxi', about: 'on the hour, for the slider' },
   { id: 'carparks', every: 1, view: 'carparks', name: 'Carparks', icon: 'fi-rr-parking', feeds: ['carparks'], about: 'free lots in every HDB carpark' },
+  { id: 'cpDay', every: 30, view: 'carparks', name: 'Carparks today', icon: 'fi-rr-time-past', history: 'cp', about: 'on the hour, for the slider' },
 ];
 const GROUP = Object.fromEntries(GROUPS.map((g) => [g.id, g]));
 // Auto sync: off on every page load. While on, and while the tab is visible, each group re-syncs on
@@ -1720,8 +1861,9 @@ const groupState = (id) => (sync.running === id ? 'running' : sync.queue.include
 function newDay() {
   const today = sgDate();
   if (STORE.day === today) return;
-  STORE.day = today; STORE.rainDay = []; STORE.taxiDay = [];
-  delete STORE.groupAt?.rainDay; delete STORE.groupAt?.taxiDay;
+  STORE.day = today; STORE.rainDay = []; STORE.taxiDay = []; STORE.cpDay = [];
+  delete STORE.groupAt?.rainDay; delete STORE.groupAt?.taxiDay; delete STORE.groupAt?.cpDay;
+  CP.frames = []; CP.hour = null;
   RP.status = 'idle'; RP.frames = []; RP.on = false; TX.frames = []; TX.hour = null;
 }
 // Calls a group will make, for the progress bar (history groups only fetch what's missing).
@@ -1729,9 +1871,9 @@ function estimate(g) {
   if (g.feeds) return g.feeds.length;
   newDay();
   if (g.history === 'rain') { const have = STORE.rainDay.length ? d3.max(STORE.rainDay, (r) => new Date(r.timestamp)) : null; return have ? Math.max(1, Math.ceil((Date.now() - have) / (2 * 3600e3))) : Math.ceil((sgHour() + 1) / 2); }
-  return missingHours().length;
+  return missingHours(g.history === 'cp' ? STORE.cpDay : STORE.taxiDay).length;
 }
-function missingHours() { const nowH = sgHour(), have = new Set(STORE.taxiDay.filter((f) => f.h < nowH).map((f) => f.h)); return d3.range(nowH + 1).filter((h) => !have.has(h)); }
+function missingHours(list = STORE.taxiDay) { const nowH = sgHour(), have = new Set(list.filter((f) => f.h < nowH).map((f) => f.h)); return d3.range(nowH + 1).filter((h) => !have.has(h)); }
 
 function runSync(ids = GROUPS.map((g) => g.id)) {
   ids.filter((id) => GROUP[id] && sync.running !== id && !sync.queue.includes(id)).forEach((id) => { sync.queue.push(id); sync.total += estimate(GROUP[id]); });
@@ -1779,6 +1921,18 @@ async function syncGroup(g) {
     }
     if (p < planned) sync.total -= planned - p;
     if (fresh.length) { STORE.rainDay = [...new Map([...STORE.rainDay, ...fresh].map((r) => [r.timestamp, r])).values()]; buildReplay(STORE.rainDay); touched(); }
+  } else if (g.history === 'cp') {
+    // hourly carpark snapshots (~300 KB each) kept as compact free/total arrays per lot type
+    STORE.cpDay ??= [];
+    for (const h of missingHours(STORE.cpDay)) {
+      await step(hourLbl(h), async () => {
+        const j = await api(`${V1}carpark-availability?date_time=${today}T${String(h).padStart(2, '0')}:00:00`, { ttl: 0 });
+        const it = j.items?.[0]; if (!it) return;
+        const fr = cpFrame(it, h); delete fr._s;
+        STORE.cpDay = [...STORE.cpDay.filter((x) => x.h !== h), fr];
+        buildCpDay(STORE.cpDay); touched();
+      });
+    }
   } else {
     for (const h of missingHours()) {
       await step(hourLbl(h), async () => {
@@ -1856,7 +2010,7 @@ async function show(view) {
   try { await ready; } catch { $('#panel').innerHTML = '<p class="text-sm text-muted-foreground">The map didn’t load. Reload the page to try again.</p>'; return; }
   if (ticket !== building) return;
   if (!proj) setupProjection();
-  ORDER.forEach((k) => { const v = VIEWS[k]; v.tiles = v.meshes = v.bars = v.rain = v.grid = v.cloud = v.drops = v.trackG = v.markG = v.cols = v.borders = v.flow = v.hex = v.ameshes = v.alabels = undefined; v.rlabels = null; v.built = false; });
+  ORDER.forEach((k) => { const v = VIEWS[k]; v.tiles = v.meshes = v.bars = v.rain = v.grid = v.cloud = v.drops = v.trackG = v.markG = v.cols = v.borders = v.flow = v.hex = v.ameshes = v.alabels = v.shell = v.glass = undefined; v.rlabels = null; v.built = false; });
   const v = VIEWS[view];
   renderPanel();
   v.build(); v.built = true;
@@ -1875,6 +2029,9 @@ function play() {
   if (state.view === 'weather' && RP.status === 'ready') {
     if (RP.i >= RP.frames.length - 1) setReplay(0);
     playTimer = setInterval(() => { if (RP.i >= RP.frames.length - 1) { stopPlay(); return; } setReplay(RP.i + 1); }, reduceMotion ? 600 : 160);
+  } else if (state.view === 'carparks' && CP.frames.length) {
+    if (CP.hour == null || CP.hour >= CP.frames.length - 1) setCpHour(0);
+    playTimer = setInterval(() => { if (CP.hour >= CP.frames.length - 1) { stopPlay(); return; } setCpHour(CP.hour + 1); }, reduceMotion ? 1400 : 800);
   } else if (state.view === 'taxis' && TX.frames.length) {
     if (TX.hour == null || TX.hour >= TX.frames.length - 1) setTaxiHour(0);
     playTimer = setInterval(() => { if (TX.hour >= TX.frames.length - 1) { stopPlay(); return; } setTaxiHour(TX.hour + 1); }, reduceMotion ? 1400 : 800);
@@ -1914,6 +2071,7 @@ $('#tabs').onclick =(e) => { const b = e.target.closest('[data-tab]'); if (b && 
 $('#panel').addEventListener('input', (e) => {
   if (e.target.id === 'rp-i') { if (playTimer) stopPlay(); setReplay(+e.target.value); }
   if (e.target.id === 'tx-i') { if (playTimer) stopPlay(); setTaxiHour(+e.target.value); }
+  if (e.target.id === 'cp-i') { if (playTimer) stopPlay(); setCpHour(+e.target.value); }
   if (e.target.id === 'cp-search') cpSearch(e.target.value);
 });
 $('#panel').addEventListener('change', (e) => { if (e.target.id === 'tx-from') { state.txFrom = e.target.value === '' ? null : +e.target.value; VIEWS.taxis.update(); refreshPanel(); } });
@@ -1931,7 +2089,10 @@ $('#panel').addEventListener('click', (e) => {
   if (t.closest('#rp-off')) { if (playTimer) stopPlay(); RP.on = false; VIEWS.weather.update(); replayRow(); renderDetail(); return; }
   if (t.closest('#rp-on')) { RP.on = true; VIEWS.weather.update(); replayRow(); renderDetail(); return; }
   if (t.closest('#tx-live')) { if (playTimer) stopPlay(); TX.hour = null; VIEWS.taxis.update(); refreshPanel(); return; }
-  const hb = t.closest('[data-hour]'); if (hb) { if (playTimer) stopPlay(); setTaxiHour(+hb.dataset.hour); return; }
+  if (t.closest('#cp-live-btn')) { if (playTimer) stopPlay(); CP.hour = null; VIEWS.carparks.update(); refreshPanel(); return; }
+  const hb = t.closest('[data-hour]'); if (hb) { if (playTimer) stopPlay(); if (state.view === 'carparks') setCpHour(+hb.dataset.hour); else setTaxiHour(+hb.dataset.hour); return; }
+  const cl = t.closest('[data-cplot]'); if (cl) { state.cpLot = cl.dataset.cplot; markSeg('cplot', cl); VIEWS.carparks.update(); refreshPanel(); return; }
+  const cv = t.closest('[data-cpview]'); if (cv) { state.cpView = cv.dataset.cpview; renderPanel(); VIEWS.carparks.update(); return; }
   const s = (name) => t.closest(`[data-${name}]`);
   let b;
   if ((b = s('wmode'))) { state.wmode = b.dataset.wmode; markSeg('wmode', b); VIEWS.weather.update(); return; }
@@ -1976,7 +2137,7 @@ renderer.domElement.addEventListener('pointerdown', (e) => { down = [e.clientX, 
 renderer.domElement.addEventListener('pointerup', (e) => {
   if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
   const h = pickAt(e), o = h?.object;
-  if (state.view === 'carparks' && o === VIEWS.carparks.bars?.mesh) { selectCp(h.instanceId === state.cp ? null : h.instanceId); return; }
+  if (state.view === 'carparks' && (o === VIEWS.carparks.shell?.mesh || o === VIEWS.carparks.glass?.mesh)) { selectCp(h.instanceId === state.cp ? null : h.instanceId); return; }
   if (o?.userData.onClick) { o.userData.onClick(h); return; }
   const area = o?.userData.area;
   if (area != null) { selectArea(area); return; }
