@@ -9,11 +9,12 @@
   Playground mock: four 3D charts where D3 does the data work and Three.js does the drawing.
   D3 supplies scales, ticks, color scales, the graticule, the map projection and the Sankey layout;
   Three.js turns those numbers into geometry. UI recreates shadcn/ui in Tailwind with the inoTives brand kit.
-  Views: a chain profile on a sphere (a 3D radar with metrics grouped by direction), the US Treasury yield curve stacked month by month, a 3D bubble chart, and a world map of
+  Views: population by age from 1950 to 2100 (a Lexis surface), the US Treasury yield curve stacked month by month, a live BTC/ETH options volatility surface, and a world map of
   2026 GDP with a Sankey of GDP by sector flowing into each country's bar.
   GDP figures: IMF World Economic Outlook, October 2026 (projections for 2026, nominal US$).
   Sector shares: approximate, from World Bank value-added shares (latest available year), scaled to 100%.
-  Yield curves: US Treasury daily par yield curve rates (real). Profile and bubble data are mock.
+  Yield curves: US Treasury daily par yield curve rates (real). Vol surface: Deribit public API, live,
+  with a saved snapshot as fallback. Population: UN World Population Prospects 2024.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -159,15 +160,9 @@ function frame3D({ sx, sy, sz, names, fmt = {} }) {
 // US Treasury daily par yield curve rates (%), first trading day of each month plus the latest day.
 // Maturities: 1M 3M 6M 1Y 2Y 3Y 5Y 7Y 10Y 20Y 30Y. Source: home.treasury.gov, Daily Treasury Par Yield Curve Rates.
 const YC = [["2019-01-02",[2.4,2.42,2.51,2.6,2.5,2.47,2.49,2.56,2.66,2.83,2.97]],["2019-02-01",[2.41,2.4,2.46,2.56,2.52,2.5,2.51,2.59,2.7,2.88,3.03]],["2019-03-01",[2.44,2.44,2.52,2.55,2.55,2.54,2.56,2.67,2.76,2.97,3.13]],["2019-04-01",[2.42,2.43,2.46,2.41,2.33,2.29,2.31,2.4,2.49,2.71,2.89]],["2019-05-01",[2.42,2.43,2.44,2.39,2.31,2.28,2.31,2.41,2.52,2.74,2.92]],["2019-06-03",[2.36,2.35,2.31,2.11,1.82,1.79,1.83,1.95,2.07,2.34,2.53]],["2019-07-01",[2.17,2.21,2.1,1.94,1.78,1.74,1.79,1.9,2.03,2.34,2.55]],["2019-08-01",[2.11,2.07,2.04,1.88,1.73,1.67,1.68,1.77,1.9,2.21,2.44]],["2019-09-03",[2.06,1.98,1.88,1.72,1.47,1.38,1.35,1.42,1.47,1.77,1.95]],["2019-10-01",[1.79,1.82,1.81,1.73,1.56,1.51,1.51,1.59,1.65,1.93,2.11]],["2019-11-01",[1.58,1.52,1.55,1.53,1.56,1.55,1.55,1.63,1.73,2.03,2.21]],["2019-12-02",[1.6,1.6,1.62,1.6,1.61,1.63,1.65,1.77,1.83,2.15,2.28]],["2020-01-02",[1.53,1.54,1.57,1.56,1.58,1.59,1.67,1.79,1.88,2.19,2.33]],["2020-02-03",[1.56,1.57,1.56,1.46,1.36,1.34,1.35,1.45,1.54,1.84,2.01]],["2020-03-02",[1.41,1.13,0.95,0.89,0.84,0.85,0.88,1.01,1.1,1.46,1.66]],["2020-04-01",[0.03,0.09,0.14,0.16,0.23,0.28,0.37,0.51,0.62,1.04,1.27]],["2020-05-01",[0.1,0.12,0.12,0.17,0.2,0.25,0.36,0.53,0.64,1.04,1.27]],["2020-06-01",[0.12,0.14,0.18,0.17,0.14,0.2,0.31,0.5,0.66,1.22,1.46]],["2020-07-01",[0.12,0.14,0.17,0.16,0.17,0.19,0.31,0.52,0.69,1.2,1.43]],["2020-08-03",[0.09,0.1,0.11,0.12,0.11,0.13,0.22,0.4,0.56,1.01,1.23]],["2020-09-01",[0.09,0.12,0.13,0.12,0.13,0.14,0.26,0.46,0.68,1.2,1.43]],["2020-10-01",[0.09,0.09,0.1,0.12,0.14,0.16,0.27,0.46,0.68,1.23,1.45]],["2020-11-02",[0.09,0.09,0.11,0.13,0.16,0.2,0.38,0.63,0.87,1.41,1.63]],["2020-12-01",[0.07,0.09,0.1,0.12,0.17,0.22,0.42,0.68,0.92,1.46,1.66]],["2021-01-04",[0.09,0.09,0.09,0.1,0.11,0.16,0.36,0.64,0.93,1.46,1.66]],["2021-02-01",[0.06,0.07,0.08,0.08,0.11,0.17,0.42,0.76,1.09,1.66,1.84]],["2021-03-01",[0.03,0.05,0.07,0.08,0.13,0.27,0.71,1.12,1.45,2.11,2.23]],["2021-04-01",[0.02,0.02,0.04,0.06,0.17,0.35,0.9,1.37,1.69,2.24,2.34]],["2021-05-03",[0.02,0.04,0.04,0.06,0.16,0.33,0.84,1.29,1.63,2.18,2.3]],["2021-06-01",[0.01,0.02,0.04,0.04,0.16,0.31,0.81,1.28,1.62,2.22,2.3]],["2021-07-01",[0.05,0.05,0.05,0.09,0.25,0.47,0.89,1.24,1.48,2.01,2.07]],["2021-08-02",[0.05,0.05,0.06,0.07,0.17,0.33,0.66,0.96,1.2,1.77,1.86]],["2021-09-01",[0.04,0.05,0.06,0.07,0.2,0.42,0.78,1.08,1.31,1.84,1.92]],["2021-10-01",[0.08,0.04,0.05,0.09,0.27,0.49,0.93,1.26,1.48,1.99,2.04]],["2021-11-01",[0.05,0.05,0.06,0.15,0.5,0.79,1.2,1.46,1.58,2.01,1.98]],["2021-12-01",[0.09,0.06,0.1,0.25,0.56,0.85,1.15,1.35,1.43,1.84,1.77]],["2022-01-03",[0.05,0.08,0.22,0.4,0.78,1.04,1.37,1.55,1.63,2.05,2.01]],["2022-02-01",[0.04,0.19,0.48,0.78,1.18,1.39,1.63,1.76,1.81,2.19,2.12]],["2022-03-01",[0.11,0.32,0.6,0.91,1.31,1.47,1.56,1.67,1.72,2.19,2.11]],["2022-04-01",[0.15,0.53,1.09,1.72,2.44,2.61,2.55,2.5,2.39,2.6,2.44]],["2022-05-02",[0.41,0.9,1.49,2.1,2.73,2.93,3.01,3.04,2.99,3.26,3.07]],["2022-06-01",[0.77,1.15,1.63,2.16,2.66,2.84,2.94,2.98,2.94,3.31,3.09]],["2022-07-01",[1.27,1.73,2.52,2.79,2.84,2.85,2.88,2.92,2.88,3.35,3.11]],["2022-08-01",[2.22,2.56,2.96,2.98,2.9,2.82,2.66,2.64,2.6,3.12,2.92]],["2022-09-01",[2.53,2.97,3.34,3.51,3.51,3.54,3.39,3.36,3.26,3.64,3.37]],["2022-10-03",[2.87,3.46,3.97,4.01,4.12,4.12,3.9,3.79,3.67,4,3.73]],["2022-11-01",[3.72,4.23,4.58,4.75,4.54,4.48,4.27,4.18,4.07,4.37,4.14]],["2022-12-01",[4.04,4.33,4.65,4.66,4.25,3.98,3.68,3.62,3.53,3.85,3.64]],["2023-01-03",[4.17,4.53,4.77,4.72,4.4,4.18,3.94,3.89,3.79,4.06,3.88]],["2023-02-01",[4.59,4.66,4.79,4.66,4.09,3.75,3.48,3.43,3.39,3.67,3.55]],["2023-03-01",[4.67,4.9,5.2,5.06,4.89,4.61,4.27,4.17,4.01,4.17,3.97]],["2023-04-03",[4.7,4.9,4.88,4.6,3.97,3.73,3.52,3.48,3.43,3.78,3.64]],["2023-05-01",[4.49,5.27,5.14,4.86,4.14,3.85,3.64,3.62,3.59,3.95,3.84]],["2023-06-01",[5.3,5.5,5.44,5.11,4.33,3.98,3.7,3.66,3.61,3.98,3.84]],["2023-07-03",[5.27,5.44,5.53,5.43,4.94,4.56,4.19,4.03,3.86,4.08,3.87]],["2023-08-01",[5.49,5.54,5.54,5.38,4.92,4.57,4.24,4.15,4.05,4.3,4.11]],["2023-09-01",[5.51,5.53,5.47,5.36,4.87,4.57,4.29,4.27,4.18,4.48,4.29]],["2023-10-02",[5.56,5.62,5.58,5.49,5.12,4.88,4.72,4.73,4.69,5,4.81]],["2023-11-01",[5.56,5.57,5.51,5.37,4.95,4.76,4.67,4.75,4.77,5.13,4.96]],["2023-12-01",[5.55,5.43,5.33,5.05,4.56,4.31,4.14,4.22,4.22,4.58,4.4]],["2024-01-02",[5.55,5.46,5.24,4.8,4.33,4.09,3.93,3.95,3.95,4.25,4.08]],["2024-02-01",[5.49,5.42,5.15,4.68,4.2,3.96,3.8,3.83,3.87,4.21,4.1]],["2024-03-01",[5.54,5.42,5.27,4.94,4.54,4.32,4.17,4.2,4.19,4.46,4.33]],["2024-04-01",[5.49,5.44,5.36,5.06,4.72,4.51,4.34,4.33,4.33,4.58,4.47]],["2024-05-01",[5.47,5.46,5.43,5.21,4.96,4.79,4.64,4.64,4.63,4.85,4.74]],["2024-06-03",[5.49,5.52,5.39,5.14,4.82,4.62,4.42,4.41,4.41,4.63,4.55]],["2024-07-01",[5.48,5.47,5.37,5.1,4.77,4.58,4.44,4.45,4.48,4.76,4.64]],["2024-08-01",[5.55,5.37,5.08,4.62,4.16,3.96,3.84,3.89,3.99,4.35,4.27]],["2024-09-03",[5.38,5.19,4.8,4.35,3.88,3.73,3.65,3.73,3.84,4.21,4.13]],["2024-10-01",[4.96,4.71,4.36,3.96,3.61,3.52,3.51,3.6,3.74,4.14,4.08]],["2024-11-01",[4.75,4.61,4.42,4.28,4.21,4.18,4.22,4.3,4.37,4.68,4.57]],["2024-12-02",[4.75,4.51,4.43,4.3,4.17,4.11,4.08,4.13,4.19,4.46,4.36]],["2025-01-02",[4.45,4.36,4.25,4.17,4.25,4.29,4.38,4.47,4.57,4.86,4.79]],["2025-02-03",[4.37,4.34,4.28,4.2,4.26,4.28,4.35,4.45,4.54,4.82,4.77]],["2025-03-03",[4.38,4.35,4.31,4.06,3.96,3.93,3.97,4.06,4.16,4.49,4.45]],["2025-04-01",[4.38,4.32,4.23,4.01,3.87,3.85,3.91,4.03,4.17,4.56,4.52]],["2025-05-01",[4.38,4.31,4.22,3.92,3.7,3.69,3.81,4.02,4.25,4.75,4.74]],["2025-06-02",[4.33,4.44,4.31,4.12,3.94,3.91,4.01,4.22,4.46,5,4.99]],["2025-07-01",[4.32,4.4,4.29,3.98,3.78,3.75,3.84,4.03,4.26,4.79,4.78]],["2025-08-01",[4.49,4.35,4.16,3.87,3.69,3.67,3.77,3.97,4.23,4.79,4.81]],["2025-09-02",[4.4,4.2,3.99,3.82,3.66,3.63,3.74,3.98,4.28,4.92,4.97]],["2025-10-01",[4.17,4.01,3.8,3.62,3.55,3.56,3.68,3.88,4.12,4.69,4.72]],["2025-11-03",[4.06,3.98,3.8,3.7,3.6,3.61,3.72,3.9,4.13,4.67,4.69]],["2025-12-01",[3.98,3.81,3.75,3.62,3.54,3.55,3.67,3.86,4.09,4.71,4.74]],["2026-01-02",[3.72,3.65,3.58,3.47,3.47,3.55,3.74,3.95,4.19,4.81,4.86]],["2026-02-02",[3.72,3.69,3.62,3.49,3.57,3.64,3.83,4.05,4.29,4.85,4.9]],["2026-03-02",[3.74,3.72,3.68,3.54,3.47,3.49,3.62,3.82,4.05,4.64,4.7]],["2026-04-01",[3.74,3.7,3.72,3.68,3.81,3.84,3.97,4.15,4.33,4.91,4.91]],["2026-05-01",[3.71,3.68,3.71,3.73,3.88,3.91,4.02,4.2,4.39,4.96,4.97]],["2026-06-01",[3.72,3.78,3.79,3.83,4.05,4.09,4.18,4.32,4.47,4.99,4.99]],["2026-07-01",[3.67,3.85,4,4,4.17,4.19,4.24,4.35,4.48,4.97,4.97]],["2026-08-03",[3.79,3.91,4.02,4.07,4.25,4.32,4.4,4.54,4.7,5.23,5.23]],["2026-09-01",[3.85,3.92,4,4.18,4.39,4.46,4.55,4.66,4.79,5.27,5.27]],["2026-10-01",[4.06,4.17,4.27,4.44,4.78,4.91,5.01,5.12,5.24,5.64,5.61]],["2026-10-30",[4.06,4.16,4.25,4.36,4.56,4.65,4.71,4.8,4.94,5.34,5.31]]];
-// Bubble chart: 30 tokens (mock)
-const SECTORS_T = ['L1', 'L2', 'DeFi', 'AI', 'Meme'];
-const TOKENS = d3.range(32).map((i) => {
-  const s = SECTORS_T[i % 5];
-  const cap = Math.exp(Math.log(0.4) + rnd() * Math.log(2000 / 0.4)) * (s === 'L1' ? 1.6 : s === 'Meme' ? 0.5 : 1);
-  return { id: `${s}-${i}`, name: ['ARC', 'NOVA', 'FLUX', 'ORB', 'ZEN', 'KITE', 'MOSS', 'RUNE', 'LUMA', 'VOLT', 'PIKE', 'ECHO', 'SAGE', 'TIDE', 'NEON', 'WISP'][i % 16] + (i >= 16 ? '2' : ''), sector: s, cap: Math.min(cap, 2000), ret: (s === 'AI' ? 18 : s === 'Meme' ? 6 : 2) + (s === 'Meme' ? 38 : 16) * gauss(), vol: (s === 'Meme' ? 110 : s === 'L1' ? 55 : 75) + 15 * gauss(), volume: Math.max(0.05, cap * (0.03 + 0.08 * rnd())) };
-});
-TOKENS[0] = { ...TOKENS[0], name: 'BTC', cap: 1950, ret: 6.2, vol: 38, volume: 42 };
-TOKENS[5] = { ...TOKENS[5], name: 'ETH', cap: 420, ret: -3.1, vol: 52, volume: 21 };
+// Options snapshot from Deribit (Nov 1, 2026 03:12 UTC), the fallback when the live request fails.
+// Per currency: { asOf, index, exp: [[expiry code, forward, [[strike, mark IV %], ...]]] }, out-of-the-money options only.
+const VOL_SNAP = {"BTC":{"asOf":1793502949345,"index":77658.35,"exp":[["26MAR27",79370.15,[[40000.0,59.02],[45000.0,54.94],[50000.0,51.65],[52000.0,49.92],[54000.0,48.58],[55000.0,48.19],[56000.0,47.41],[58000.0,46.31],[60000.0,45.09],[62000.0,44.02],[64000.0,43.1],[65000.0,42.72],[66000.0,42.23],[68000.0,41.44],[70000.0,40.7],[72000.0,40.06],[74000.0,39.54],[75000.0,39.35],[76000.0,39.02],[78000.0,38.68],[80000.0,38.44],[82000.0,38.2],[84000.0,38.02],[85000.0,37.96],[86000.0,37.88],[88000.0,37.76],[90000.0,37.71],[92000.0,37.62],[94000.0,37.61],[95000.0,37.63],[96000.0,37.66],[98000.0,37.71],[100000.0,37.79],[102000.0,37.95],[104000.0,37.98],[105000.0,38.05],[106000.0,38.2],[108000.0,38.34],[110000.0,38.58],[112000.0,38.78],[115000.0,39.02],[120000.0,39.94],[125000.0,40.43],[130000.0,41.32],[140000.0,43.1],[150000.0,44.73],[160000.0,46.79],[170000.0,48.66]]],["25DEC26",78305.56,[[40000.0,78.91],[45000.0,69.32],[50000.0,62.4],[52000.0,59.86],[54000.0,57.48],[55000.0,56.35],[56000.0,55.21],[58000.0,52.95],[60000.0,51.05],[62000.0,48.76],[64000.0,47.1],[65000.0,46.09],[66000.0,45.27],[68000.0,43.66],[70000.0,42.25],[72000.0,41.07],[73000.0,40.52],[74000.0,39.97],[75000.0,39.48],[76000.0,39.05],[78000.0,38.19],[80000.0,37.52],[82000.0,36.93],[84000.0,36.56],[85000.0,36.48],[86000.0,36.28],[88000.0,36.25],[90000.0,36.3],[92000.0,36.61],[94000.0,36.81],[95000.0,37.23],[96000.0,37.48],[98000.0,37.97],[100000.0,38.63],[102000.0,39.5],[104000.0,40.18],[105000.0,40.65],[106000.0,41.02],[108000.0,41.91],[110000.0,42.87],[115000.0,45.31],[120000.0,47.76],[125000.0,49.26],[130000.0,51.51],[135000.0,53.23],[140000.0,56.24],[150000.0,59.46],[160000.0,63.62],[170000.0,68.3]]],["1NOV26",77654.74,[[70000.0,68.11],[71000.0,66.93],[72000.0,57.92],[73000.0,49.47],[74000.0,41.24],[75000.0,33.54],[75500.0,28.75],[76000.0,24.72],[76500.0,24.19],[77000.0,23.35],[77500.0,19.64],[78000.0,18.7],[78500.0,25.25],[79000.0,29.13],[79500.0,29.14],[80000.0,31.33],[80500.0,35.34],[81000.0,35.81],[81500.0,38.3],[82000.0,42.23],[82500.0,45.97],[83000.0,46.29],[83500.0,47.67],[84000.0,48.74],[85000.0,53.41],[86000.0,59.06],[87000.0,59.42],[88000.0,63.15],[89000.0,65.66],[90000.0,70.39],[91000.0,75.29]]],["29JAN27",78708.36,[[58000.0,48.56],[60000.0,46.91],[62000.0,45.67],[64000.0,44.23],[66000.0,43.17],[67000.0,42.51],[68000.0,42.09],[69000.0,41.49],[70000.0,41.1],[71000.0,40.61],[72000.0,40.16],[73000.0,39.75],[74000.0,39.38],[75000.0,39.03],[76000.0,38.7],[77000.0,38.41],[78000.0,38.11],[79000.0,37.87],[80000.0,37.67],[81000.0,37.48],[82000.0,37.31],[83000.0,37.15],[84000.0,37.04],[85000.0,36.97],[86000.0,36.89],[87000.0,36.84],[88000.0,36.73],[89000.0,36.69],[90000.0,36.77],[91000.0,36.77],[92000.0,36.77],[93000.0,36.77],[94000.0,36.95],[96000.0,36.95],[98000.0,37.18],[100000.0,37.48],[102000.0,37.8],[104000.0,38.13],[105000.0,38.36],[106000.0,38.57],[108000.0,39.04],[110000.0,39.43],[115000.0,40.59],[120000.0,41.98]]],["25JUN27",80465.09,[[45000.0,51.18],[50000.0,48.38],[52000.0,47.19],[54000.0,46.16],[55000.0,45.82],[56000.0,45.25],[58000.0,44.39],[60000.0,43.61],[62000.0,42.99],[64000.0,42.38],[65000.0,42.01],[66000.0,41.75],[68000.0,41.25],[70000.0,40.8],[72000.0,40.36],[74000.0,40.02],[76000.0,39.72],[78000.0,39.39],[80000.0,39.12],[82000.0,38.99],[84000.0,38.85],[85000.0,38.83],[86000.0,38.74],[88000.0,38.68],[90000.0,38.62],[92000.0,38.57],[94000.0,38.53],[95000.0,38.51],[96000.0,38.52],[98000.0,38.53],[100000.0,38.57],[102000.0,38.62],[104000.0,38.67],[105000.0,38.69],[106000.0,38.75],[108000.0,38.79],[110000.0,38.88],[112000.0,38.89],[114000.0,38.93],[115000.0,39.05],[116000.0,39.15],[120000.0,39.28],[125000.0,39.66],[130000.0,40.03],[135000.0,40.29],[140000.0,40.72],[150000.0,41.56],[160000.0,42.43],[170000.0,43.41]]],["20NOV26",77879.45,[[65000.0,52.03],[70000.0,44.98],[72000.0,42.84],[73000.0,41.83],[74000.0,40.9],[75000.0,39.96],[76000.0,39.15],[77000.0,38.5],[78000.0,37.88],[79000.0,37.52],[80000.0,37.07],[81000.0,36.78],[82000.0,36.52],[83000.0,36.38],[84000.0,36.47],[85000.0,36.59],[86000.0,36.83],[88000.0,37.63],[90000.0,38.69],[95000.0,43.07]]],["2NOV26",77671.55,[[69000.0,66.58],[70000.0,59.89],[71000.0,54.27],[72000.0,49.64],[73000.0,49.63],[74000.0,42.57],[74500.0,40.25],[75000.0,38.03],[75500.0,35.41],[76000.0,33.27],[76500.0,31.35],[77000.0,29.51],[77500.0,27.91],[78000.0,26.95],[78500.0,27.16],[79000.0,28.06],[79500.0,29.19],[80000.0,30.92],[80500.0,32.93],[81000.0,36.58],[81500.0,36.81],[82000.0,36.81],[82500.0,38.02],[83000.0,40.6],[83500.0,42.7],[84000.0,44.25],[85000.0,46.83],[86000.0,48.62],[87000.0,49.08],[88000.0,53.18],[89000.0,57.52],[90000.0,61.2],[91000.0,64.93]]],["4NOV26",77688.19,[[68000.0,68.54],[69000.0,64.59],[70000.0,61.91],[71000.0,58.93],[72000.0,55.89],[73000.0,53.19],[74000.0,50.99],[74500.0,49.88],[75000.0,48.61],[75500.0,47.85],[76000.0,46.83],[76500.0,46.06],[77000.0,45.49],[77500.0,44.26],[78000.0,43.86],[78500.0,43.23],[79000.0,42.73],[79500.0,42.06],[80000.0,42.47],[81000.0,42.65],[82000.0,43.16],[83000.0,44.05],[84000.0,45.88],[85000.0,48.44],[86000.0,49.64]]],["27NOV26",77960.72,[[58000.0,59.47],[60000.0,55.96],[62000.0,52.98],[64000.0,50.22],[66000.0,47.65],[67000.0,46.47],[68000.0,45.49],[69000.0,44.42],[70000.0,43.35],[71000.0,42.42],[72000.0,41.67],[73000.0,40.83],[74000.0,40.02],[75000.0,39.36],[76000.0,38.73],[77000.0,38.14],[78000.0,37.56],[79000.0,37.16],[80000.0,36.72],[81000.0,36.44],[82000.0,36.16],[83000.0,36.02],[84000.0,35.87],[85000.0,35.97],[86000.0,36.08],[87000.0,36.2],[88000.0,36.43],[89000.0,36.73],[90000.0,37.1],[91000.0,37.4],[92000.0,37.82],[93000.0,38.42],[94000.0,38.88],[95000.0,39.9],[96000.0,40.89],[97000.0,41.44],[98000.0,42.41],[99000.0,43.28],[100000.0,44.05],[102000.0,45.72],[104000.0,47.48],[105000.0,47.69],[106000.0,48.95],[108000.0,50.05],[110000.0,52.47],[112000.0,52.95],[115000.0,54.48],[120000.0,58.66]]],["6NOV26",77724.42,[[65000.0,69.03],[68000.0,60.39],[70000.0,55.29],[72000.0,50.43],[73000.0,48.79],[74000.0,47.14],[75000.0,45.19],[76000.0,43.77],[77000.0,42.09],[78000.0,40.93],[79000.0,39.72],[80000.0,39.14],[81000.0,39.36],[82000.0,39.45],[83000.0,39.55],[84000.0,40.56],[85000.0,42.55],[86000.0,43.59],[87000.0,46.1],[88000.0,49.23],[90000.0,53.48],[92000.0,56.93],[95000.0,61.84],[100000.0,66.12]]],["13NOV26",77809.37,[[65000.0,56.51],[68000.0,50.98],[70000.0,47.85],[72000.0,45.24],[74000.0,42.7],[75000.0,41.45],[76000.0,40.47],[77000.0,39.58],[78000.0,38.91],[79000.0,38.15],[80000.0,37.62],[81000.0,37.3],[82000.0,36.94],[83000.0,36.97],[84000.0,37.03],[85000.0,37.31],[86000.0,37.74],[88000.0,39.4],[90000.0,40.64],[95000.0,47.54]]],["3NOV26",77679.03,[[68000.0,66.35],[69000.0,62.67],[70000.0,58.38],[71000.0,52.25],[72000.0,48.4],[73000.0,45.4],[74000.0,41.91],[74500.0,40.49],[75000.0,39.29],[75500.0,37.9],[76000.0,36.56],[76500.0,35.55],[77000.0,33.92],[77500.0,33.5],[78000.0,32.51],[78500.0,31.62],[79000.0,31.13],[79500.0,31.1],[80000.0,31.3],[80500.0,31.86],[81000.0,32.99],[82000.0,35.89],[83000.0,39.76],[84000.0,40.31],[85000.0,41.69],[86000.0,47.89],[87000.0,50.4]]],["24SEP27",81577.94,[[50000.0,46.82],[60000.0,43.24],[65000.0,41.96],[66000.0,41.71],[68000.0,41.32],[70000.0,40.98],[72000.0,40.64],[74000.0,40.38],[76000.0,40.11],[78000.0,39.83],[80000.0,39.64],[82000.0,39.49],[84000.0,39.35],[86000.0,39.22],[88000.0,39.16],[90000.0,39.09],[92000.0,39.03],[94000.0,38.97],[96000.0,38.96],[98000.0,38.93],[100000.0,38.89],[102000.0,38.91],[104000.0,38.94],[106000.0,38.97],[108000.0,39.04],[110000.0,39.11],[112000.0,39.08],[114000.0,39.21],[115000.0,39.27],[116000.0,39.31],[118000.0,39.32],[120000.0,39.45],[125000.0,39.53],[130000.0,39.82],[135000.0,39.98],[140000.0,40.17],[150000.0,40.65],[160000.0,41.21],[170000.0,41.81]]]]},"ETH":{"asOf":1793502952036,"index":2264.87,"exp":[["4NOV26",2264.21,[[1900.0,99.66],[2000.0,86.48],[2050.0,80.34],[2080.0,76.31],[2100.0,73.85],[2120.0,71.26],[2140.0,68.61],[2160.0,67.02],[2180.0,64.46],[2200.0,62.49],[2220.0,60.79],[2240.0,59.57],[2260.0,57.76],[2280.0,56.76],[2300.0,55.5],[2320.0,55.5],[2340.0,55.49],[2360.0,55.49],[2380.0,55.27],[2400.0,55.49],[2420.0,55.57],[2450.0,56.82],[2500.0,60.16],[2600.0,68.7]]],["29JAN27",2285.18,[[1600.0,62.69],[1800.0,58.19],[1900.0,56.47],[2000.0,55.09],[2050.0,54.51],[2100.0,54.0],[2150.0,53.53],[2200.0,53.1],[2250.0,52.69],[2300.0,52.36],[2350.0,52.13],[2400.0,51.92],[2450.0,51.74],[2500.0,51.74],[2550.0,51.74],[2600.0,51.72],[2650.0,51.71],[2700.0,51.74],[2800.0,51.74],[2900.0,52.01],[3000.0,52.48],[3200.0,53.78],[3400.0,54.84],[3600.0,56.78],[3800.0,58.48],[4000.0,60.14],[4200.0,61.77],[4400.0,63.61]]],["25JUN27",2329.59,[[1200.0,65.03],[1300.0,62.77],[1400.0,60.84],[1500.0,59.27],[1600.0,57.9],[1700.0,56.78],[1800.0,55.91],[1900.0,55.19],[2000.0,54.61],[2100.0,54.17],[2200.0,53.78],[2300.0,53.5],[2400.0,53.33],[2500.0,53.23],[2600.0,53.14],[2700.0,53.12],[2800.0,53.14],[2900.0,53.19],[3000.0,53.22],[3100.0,53.32],[3200.0,53.46],[3300.0,53.62],[3400.0,53.71],[3500.0,53.94],[3600.0,54.16],[3700.0,54.35],[3800.0,54.58],[3900.0,54.8],[4000.0,55.08],[4100.0,55.28],[4200.0,55.55],[4400.0,56.03],[4500.0,56.41],[4600.0,56.68],[4800.0,57.01],[5000.0,57.59]]],["6NOV26",2264.46,[[1800.0,98.21],[1900.0,87.3],[2000.0,76.13],[2050.0,71.19],[2100.0,66.54],[2150.0,62.64],[2200.0,59.58],[2250.0,56.89],[2300.0,54.4],[2350.0,53.91],[2400.0,53.55],[2450.0,54.13],[2500.0,54.74],[2550.0,57.56],[2600.0,60.69],[2700.0,67.12],[2800.0,72.17],[3000.0,84.01]]],["3NOV26",2264.05,[[1900.0,94.09],[2000.0,82.45],[2040.0,76.49],[2050.0,75.03],[2060.0,73.41],[2080.0,70.25],[2100.0,66.96],[2120.0,63.71],[2140.0,60.15],[2160.0,56.8],[2180.0,53.47],[2200.0,50.67],[2220.0,47.98],[2240.0,45.18],[2260.0,43.68],[2280.0,41.18],[2300.0,41.01],[2320.0,40.27],[2340.0,40.97],[2360.0,41.18],[2380.0,42.23],[2400.0,44.3],[2420.0,46.74],[2450.0,50.35],[2500.0,56.17],[2600.0,64.58]]],["26MAR27",2299.99,[[1200.0,69.8],[1300.0,66.9],[1400.0,64.08],[1500.0,61.77],[1600.0,59.85],[1700.0,58.17],[1800.0,56.7],[1900.0,55.51],[2000.0,54.59],[2100.0,53.9],[2200.0,53.38],[2300.0,53.03],[2400.0,52.74],[2500.0,52.63],[2600.0,52.55],[2700.0,52.55],[2800.0,52.57],[2900.0,52.67],[3000.0,52.89],[3100.0,53.1],[3200.0,53.39],[3300.0,53.73],[3400.0,54.12],[3500.0,54.51],[3600.0,54.93],[3700.0,55.41],[3800.0,55.86],[3900.0,56.31],[4000.0,56.89],[4200.0,57.82],[4400.0,58.87],[4500.0,59.35],[4600.0,59.93],[4800.0,61.01],[5000.0,62.06]]],["2NOV26",2263.89,[[1900.0,96.4],[2000.0,78.17],[2040.0,73.91],[2050.0,73.06],[2060.0,70.77],[2080.0,66.48],[2100.0,64.59],[2120.0,60.44],[2140.0,56.82],[2150.0,54.38],[2160.0,52.51],[2180.0,48.09],[2200.0,43.45],[2220.0,39.2],[2240.0,35.37],[2260.0,32.21],[2280.0,29.99],[2300.0,30.58],[2320.0,32.68],[2340.0,35.92],[2360.0,39.3],[2380.0,42.5],[2400.0,43.24],[2420.0,47.7],[2440.0,47.83],[2460.0,48.62],[2480.0,52.33],[2500.0,55.15],[2520.0,57.92],[2550.0,61.94],[2600.0,69.9],[2700.0,84.46]]],["24SEP27",2359.52,[[1500.0,58.08],[1600.0,57.07],[1800.0,55.63],[1900.0,55.12],[2000.0,54.74],[2100.0,54.44],[2200.0,54.18],[2300.0,53.98],[2400.0,53.83],[2500.0,53.67],[2600.0,53.68],[2700.0,53.62],[2800.0,53.61],[2900.0,53.62],[3000.0,53.64],[3100.0,53.73],[3200.0,53.79],[3300.0,53.89],[3400.0,53.92],[3500.0,54.07],[3600.0,54.17],[3700.0,54.3],[3800.0,54.4],[3900.0,54.62],[4000.0,54.69],[4100.0,54.93],[4200.0,55.07],[4300.0,55.13],[4400.0,55.36],[4500.0,55.53],[4600.0,55.59],[4800.0,56.08],[5000.0,56.39]]],["13NOV26",2265.6,[[1800.0,79.03],[1900.0,72.31],[2000.0,65.71],[2050.0,62.66],[2100.0,60.35],[2150.0,57.81],[2200.0,56.06],[2250.0,54.34],[2300.0,53.24],[2350.0,52.06],[2400.0,51.68],[2450.0,51.94],[2500.0,52.06],[2550.0,52.17],[2600.0,53.09],[2700.0,55.94],[2800.0,59.59],[3000.0,68.74]]],["20NOV26",2267.1,[[1800.0,71.46],[1900.0,65.9],[2000.0,61.39],[2100.0,57.39],[2150.0,55.73],[2200.0,54.29],[2250.0,53.03],[2300.0,52.14],[2350.0,51.62],[2400.0,51.51],[2450.0,51.19],[2500.0,51.23],[2600.0,51.66],[2700.0,53.35],[2800.0,55.61],[3000.0,61.24]]],["1NOV26",2264.25,[[1900.0,107.16],[2000.0,88.89],[2050.0,75.42],[2060.0,72.58],[2080.0,67.5],[2100.0,62.54],[2120.0,57.6],[2140.0,52.52],[2150.0,52.43],[2160.0,52.22],[2180.0,50.41],[2200.0,46.01],[2220.0,43.82],[2240.0,38.53],[2260.0,32.63],[2280.0,34.07],[2300.0,38.13],[2320.0,40.57],[2340.0,44.89],[2350.0,46.87],[2360.0,49.61],[2380.0,49.81],[2400.0,50.01],[2420.0,52.87],[2440.0,53.95],[2460.0,58.24],[2480.0,62.8],[2500.0,66.47],[2520.0,67.27],[2540.0,70.62],[2550.0,72.43],[2560.0,74.07],[2600.0,81.95],[2700.0,91.53]]],["25DEC26",2275.91,[[1200.0,84.01],[1300.0,79.73],[1400.0,75.35],[1500.0,71.35],[1600.0,67.48],[1700.0,64.31],[1800.0,61.15],[1900.0,58.66],[2000.0,56.4],[2100.0,54.8],[2200.0,53.29],[2300.0,52.25],[2400.0,51.62],[2500.0,51.6],[2600.0,51.61],[2700.0,51.7],[2800.0,52.18],[2900.0,52.97],[3000.0,54.01],[3100.0,55.06],[3200.0,56.49],[3300.0,57.6],[3400.0,58.9],[3500.0,60.06],[3600.0,61.64],[3800.0,64.48],[4000.0,67.27],[4200.0,69.73],[4400.0,72.52],[4500.0,73.77],[4600.0,74.88],[4800.0,77.68],[5000.0,79.64]]],["27NOV26",2268.31,[[1600.0,76.69],[1800.0,67.15],[1900.0,62.72],[2000.0,58.93],[2100.0,55.87],[2150.0,54.67],[2200.0,53.54],[2250.0,52.46],[2300.0,51.74],[2350.0,51.14],[2400.0,51.15],[2450.0,50.87],[2500.0,50.37],[2550.0,50.96],[2600.0,51.15],[2650.0,51.58],[2700.0,52.12],[2750.0,52.86],[2800.0,53.97],[2850.0,54.65],[2900.0,55.64],[2950.0,56.71],[3000.0,57.6],[3050.0,58.95],[3100.0,60.25],[3150.0,61.58],[3200.0,63.08],[3300.0,65.27],[3400.0,67.75],[3500.0,70.21],[3600.0,72.87],[3800.0,77.05],[4000.0,81.61],[4200.0,85.08],[4400.0,89.53],[4600.0,90.65],[4800.0,95.4]]]]}};
 // GDP 2026 (IMF WEO Oct 2026, nominal US$ trillions) and sector shares (approx. World Bank, scaled to 100)
 const GDP = [
   ['United States', 'United States of America', 32.64, 2.33, [-98, 39], [0.9, 17.6, 81.5]],
@@ -197,137 +192,163 @@ let worldTopo = null;
 const topoReady = fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then((r) => r.json()).then((t) => { worldTopo = t; }).catch(() => {});
 
 // ================= views =================
-const state = { view: 'gdp', chain: 'Ethereum', compare: 'median', ycIndex: 94, sectors: Object.fromEntries(SECTORS_T.map((s) => [s, true])), country: null, sector: null };
+const state = { view: 'gdp', popLoc: 'CHN', popYear: 2024, ycIndex: 94, volCur: 'BTC', volExp: null, country: null, sector: null };
 const VIEWS = {};
 
-// ---------- 1. chain profile on a sphere ----------
-// Twelve scores, grouped so direction means something: adoption on top, security at the bottom,
-// cost on the left, speed on the right. Scores are 0-100, higher is better (mock, illustrative).
-const PGROUPS = [
-  { name: 'Adoption', dir: [0, 1, 0], metrics: ['Users', 'Apps', 'TVL'] },
-  { name: 'Speed', dir: [1, 0, 0], metrics: ['Throughput', 'Block time', 'Finality'] },
-  { name: 'Security', dir: [0, -1, 0], metrics: ['Decentralization', 'Uptime', 'Client diversity'] },
-  { name: 'Cost', dir: [-1, 0, 0], metrics: ['Low fees', 'Fee stability', 'Cheap storage'] },
+// ---------- 1. population by age, 1950 to 2100 (a Lexis surface) ----------
+// One slice every two years, people at each single year of age across it. A generation travels diagonally:
+// two years later it is two years older. Estimates to 2023, UN medium-variant projections after.
+// Data: data/wpp2024-population.json, processed from the UN's single-age CSVs (thousands; v[slice * 101 + age]).
+const POP_LOCS = [['WLD', 'World'], ['JPN', 'Japan'], ['CHN', 'China'], ['USA', 'United States'], ['IND', 'India'], ['DEU', 'Germany'], ['NGA', 'Nigeria']];
+const POP_Y0 = 1950, POP_STEP = 2, POP_YEARS = d3.range(1950, 2101, POP_STEP), POP_AGES = d3.range(0, 101);
+const POP_LAST_EST = 2023, POP_SPLIT = 2022;   // the last sampled year that is an estimate
+// The surface is drawn at every second age: with two-year slices a generation then moves exactly one cell
+// diagonally per slice, along the mesh's triangle diagonals, so its ridge stays smooth instead of zigzagging.
+const POP_GRID = d3.range(0, 101, 2);
+let POP = null;
+const popReady = fetch('data/wpp2024-population.json').then((r) => r.json()).then((d) => { POP = d; }).catch(() => {});
+const POP_BANDS = [
+  { name: 'Children, 0–14', max: 14, color: '#c9a4f5' },
+  { name: 'Working age, 15–64', max: 64, color: '#1fefd7' },
+  { name: '65 and over', max: Infinity, color: '#e58fb0' },
 ];
-const CHAINS = {
-  Ethereum: [64, 90, 95, 30, 40, 45, 94, 98, 85, 20, 45, 25],
-  Solana: [91, 78, 66, 96, 95, 90, 52, 82, 40, 92, 70, 75],
-  Base: [80, 70, 48, 78, 85, 70, 28, 96, 30, 88, 72, 70],
-  Arbitrum: [55, 72, 52, 74, 85, 68, 35, 95, 35, 82, 70, 65],
-  'BNB Chain': [78, 66, 60, 80, 80, 82, 30, 92, 40, 80, 80, 72],
-  Avalanche: [40, 52, 35, 70, 82, 92, 60, 93, 45, 78, 74, 68],
-};
-const PMETRICS = PGROUPS.flatMap((g, gi) => {
-  const c = new THREE.Vector3(...g.dir);
-  const t1 = Math.abs(c.y) > 0.9 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
-  const t2 = new THREE.Vector3().crossVectors(c, t1);
-  const a = (34 * Math.PI) / 180;
-  return g.metrics.map((name, k) => {
-    const phi = ((90 + 120 * k) * Math.PI) / 180;
-    const dir = c.clone().multiplyScalar(Math.cos(a)).addScaledVector(t1.clone().multiplyScalar(Math.cos(phi)).add(t2.clone().multiplyScalar(Math.sin(phi))), Math.sin(a)).normalize();
-    return { name, group: g.name, gi, dir };
-  });
-});
-const MEDIAN = PMETRICS.map((_, i) => d3.median(Object.values(CHAINS), (v) => v[i]));
-const pRadius = d3.scaleLinear([0, 100], [0.6, 4.2]);
-const pDelta = d3.scaleDiverging([-25, 0, 25], d3.interpolateRgbBasis(['#e58fb0', '#3a3f48', '#1fefd7'])).clamp(true);
-// Smooth the 12 scores over the sphere: each direction blends nearby metrics (von Mises kernel)
-function blend(dir, vals, k = 16) {
-  let sw = 0, sv = 0;
-  PMETRICS.forEach((m, i) => { const w = Math.exp(k * (dir.dot(m.dir) - 1)); sw += w; sv += w * vals[i]; });
-  return sv / sw;
+const popBand = (age) => POP_BANDS.find((b) => age <= b.max);
+const popAt = (loc, y, a) => POP.c[loc].v[((y - POP_Y0) / POP_STEP) * POP_AGES.length + a];   // thousands
+const popAgeLabel = (a) => (a >= 100 ? '100 and over' : `${a}`);
+const people = (thousands) => d3.format('.3~s')(thousands * 1000).replace('G', 'B');
+function popStats(loc, y) {
+  const v = POP_AGES.map((_, a) => popAt(loc, y, a)), total = d3.sum(v);
+  const kids = d3.sum(v.slice(0, 15)), work = d3.sum(v.slice(15, 65)), old = d3.sum(v.slice(65));
+  // median age, interpolated inside the year of age that holds the middle person
+  let acc = 0, median = 0;
+  for (let a = 0; a < v.length; a++) { if (acc + v[a] >= total / 2) { median = a + (total / 2 - acc) / v[a]; break; } acc += v[a]; }
+  return { v, total, kids, work, old, median, dependency: (100 * old) / work };
 }
-const benchOf = () => (state.compare === 'median' ? MEDIAN : CHAINS[state.compare]);
-const benchName = () => (state.compare === 'median' ? 'the median chain' : state.compare);
-
-VIEWS.profile = {
-  tab: 'Chain profile', icon: 'fi-rr-globe',
-  title: 'A chain’s shape',
-  blurb: 'Twelve scores wrapped around a sphere, grouped so direction means something: adoption at the top, security at the bottom, cost on the left, speed on the right. Cyan bulges beat the benchmark; rose dents fall short. The faint shell is the benchmark itself.',
-  how: ['scaleLinear maps scores to radius, d3.median builds the benchmark, and scaleDiverging colors each point by how far it sits above or below it.', 'Bends a smooth sphere into the profile by blending nearby scores, adds the benchmark as a faint shell, and labels only the biggest gaps and strengths.'],
-  note: 'Scores are mock and illustrative, 0–100, higher is better.',
-  camera: [4.5, 2.6, 18.5], target: [0, 0.5, 0],
+// [year, age, text]: pinned on the surface where the generation is easy to spot
+const POP_NOTES = {
+  CHN: [[1990, 25, 'Born in the 1960s boom'], [2010, 8, 'One-child policy, 1980–2015']],
+  JPN: [[1970, 22, 'Post-war boom, 1947–49'], [2000, 27, 'Their children, early 1970s']],
+  USA: [[1980, 25, 'Baby boom, 1946–64']],
+  DEU: [[1990, 27, 'Boomers, born in the 1960s']],
+};
+VIEWS.pop = {
+  tab: 'Population', icon: 'fi-rr-users-alt',
+  title: 'Population by age, 1950 to 2100',
+  blurb: 'Each slice is one year: how many people there are at every age. Stack 150 years of them and each generation becomes a ridge running diagonally, a little older every year. Watch a population pile up toward the older end and you are watching its economy age, a big part of why the GDP growth rates on the map differ so much.',
+  how: ['scaleLinear sets age and headcount, d3.sum totals the age bands, and the median age comes from interpolating inside the year of age that holds the middle person.', 'Builds one surface for the estimates and a fainter one for the UN projections, colors each vertex by its age band, and moves an amber line through the stack as you scrub or play.'],
+  note: 'Real data: UN World Population Prospects 2024. Estimates to 2023, medium-variant projections from 2024.',
+  camera: [-4, 16, 19.5], target: [0.3, 0.9, -0.8],
   autoRotate: false,
-  build() {
-    const vals = CHAINS[state.chain], bench = benchOf();
-    const delta = vals.map((v, i) => v - bench[i]);
-    // the profile: one matte solid colored by difference from the benchmark
-    const geo = new THREE.SphereGeometry(1, 128, 64);
-    const pos = geo.getAttribute('position'), col = new Float32Array(pos.count * 3), c = new THREE.Color(), d = new THREE.Vector3();
-    for (let i = 0; i < pos.count; i++) {
-      d.fromBufferAttribute(pos, i).normalize();
-      const v = blend(d, vals), b = blend(d, bench), r = pRadius(v);
-      pos.setXYZ(i, d.x * r, d.y * r, d.z * r);
-      c.set(pDelta(v - b)); col.set([c.r, c.g, c.b], i * 3);
-    }
-    geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-    geo.computeVertexNormals();
-    const shape = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7, metalness: 0.05 }));
-    shape.userData.pick = (hit) => {
-      const p = hit.point.clone().normalize();
-      const i = d3.maxIndex(PMETRICS, (m) => m.dir.dot(p)), m = PMETRICS[i];
-      return metricTip(m, vals[i], bench[i]);
+  async build() {
+    const ticket = building;
+    await popReady;
+    if (ticket !== building) return;
+    if (!POP) { $('#pop-year').textContent = 'The population data didn’t load. Reload the page to try again.'; return; }
+    const loc = state.popLoc;
+    const peak = d3.max(POP.c[loc].v);
+    const sx = d3.scaleLinear([0, 101], box.x);
+    const sy = d3.scaleLinear([0, peak], box.y).nice();
+    const sz = d3.scaleLinear([POP_YEARS.at(-1), POP_YEARS[0]], [-5, 5]);   // 1950 in front, projections behind
+    sx.ticks = () => [0, 20, 40, 60, 80, 100];
+    sz.ticks = () => d3.range(2100, 1949, -25);
+    frame3D({ sx, sy, sz, names: { x: 'Age', y: 'People at each age', z: 'Year' }, fmt: { x: (v) => `${v}`, y: (v) => people(v), z: (v) => `${v}` } });
+    const X = (a) => sx(a + 0.5);
+    const P = (y, a, lift = 0) => new THREE.Vector3(X(a), sy(popAt(loc, y, a)) + lift, sz(y));
+    // two surfaces sharing the 2023 slice: estimates solid, projections faint
+    const nA = POP_GRID.length, c = new THREE.Color();
+    const sheet = (years, opacity) => {
+      const pos = [], col = [], idx = [];
+      years.forEach((y) => POP_GRID.forEach((a) => { pos.push(...P(y, a).toArray()); c.set(popBand(a).color); col.push(c.r, c.g, c.b); }));
+      for (let k = 0; k < years.length - 1; k++) for (let a = 0; a < nA - 1; a++) { const i = k * nA + a, j = i + nA; idx.push(i, i + 1, j + 1, i, j + 1, j); }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx);
+      g.computeVertexNormals();
+      const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, metalness: 0, side: THREE.DoubleSide, transparent: true, opacity, depthWrite: opacity > 0.6 }));
+      m.userData.pick = (hit) => {
+        const y = popSnap(sz.invert(hit.point.z)), a = Math.max(0, Math.min(100, Math.round(sx.invert(hit.point.x) - 0.5)));
+        const n = popAt(loc, y, a), s = popStats(loc, y);
+        return `<div class="font-medium">${POP.c[loc].name}, ${y}${y > POP_LAST_EST ? ' <span class="text-muted-foreground">· projected</span>' : ''}</div><div class="font-mono">age ${popAgeLabel(a)}: ${people(n)}</div><div class="font-mono text-muted-foreground">${d3.format('.1%')(n / s.total)} of everyone</div>`;
+      };
+      m.userData.yearAt = (hit) => popSnap(sz.invert(hit.point.z));
+      group.add(m); pickables.push(m);
     };
-    shape.userData.metricAt = (hit) => d3.maxIndex(PMETRICS, (m) => m.dir.dot(hit.point.clone().normalize()));
-    group.add(shape); pickables.push(shape);
-    // the benchmark: a faint wire shell
-    const bgeo = new THREE.SphereGeometry(1, 32, 16), bp = bgeo.getAttribute('position');
-    for (let i = 0; i < bp.count; i++) { d.fromBufferAttribute(bp, i).normalize(); const r = pRadius(blend(d, bench)); bp.setXYZ(i, d.x * r, d.y * r, d.z * r); }
-    group.add(new THREE.LineSegments(new THREE.WireframeGeometry(bgeo), lineMat(B.ink2, 0.06)));
-    bgeo.dispose();
-    // group names, quiet, outside the shape
-    PGROUPS.forEach((g) => lbl(g.name, new THREE.Vector3(...g.dir).multiplyScalar(5.3), 'strong'));
-    // labels only for the three biggest strengths and three biggest gaps
-    const order = d3.range(12).sort((a, b) => delta[b] - delta[a]);
-    [...order.slice(0, 3), ...order.slice(-3)].forEach((i) => {
-      if (Math.abs(delta[i]) < 3) return;
-      const m = PMETRICS[i], r = pRadius(blend(m.dir, vals));
-      const o = lbl(`${m.name} ${d3.format('+')(delta[i])}`, m.dir.clone().multiplyScalar(r + 0.35), 'bg');
-      o.element.style.color = delta[i] > 0 ? B.signal : '#e58fb0';
-    });
-    // spoke for the metric under the cursor or in the list
-    const spoke = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), lineMat(B.amber, 0.9));
-    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), new THREE.MeshBasicMaterial({ color: B.amber }));
+    sheet(POP_YEARS.filter((y) => y <= POP_SPLIT), 0.92);
+    sheet(POP_YEARS.filter((y) => y >= POP_SPLIT), 0.4);
+    // a line every ten years, so the slices read as slices
+    POP_YEARS.filter((y) => y % 10 === 0).forEach((y) => group.add(polyline(POP_GRID.map((a) => P(y, a, 0.01)), B.paper, y > POP_LAST_EST ? 0.25 : 0.5)));
+    lbl('UN projections from 2024', new THREE.Vector3(sx(101) + 0.3, sy(0) + 0.3, sz(2024)), 'bg');
+    (POP_NOTES[loc] ?? []).forEach(([y, a, text]) => lbl(text, P(y, a, 0.45), 'bg'));
+    // the selected year: an amber tube
+    let tube = null;
     const tag = lbl('', new THREE.Vector3(), 'strong bg sel');
-    spoke.visible = dot.visible = tag.visible = false;
-    group.add(spoke, dot);
-    this.focus = (i) => {
-      document.querySelectorAll('[data-metric]').forEach((el) => el.toggleAttribute('data-on', +el.dataset.metric === i));
-      if (i == null || i < 0) { spoke.visible = dot.visible = tag.visible = false; return; }
-      const m = PMETRICS[i], tip = m.dir.clone().multiplyScalar(pRadius(blend(m.dir, vals)) + 0.02);
-      spoke.geometry.setFromPoints([new THREE.Vector3(), tip]);
-      dot.position.copy(tip);
-      tag.position.copy(m.dir.clone().multiplyScalar(pRadius(blend(m.dir, vals)) + 0.7));
-      tag.element.textContent = `${m.name} ${vals[i]} · ${benchName() === 'the median chain' ? 'median' : state.compare} ${bench[i]}`;
-      spoke.visible = dot.visible = tag.visible = true;
+    this.select = (y) => {
+      state.popYear = y;
+      if (tube) { group.remove(tube); tube.geometry.dispose(); tube.material.dispose(); }
+      const pts = POP_GRID.map((a) => P(y, a, 0.02));
+      tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 80, 0.045, 8), new THREE.MeshBasicMaterial({ color: B.amber }));
+      group.add(tube);
+      tag.position.copy(pts[0].clone().add(new THREE.Vector3(-0.6, 0.3, 0)));
+      tag.element.textContent = `${y}`;
+      popPanel(loc, y);
     };
+    this.select(state.popYear);
   },
   controls() {
-    const vals = CHAINS[state.chain], bench = benchOf();
-    const rows = d3.range(12).map((i) => ({ i, m: PMETRICS[i], d: vals[i] - bench[i] })).sort((a, b) => b.d - a.d);
-    const span = 50;
-    const chip = (name, attr, on) => `<button ${attr} aria-pressed="${on}" class="rounded-md border px-2.5 py-1 text-sm text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-pressed:border-foreground/30 aria-pressed:bg-accent aria-pressed:text-foreground">${esc(name)}</button>`;
+    const y = state.popYear;
     return `<div>
-      <p class="mb-1.5 text-xs text-muted-foreground">Chain</p>
-      <div class="flex flex-wrap gap-1.5">${Object.keys(CHAINS).map((k) => chip(k, `data-chain="${esc(k)}"`, state.chain === k)).join('')}</div>
-      <p class="mb-1.5 mt-3 text-xs text-muted-foreground">Compare with</p>
-      <select data-compare class="h-8 w-full rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-        <option value="median" ${state.compare === 'median' ? 'selected' : ''}>Median of all six chains</option>
-        ${Object.keys(CHAINS).filter((k) => k !== state.chain).map((k) => `<option value="${esc(k)}" ${state.compare === k ? 'selected' : ''}>${esc(k)}</option>`).join('')}
-      </select>
-      <p class="mb-1.5 mt-4 text-xs text-muted-foreground">${esc(state.chain)} against ${esc(benchName())}, strongest first</p>
-      <ol class="space-y-0.5" id="metric-list">${rows.map(({ i, m, d }) => `
-        <li data-metric="${i}" class="grid cursor-default grid-cols-[1fr_96px_34px] items-center gap-2 rounded-md px-2 py-1 text-sm data-[on]:bg-amber/10 data-[on]:text-amber hover:bg-accent">
-          <span class="min-w-0 truncate">${m.name} <span class="text-xs text-muted-foreground">${m.group.toLowerCase()}</span></span>
-          <span class="relative h-2"><span class="absolute inset-y-0 left-1/2 w-px bg-border"></span><span class="absolute inset-y-0 rounded-sm" style="${d >= 0 ? `left:50%;width:${(Math.min(d, span) / span) * 50}%;background:#1fefd7` : `right:50%;width:${(Math.min(-d, span) / span) * 50}%;background:#e58fb0`}"></span></span>
-          <span class="text-right font-mono text-xs">${d3.format('+')(d)}</span>
-        </li>`).join('')}</ol>
+      <div class="flex flex-wrap gap-1.5">${POP_LOCS.map(([k, name]) => `<button data-pop-loc="${k}" aria-pressed="${state.popLoc === k}" class="rounded-md border px-2.5 py-1 text-sm text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-pressed:border-foreground/30 aria-pressed:bg-accent aria-pressed:text-foreground">${esc(name)}</button>`).join('')}</div>
+      <div class="mt-4 flex items-center gap-2">
+        <button id="pop-play" class="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-input bg-background hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Play through the years"><i class="fi ${popTimer ? 'fi-rr-pause' : 'fi-rr-play'} text-xs"></i></button>
+        <input id="pop-range" type="range" class="slider" min="${POP_YEARS[0]}" max="${POP_YEARS.at(-1)}" step="${POP_STEP}" value="${y}" aria-label="Year" />
+      </div>
+      <div class="mt-3 flex items-baseline justify-between"><span id="pop-year" class="font-semibold"></span><span id="pop-kind" class="text-xs text-muted-foreground"></span></div>
+      <div id="pop-mini" class="mt-2"></div>
+      <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">${POP_BANDS.map((b) => `<span class="inline-flex items-center gap-1.5"><span class="size-2 rounded-sm" style="background:${b.color}"></span>${b.name}</span>`).join('')}</div>
+      <div id="pop-tiles" class="mt-3 grid grid-cols-3 gap-2"></div>
+      <p class="mt-3 text-xs leading-relaxed text-muted-foreground">Old-age dependency counts people 65 and over for every 100 people aged 15 to 64. As it climbs, fewer workers support each retiree, and growth gets harder to come by.</p>
     </div>`;
   },
 };
-function metricTip(m, v, b) {
-  const dlt = v - b;
-  return `<div class="font-medium">${m.name} <span class="text-muted-foreground">· ${m.group.toLowerCase()}</span></div><div class="font-mono">${esc(state.chain)} ${v} · ${state.compare === 'median' ? 'median' : esc(state.compare)} ${b}</div><div class="font-mono" style="color:${dlt >= 0 ? '#1fefd7' : '#e58fb0'}">${d3.format('+')(dlt)}</div>`;
+let popTimer = null;
+const popSnap = (y) => Math.max(POP_YEARS[0], Math.min(POP_YEARS.at(-1), Math.round((y - POP_Y0) / POP_STEP) * POP_STEP + POP_Y0));
+// panel: the year's age structure as bars against 1950 and 2100 outlines, and three readouts
+function popPanel(loc, y) {
+  const el = $('#pop-mini');
+  if (!el) return;
+  const s = popStats(loc, y);
+  $('#pop-year').textContent = `${POP.c[loc].name}, ${y}`;
+  $('#pop-kind').textContent = y > POP_LAST_EST ? 'UN projection' : 'UN estimate';
+  const r = $('#pop-range'); if (r) { r.value = y; r.style.setProperty('--fill', `${((y - POP_YEARS[0]) / (POP_YEARS.at(-1) - POP_YEARS[0])) * 100}%`); }
+  $('#pop-tiles').innerHTML = [['People', people(s.total)], ['Median age', s.median.toFixed(1)], ['Old-age dependency', s.dependency.toFixed(0)]]
+    .map(([l, v]) => `<div class="rounded-lg border bg-background/60 px-2.5 py-1.5"><p class="text-[11px] leading-tight text-muted-foreground">${l}</p><p class="font-mono text-sm">${v}</p></div>`).join('');
+  el.innerHTML = '';
+  const w = el.clientWidth || 300, h = 168, m = { t: 4, r: 8, b: 18, l: 34 };
+  const peak = d3.max(POP.c[loc].v);
+  const x = d3.scaleLinear([0, peak], [m.l, w - m.r]).nice(), yb = d3.scaleBand(POP_AGES.slice().reverse(), [m.t, h - m.b]).padding(0);
+  const svg = d3.select(el).append('svg').attr('width', w).attr('height', h);
+  const axisStyle = (g) => { g.selectAll('line').attr('stroke', B.line); g.selectAll('text').attr('fill', B.fog).style('font', '10px "Source Code Pro", monospace'); };
+  svg.append('g').attr('transform', `translate(0,${h - m.b})`).call(d3.axisBottom(x).ticks(3).tickFormat(people).tickSize(-(h - m.t - m.b))).call((g) => { g.select('.domain').remove(); axisStyle(g); });
+  svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(yb).tickValues([0, 20, 40, 60, 80, 100]).tickSize(0)).call((g) => { g.select('.domain').remove(); axisStyle(g); });
+  svg.append('g').selectAll('rect').data(s.v).join('rect')
+    .attr('x', m.l).attr('y', (_, a) => yb(a)).attr('height', yb.bandwidth()).attr('width', (v) => Math.max(0, x(v) - m.l))
+    .attr('fill', (_, a) => popBand(a).color).attr('fill-opacity', y > POP_LAST_EST ? 0.5 : 0.85);
+  const outline = (yr, dash) => {
+    const line = d3.line().x((v) => x(v)).y((_, a) => yb(a) + yb.bandwidth() / 2).curve(d3.curveStep);
+    svg.append('path').attr('d', line(POP_AGES.map((_, a) => popAt(loc, yr, a)))).attr('fill', 'none').attr('stroke', B.ink2).attr('stroke-width', 1).attr('stroke-dasharray', dash);
+  };
+  outline(1950, '1 3'); outline(2100, '4 3');
+  svg.append('text').attr('x', w - m.r).attr('y', m.t + 8).attr('text-anchor', 'end').attr('fill', B.fog).style('font', '10px "Source Code Pro", monospace').text('dotted 1950 · dashed 2100');
+}
+function popPlay() {
+  if (popTimer) { clearInterval(popTimer); popTimer = null; }
+  else {
+    if (state.popYear >= POP_YEARS.at(-1)) state.popYear = POP_YEARS[0];
+    popTimer = setInterval(() => {
+      if (state.view !== 'pop' || state.popYear >= POP_YEARS.at(-1)) { clearInterval(popTimer); popTimer = null; const b = $('#pop-play i'); if (b) b.className = 'fi fi-rr-play text-xs'; return; }
+      VIEWS.pop.select(state.popYear + POP_STEP);
+    }, reduceMotion ? 300 : 90);
+  }
+  const b = $('#pop-play i'); if (b) b.className = `fi ${popTimer ? 'fi-rr-pause' : 'fi-rr-play'} text-xs`;
 }
 
 // ---------- 2. the Treasury yield curve, stacked month by month ----------
@@ -440,36 +461,169 @@ function ycPlay() {
   const b = $('#yc-play i'); if (b) b.className = `fi ${ycTimer ? 'fi-rr-pause' : 'fi-rr-play'} text-xs`;
 }
 
-// ---------- 3. bubbles ----------
-VIEWS.bubbles = {
-  tab: '3D bubbles', icon: 'fi-rr-chart-scatter',
-  title: 'Bubbles in a box',
-  blurb: 'Market cap, return and volatility on three axes, 24h volume as size, sector as color. A drop line to the floor shows where each token sits on the cap–volatility plane, so depth stays readable as you turn it.',
-  how: ['scaleLog spreads market cap from $0.4B to $2T, scaleSqrt sizes bubbles by area, and scaleOrdinal colors sectors.', 'Places a sphere per token with a drop line to the floor, inside the same D3-ticked frame as the line chart.'],
-  camera: [-9, 7.5, 19.5], target: [0, 2.2, 0],
-  build() {
-    const on = TOKENS.filter((t) => state.sectors[t.sector]);
-    const sx = d3.scaleLog([0.3, 2500], box.x);
-    const sy = d3.scaleLinear(d3.extent(TOKENS, (t) => t.ret), box.y).nice();
-    const sz = d3.scaleLinear([0, d3.max(TOKENS, (t) => t.vol)], box.z).nice();
-    const sr = d3.scaleSqrt([0, d3.max(TOKENS, (t) => t.volume)], [0.08, 0.6]);
-    const color = d3.scaleOrdinal(SECTORS_T, PAL);
-    sx.ticks = () => [1, 10, 100, 1000];
-    frame3D({ sx, sy, sz, names: { x: 'Market cap (log)', y: 'Return, 30d', z: 'Volatility' }, fmt: { x: (v) => (v >= 1000 ? `$${v / 1000}T` : `$${v}B`), y: (v) => `${v > 0 ? '+' : ''}${v}%`, z: (v) => `${v}%` } });
-    const drops = [];
-    on.forEach((t) => {
-      const p = new THREE.Vector3(sx(t.cap), sy(t.ret), sz(t.vol));
-      const m = new THREE.Mesh(new THREE.SphereGeometry(sr(t.volume), 24, 16), solid(color(t.sector), { transparent: true, opacity: 0.85 }));
-      m.position.copy(p);
-      m.userData.html = `<div class="font-medium">${esc(t.name)} <span class="text-muted-foreground">· ${t.sector}</span></div><div class="font-mono">cap ${t.cap >= 1000 ? `$${(t.cap / 1000).toFixed(2)}T` : `$${t.cap.toFixed(1)}B`}</div><div class="font-mono">30d ${d3.format('+.1f')(t.ret)}% · vol ${t.vol.toFixed(0)}%</div><div class="font-mono">24h volume $${t.volume.toFixed(2)}B</div>`;
-      group.add(m); pickables.push(m);
-      drops.push(p, new THREE.Vector3(p.x, box.y[0], p.z));
-      if (t.cap > 300) lbl(t.name, p.clone().add(new THREE.Vector3(0, sr(t.volume) + 0.2, 0)), 'strong');
-    });
-    group.add(segments(drops, B.fog, 0.35));
+// ---------- 3. options volatility surface, live from Deribit ----------
+// Columns are log(strike / forward) on a shared grid; rows are expiries. Each expiry's out-of-the-money
+// marks are interpolated onto the grid only inside the strikes it actually lists, so the surface has gaps, not guesses.
+const LM = d3.range(-20, 21).map((i) => i * 0.025);
+const MONTHS = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
+const expDate = (code) => { const m = code.match(/^(\d{1,2})([A-Z]{3})(\d{2})$/); return new Date(Date.UTC(2000 + +m[3], MONTHS[m[2]], +m[1], 8)); };
+const usd = d3.format('$,.0f');
+const pctOf = (lm) => `${Math.round(Math.exp(lm) * 100)}%`;
+const volColor = d3.interpolateRgbBasis(['#174d49', '#1fefd7', '#f6c453', '#e58fb0']);
+function ivAt(pts, x) {
+  if (!pts.length || x < pts[0][0] || x > pts.at(-1)[0]) return null;
+  const i = d3.bisector((p) => p[0]).left(pts, x);
+  if (i === 0) return pts[0][1];
+  const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+  return y0 + ((y1 - y0) * (x - x0)) / (x1 - x0);
+}
+// Deribit book summary -> { asOf, index, exp: [[code, forward, [[strike, iv], ...]]] }, the same shape as VOL_SNAP
+function volCompact(res) {
+  const exps = new Map();
+  res.forEach((o) => {
+    const [, code, ks, t] = o.instrument_name.split('-'), k = +ks, f = o.underlying_price, iv = o.mark_iv;
+    if (!(iv > 0) || (t === 'C') !== (k >= f) || k / f < 0.5 || k / f > 2.2) return;
+    if (!exps.has(code)) exps.set(code, [code, f, []]);
+    exps.get(code)[2].push([k, iv]);
+  });
+  exps.forEach((e) => e[2].sort((a, b) => a[0] - b[0]));
+  return { asOf: d3.max(res, (o) => o.creation_timestamp), index: res[0]?.estimated_delivery_price, exp: [...exps.values()] };
+}
+function volSurface(s) {
+  const rows = s.exp.map(([code, fwd, ks]) => {
+    const date = expDate(code), days = (date - s.asOf) / 864e5;
+    const all = ks.map(([k, iv]) => [Math.log(k / fwd), iv]), atm = ivAt(all, 0);
+    // keep strikes within 3 standard moves for this expiry: a 2-day option 30% away is a lottery ticket, not part of the smile
+    const reach = 3 * ((atm ?? 0) / 100) * Math.sqrt(Math.max(days, 0) / 365);
+    const pts = all.filter(([x]) => Math.abs(x) <= reach);
+    return { code, date, days, fwd, pts, grid: LM.map((x) => ivAt(pts, x)), atm };
+  }).filter((r) => r.days > 0.5 && r.pts.length >= 4 && r.atm != null).sort((a, b) => a.days - b.days);
+  return { asOf: new Date(s.asOf), index: s.index, rows };
+}
+const volCache = {};
+async function volLoad(cur) {
+  if (volCache[cur]) return volCache[cur];
+  let src = 'live', snap;
+  try {
+    const ac = new AbortController(), timer = setTimeout(() => ac.abort(), 8000);
+    const r = await fetch(`https://www.deribit.com/api/v2/public/get_book_summary_by_currency?currency=${cur}&kind=option`, { signal: ac.signal });
+    clearTimeout(timer);
+    snap = volCompact((await r.json()).result);
+    if (volSurface(snap).rows.length < 3) throw new Error('too few expiries');
+  } catch { src = 'snapshot'; snap = VOL_SNAP[cur]; }
+  return (volCache[cur] = { ...volSurface(snap), src, cur });
+}
+VIEWS.vol = {
+  tab: 'Vol surface', icon: 'fi-rr-mountains',
+  title: 'The options volatility surface',
+  blurb: 'Every option price carries a guess about how far the coin will move, called implied volatility. Plot it for every strike and expiry and you get a surface. The smile across strikes shows what traders pay to insure against big moves; the slope from front to back shows whether they expect the next few days to be wilder or calmer than the months ahead.',
+  how: ['scaleLinear on log strike over forward lines up strikes across expiries, scaleSqrt stretches the near expiries, and a bisector interpolates each expiry onto a shared strike grid.', 'Builds one mesh from that grid, leaving gaps where an expiry lists no strikes, draws each expiry as a line on it, runs the at-the-money term structure across them, and moves an amber highlight to the expiry you pick.'],
+  note: 'Live data: Deribit public API, mark implied volatility of out-of-the-money options. Falls back to a saved snapshot if Deribit doesn’t respond.',
+  camera: [-11, 8.5, 15.5], target: [0, 1.6, 0],
+  autoRotate: false,
+  async build() {
+    const ticket = building;
+    const d = await volLoad(state.volCur);
+    if (ticket !== building) return;
+    const { rows } = d;
+    if (state.volExp == null || state.volExp >= rows.length) state.volExp = d3.minIndex(rows, (r) => Math.abs(r.days - 30));
+    const ivMin = d3.min(rows, (r) => d3.min(r.grid)), ivMax = d3.max(rows, (r) => d3.max(r.grid));
+    const sx = d3.scaleLinear([LM[0], LM.at(-1)], box.x);
+    const sy = d3.scaleLinear([Math.floor(ivMin / 10) * 10, Math.ceil(ivMax / 10) * 10], box.y);
+    const maxDays = rows.at(-1).days;
+    const sz = d3.scaleSqrt([0, maxDays], [-4, 4]);   // near expiries at the back, where their spikes don't hide the rest
+    const color = d3.scaleSequential([ivMin, ivMax], volColor);
+    const DAYS = { 1: '1d', 7: '1w', 30: '1m', 90: '3m', 180: '6m', 365: '1y', 730: '2y' };
+    sx.ticks = () => [0.6, 0.8, 1, 1.25, 1.6].map(Math.log);
+    sz.ticks = () => Object.keys(DAYS).map(Number).filter((v) => v <= maxDays && v >= rows[0].days);
+    frame3D({ sx, sy, sz, names: { x: 'Strike, % of forward', y: 'Implied vol', z: 'Time to expiry' }, fmt: { x: pctOf, y: (v) => `${v}%`, z: (v) => DAYS[v] } });
+    const P = (r, i, lift = 0) => new THREE.Vector3(sx(LM[i]), sy(r.grid[i]) + lift, sz(r.days));
+    // one mesh over the grid; a triangle only where all three corners have a real mark
+    const nC = LM.length, pos = [], col = [], idx = [], c = new THREE.Color();
+    rows.forEach((r) => LM.forEach((x, i) => { const v = r.grid[i] ?? ivMin; pos.push(sx(x), sy(v), sz(r.days)); c.set(color(v)); col.push(c.r, c.g, c.b); }));
+    const ok = (j) => rows[Math.floor(j / nC)].grid[j % nC] != null;
+    for (let k = 0; k < rows.length - 1; k++) for (let i = 0; i < nC - 1; i++) {
+      const a = k * nC + i, b = a + 1, dn = a + nC, e = dn + 1;
+      if (ok(a) && ok(b) && ok(e)) idx.push(a, b, e);
+      if (ok(a) && ok(e) && ok(dn)) idx.push(a, e, dn);
+    }
+    const sg = new THREE.BufferGeometry();
+    sg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); sg.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); sg.setIndex(idx);
+    sg.computeVertexNormals();
+    const surface = new THREE.Mesh(sg, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0, side: THREE.DoubleSide, transparent: true, opacity: 0.9 }));
+    const rowAt = (hit) => d3.minIndex(rows, (r) => Math.abs(sz(r.days) - hit.point.z));
+    surface.userData.rowAt = rowAt;
+    surface.userData.pick = (hit) => {
+      const r = rows[rowAt(hit)], i = d3.minIndex(LM, (x) => Math.abs(sx(x) - hit.point.x)), iv = r.grid[i];
+      return `<div class="font-medium">${d3.utcFormat('%b %-d, %Y')(r.date)} <span class="text-muted-foreground">· ${Math.round(r.days)}d</span></div><div class="font-mono">strike ${usd(r.fwd * Math.exp(LM[i]))} (${pctOf(LM[i])})</div><div class="font-mono" style="color:${iv == null ? B.fog : color(iv)}">IV ${iv == null ? 'not listed' : `${iv.toFixed(1)}%`}</div>`;
+    };
+    group.add(surface); pickables.push(surface);
+    // each expiry as a line on the surface
+    rows.forEach((r) => { const pts = LM.flatMap((_, i) => (r.grid[i] == null ? [] : [P(r, i, 0.01)])); if (pts.length > 1) group.add(polyline(pts, B.paper, 0.55)); });
+    // at-the-money term structure across expiries
+    const atm = rows.map((r) => new THREE.Vector3(sx(0), sy(r.atm) + 0.02, sz(r.days)));
+    group.add(polyline(atm, B.ink, 0.95));
+    lbl('At the money', atm.at(-1).clone().add(new THREE.Vector3(0, 0.45, 0.4)), 'bg');
+    // the selected expiry: an amber tube
+    let tube = null;
+    const tag = lbl('', new THREE.Vector3(), 'strong bg sel');
+    this.select = (k) => {
+      state.volExp = k;
+      if (tube) { group.remove(tube); tube.geometry.dispose(); tube.material.dispose(); tube = null; }
+      const r = rows[k], pts = LM.flatMap((_, i) => (r.grid[i] == null ? [] : [P(r, i, 0.02)]));
+      if (pts.length > 1) {
+        tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 80, 0.045, 8), new THREE.MeshBasicMaterial({ color: B.amber }));
+        group.add(tube);
+        tag.position.copy(pts.at(-1).clone().add(new THREE.Vector3(0.6, 0.25, 0)));
+      }
+      tag.element.textContent = d3.utcFormat('%b %-d')(r.date);
+      volPanel(d, k);
+    };
+    this.select(state.volExp);
   },
-  controls: () => toggles('sectors', SECTORS_T, (k, i) => PAL[i], 'Sectors'),
+  controls() {
+    return `<div>
+      <div class="flex items-center gap-1.5">
+        ${['BTC', 'ETH'].map((c) => `<button data-vol-cur="${c}" aria-pressed="${state.volCur === c}" class="rounded-md border px-2.5 py-1 text-sm text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-pressed:border-foreground/30 aria-pressed:bg-accent aria-pressed:text-foreground">${c}</button>`).join('')}
+        <button id="vol-refresh" class="ml-auto inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-input bg-background hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Reload prices from Deribit" title="Reload prices from Deribit"><i class="fi fi-rr-refresh text-xs"></i></button>
+      </div>
+      <p id="vol-src" class="mt-2 text-xs text-muted-foreground">Loading ${state.volCur} options from Deribit…</p>
+      <input id="vol-range" type="range" class="slider mt-3" min="0" max="0" step="1" value="0" aria-label="Expiry" />
+      <div class="mt-2 flex items-baseline justify-between"><span id="vol-date" class="font-semibold"></span><span id="vol-days" class="text-xs text-muted-foreground"></span></div>
+      <div id="vol-mini" class="mt-2 h-[150px]"></div>
+      <div id="vol-tiles" class="mt-2 grid grid-cols-3 gap-2"></div>
+      <p class="mt-3 text-xs leading-relaxed text-muted-foreground">When the left side of a smile sits higher than the right, puts cost more than calls the same distance away: traders are paying for protection against a fall.</p>
+    </div>`;
+  },
 };
+// panel: source line, expiry slider, that expiry's smile against all the others, and three readouts
+function volPanel(d, k) {
+  const el = $('#vol-mini');
+  if (!el) return;
+  const r = d.rows[k], n = d.rows.length;
+  $('#vol-src').textContent = d.src === 'live'
+    ? `Live from Deribit at ${d3.utcFormat('%H:%M UTC')(d.asOf)} · ${d.cur} index ${usd(d.index)}`
+    : `Deribit didn’t respond, so this is the saved snapshot from ${d3.utcFormat('%b %-d, %Y %H:%M UTC')(d.asOf)}.`;
+  const range = $('#vol-range');
+  range.max = n - 1; range.value = k; range.style.setProperty('--fill', `${(k / Math.max(1, n - 1)) * 100}%`);
+  $('#vol-date').textContent = `Expires ${d3.utcFormat('%B %-d, %Y')(r.date)}`;
+  $('#vol-days').textContent = r.days < 2 ? `in ${Math.round(r.days * 24)} hours` : `in ${Math.round(r.days)} days`;
+  const put = ivAt(r.pts, Math.log(0.9)), call = ivAt(r.pts, Math.log(1.1)), skew = put != null && call != null ? put - call : null;
+  $('#vol-tiles').innerHTML = [['At the money', `${r.atm.toFixed(1)}%`], ['90% put − 110% call', skew == null ? '—' : `${d3.format('+.1f')(skew)} pts`], ['Forward', usd(r.fwd)]]
+    .map(([l, v]) => `<div class="rounded-lg border bg-background/60 px-2.5 py-1.5"><p class="text-[11px] leading-tight text-muted-foreground">${l}</p><p class="font-mono text-sm">${v}</p></div>`).join('');
+  el.innerHTML = '';
+  const w = el.clientWidth || 300, h = 150, m = { t: 8, r: 8, b: 20, l: 30 };
+  const ivs = d.rows.flatMap((q) => q.grid.filter((v) => v != null));
+  const x = d3.scaleLinear([LM[0], LM.at(-1)], [m.l, w - m.r]), y = d3.scaleLinear(d3.extent(ivs), [h - m.b, m.t]).nice();
+  const svg = d3.select(el).append('svg').attr('width', w).attr('height', h);
+  const axisStyle = (g) => { g.selectAll('line').attr('stroke', B.line); g.selectAll('text').attr('fill', B.fog).style('font', '10px "Source Code Pro", monospace'); };
+  svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(3).tickSize(-(w - m.l - m.r)).tickFormat((v) => `${v}%`)).call((g) => { g.select('.domain').remove(); axisStyle(g); });
+  svg.append('g').attr('transform', `translate(0,${h - m.b})`).call(d3.axisBottom(x).tickValues([0.7, 0.85, 1, 1.2, 1.5].map(Math.log)).tickFormat(pctOf).tickSizeOuter(0)).call((g) => { g.select('.domain').attr('stroke', B.line); axisStyle(g); });
+  svg.append('line').attr('x1', x(0)).attr('x2', x(0)).attr('y1', m.t).attr('y2', h - m.b).attr('stroke', B.fog).attr('stroke-dasharray', '2 3');
+  const line = d3.line().defined((v) => v != null).x((_, i) => x(LM[i])).y((v) => y(v)).curve(d3.curveMonotoneX);
+  d.rows.forEach((q, j) => { if (j !== k) svg.append('path').attr('d', line(q.grid)).attr('fill', 'none').attr('stroke', B.fog).attr('stroke-opacity', 0.28).attr('stroke-width', 1); });
+  svg.append('path').attr('d', line(r.grid)).attr('fill', 'none').attr('stroke', B.amber).attr('stroke-width', 2);
+}
 
 // ---------- 4. GDP world: bars on a map, Sankey from sectors into each bar ----------
 VIEWS.gdp = {
@@ -618,10 +772,7 @@ function ribbonAlong(curve, width, color, opacity, country) {
 }
 
 // ================= panel =================
-function toggles(key, names, colorOf, label) {
-  return `<div><p class="mb-1.5 text-xs text-muted-foreground">${label}</p><div class="flex flex-wrap gap-1.5">${names.map((n, i) => `<button data-toggle="${key}" data-name="${esc(n)}" aria-pressed="${state[key][n]}" class="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-pressed:border-foreground/30 aria-pressed:text-foreground"><span class="size-2 rounded-full" style="background:${colorOf(n, i)}"></span>${esc(n)}</button>`).join('')}</div></div>`;
-}
-const ORDER = ['gdp', 'profile', 'lines', 'bubbles'];
+const ORDER = ['gdp', 'pop', 'lines', 'vol'];
 $('#tabs').innerHTML = ORDER.map((k) => `<button role="tab" data-tab="${k}" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi ${VIEWS[k].icon} text-xs"></i>${VIEWS[k].tab}</button>`).join('');
 function renderPanel() {
   const v = VIEWS[state.view];
@@ -652,25 +803,19 @@ async function show(view, { keepCamera = false } = {}) {
 $('#tabs').onclick = (e) => { const b = e.target.closest('[data-tab]'); if (b) show(b.dataset.tab); };
 $('#panel').addEventListener('input', (e) => {
   if (e.target.id === 'yc-range') { if (ycTimer) ycPlay(); VIEWS.lines.select(+e.target.value); }
+  if (e.target.id === 'pop-range') { if (popTimer) popPlay(); VIEWS.pop.select(+e.target.value); }
+  if (e.target.id === 'vol-range') VIEWS.vol.select?.(+e.target.value);
 });
-$('#panel').addEventListener('change', (e) => {
-  const sel = e.target.closest('[data-compare]');
-  if (sel) { state.compare = sel.value; show('profile', { keepCamera: true }); }
-});
-$('#panel').addEventListener('pointerover', (e) => { const li = e.target.closest('[data-metric]'); if (li && state.view === 'profile') VIEWS.profile.focus?.(+li.dataset.metric); });
-$('#panel').addEventListener('pointerleave', () => { if (state.view === 'profile') VIEWS.profile.focus?.(null); });
 $('#panel').addEventListener('click', (e) => {
   if (e.target.closest('#yc-play')) { ycPlay(); return; }
-  const ch = e.target.closest('[data-chain]');
-  if (ch) { state.chain = ch.dataset.chain; if (state.compare === state.chain) state.compare = 'median'; show('profile', { keepCamera: true }); return; }
-  const t = e.target.closest('[data-toggle]'), c = e.target.closest('[data-country]'), sc = e.target.closest('[data-sector]');
+  const vc = e.target.closest('[data-vol-cur]');
+  if (vc) { if (vc.dataset.volCur !== state.volCur) { state.volCur = vc.dataset.volCur; state.volExp = null; show('vol', { keepCamera: true }); } return; }
+  if (e.target.closest('#vol-refresh')) { delete volCache[state.volCur]; show('vol', { keepCamera: true }); return; }
+  if (e.target.closest('#pop-play')) { popPlay(); return; }
+  const pl = e.target.closest('[data-pop-loc]');
+  if (pl) { if (popTimer) popPlay(); state.popLoc = pl.dataset.popLoc; show('pop', { keepCamera: true }); return; }
+  const c = e.target.closest('[data-country]'), sc = e.target.closest('[data-sector]');
   if (sc) { state.sector = state.sector === sc.dataset.sector ? null : sc.dataset.sector; state.country = null; show('gdp', { keepCamera: true }); }
-  if (t) {
-    const set = state[t.dataset.toggle];
-    set[t.dataset.name] = !set[t.dataset.name];
-    if (!Object.values(set).some(Boolean)) set[t.dataset.name] = true;
-    show(state.view, { keepCamera: true });
-  }
   if (c) { state.country = state.country === c.dataset.country ? null : c.dataset.country; state.sector = null; show('gdp', { keepCamera: true }); }
 });
 
@@ -688,7 +833,6 @@ renderer.domElement.addEventListener('pointermove', (ev) => {
   const hit = pickAt(ev), obj = hit?.object ?? null;
   if (hover !== obj) { glow(hover, false); glow(obj, true); hover = obj; }
   renderer.domElement.style.cursor = obj?.userData.country || obj?.userData.sector ? 'pointer' : '';
-  if (state.view === 'profile') VIEWS.profile.focus?.(obj?.userData.metricAt ? obj.userData.metricAt(hit) : null);
   if (!hit) { tip.hidden = true; return; }
   tip.innerHTML = obj.userData.pick ? obj.userData.pick(hit) : obj.userData.html;
   tip.hidden = false;
@@ -696,12 +840,14 @@ renderer.domElement.addEventListener('pointermove', (ev) => {
   tip.style.left = `${ev.clientX + 14 + w > innerWidth ? ev.clientX - w - 14 : ev.clientX + 14}px`;
   tip.style.top = `${ev.clientY + 14 + h > innerHeight ? ev.clientY - h - 14 : ev.clientY + 14}px`;
 });
-renderer.domElement.addEventListener('pointerleave', () => { glow(hover, false); hover = null; tip.hidden = true; if (state.view === 'profile') VIEWS.profile.focus?.(null); });
+renderer.domElement.addEventListener('pointerleave', () => { glow(hover, false); hover = null; tip.hidden = true; });
 let down = null;
 renderer.domElement.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; });
 renderer.domElement.addEventListener('pointerup', (e) => {
   if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
   if (state.view === 'lines') { const h = pickAt(e); if (h?.object.userData.monthAt) { if (ycTimer) ycPlay(); VIEWS.lines.select(h.object.userData.monthAt(h)); } return; }
+  if (state.view === 'pop') { const h = pickAt(e); if (h?.object.userData.yearAt) { if (popTimer) popPlay(); VIEWS.pop.select(h.object.userData.yearAt(h)); } return; }
+  if (state.view === 'vol') { const h = pickAt(e); if (h?.object.userData.rowAt) VIEWS.vol.select(h.object.userData.rowAt(h)); return; }
   if (state.view !== 'gdp') return;
   const ud = pickAt(e)?.object.userData ?? {};
   if (ud.sector) { state.sector = ud.sector === state.sector ? null : ud.sector; state.country = null; }

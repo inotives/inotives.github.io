@@ -44,3 +44,6 @@ learnings/
 !public/learnings/*.html
 .notes/
 .playwright-cli/
+
+# Local data caches (e.g. OneMap geocodes for playground data)
+.cache/
