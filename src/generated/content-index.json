@@ -1,6 +1,26 @@
 {
   "posts": [
     {
+      "slug": "2026-11-02-elephants-goldfish-and-trinary-agents",
+      "filename": "2026-11-02-elephants-goldfish-and-trinary-agents.md",
+      "category": "post",
+      "title": "Elephants, Goldfish and my trinary workflows",
+      "date": "2026-11-02",
+      "tags": [
+        "ai-agents",
+        "elephant-goldfish-model",
+        "trinary-agents",
+        "agent-rig",
+        "design-docs",
+        "code-review",
+        "agentic-workflows"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Notes on Dave Rensin's Elephant-Goldfish Model, which treats design documents as the new source code and tests them with zero-context AI sessions before writing code, and how it compares with my AgentRig, trinary-agents and trinary-rapid workflows: where we already agree, where we deliberately differ, and the one gap worth closing.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-10-31-self-serve-dashboards-as-specs",
       "filename": "2026-10-31-self-serve-dashboards-as-specs.md",
       "category": "post",

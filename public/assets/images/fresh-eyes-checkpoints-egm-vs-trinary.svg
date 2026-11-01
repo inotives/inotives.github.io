@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 690" role="img" aria-labelledby="title desc">
+<title id="title">Where each workflow checks with fresh eyes</title>
+<desc id="desc">A grid comparing the Elephant-Goldfish Model, trinary-agents and trinary-rapid across seven stages: interview, plan or design doc, fresh eyes on the plan, human approval, implementation, fresh eyes on the code, and human acceptance. All three interview before coding, write a plan, require human approval and review code with a separate agent. Only the Elephant-Goldfish Model tests the plan itself with zero-context sessions before approval; in both trinary workflows that cell is empty and highlighted as the main lesson.</desc>
+<style>
+text{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+.scan{animation:scan 7s ease-in-out infinite}
+.gap{stroke-dasharray:8 7;animation:march 2.4s linear infinite,glow 2.4s ease-in-out infinite}
+.halo{animation:glow 2.4s ease-in-out infinite}
+@keyframes scan{0%{transform:translateX(0);opacity:0}6%{opacity:.9}88%{opacity:.9}100%{transform:translateX(980px);opacity:0}}
+@keyframes march{to{stroke-dashoffset:-30}}
+@keyframes glow{0%,100%{opacity:.55}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.scan{animation:none;opacity:0}.gap,.halo{animation:none;opacity:1}}
+</style>
+<defs><linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#07111f"/><stop offset="1" stop-color="#17172f"/></linearGradient><linearGradient id="beam" x1="0" x2="1"><stop stop-color="#67e8f9" stop-opacity="0"/><stop offset=".5" stop-color="#67e8f9" stop-opacity=".22"/><stop offset="1" stop-color="#67e8f9" stop-opacity="0"/></linearGradient></defs>
+<rect width="1200" height="690" rx="28" fill="url(#bg)"/>
+<text x="40" y="62" fill="#f8fafc" font-size="29" font-weight="700">Where each workflow checks with fresh eyes</text>
+<text x="40" y="94" fill="#94a3b8" font-size="16">Same skeleton: interview, plan, human gate, independent code review. The difference is what the zero-context check reads.</text>
+<text x="266.0" y="150" fill="#cbd5e1" font-size="14" font-weight="700" text-anchor="middle">Interview</text>
+<text x="406.0" y="150" fill="#cbd5e1" font-size="14" font-weight="700" text-anchor="middle">Plan /</text>
+<text x="406.0" y="170" fill="#cbd5e1" font-size="14" font-weight="700" text-anchor="middle">design doc</text>
+<text x="546.0" y="150" fill="#fbbf24" font-size="14" font-weight="700" text-anchor="middle">Fresh eyes</text>
+<text x="546.0" y="170" fill="#fbbf24" font-size="14" font-weight="700" text-anchor="middle">on the plan</text>
+<text x="686.0" y="150" fill="#cbd5e1" font-size="14" font-weight="700" text-anchor="middle">Human</text>
+<text x="686.0" y="170" fill="#cbd5e1" font-size="14" font-weight="700" text-anchor="middle">approval</text>
+<text x="826.0" y="150" fill="#cbd5e1" font-size="14" font-weight="700" text-anchor="middle">Implement</text>
+<text x="966.0" y="150" fill="#cbd5e1" font-size="14" font-weight="700" text-anchor="middle">Fresh eyes</text>
+<text x="966.0" y="170" fill="#cbd5e1" font-size="14" font-weight="700" text-anchor="middle">on the code</text>
+<text x="1106.0" y="150" fill="#cbd5e1" font-size="14" font-weight="700" text-anchor="middle">Human</text>
+<text x="1106.0" y="170" fill="#cbd5e1" font-size="14" font-weight="700" text-anchor="middle">acceptance</text>
+<rect class="halo" x="478" y="128" width="136" height="382" rx="16" fill="#fbbf24" fill-opacity=".05" stroke="#fbbf24" stroke-opacity=".35"/>
+<g class="scan"><rect x="136" y="186" width="120" height="312" fill="url(#beam)"/></g>
+<rect x="40" y="206" width="142" height="82" rx="14" fill="#0f172a" stroke="#60a5fa" stroke-width="2"/>
+<text x="111" y="243" fill="#f8fafc" font-size="16" font-weight="700" text-anchor="middle">Elephant-</text>
+<text x="111" y="264" fill="#f8fafc" font-size="16" font-weight="700" text-anchor="middle">Goldfish</text>
+<rect x="201.0" y="206" width="130" height="82" rx="14" fill="#111c2e" stroke="#60a5fa" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="266.0" y="242" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">No-code debate</text>
+<text x="266.0" y="262" fill="#a5b4c8" font-size="12" text-anchor="middle">20 min to days</text>
+<rect x="341.0" y="206" width="130" height="82" rx="14" fill="#111c2e" stroke="#60a5fa" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="406.0" y="242" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Design doc</text>
+<text x="406.0" y="262" fill="#a5b4c8" font-size="12" text-anchor="middle">4 fixed sections</text>
+<rect x="481.0" y="206" width="130" height="82" rx="14" fill="#111c2e" stroke="#60a5fa" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="546.0" y="242" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">3 Goldfish tests</text>
+<text x="546.0" y="262" fill="#a5b4c8" font-size="12" text-anchor="middle">until nit-picks</text>
+<rect x="621.0" y="206" width="130" height="82" rx="14" fill="#111c2e" stroke="#60a5fa" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="686.0" y="242" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Human review</text>
+<text x="686.0" y="262" fill="#a5b4c8" font-size="12" text-anchor="middle">when available</text>
+<rect x="761.0" y="206" width="130" height="82" rx="14" fill="#111c2e" stroke="#60a5fa" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="826.0" y="242" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">One pass</text>
+<text x="826.0" y="262" fill="#a5b4c8" font-size="12" text-anchor="middle">from the doc</text>
+<rect x="901.0" y="206" width="130" height="82" rx="14" fill="#111c2e" stroke="#60a5fa" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="966.0" y="242" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">"Mean" AI review</text>
+<text x="966.0" y="262" fill="#a5b4c8" font-size="12" text-anchor="middle">repeat to trivial</text>
+<rect x="1041.0" y="206" width="130" height="82" rx="14" fill="#111c2e" stroke="#60a5fa" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="1106.0" y="242" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Normal review</text>
+<text x="1106.0" y="262" fill="#a5b4c8" font-size="12" text-anchor="middle">of the result</text>
+<rect x="40" y="310" width="142" height="82" rx="14" fill="#0f172a" stroke="#c084fc" stroke-width="2"/>
+<text x="111" y="347" fill="#f8fafc" font-size="16" font-weight="700" text-anchor="middle">trinary-</text>
+<text x="111" y="368" fill="#f8fafc" font-size="16" font-weight="700" text-anchor="middle">agents</text>
+<rect x="201.0" y="310" width="130" height="82" rx="14" fill="#111c2e" stroke="#c084fc" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="266.0" y="346" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Decision tree</text>
+<text x="266.0" y="366" fill="#a5b4c8" font-size="12" text-anchor="middle">round by round</text>
+<rect x="341.0" y="310" width="130" height="82" rx="14" fill="#111c2e" stroke="#c084fc" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="406.0" y="346" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">IP README</text>
+<text x="406.0" y="366" fill="#a5b4c8" font-size="12" text-anchor="middle">goal, scope, checks</text>
+<rect class="gap" x="481.0" y="310" width="130" height="82" rx="14" fill="#1c1408" stroke="#fbbf24" stroke-width="2"/>
+<text x="546.0" y="346" fill="#fde68a" font-size="13" font-weight="700" text-anchor="middle">Not in the flow</text>
+<text x="546.0" y="366" fill="#fcd34d" font-size="12" text-anchor="middle">plan goes to human</text>
+<rect x="621.0" y="310" width="130" height="82" rx="14" fill="#111c2e" stroke="#c084fc" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="686.0" y="346" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Plan approval</text>
+<text x="686.0" y="366" fill="#a5b4c8" font-size="12" text-anchor="middle">explicit, in UTC</text>
+<rect x="761.0" y="310" width="130" height="82" rx="14" fill="#111c2e" stroke="#c084fc" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="826.0" y="346" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Task DAG</text>
+<text x="826.0" y="366" fill="#a5b4c8" font-size="12" text-anchor="middle">one task at a time</text>
+<rect x="901.0" y="310" width="130" height="82" rx="14" fill="#111c2e" stroke="#c084fc" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="966.0" y="346" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Reviewer agent</text>
+<text x="966.0" y="366" fill="#a5b4c8" font-size="12" text-anchor="middle">per task, 3 reworks</text>
+<rect x="1041.0" y="310" width="130" height="82" rx="14" fill="#111c2e" stroke="#c084fc" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="1106.0" y="346" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Feature</text>
+<text x="1106.0" y="366" fill="#a5b4c8" font-size="12" text-anchor="middle">acceptance</text>
+<rect x="40" y="414" width="142" height="82" rx="14" fill="#0f172a" stroke="#f472b6" stroke-width="2"/>
+<text x="111" y="451" fill="#f8fafc" font-size="16" font-weight="700" text-anchor="middle">trinary-</text>
+<text x="111" y="472" fill="#f8fafc" font-size="16" font-weight="700" text-anchor="middle">rapid</text>
+<rect x="201.0" y="414" width="130" height="82" rx="14" fill="#111c2e" stroke="#f472b6" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="266.0" y="450" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Two rounds max</text>
+<text x="266.0" y="470" fill="#a5b4c8" font-size="12" text-anchor="middle">then a size check</text>
+<rect x="341.0" y="414" width="130" height="82" rx="14" fill="#111c2e" stroke="#f472b6" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="406.0" y="450" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">RF README</text>
+<text x="406.0" y="470" fill="#a5b4c8" font-size="12" text-anchor="middle">steps + checks</text>
+<rect class="gap" x="481.0" y="414" width="130" height="82" rx="14" fill="#1c1408" stroke="#fbbf24" stroke-width="2"/>
+<text x="546.0" y="450" fill="#fde68a" font-size="13" font-weight="700" text-anchor="middle">Not in the flow</text>
+<text x="546.0" y="470" fill="#fcd34d" font-size="12" text-anchor="middle">plan goes to human</text>
+<rect x="621.0" y="414" width="130" height="82" rx="14" fill="#111c2e" stroke="#f472b6" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="686.0" y="450" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Plan approval</text>
+<text x="686.0" y="470" fill="#a5b4c8" font-size="12" text-anchor="middle">the only gate</text>
+<rect x="761.0" y="414" width="130" height="82" rx="14" fill="#111c2e" stroke="#f472b6" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="826.0" y="450" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Main agent</text>
+<text x="826.0" y="470" fill="#a5b4c8" font-size="12" text-anchor="middle">helpers optional</text>
+<rect x="901.0" y="414" width="130" height="82" rx="14" fill="#111c2e" stroke="#f472b6" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="966.0" y="450" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">One reviewer</text>
+<text x="966.0" y="470" fill="#a5b4c8" font-size="12" text-anchor="middle">second on request</text>
+<rect x="1041.0" y="414" width="130" height="82" rx="14" fill="#111c2e" stroke="#f472b6" stroke-opacity=".7" stroke-width="1.5"/>
+<text x="1106.0" y="450" fill="#f1f5f9" font-size="13" font-weight="700" text-anchor="middle">Report +</text>
+<text x="1106.0" y="470" fill="#a5b4c8" font-size="12" text-anchor="middle">acceptance</text>
+<rect x="40" y="544" width="1120" height="112" rx="18" fill="#0f172a" stroke="#334155"/>
+<rect class="gap" x="64" y="568" width="42" height="26" rx="8" fill="#1c1408" stroke="#fbbf24" stroke-width="2"/>
+<text x="122" y="587" fill="#fde68a" font-size="16" font-weight="700">The gap: nobody with zero context reads our plan before I approve it.</text>
+<text x="122" y="614" fill="#cbd5e1" font-size="14">A Goldfish asks "can you explain this, what is missing, could you build it first time?" A trinary reviewer asks "does this diff</text>
+<text x="122" y="634" fill="#cbd5e1" font-size="14">meet the brief?" Both use fresh context. Only the first one catches a weak plan before code exists.</text>
+</svg>
