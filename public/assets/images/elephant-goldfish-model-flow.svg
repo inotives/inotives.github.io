@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">The Elephant-Goldfish Model</title>
+  <desc id="desc">An animated flow. A long, context-rich Elephant session debates the feature without writing code and builds a design document with four sections: problem, technical plan, alternatives, and detailed implementation listing every file. Three fresh Goldfish sessions with no memory then read only the document and the files it references: a comprehension test, a critic review, and an implementation-readiness check. Gaps they find go back into the document until only nit-picks remain. A human approves, an agent implements from the document, and a harsh AI code review repeats until the critiques are trivial.</desc>
+  <style>
+    text { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif; }
+    .march { stroke-dasharray: 10 12; animation: march 2.8s linear infinite; }
+    .march-back { stroke-dasharray: 7 9; animation: march 2.2s linear infinite; }
+    .pulse { animation: pulse 3.2s ease-in-out infinite; }
+    .blink1 { animation: blink 4.5s ease-in-out infinite; }
+    .blink2 { animation: blink 4.5s ease-in-out 1.5s infinite; }
+    .blink3 { animation: blink 4.5s ease-in-out 3s infinite; }
+    @keyframes march { to { stroke-dashoffset: -44; } }
+    @keyframes pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+    @keyframes blink { 0%,100% { opacity: .35; } 20%,45% { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) {
+      .march, .march-back, .pulse, .blink1, .blink2, .blink3 { animation: none; opacity: 1; }
+    }
+  </style>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#07111f"/><stop offset="1" stop-color="#17172f"/></linearGradient>
+    <linearGradient id="ele" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#1e3a5f"/><stop offset="1" stop-color="#172238"/></linearGradient>
+    <linearGradient id="fish" x1="0" x2="1"><stop stop-color="#7c2d12"/><stop offset="1" stop-color="#9a3412"/></linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0 0L10 3L0 6Z" fill="#67e8f9"/></marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0 0L10 3L0 6Z" fill="#fdba74"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0 0L10 3L0 6Z" fill="#86efac"/></marker>
+  </defs>
+
+  <rect width="1200" height="720" rx="28" fill="url(#bg)"/>
+  <text x="56" y="66" fill="#f8fafc" font-size="30" font-weight="700">Feed the Elephant, test it against the Goldfish</text>
+  <text x="56" y="100" fill="#94a3b8" font-size="16">Design judgment moves into a document before any code exists. Fresh sessions prove the document stands on its own.</text>
+
+  <!-- Phase labels -->
+  <text x="56" y="148" fill="#93c5fd" font-size="13" font-weight="700" letter-spacing="1.5">PHASE 1 · GROW THE ELEPHANT</text>
+  <text x="414" y="148" fill="#67e8f9" font-size="13" font-weight="700" letter-spacing="1.5">PHASE 2 · TEACH IT</text>
+  <text x="742" y="148" fill="#fdba74" font-size="13" font-weight="700" letter-spacing="1.5">PHASE 3 · GOLDFISH PROTOCOL</text>
+
+  <!-- Elephant session -->
+  <rect x="56" y="164" width="300" height="352" rx="20" fill="url(#ele)" stroke="#60a5fa" stroke-width="2"/>
+  <g transform="translate(84 194)">
+    <path d="M4 30C0 34 0 40 2 44" fill="none" stroke="#93c5fd" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="8" y="38" width="10" height="24" rx="4" fill="#93c5fd"/>
+    <rect x="34" y="38" width="10" height="24" rx="4" fill="#93c5fd"/>
+    <ellipse cx="28" cy="32" rx="25" ry="18" fill="#93c5fd"/>
+    <circle cx="56" cy="24" r="16" fill="#93c5fd"/>
+    <ellipse cx="49" cy="25" rx="9" ry="12" fill="#60a5fa"/>
+    <path d="M69 30C76 38 76 52 70 60" fill="none" stroke="#93c5fd" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="62" cy="19" r="2.4" fill="#172238"/>
+  </g>
+  <text x="176" y="218" fill="#eff6ff" font-size="21" font-weight="700">Elephant</text>
+  <text x="176" y="244" fill="#bfdbfe" font-size="14">one long session,</text>
+  <text x="176" y="263" fill="#bfdbfe" font-size="14">full context</text>
+  <g font-size="15" fill="#dbeafe">
+    <circle cx="86" cy="304" r="4" fill="#60a5fa"/><text x="100" y="309">Load context, correct it early</text>
+    <circle cx="86" cy="340" r="4" fill="#60a5fa"/><text x="100" y="345">"No code": interview me</text>
+    <circle cx="86" cy="376" r="4" fill="#60a5fa"/><text x="100" y="381">Break the sycophancy</text>
+    <circle cx="86" cy="412" r="4" fill="#60a5fa"/><text x="100" y="417">AI proposes the first design</text>
+    <circle cx="86" cy="448" r="4" fill="#60a5fa"/><text x="100" y="453">Argue: hours, even days</text>
+  </g>
+  <text x="86" y="494" fill="#7dd3fc" font-size="13" font-style="italic">"Why do you think that?"</text>
+
+  <!-- Arrow elephant -> doc -->
+  <path d="M356 340H404" fill="none" stroke="#164e63" stroke-width="10" stroke-linecap="round"/>
+  <path class="march" d="M356 340H404" fill="none" stroke="#67e8f9" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <!-- Design doc -->
+  <rect class="pulse" x="406" y="158" width="292" height="364" rx="22" fill="none" stroke="#67e8f9" stroke-width="2" opacity=".6"/>
+  <path d="M424 176H644L680 212V504H424Z" fill="#0f2a33" stroke="#22d3ee" stroke-width="2"/>
+  <path d="M644 176V212H680" fill="none" stroke="#22d3ee" stroke-width="2"/>
+  <text x="446" y="210" fill="#ecfeff" font-size="18" font-weight="700">design-doc.md</text>
+  <text x="446" y="232" fill="#a5f3fc" font-size="13">"the new source code"</text>
+  <g font-size="15">
+    <rect x="446" y="252" width="212" height="46" rx="10" fill="#134e4a"/>
+    <text x="460" y="272" fill="#f0fdfa" font-weight="700">1 · Problem</text>
+    <text x="460" y="290" fill="#99f6e4" font-size="12">3–5 plain sentences</text>
+    <rect x="446" y="306" width="212" height="46" rx="10" fill="#134e4a"/>
+    <text x="460" y="326" fill="#f0fdfa" font-weight="700">2 · Technical plan</text>
+    <text x="460" y="344" fill="#99f6e4" font-size="12">prose + block diagram</text>
+    <rect x="446" y="360" width="212" height="46" rx="10" fill="#134e4a"/>
+    <text x="460" y="380" fill="#f0fdfa" font-weight="700">3 · Alternatives</text>
+    <text x="460" y="398" fill="#99f6e4" font-size="12">what was rejected, and why</text>
+    <rect x="446" y="414" width="212" height="70" rx="10" fill="#115e59" stroke="#5eead4"/>
+    <text x="460" y="434" fill="#f0fdfa" font-weight="700">4 · Detailed</text>
+    <text x="460" y="452" fill="#f0fdfa" font-weight="700">implementation</text>
+    <text x="460" y="472" fill="#99f6e4" font-size="12">every file + why it changes</text>
+  </g>
+
+  <!-- Arrow doc -> goldfish -->
+  <path d="M698 300H742" fill="none" stroke="#7c2d12" stroke-width="10" stroke-linecap="round"/>
+  <path class="march" d="M698 300H742" fill="none" stroke="#fdba74" stroke-width="3" marker-end="url(#arrowOrange)"/>
+
+  <!-- Goldfish tests -->
+  <g>
+    <rect class="blink1" x="746" y="164" width="400" height="98" rx="18" fill="url(#fish)" stroke="#fdba74" stroke-width="2"/>
+    <g transform="translate(766 196)"><path d="M0 16C10 2 30 2 40 16C30 30 10 30 0 16Z" fill="#fb923c"/><path d="M40 16L54 6V26Z" fill="#fb923c"/><circle cx="12" cy="13" r="2.4" fill="#431407"/></g>
+    <text x="840" y="200" fill="#fff7ed" font-size="17" font-weight="700">5 · Comprehension test</text>
+    <text x="840" y="224" fill="#fed7aa" font-size="14">"What is this trying to do, and how</text>
+    <text x="840" y="243" fill="#fed7aa" font-size="14">does my system work today?"</text>
+
+    <rect class="blink2" x="746" y="276" width="400" height="98" rx="18" fill="url(#fish)" stroke="#fdba74" stroke-width="2"/>
+    <g transform="translate(766 308)"><path d="M0 16C10 2 30 2 40 16C30 30 10 30 0 16Z" fill="#fb923c"/><path d="M40 16L54 6V26Z" fill="#fb923c"/><circle cx="12" cy="13" r="2.4" fill="#431407"/></g>
+    <text x="840" y="312" fill="#fff7ed" font-size="17" font-weight="700">6 · Critic review</text>
+    <text x="840" y="336" fill="#fed7aa" font-size="14">"Every gap, faulty assumption and</text>
+    <text x="840" y="355" fill="#fed7aa" font-size="14">edge case I missed." (~30% gold)</text>
+
+    <rect class="blink3" x="746" y="388" width="400" height="98" rx="18" fill="url(#fish)" stroke="#fdba74" stroke-width="2"/>
+    <g transform="translate(766 420)"><path d="M0 16C10 2 30 2 40 16C30 30 10 30 0 16Z" fill="#fb923c"/><path d="M40 16L54 6V26Z" fill="#fb923c"/><circle cx="12" cy="13" r="2.4" fill="#431407"/></g>
+    <text x="840" y="424" fill="#fff7ed" font-size="17" font-weight="700">7 · Implementation readiness</text>
+    <text x="840" y="448" fill="#fed7aa" font-size="14">"Could you build this correctly</text>
+    <text x="840" y="467" fill="#fed7aa" font-size="14">on the first pass?"</text>
+  </g>
+  <text x="746" y="580" fill="#94a3b8" font-size="13">Each Goldfish is a brand-new session with zero memory.</text>
+
+  <!-- Feedback loop goldfish -> doc -->
+  <path d="M946 488V540H552V510" fill="none" stroke="#c2410c" stroke-width="2.5"/>
+  <path class="march-back" d="M946 488V540H552V510" fill="none" stroke="#fdba74" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+  <rect x="640" y="526" width="226" height="28" rx="14" fill="#1c1917" stroke="#c2410c"/>
+  <text x="753" y="545" fill="#fed7aa" font-size="13" text-anchor="middle">gaps → fix the doc → re-test</text>
+  <circle r="6" fill="#fdba74">
+    <animateMotion dur="4s" repeatCount="indefinite" path="M946 488V540H552V510"/>
+  </circle>
+
+  <!-- Phase 4 lane -->
+  <text x="56" y="600" fill="#86efac" font-size="13" font-weight="700" letter-spacing="1.5">PHASE 4 · ONLY NOW, CODE</text>
+  <g>
+    <rect x="56" y="616" width="250" height="64" rx="16" fill="#14532d" stroke="#86efac"/>
+    <text x="181" y="643" fill="#f0fdf4" font-size="16" font-weight="700" text-anchor="middle">Human review</text>
+    <text x="181" y="664" fill="#bbf7d0" font-size="13" text-anchor="middle">approve the design</text>
+    <rect x="372" y="616" width="300" height="64" rx="16" fill="#14532d" stroke="#86efac"/>
+    <text x="522" y="643" fill="#f0fdf4" font-size="16" font-weight="700" text-anchor="middle">8 · Implement from the doc</text>
+    <text x="522" y="664" fill="#bbf7d0" font-size="13" text-anchor="middle">follow the plan; restart = re-read doc</text>
+    <rect x="738" y="616" width="408" height="64" rx="16" fill="#14532d" stroke="#86efac"/>
+    <text x="942" y="643" fill="#f0fdf4" font-size="16" font-weight="700" text-anchor="middle">9 · "Mean" code review</text>
+    <text x="942" y="664" fill="#bbf7d0" font-size="13" text-anchor="middle">"tear it to shreds" — repeat until critiques are trivial</text>
+  </g>
+  <path class="march" d="M306 648H364M672 648H730" fill="none" stroke="#86efac" stroke-width="3" marker-end="url(#arrowGreen)"/>
+</svg>

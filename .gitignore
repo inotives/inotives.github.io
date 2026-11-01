@@ -47,3 +47,6 @@ learnings/
 
 # Local data caches (e.g. OneMap geocodes for playground data)
 .cache/
+
+# Build output (CI builds and deploys this itself)
+docs/
