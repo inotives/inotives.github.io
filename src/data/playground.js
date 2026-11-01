@@ -272,4 +272,24 @@ export const PLAYGROUND_MOCKS = [
       { name: 'OneMap', href: 'https://www.onemap.gov.sg/' },
     ],
   },
+  {
+    id: 'sg-pulse',
+    project: 'Data in 3D',
+    name: 'Singapore pulse in 3D',
+    date: '2026-11-01',
+    href: '/mocks/sg-pulse.html',
+    preview: '/mocks/previews/sg-pulse.jpg',
+    description:
+      'Singapore’s live government data on one 3D island, in four layers. Weather: all of NEA’s rain gauges rise as columns with falling drops, wind arrows turn to each station’s bearing, and the island is shaded by temperature or humidity interpolated from the stations, or by the two-hour forecast, with today’s UV index, the 24-hour forecast by region and the four-day outlook; a replay plays today’s rain five minutes at a time, or as a running total since midnight. Air: each planning area rises with its NEA region’s 24-hour PSI or the last hour of PM2.5, coloured by NEA’s health bands, with today’s readings by region and every pollutant for a selected region. Taxis: every taxi free for hire as a point or as density bars, the busiest areas, and today hour by hour on a slider. Carparks: each HDB carpark as a bar, height for its car lots and colour for the share free, with the tightest areas, a search, and a Leaflet street map for a selected carpark. The feeds sync in eight groups, each from its own icon in the Sync menu or the tab’s panel, or all at once, through a rate-limited queue; everything is kept in the browser’s IndexedDB, and history syncs fetch only what is missing.',
+    libraries: ['threejs', 'd3', 'leaflet', 'shadcn', 'tailwind', 'flaticon'],
+    sources: [
+      { name: 'data.gov.sg real-time APIs (NEA)', href: 'https://data.gov.sg/datasets?formats=API' },
+      { name: 'UV index (data.gov.sg)', href: 'https://data.gov.sg/datasets/d_1b676cd174a9af4704fdb3f9aa58ff5e/view' },
+      { name: 'Taxi availability (data.gov.sg)', href: 'https://data.gov.sg/datasets/d_e25662f1a062dd046453926aa284ba64/view' },
+      { name: 'HDB carpark availability (data.gov.sg)', href: 'https://data.gov.sg/datasets/d_ca933a644e55d34fe21f28b8052fac63/view' },
+      { name: 'HDB carpark information (data.gov.sg)', href: 'https://data.gov.sg/datasets/d_23f946fa557947f93a8043bbef41dd09/view' },
+      { name: 'URA Master Plan 2019 planning areas', href: 'https://data.gov.sg/datasets/d_4765db0e87b9c86336792efe8a1f7a66/view' },
+      { name: 'OneMap', href: 'https://www.onemap.gov.sg/' },
+    ],
+  },
 ]
