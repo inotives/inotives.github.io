@@ -236,13 +236,15 @@ export const PLAYGROUND_MOCKS = [
     href: '/mocks/d3-3d.html',
     preview: '/mocks/previews/d3-3d.jpg',
     description:
-      'Four 3D charts where D3 does the data work and Three.js draws: a chain profile wrapped around a sphere, with scores grouped by direction and colored against a benchmark, seven years of real US Treasury yield curves stacked month by month (watch 2022 turn the curve upside down), a bubble chart in a box, and a world map of 2026 GDP as stacked bars with a Sankey that splits the top 20 economies into services, industry and agriculture and flows each part into its country. GDP from the IMF’s October 2026 outlook; sector shares approximate.',
+      'Four 3D charts where D3 does the data work and Three.js draws: 150 years of population by age for six countries and the world (each generation a ridge running diagonally as it ages, UN projections to 2100), seven years of real US Treasury yield curves stacked month by month (watch 2022 turn the curve upside down), a live BTC and ETH options volatility surface from Deribit, and a world map of 2026 GDP as stacked bars with a Sankey that splits the top 20 economies into services, industry and agriculture and flows each part into its country. GDP from the IMF’s October 2026 outlook; sector shares approximate.',
     libraries: ['d3', 'threejs', 'shadcn', 'tailwind', 'flaticon'],
     sources: [
       { name: 'IMF WEO, Oct 2026', href: 'https://www.imf.org/en/publications/weo/issues/2026/10/13/world-economic-outlook-october-2026' },
       { name: 'Worldometer table', href: 'https://www.worldometers.info/gdp/gdp-by-country/?region=worldwide&year=2026&metric=nominal' },
       { name: 'World Bank WDI', href: 'https://data.worldbank.org/indicator/NV.SRV.TOTL.ZS' },
       { name: 'US Treasury yield curve', href: 'https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve' },
+      { name: 'Deribit public API', href: 'https://docs.deribit.com/#public-get_book_summary_by_currency' },
+      { name: 'UN World Population Prospects 2024', href: 'https://population.un.org/wpp/' },
     ],
   },
 ]
