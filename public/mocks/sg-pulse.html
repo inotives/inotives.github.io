@@ -1,0 +1,2170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Singapore Pulse</title>
+<!--
+  Playground mock: Singapore's live government data on a 3D island.
+  Three.js draws the island and the marks, D3 does projection, scales, colour and the panel charts,
+  Leaflet shows the street map for a selected carpark (OneMap Night tiles). UI recreates shadcn/ui
+  in Tailwind with the inoTives brand kit. Icons: Flaticon UIcons.
+  Layers: weather (rain gauges, wind, temperature, humidity, forecasts, UV), air quality (PSI, PM2.5),
+  available taxis and HDB carpark availability.
+  Data (real, live): data.gov.sg real-time APIs, fetched by the page. Static base layer in
+  data/sg-pulse.json: URA Master Plan 2019 planning areas and HDB carpark locations.
+  data.gov.sg rate-limits bursts, so every call goes through one queue with a gap between calls.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-ink-2: #b8b5ac;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base { *, ::before, ::after { border-color: var(--color-border); } }
+</style>
+<style>
+  body { margin: 0; background: #15171b; }
+  .fi { display: inline-flex; line-height: 1; }
+  #stage { isolation: isolate; background: radial-gradient(ellipse 80% 70% at 60% 48%, #1b1e24 0%, #15171b 72%); }
+  #stage canvas { display: block; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+  .lbl { font: 400 10.5px "Source Code Pro", monospace; color: #8b9099; white-space: nowrap; }
+  .lbl.bg { padding: 1px 5px; border-radius: 4px; background: rgb(21 23 27 / 0.7); }
+  .lbl.val { padding: 0 4px; border-radius: 3px; background: rgb(21 23 27 / 0.65); color: #e4e1d8; font-size: 10px; }
+  .lbl.icon { font-size: 13px; color: #b8b5ac; }
+  .lbl.strong { color: #e4e1d8; font: 500 12px "IBM Plex Sans Condensed", sans-serif; }
+  .lbl.sel { color: #f6c453; font: 500 12px "IBM Plex Sans Condensed", sans-serif; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
+  .slider { -webkit-appearance: none; appearance: none; width: 100%; height: 16px; background: transparent; cursor: pointer; }
+  .slider::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: linear-gradient(#f6c453, #f6c453) 0 / var(--fill, 50%) 100% no-repeat, #2a2e36; }
+  .slider::-moz-range-track { height: 6px; border-radius: 999px; background: #2a2e36; }
+  .slider::-moz-range-progress { height: 6px; border-radius: 999px; background: #f6c453; }
+  .slider::-webkit-slider-thumb { -webkit-appearance: none; margin-top: -5px; width: 16px; height: 16px; border-radius: 999px; background: #15171b; border: 1px solid rgb(246 196 83 / 0.7); }
+  .slider::-moz-range-thumb { width: 14px; height: 14px; border-radius: 999px; background: #15171b; border: 1px solid rgb(246 196 83 / 0.7); }
+  .slider:focus-visible { outline: none; }
+  .slider:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgb(246 196 83 / 0.35); }
+  #lmap { background: #0e1013; }
+  .leaflet-container { font: 12px "IBM Plex Sans Condensed", sans-serif; }
+  .leaflet-control-attribution { background: rgb(21 23 27 / 0.8) !important; color: #8b9099 !important; font-size: 9.5px; }
+  .leaflet-control-attribution a { color: #b8b5ac !important; }
+  .leaflet-bar a { background: #1d2026 !important; color: #e4e1d8 !important; border-color: #2b2f37 !important; }
+  .leaflet-tooltip { background: #15171b; color: #e4e1d8; border: 1px solid #2b2f37; box-shadow: none; font-size: 11.5px; }
+  .leaflet-tooltip::before { display: none; }
+  @media (min-width: 900px) { #panel { left: 1.5rem; top: 4.5rem; width: 380px; max-height: calc(100% - 6rem); } }
+  @media (max-width: 899px) { #panel { left: 0.75rem; right: 0.75rem; bottom: 0.75rem; max-height: 46vh; } }
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+<div class="fixed inset-0 overflow-hidden">
+  <div id="stage" class="absolute inset-0"></div>
+  <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
+    <a href="/playground" class="pointer-events-auto rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <span class="hidden text-sm text-muted-foreground lg:inline">Playground · Singapore pulse</span>
+    <div role="tablist" aria-label="Layers" id="tabs" class="pointer-events-auto mx-auto inline-flex h-9 max-w-full items-center overflow-x-auto rounded-lg bg-muted p-1 text-muted-foreground"></div>
+    <div class="pointer-events-auto flex shrink-0 justify-end lg:w-[190px]">
+      <div class="relative">
+        <button id="sync" aria-haspopup="true" aria-expanded="false" aria-controls="sync-menu" class="inline-flex h-9 items-center gap-1.5 rounded-md border bg-card/90 px-3 text-sm font-medium text-foreground shadow backdrop-blur transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Sync data from data.gov.sg"><i class="fi fi-rr-refresh"></i><span id="sync-lbl">Sync</span><i class="fi fi-rr-angle-small-down text-muted-foreground"></i></button>
+        <div id="sync-menu" hidden class="scroll-thin absolute right-0 top-11 z-30 max-h-[calc(100vh-5rem)] w-[340px] max-w-[calc(100vw-1.5rem)] overflow-auto rounded-xl border bg-card/95 p-2 shadow-lg backdrop-blur"></div>
+      </div>
+    </div>
+  </header>
+  <aside id="panel" class="scroll-thin absolute z-10 overflow-auto rounded-xl border bg-card/90 p-4 shadow backdrop-blur"></aside>
+  <button id="reset-cam" class="absolute right-4 top-16 z-10 inline-flex h-8 items-center gap-1.5 rounded-md border bg-card/80 px-2.5 text-xs font-medium text-muted-foreground shadow backdrop-blur transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:right-6" title="Reset the camera (R)" aria-label="Reset the camera"><i class="fi fi-rr-expand"></i>Reset view</button>
+  <div id="legend" class="pointer-events-none absolute bottom-3 right-4 z-10 hidden rounded-lg border bg-card/80 px-3 py-2 text-xs text-muted-foreground backdrop-blur md:block"></div>
+</div>
+<div id="tip" hidden class="pointer-events-none fixed z-40 rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
+const B = { paper: '#15171b', raise: '#1d2026', muted: '#23262d', line: '#2b2f37', ink: '#e4e1d8', ink2: '#b8b5ac', fog: '#8b9099', signal: '#1fefd7', amber: '#f6c453', pink: '#e58fb0', sky: '#7cc4dc', violet: '#c9a4f5' };
+const RAMP = d3.interpolateRgbBasis(['#174d49', '#1fefd7', '#f6c453', '#e58fb0']);
+const TEMP = d3.interpolateRgbBasis(['#2b5d7a', '#1fefd7', '#f6c453', '#e58fb0']);
+const HUMID = d3.interpolateRgbBasis(['#4a4130', '#3f6b62', '#1fefd7', '#7cc4dc']);
+const RAIN = d3.interpolateRgbBasis(['#3d6f8f', '#7cc4dc', '#d9f1ff']);
+const FREE = d3.interpolateRgbBasis(['#e58fb0', '#f6c453', '#1fefd7']);
+const TEMP_DOMAIN = [25, 34], RH_DOMAIN = [50, 100];
+const title = (s) => s.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase()).replace(/\bBlk\b/, 'Blk');
+const f0 = d3.format(','), f1 = d3.format('.1f'), pctF = d3.format('.0%');
+const muted = (t) => `<p class="text-xs text-muted-foreground">${t}</p>`;
+
+// ---------- Singapore time ----------
+const TZ = 'Asia/Singapore';
+const sgDate = (d = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d);
+const sgHour = (d = new Date()) => +new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', hourCycle: 'h23' }).format(d);
+const hhmm = (t) => new Date(t).toLocaleTimeString('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+const hourLbl = (h) => (h === 0 ? '12am' : h < 12 ? `${h}am` : h === 12 ? '12pm' : `${h - 12}pm`);
+const minsOfDay = (t) => { const d = new Date(t); return sgHour(d) * 60 + +new Intl.DateTimeFormat('en-GB', { timeZone: TZ, minute: '2-digit' }).format(d); };
+
+// ================= API queue =================
+// data.gov.sg answers 429 to bursts, so calls go out one at a time with a gap, back off on 429,
+// and identical calls inside their TTL share one response.
+const RTB = 'https://api-open.data.gov.sg/v2/real-time/api/';
+const V1 = 'https://api.data.gov.sg/v1/transport/';
+// data.gov.sg's published limit without an API key: 6 real-time calls per 10 seconds (the counter
+// resets every 10 s), counted per client. Calls go from each visitor's browser, so each visitor has
+// their own allowance. We keep one under it, as a sliding window over the calls actually sent
+// (retries included); the v1 transport feeds get their own window.
+const LIMITS = [
+  { host: 'api-open.data.gov.sg', max: 5, win: 10e3, sent: [] },
+  { host: '', max: 4, win: 10e3, sent: [] },
+];
+const apiCache = new Map(), queue = [];
+let pumping = false;
+async function slot(url) {
+  const L = LIMITS.find((l) => url.includes(l.host));
+  for (;;) {
+    const now = Date.now();
+    while (L.sent.length && L.sent[0] <= now - L.win) L.sent.shift();
+    if (L.sent.length < L.max) { L.sent.push(now); return; }
+    await sleep(L.sent[0] + L.win - now + 60);
+  }
+}
+function api(url, { ttl = 50e3 } = {}) {
+  const c = apiCache.get(url);
+  if (c && Date.now() - c.t < ttl) return c.p;
+  const p = new Promise((ok, no) => { queue.push({ url, ok, no }); pump(); });
+  apiCache.set(url, { t: Date.now(), p });
+  p.catch(() => apiCache.delete(url));
+  return p;
+}
+async function pump() {
+  if (pumping) return;
+  pumping = true;
+  while (queue.length) {
+    const job = queue.shift();
+    for (let tries = 0; ; tries++) {
+      await slot(job.url);
+      // A 429 comes back without CORS headers, so the browser sees it as a network error: retry both.
+      let r = null;
+      try { r = await fetch(job.url); } catch (e) { if (tries < 4) { await sleep(10e3); continue; } job.no(new Error('rate-limited or offline')); break; }
+      if (r.status === 429 && tries < 4) { await sleep(10e3); continue; }   // wait out the 10-second window
+      try { if (!r.ok) throw new Error(`HTTP ${r.status}`); job.ok(await r.json()); } catch (e) { job.no(e); }
+      break;
+    }
+  }
+  pumping = false;
+}
+
+// ================= stage =================
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.appendChild(renderer.domElement);
+const labelR = new CSS2DRenderer(); labelR.domElement.className = 'labels'; stage.appendChild(labelR.domElement);
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(B.paper, 40, 90);
+scene.add(new THREE.HemisphereLight('#cfe9ff', B.paper, 1.2));
+const key = new THREE.DirectionalLight('#ffffff', 1.6); key.position.set(-8, 16, 12); scene.add(key);
+const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 300);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.minDistance = 1.5; controls.maxDistance = 70; controls.maxPolarAngle = Math.PI * 0.47;
+controls.addEventListener('start', () => { fly = null; });
+let group = new THREE.Group(); scene.add(group);
+let pickables = [], fly = null;
+const tickers = new Set();
+
+function lbl(text, pos, cls = '', parent = group, html = false) {
+  const d = document.createElement('div'); d.className = `lbl ${cls}`; d[html ? 'innerHTML' : 'textContent'] = text;
+  const o = new CSS2DObject(d); o.position.copy(pos); parent.add(o); return o;
+}
+function dispose(root) {
+  root.traverse((o) => {
+    o.geometry?.dispose();
+    (Array.isArray(o.material) ? o.material : o.material ? [o.material] : []).forEach((m) => m.dispose());
+    if (o.isCSS2DObject) o.element.remove();
+  });
+  root.parent?.remove(root);
+}
+function clearScene() { dispose(group); group = new THREE.Group(); scene.add(group); pickables = []; tickers.clear(); }
+
+// A soft round sprite for point clouds (taxis, raindrops).
+const DOT = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d'), r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.35, 'rgba(255,255,255,0.85)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = r; g.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+})();
+
+// ================= base data =================
+let BASE = null, AREAS = [], CARPARKS = [];
+const baseReady = fetch('data/sg-pulse.json').then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }).then((d) => {
+  BASE = d;
+  AREAS = d.areas.map((a, i) => {
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    a.p.forEach((poly) => poly[0].forEach(([x, y]) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }));
+    return { ...a, i, bb: [x0, y0, x1, y1] };
+  });
+  AREAS.forEach((a) => { a.c = centroid(a); });
+  CARPARKS = d.carparks.map(([lat, lon, id, address, type, free, night], i) => ({ i, lat, lon, id, address, type: d.carparkTypes[type], free, night }));
+  CARPARKS.forEach((c) => { c.area = areaAt(c.lon, c.lat); });
+  return d;
+});
+const centroid = (a) => {
+  let best = null, ar = -1;
+  a.p.forEach((poly) => { const r = poly[0]; const s = Math.abs(d3.polygonArea(r)); if (s > ar) { ar = s; best = r; } });
+  return d3.polygonCentroid(best);
+};
+function areaAt(lon, lat) {
+  for (const a of AREAS) {
+    const [x0, y0, x1, y1] = a.bb;
+    if (lon < x0 || lon > x1 || lat < y0 || lat > y1) continue;
+    for (const poly of a.p) if (d3.polygonContains(poly[0], [lon, lat]) && !poly.slice(1).some((h) => d3.polygonContains(h, [lon, lat]))) return a.i;
+  }
+  return -1;
+}
+
+// Projection: Mercator fitted to the island, in world units. x east, z south.
+let proj = null;
+const P = (lon, lat) => proj([lon, lat]);
+function setupProjection() {
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  AREAS.forEach((a) => { x0 = Math.min(x0, a.bb[0]); y0 = Math.min(y0, a.bb[1]); x1 = Math.max(x1, a.bb[2]); y1 = Math.max(y1, a.bb[3]); });
+  proj = d3.geoMercator().fitExtent([[-12, -7.5], [12, 7.5]], { type: 'MultiPoint', coordinates: [[x0, y0], [x1, y1]] });
+}
+function shapeOf(poly) {
+  const toV = (r) => r.map(([lon, lat]) => { const [x, z] = P(lon, lat); return new THREE.Vector2(x, -z); });
+  const s = new THREE.Shape(toV(poly[0]));
+  poly.slice(1).forEach((h) => s.holes.push(new THREE.Path(toV(h))));
+  return s;
+}
+const V3 = (lon, lat, y = 0) => { const [x, z] = P(lon, lat); return new THREE.Vector3(x, y, z); };
+
+// The island: every planning area as a flat tile with its border. Returns the tiles, one per area.
+function island() {
+  const g = new THREE.Group(), edges = [], tiles = [];
+  AREAS.forEach((a) => {
+    const geo = new THREE.ShapeGeometry(a.p.map(shapeOf)); geo.rotateX(-Math.PI / 2);
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: '#262a31', roughness: 0.9 }));
+    m.position.y = -0.01; m.userData = { area: a.i }; g.add(m); tiles.push(m);
+    a.p.forEach((poly) => poly.forEach((r) => r.forEach((pt, k) => {
+      const [ax, az] = P(...pt), [bx, bz] = P(...r[(k + 1) % r.length]);
+      edges.push(new THREE.Vector3(ax, 0.002, az), new THREE.Vector3(bx, 0.002, bz));
+    })));
+  });
+  g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(edges), new THREE.LineBasicMaterial({ color: '#3a3f48', transparent: true, opacity: 0.8 })));
+  group.add(g);
+  return tiles;
+}
+// Upright bars as one InstancedMesh, base on the ground, heights eased by a ticker.
+function bars(n, { w = 0.08, round = false, hexagon = false } = {}) {
+  const geo = hexagon ? new THREE.CylinderGeometry(w / 2, w / 2, 1, 6) : round ? new THREE.CylinderGeometry(w / 2, w / 2, 1, 14) : new THREE.BoxGeometry(w, 1, w);
+  geo.translate(0, 0.5, 0);
+  const mesh = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.05 }), n);
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  const pos = new Array(n).fill(null), cur = new Float32Array(n), tgt = new Float32Array(n), m4 = new THREE.Matrix4();
+  const write = (i) => { const p = pos[i]; if (!p) return; m4.makeScale(cur[i] > 0 ? 1 : 0, Math.max(cur[i], 1e-4), cur[i] > 0 ? 1 : 0).setPosition(p.x, 0, p.z); mesh.setMatrixAt(i, m4); };
+  const api = {
+    mesh,
+    place(i, v3) { pos[i] = v3; write(i); },
+    set(i, h, color) { tgt[i] = h; if (color) mesh.setColorAt(i, new THREE.Color(color)); },
+    alive: (i) => tgt[i] > 0,
+    commit() { if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true; if (reduceMotion) { cur.set(tgt); for (let i = 0; i < n; i++) write(i); mesh.instanceMatrix.needsUpdate = true; } },
+    tick() {
+      let moved = false;
+      for (let i = 0; i < n; i++) { const d = tgt[i] - cur[i]; if (Math.abs(d) > 1e-4) { cur[i] = Math.abs(d) < 2e-3 ? tgt[i] : cur[i] + d * 0.14; write(i); moved = true; } }
+      if (moved) mesh.instanceMatrix.needsUpdate = true;
+    },
+  };
+  for (let i = 0; i < n; i++) mesh.setColorAt(i, new THREE.Color(B.line));
+  group.add(mesh); tickers.add(api.tick);
+  return api;
+}
+
+// ================= state =================
+const state = { view: 'weather', wmode: 'temp', air: 'psi', taxi: 'points', txFrom: null, cpFilter: 'all', cpLot: 'C', cpView: 'bars', area: null, region: null, cp: null, gauge: null };
+const W = {};            // weather readings
+const AIR = {};          // psi, pm25, day series
+const TX = { hist: [], frames: [], hour: null, status: 'idle' };   // taxis
+const CP = { live: new Map(), hist: new Map(), ts: null, liveFrame: null, frames: [], hour: null };          // carparks
+const STN = new Map();   // weather stations by id
+const RP = { status: 'idle', frames: [], i: 0, cum: false, pages: 0 };   // today's rain replay
+let playTimer = null;
+
+function stationsFrom(d) { (d.stations ?? []).forEach((s) => STN.set(s.id, { id: s.id, name: s.name, lat: s.location.latitude, lon: s.location.longitude })); }
+function readingMap(d) { const r = d.readings?.[0]; return { ts: r?.timestamp, v: new Map((r?.data ?? []).map((x) => [x.stationId, x.value])), ids: (d.stations ?? []).map((s) => s.id) }; }
+// Inverse-distance weighting from station readings to a point.
+function idw(rd, lon, lat) {
+  let sw = 0, sv = 0;
+  for (const [id, v] of rd.v) {
+    const s = STN.get(id); if (!s || v == null) continue;
+    const d2 = (s.lon - lon) ** 2 + (s.lat - lat) ** 2;
+    if (d2 < 1e-8) return v;
+    const w = 1 / d2; sw += w; sv += w * v;
+  }
+  return sw ? sv / sw : null;
+}
+const avgOf = (rd) => d3.mean([...rd.v.values()]);
+
+// ---------- forecasts ----------
+const fcCat = (s = '') => (/thunder/i.test(s) ? 'thunder' : /rain|shower|drizzle/i.test(s) ? 'rain' : /haz|mist|fog/i.test(s) ? 'haze' : /cloud|overcast/i.test(s) ? 'cloud' : /night/i.test(s) ? 'night' : 'fair');
+const FC_COL = { fair: '#5b4a24', night: '#2f3550', cloud: '#353a43', haze: '#5a5040', rain: '#2a5f86', thunder: '#5c3f8f' };
+const FC_ICON = { fair: 'fi-rr-sun', night: 'fi-rr-moon', cloud: 'fi-rr-cloud', haze: 'fi-rr-smog', rain: 'fi-rr-cloud-rain', thunder: 'fi-rr-thunderstorm' };
+const fcIcon = (s, cls = '') => `<i class="fi ${FC_ICON[fcCat(s)]} ${cls}"></i>`;
+
+// ---------- air quality bands (NEA) ----------
+// NEA's colours and bands (PSI forecast gauge): Good–Moderate 0–100 green, Unhealthy 101–200 yellow,
+// Very unhealthy 201–300 orange, Hazardous above 300 red. PM2.5 1-hour bands I–IV in the same colours.
+const NEA = { green: '#3f8f2f', yellow: '#f5c84a', orange: '#f0a03c', red: '#c9343a' };
+const PSI_BANDS = [[100, 'Good – Moderate', NEA.green], [200, 'Unhealthy', NEA.yellow], [300, 'Very Unhealthy', NEA.orange], [Infinity, 'Hazardous', NEA.red]];
+// PM2.5 descriptors carry NEA's band number (Band 1 to 4)
+const bandName = (bands, v) => { const i = bands.findIndex(([hi]) => v <= hi); return bands === PM_BANDS ? `Band ${i + 1} · ${bands[i][1]}` : bands[i][1]; };
+const PM_BANDS = [[55, 'Normal', NEA.green], [150, 'Elevated', NEA.yellow], [250, 'High', NEA.orange], [Infinity, 'Very High', NEA.red]];
+const UV_BANDS = [[2, 'Low', '#5fbf8f'], [5, 'Moderate', '#f6c453'], [7, 'High', '#e8894a'], [10, 'Very high', '#e05d6f'], [Infinity, 'Extreme', '#9b4fb0']];
+const band = (bands, v) => bands.find(([hi]) => v <= hi);
+// The band colour, dimmer at the bottom of the band and full at the top, so regions in one band still differ.
+const bandShade = (bands, v) => { const k = bands.findIndex(([hi]) => v <= hi), lo = k ? bands[k - 1][0] : 0, hi = bands[k][0] === Infinity ? lo * 1.5 : bands[k][0]; return d3.interpolateRgb('#3a3f48', bands[k][2])(0.4 + 0.6 * Math.min(1, (v - lo) / (hi - lo))); };
+const REGIONS = ['north', 'east', 'central', 'west', 'south'];
+const REG_COL = { north: B.signal, east: B.amber, central: B.ink, west: B.pink, south: B.sky };
+// NEA's health advisory by 24-hour PSI band, for its three groups.
+const ADVICE_GROUPS = ['Healthy persons', 'Elderly, pregnant women, children', 'Persons with chronic lung disease, heart disease'];
+const AIR_ADVICE = {
+  'Good – Moderate': ['Normal activities', 'Normal activities', 'Normal activities'],
+  Unhealthy: ['Reduce prolonged or strenuous outdoor physical exertion', 'Minimise prolonged or strenuous outdoor physical exertion', 'Avoid prolonged or strenuous outdoor physical exertion'],
+  'Very Unhealthy': ['Avoid prolonged or strenuous outdoor physical exertion', 'Minimise outdoor activity', 'Avoid outdoor activity'],
+  Hazardous: ['Minimise outdoor activity', 'Avoid outdoor activity', 'Avoid outdoor activity'],
+};
+
+// ================= views =================
+const VIEWS = {};
+
+// ---------- weather ----------
+VIEWS.weather = {
+  tab: 'Weather', icon: 'fi-rr-cloud-sun-rain',
+  title: 'The weather, right now',
+  blurb: 'Every rain gauge rises with the last five minutes of rain, arrows show where the wind is blowing, and the island is shaded by temperature, humidity or the two-hour forecast. Replay today to watch the showers cross the island.',
+  how: ['Inverse-distance shading from the 17 weather stations, the UV, forecast and rain charts.', 'A rain column and falling drops at each of the rain gauges, wind arrows turned to their bearing.'],
+  camera: [-2, 17, 19], target: [0.5, 0, 0.6],
+  build() {
+    this.tiles = island();
+    this.tiles.forEach((t) => { t.userData.pick = () => this.areaTip(AREAS[t.userData.area]); pickables.push(t); });
+    this.labels = new THREE.Group(); group.add(this.labels);
+    this.windG = new THREE.Group(); group.add(this.windG);
+    this.rainIds = []; this.rain = null; this.drops = null;
+    this.update();
+  },
+  // Rain shown: the live five minutes, or a frame of today's replay (five-minute or running total).
+  rainNow() {
+    if (RP.status === 'ready' && RP.on) { const fr = RP.frames[RP.i]; return { ts: fr.t, v: RP.cum ? fr.cum : fr.v, cum: RP.cum }; }
+    return W.rain ? { ts: W.rain.ts, v: W.rain.v, cum: false } : null;
+  },
+  update() {
+    if (!this.tiles) return;
+    const mode = state.wmode;
+    // island shading
+    const tc = d3.scaleSequential(TEMP_DOMAIN, TEMP).clamp(true), hc = d3.scaleSequential(RH_DOMAIN, HUMID).clamp(true);
+    this.tiles.forEach((t) => {
+      const a = AREAS[t.userData.area]; let c = '#262a31';
+      if (mode === 'temp' && W.temp) { const v = idw(W.temp, ...a.c); if (v != null) c = d3.interpolateRgb('#1d2026', tc(v))(0.62); }
+      if (mode === 'rh' && W.rh) { const v = idw(W.rh, ...a.c); if (v != null) c = d3.interpolateRgb('#1d2026', hc(v))(0.62); }
+      if (mode === 'fc' && W.f2) { const f = this.fcFor(a); if (f) c = FC_COL[fcCat(f)]; }
+      t.material.color.set(state.area === a.i ? d3.interpolateRgb(c, B.amber)(0.35) : c);
+    });
+    // labels: station readings, or forecast icons
+    dispose(this.labels); this.labels = new THREE.Group(); group.add(this.labels);
+    const rd = mode === 'temp' ? W.temp : mode === 'rh' ? W.rh : null;
+    if (rd) rd.v.forEach((v, id) => { const s = STN.get(id); if (s && v != null) lbl(mode === 'temp' ? `${f1(v)}°` : `${Math.round(v)}%`, V3(s.lon, s.lat, 0.12), 'val', this.labels); });
+    if (mode === 'fc' && W.f2) W.f2.meta.forEach((m) => { const f = W.f2.byName.get(m.name); if (f) lbl(fcIcon(f), V3(m.label_location.longitude, m.label_location.latitude, 0.1), 'icon', this.labels, true); });
+    if (state.area != null) { const a = AREAS[state.area]; lbl(a.n, V3(...a.c, 0.4), 'sel', this.labels); }
+    if (state.gauge != null && STN.has(state.gauge)) { const g = STN.get(state.gauge); lbl(g.name, V3(g.lon, g.lat, 0.5), 'sel', this.labels); }
+    this.drawRain(); this.drawWind(); this.drawTracks();
+    legend();
+  },
+  drawRain() {
+    const rn = this.rainNow(); if (!rn) return;
+    const ids = [...new Set([...(W.rain?.ids ?? []), ...rn.v.keys()])].filter((id) => STN.has(id));
+    if (!this.rain || ids.length !== this.rainIds.length) {
+      if (this.rain) { tickers.delete(this.rain.tick); pickables = pickables.filter((p) => p !== this.rain.mesh); dispose(this.rain.mesh); }
+      this.rainIds = ids;
+      this.rain = bars(ids.length, { w: 0.13, round: true });
+      ids.forEach((id, i) => { const s = STN.get(id); this.rain.place(i, V3(s.lon, s.lat)); });
+      this.rain.mesh.userData = { alive: () => true, pick: (h) => this.rainTip(this.rainIds[h.instanceId]), onClick: (h) => selectGauge(this.rainIds[h.instanceId]) };
+      pickables.push(this.rain.mesh);
+    }
+    const hOf = (mm) => (mm > 0 ? (rn.cum ? 0.12 + Math.sqrt(mm) * 0.32 : 0.15 + Math.sqrt(mm) * 0.9) : 0.03);
+    const col = d3.scaleSequentialSqrt([0, rn.cum ? 40 : 4], RAIN).clamp(true);
+    this.rainIds.forEach((id, i) => { const mm = rn.v.get(id) ?? 0, sel = id === state.gauge; this.rain.set(i, Math.min(3.2, Math.max(sel ? 0.3 : 0, hOf(mm))), sel ? B.amber : mm > 0 ? col(mm) : '#3a3f48'); });
+    this.rain.commit();
+    this.drawDrops(rn);
+  },
+  // Falling drops above every gauge with rain in the frame.
+  drawDrops(rn) {
+    if (this.drops) { tickers.delete(this.drops.tick); dispose(this.drops.pts); this.drops = null; }
+    if (rn.cum) return;
+    const wet = this.rainIds.map((id) => [STN.get(id), rn.v.get(id) ?? 0]).filter(([, mm]) => mm > 0);
+    if (!wet.length) return;
+    const xs = [], speed = [];
+    wet.forEach(([s, mm]) => {
+      const n = Math.round(Math.min(90, 10 + mm * 30)), c = V3(s.lon, s.lat);
+      for (let k = 0; k < n; k++) { const r = Math.sqrt(Math.random()) * 0.42, a = Math.random() * Math.PI * 2; xs.push(c.x + r * Math.cos(a), Math.random() * 2.6, c.z + r * Math.sin(a)); speed.push(0.018 + Math.random() * 0.02); }
+    });
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(xs, 3));
+    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.05, map: DOT, color: '#9fd8ff', transparent: true, opacity: 0.75, depthWrite: false }));
+    group.add(pts);
+    const arr = geo.attributes.position.array;
+    const tick = () => { if (reduceMotion) return; for (let k = 0; k < speed.length; k++) { arr[k * 3 + 1] -= speed[k]; if (arr[k * 3 + 1] < 0) arr[k * 3 + 1] = 2.6; } geo.attributes.position.needsUpdate = true; };
+    tickers.add(tick); this.drops = { pts, tick };
+  },
+  // Wind arrows point the way the wind blows (bearing + 180), length by speed.
+  drawWind() {
+    pickables = pickables.filter((p) => !p.userData.wind);
+    dispose(this.windG); this.windG = new THREE.Group(); group.add(this.windG);
+    if (!W.wd || !W.ws) return;
+    const s = new THREE.Shape([[-0.5, -0.035], [0.22, -0.035], [0.22, -0.11], [0.5, 0], [0.22, 0.11], [0.22, 0.035], [-0.5, 0.035]].map(([x, y]) => new THREE.Vector2(x, y)));
+    const geo = new THREE.ShapeGeometry(s); geo.rotateX(-Math.PI / 2);
+    const mat = new THREE.MeshBasicMaterial({ color: B.ink, transparent: true, opacity: 0.8, side: THREE.DoubleSide });
+    W.wd.v.forEach((deg, id) => {
+      const st = STN.get(id), kn = W.ws.v.get(id); if (!st || deg == null || kn == null) return;
+      const m = new THREE.Mesh(geo, mat);
+      const to = (deg + 180) * Math.PI / 180;
+      m.rotation.y = Math.PI / 2 - to;
+      const len = 0.35 + Math.min(kn, 25) * 0.05; m.scale.set(len, 1, 1);
+      m.position.copy(V3(st.lon, st.lat, 0.05));
+      m.userData = { wind: true, pick: () => `<div class="font-medium text-foreground">${esc(st.name)}</div><div class="font-mono">${f1(kn)} knots from ${Math.round(deg)}° (${compass(deg)})</div>` };
+      this.windG.add(m); pickables.push(m);
+    });
+  },
+  fcFor(a) {
+    if (!W.f2) return null;
+    let best = null, bd = Infinity;
+    W.f2.meta.forEach((m) => { const d = (m.label_location.longitude - a.c[0]) ** 2 + (m.label_location.latitude - a.c[1]) ** 2; if (d < bd) { bd = d; best = m.name; } });
+    return W.f2.byName.get(best) ?? null;
+  },
+  areaTip(a) {
+    const t = W.temp && idw(W.temp, ...a.c), h = W.rh && idw(W.rh, ...a.c), f = this.fcFor(a);
+    return `<div class="font-medium text-foreground">${esc(a.n)}</div>
+      ${t != null ? `<div class="font-mono">about ${f1(t)}°C · ${h != null ? `${Math.round(h)}% humidity` : ''}</div>` : ''}
+      ${f ? `<div class="text-muted-foreground">${fcIcon(f, 'mr-1 align-[-1px]')}${esc(f)} for the next 2 hours</div>` : ''}`;
+  },
+  rainTip(id) {
+    const s = STN.get(id), rn = this.rainNow(), mm = rn?.v.get(id) ?? 0;
+    return `<div class="font-medium text-foreground">${esc(s?.name ?? id)}</div><div class="font-mono">${f1(mm)} mm ${rn?.cum ? 'since midnight' : 'in 5 minutes'}</div><div class="text-muted-foreground">rain gauge ${esc(id)}${rn?.ts ? ` · ${hhmm(rn.ts)}` : ''}</div>`;
+  },
+  tilesHtml() {
+    const t = W.temp ? [...W.temp.v.values()] : [], h = W.rh ? avgOf(W.rh) : null;
+    const rain = W.rain ? [...W.rain.v.values()] : [], wet = rain.filter((v) => v > 0).length;
+    const uvNow = W.uv?.index?.[0]?.value, ub = uvNow != null ? band(UV_BANDS, uvNow) : null;
+    return tile('Temperature', t.length ? `${f1(d3.mean(t))}°C` : '–', t.length ? `${f1(d3.min(t))} to ${f1(d3.max(t))}° across ${t.length} stations` : '')
+      + tile('Humidity', h != null ? `${Math.round(h)}%` : '–', 'island average')
+      + tile('Raining', rain.length ? `${wet} of ${rain.length}` : '–', rain.length ? (wet ? `gauges · wettest ${f1(d3.max(rain))} mm` : 'gauges · dry right now') : '')
+      + tile('UV index', uvNow != null ? `<span style="color:${ub[2]}">${uvNow}</span>` : '–', ub ? `${ub[1]} · ${hhmm(W.uv.index[0].hour)}` : '');
+  },
+  opts() {
+    return `<div class="mt-3 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Shade by</span>${seg('wmode', [['temp', 'Temperature'], ['rh', 'Humidity'], ['fc', '2-hr forecast']], state.wmode)}</div>
+      <div id="replay" class="mt-3"></div>`;
+  },
+  fill() {
+    replayRow();
+    const el = $('#body'); if (!el) return;
+    const rain = RP.status === 'ready'
+      ? `${sec('Rain today, gauge by gauge', `${wetGauges().length} of ${rainGauges().length} gauges had rain · west to east`)}<div id="rheat"></div><div id="rtracks" class="mt-2"></div>
+         ${sec('Wettest gauges today', 'mm since midnight')}<div id="rtop"></div>`
+      : `${sec('Rain today', '')}${muted('Sync “Today’s rain” above for the gauge-by-gauge timeline, the storm tracks and the wettest gauges.')}`;
+    el.innerHTML = `${rain}${sec('UV index today', W.uv ? `updated ${hhmm(W.uv.updatedTimestamp ?? W.uv.timestamp)}` : '')}<div id="uv"></div>
+      ${sec('Next 24 hours', W.f24 ? esc(W.f24.general?.validPeriod?.text ?? '') : '')}<div id="f24"></div>
+      ${sec('Four-day outlook', '')}<div id="f4"></div>`;
+    if (RP.status === 'ready') { rainHeat($('#rheat')); trackList($('#rtracks')); wettest($('#rtop')); }
+    uvChart($('#uv')); f24Box($('#f24')); f4Box($('#f4'));
+  },
+  detail(el) {
+    if (state.gauge != null && RP.status === 'ready') {
+      const id = state.gauge, last = RP.frames.at(-1), pts = RP.frames.map((f) => [f, f.v.get(id) ?? 0]);
+      const peak = d3.greatest(pts, (d) => d[1]), wetMin = pts.filter((d) => d[1] > 0).length * 5, now = W.rain?.v.get(id);
+      el.innerHTML = `${headRow(gaugeName(id), `${gaugeArea(id)} · rain gauge ${id}`)}
+        <div class="mt-2 grid grid-cols-3 gap-2">${tile('Today', `${f1(last.cum.get(id) ?? 0)} mm`)}${tile('Peak 5 min', peak[1] > 0 ? `${f1(peak[1])} mm` : '–', peak[1] > 0 ? `to ${hhmm(peak[0].t)}` : 'dry all day')}${tile('Raining for', wetMin >= 60 ? `${f1(wetMin / 60)} h` : `${wetMin} min`)}</div>
+        <p class="mt-3 text-xs font-medium text-ink-2">Five-minute rain today</p><div id="gprof" class="mt-1"></div>
+        ${now != null ? `<p class="mt-1 text-[11px] text-muted-foreground">Latest live reading: ${f1(now)} mm in the five minutes to ${hhmm(W.rain.ts)}.</p>` : ''}`;
+      gaugeProfile($('#gprof'), id);
+      return;
+    }
+    if (state.area == null) { el.innerHTML = muted('<i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Hover a gauge, an arrow or a storm track for its reading; click a gauge for its day, or an area for its local weather.'); return; }
+    const a = AREAS[state.area], f = this.fcFor(a);
+    const near = (rd, unit, fmt) => (rd ? [...rd.v].map(([id, v]) => ({ s: STN.get(id), v })).filter((d) => d.s && d.v != null)
+      .map((d) => ({ ...d, km: d3.geoDistance([d.s.lon, d.s.lat], a.c) * 6371 })).sort((x, y) => x.km - y.km).slice(0, 3)
+      .map((d) => `<div class="flex justify-between gap-2"><span class="truncate text-ink-2">${esc(d.s.name)}</span><span class="shrink-0 font-mono">${fmt(d.v)}${unit} <span class="text-muted-foreground">${f1(d.km)} km</span></span></div>`).join('') : '');
+    el.innerHTML = `${headRow(a.n, `${a.r}${f ? ` · ${f}` : ''}`)}
+      <div class="mt-2 grid grid-cols-2 gap-2">${tile('About', W.temp ? `${f1(idw(W.temp, ...a.c))}°C` : '–')}${tile('Humidity', W.rh ? `${Math.round(idw(W.rh, ...a.c))}%` : '–')}</div>
+      <p class="mt-3 text-xs font-medium text-ink-2">Nearest stations</p><div class="mt-1 space-y-0.5 text-xs">${near(W.temp, '°C', f1)}${near(this.rainNow(), ' mm', f1)}</div>`;
+  },
+  legend() {
+    const st = (f, n = 24) => d3.range(n + 1).map((i) => f(i / n)).join(',');
+    if (state.wmode === 'fc') return `<div class="mb-1 text-foreground">Two-hour forecast</div>${['fair', 'cloud', 'rain', 'thunder'].map((k) => `<div class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm" style="background:${FC_COL[k]}"></span><i class="fi ${FC_ICON[k]}"></i>${{ fair: 'Fair', cloud: 'Cloudy', rain: 'Showers or rain', thunder: 'Thundery showers' }[k]}</div>`).join('')}`;
+    const [d, f, u] = state.wmode === 'temp' ? [TEMP_DOMAIN, TEMP, '°C'] : [RH_DOMAIN, HUMID, '%'];
+    return `<div class="mb-1 text-foreground">${state.wmode === 'temp' ? 'Temperature' : 'Relative humidity'}</div><div class="h-2 w-48 rounded-full" style="background:linear-gradient(90deg,${st(f)})"></div><div class="mt-1 flex w-48 justify-between font-mono text-[10.5px]"><span>${d[0]}${u}</span><span>${d[1]}${u}</span></div>
+      <div class="mt-2 flex items-center gap-1.5 text-foreground"><span class="inline-block h-3 w-1.5 rounded-sm" style="background:${RAIN(0.6)}"></span>Rain gauge, height by mm</div>`;
+  },
+};
+const compass = (deg) => ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(deg / 45) % 8];
+
+function uvChart(el) {
+  const rec = W.uv; if (!rec?.index?.length) { el.innerHTML = muted('Sync “Forecasts and UV” above for the UV chart.'); return; }
+  const pts = rec.index.map((d) => ({ h: sgHour(new Date(d.hour)), v: d.value }));
+  const w = el.clientWidth || 340, H = 92, m = { l: 4, r: 4, t: 12, b: 16 };
+  const x = d3.scaleBand(d3.range(7, 20), [m.l, w - m.r]).padding(0.2), y = d3.scaleLinear([0, Math.max(11, d3.max(pts, (d) => d.v))], [H - m.b, m.t]);
+  el.innerHTML = `<svg width="${w}" height="${H}" class="block">
+    ${pts.filter((d) => x(d.h) != null).map((d) => `<rect x="${x(d.h)}" y="${y(d.v)}" width="${x.bandwidth()}" height="${Math.max(1, y(0) - y(d.v))}" rx="2" fill="${band(UV_BANDS, d.v)[2]}"><title>${hourLbl(d.h)}: UV ${d.v} (${band(UV_BANDS, d.v)[1]})</title></rect>
+      <text x="${x(d.h) + x.bandwidth() / 2}" y="${y(d.v) - 3}" text-anchor="middle" font-size="9.5" font-family="Source Code Pro" fill="#b8b5ac">${d.v}</text>`).join('')}
+    ${d3.range(7, 20, 2).map((h) => `<text x="${x(h) + x.bandwidth() / 2}" y="${H - 3}" text-anchor="middle" font-size="9.5" font-family="Source Code Pro" fill="#8b9099">${hourLbl(h)}</text>`).join('')}
+  </svg>`;
+}
+function f24Box(el) {
+  const r = W.f24; if (!r) { el.innerHTML = muted('Not synced yet.'); return; }
+  const g = r.general;
+  el.innerHTML = `<div class="flex items-center gap-3 rounded-lg border bg-background/40 p-2.5">
+      <span class="text-2xl text-ink-2">${fcIcon(g.forecast?.text)}</span>
+      <div class="min-w-0 text-sm"><div class="font-medium">${esc(g.forecast?.text ?? '')}</div>
+      <div class="font-mono text-xs text-muted-foreground">${g.temperature?.low}–${g.temperature?.high}°C · ${g.relativeHumidity?.low}–${g.relativeHumidity?.high}% · wind ${esc(g.wind?.direction ?? '')} ${g.wind?.speed?.low}–${g.wind?.speed?.high} km/h</div></div></div>
+    <table class="mt-2 w-full text-xs"><thead><tr class="text-muted-foreground"><th class="pb-1 text-left font-normal"></th>${REGIONS.map((k) => `<th class="pb-1 text-center font-normal capitalize">${k}</th>`).join('')}</tr></thead>
+    <tbody>${(r.periods ?? []).map((p) => `<tr class="border-t"><td class="py-1 pr-1 text-ink-2">${esc(p.timePeriod?.text?.replace(/ to .*/, '') ?? '')}</td>${REGIONS.map((k) => `<td class="py-1 text-center text-[14px] text-ink-2" title="${esc(p.regions?.[k]?.text ?? '')}">${fcIcon(p.regions?.[k]?.text)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+function f4Box(el) {
+  const r = W.f4; if (!r?.forecasts) { el.innerHTML = muted('Not synced yet.'); return; }
+  el.innerHTML = `<div class="grid grid-cols-4 gap-1.5">${r.forecasts.slice(0, 4).map((d) => `<div class="rounded-lg border bg-background/40 p-2 text-center" title="${esc(d.forecast?.summary ?? d.forecast?.text ?? '')}">
+    <div class="text-[11px] text-muted-foreground">${esc(d.day?.slice(0, 3) ?? '')}</div><div class="my-1 text-lg text-ink-2">${fcIcon(d.forecast?.text)}</div>
+    <div class="font-mono text-[11px]">${d.temperature?.low}–${d.temperature?.high}°</div></div>`).join('')}</div>`;
+}
+
+// ---------- rain replay (the synced day, five-minute frames) ----------
+// Built from the stored readings of the day; the sync fetches only the pages it doesn't have yet.
+function buildReplay(readings) {
+  const frames = [...new Map(readings.map((r) => [r.timestamp, r])).values()].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  const run = new Map();
+  RP.frames = frames.map((r) => {
+    const v = new Map(r.data.map((x) => [x.stationId, x.value]));
+    v.forEach((mm, id) => run.set(id, (run.get(id) ?? 0) + mm));
+    return { t: r.timestamp, v, cum: new Map(run), mean: d3.mean([...v.values()]) ?? 0, wet: [...v.values()].filter((x) => x > 0).length };
+  });
+  const was = RP.status;
+  RP._tracks = null;
+  RP.status = RP.frames.length ? 'ready' : 'idle';
+  if (was !== 'ready' || RP.i >= RP.frames.length) {
+    // start on the wettest moment of the day, if there was one
+    const wettest = d3.greatestIndex(RP.frames, (f) => f.mean);
+    RP.i = wettest >= 0 && RP.frames[wettest].mean > 0 ? wettest : RP.frames.length - 1;
+  }
+}
+function replayRow() {
+  const el = $('#replay'); if (!el) return;
+  if (RP.status !== 'ready') { el.innerHTML = muted('<i class="fi fi-rr-time-past mr-1 align-[-1px]"></i>Sync “Today’s rain” above to replay it five minutes at a time.'); return; }
+  if (!RP.on) { el.innerHTML = `<button id="rp-on" class="${btnCls} w-full justify-center"><i class="fi fi-rr-time-past"></i>Replay today’s rain <span class="font-mono text-xs text-muted-foreground">to ${hhmm(RP.frames.at(-1).t)}</span></button>`; return; }
+  const n = RP.frames.length, fr = RP.frames[RP.i], pct = n > 1 ? (RP.i / (n - 1)) * 100 : 100;
+  el.innerHTML = `<div class="rounded-lg border bg-background/40 p-2.5">
+    <div class="flex items-center justify-between gap-2 text-xs"><span class="text-ink-2"><i class="fi fi-rr-time-past mr-1 align-[-1px]"></i>Today’s rain, five-minute frames</span>
+      <button id="rp-off" class="rounded px-1.5 py-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"><i class="fi fi-rr-cross-small align-[-2px]"></i>Live</button></div>
+    <div id="rp-chart" class="mt-1.5"></div>
+    <div class="mt-1 flex items-center gap-2">
+      <button id="play" class="inline-flex size-8 shrink-0 items-center justify-center rounded-md border bg-background/60 text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="${playTimer ? 'Pause' : 'Play the day'}"><i class="fi ${playTimer ? 'fi-rr-pause' : 'fi-rr-play'}"></i></button>
+      <input id="rp-i" type="range" class="slider" min="0" max="${n - 1}" step="1" value="${RP.i}" style="--fill:${pct}%" aria-label="Time of day" />
+      <span id="rp-lbl" class="w-[44px] shrink-0 text-right font-mono text-sm text-amber">${hhmm(fr.t)}</span></div>
+    <div class="mt-2 flex items-center justify-between gap-2"><span id="rp-sub" class="text-[11px] text-muted-foreground">${rpSub()}</span>${seg('rpcum', [['0', '5 min'], ['1', 'Since midnight']], RP.cum ? '1' : '0')}</div></div>`;
+  rpChart();
+}
+const rpSub = () => { const fr = RP.frames[RP.i]; return `${fr.wet} of ${fr.v.size} gauges wet`; };
+function rpChart() {
+  const el = $('#rp-chart'); if (!el) return;
+  const w = el.clientWidth || 320, H = 40, fr = RP.frames;
+  const x = d3.scaleLinear([0, 24 * 60], [0, w]), y = d3.scaleLinear([0, Math.max(0.05, d3.max(fr, (f) => f.mean))], [H - 2, 2]);
+  const area = d3.area().x((f) => x(minsOfDay(f.t))).y0(H - 1).y1((f) => y(f.mean)).curve(d3.curveMonotoneX)(fr);
+  const cx = x(minsOfDay(fr[RP.i].t));
+  el.innerHTML = `<svg width="${w}" height="${H}" class="block"><path d="${area}" fill="${B.sky}" fill-opacity="0.45" stroke="${B.sky}" stroke-width="1"/>
+    <line x1="${cx}" x2="${cx}" y1="0" y2="${H}" stroke="${B.amber}" stroke-width="1.2"/>
+    ${[6, 12, 18].map((h) => `<text x="${x(h * 60)}" y="9" text-anchor="middle" font-size="9" font-family="Source Code Pro" fill="#8b9099">${hourLbl(h)}</text>`).join('')}
+    <title>Average rain across the gauges, every five minutes today</title></svg>`;
+}
+function setReplay(i) {
+  RP.i = Math.max(0, Math.min(RP.frames.length - 1, i));
+  const s = $('#rp-i'); if (s) { s.value = RP.i; s.style.setProperty('--fill', `${(RP.i / Math.max(1, RP.frames.length - 1)) * 100}%`); }
+  const l = $('#rp-lbl'); if (l) l.textContent = hhmm(RP.frames[RP.i].t);
+  const sub = $('#rp-sub'); if (sub) sub.textContent = rpSub();
+  VIEWS.weather.drawRain(); VIEWS.weather.drawMarks(); rpChart(); moveCursors();
+}
+
+// ---------- rain today: gauge-by-time heatmap, storm tracks, wettest gauges ----------
+const RAIN_CLAMP = 6;   // mm in five minutes; heavier cells share the top colour
+const TRACK_COL = d3.scaleSequential([6 * 60, 22 * 60], d3.interpolateRgbBasis(['#7cc4dc', '#c9a4f5', '#e58fb0'])).clamp(true);
+// Gauges in the history, west to east, so a storm crossing the island reads as a diagonal.
+function rainGauges() {
+  const ids = new Set(); RP.frames.forEach((f) => f.v.forEach((_, id) => ids.add(id)));
+  return [...ids].filter((id) => STN.has(id)).sort((a, b) => STN.get(a).lon - STN.get(b).lon);
+}
+const gaugeName = (id) => STN.get(id)?.name ?? id;
+const gaugeArea = (id) => { const s = STN.get(id); const a = s ? areaAt(s.lon, s.lat) : -1; return a >= 0 ? AREAS[a].n : 'offshore'; };
+// Cursor lines that follow the replay: every .rp-cur carries the pixel span of 12am to midnight.
+function moveCursors() {
+  const on = RP.status === 'ready' && RP.on, m = on ? minsOfDay(RP.frames[RP.i].t) : 0;
+  document.querySelectorAll('.rp-cur').forEach((c) => { const l = +c.dataset.l, r = +c.dataset.r, x = l + ((r - l) * m) / 1440; c.setAttribute('x1', x); c.setAttribute('x2', x); c.setAttribute('opacity', on ? 1 : 0); });
+}
+// Only gauges that saw rain get a row, and the time axis zooms to when it rained (with an hour either side).
+function heatSpan() {
+  const wetF = RP.frames.filter((f) => f.wet > 0).map((f) => minsOfDay(f.t)), end = minsOfDay(RP.frames.at(-1).t);
+  if (!wetF.length) return null;
+  let a = Math.max(0, d3.min(wetF) - 65), b = Math.min(end, d3.max(wetF) + 60);
+  if (b - a < 180) { const c = (a + b) / 2; a = Math.max(0, c - 90); b = Math.min(Math.max(end, a + 180), a + 180); }
+  return [a, b];
+}
+const wetGauges = () => { const last = RP.frames.at(-1); return rainGauges().filter((id) => (last?.cum.get(id) ?? 0) > 0); };
+function rainHeat(el) {
+  const ids = wetGauges(), n = ids.length, span = heatSpan();
+  if (!n || !span) { el.innerHTML = muted('No gauge has recorded rain today.'); return; }
+  const rowH = Math.max(3, Math.min(10, 190 / n));
+  const w = el.clientWidth || 340, m = { l: 34, r: 2, t: 2, b: 14 }, H = m.t + n * rowH + m.b, dpr = Math.min(devicePixelRatio, 2);
+  const x = d3.scaleLinear(span, [m.l, w - m.r]), cw = Math.max(1, x(5) - x(0));
+  const ticks = d3.range(Math.ceil(span[0] / 60), Math.floor(span[1] / 60) + 1).filter((h, _, a) => a.length <= 7 || h % (a.length > 14 ? 4 : 2) === 0);
+  const col = d3.scaleSequentialSqrt([0, RAIN_CLAMP], RAIN).clamp(true), row = new Map(ids.map((id, r) => [id, r]));
+  el.innerHTML = `<div class="relative"><canvas width="${w * dpr}" height="${H * dpr}" style="width:${w}px;height:${H}px;cursor:crosshair" class="block"></canvas>
+    <svg width="${w}" height="${H}" class="pointer-events-none absolute inset-0">
+      <text x="${m.l - 4}" y="${m.t + 8}" text-anchor="end" font-size="9" font-family="Source Code Pro" fill="#8b9099">west</text>
+      <text x="${m.l - 4}" y="${m.t + n * rowH}" text-anchor="end" font-size="9" font-family="Source Code Pro" fill="#8b9099">east</text>
+      ${ticks.map((h) => `<text x="${x(h * 60)}" y="${H - 3}" text-anchor="middle" font-size="9" font-family="Source Code Pro" fill="#8b9099">${hourLbl(h % 24)}</text>`).join('')}
+      <line class="rp-cur" data-l="${x(0)}" data-r="${x(1440)}" y1="0" y2="${H - m.b}" stroke="${B.amber}" stroke-width="1.2" opacity="0"/>
+      ${state.gauge != null && row.has(state.gauge) ? `<rect x="${m.l - 2}" y="${m.t + row.get(state.gauge) * rowH - 1}" width="${w - m.l}" height="${rowH + 2}" fill="none" stroke="${B.amber}" stroke-width="1"/>` : ''}
+    </svg></div>`;
+  const cv = el.querySelector('canvas'), g = cv.getContext('2d');
+  g.scale(dpr, dpr);
+  g.fillStyle = '#1f2228'; g.fillRect(m.l, m.t, w - m.l - m.r, n * rowH);
+  RP.frames.forEach((f) => {
+    const xi = x(minsOfDay(f.t) - 5);
+    f.v.forEach((mm, id) => { if (mm > 0 && row.has(id)) { g.fillStyle = col(mm); g.fillRect(xi, m.t + row.get(id) * rowH, cw, rowH - 0.3); } });
+  });
+  const mins = RP.frames.map((f) => minsOfDay(f.t));
+  const at = (ev) => {
+    const r = cv.getBoundingClientRect(), px = ev.clientX - r.left, py = ev.clientY - r.top;
+    const ri = Math.floor((py - m.t) / rowH); if (ri < 0 || ri >= n || px < m.l || px > w - m.r) return null;
+    const fi = Math.min(mins.length - 1, d3.bisectLeft(mins, x.invert(px)));
+    return { id: ids[ri], fi };
+  };
+  cv.onmousemove = (ev) => {
+    const a = at(ev); if (!a) { tip.hidden = true; return; }
+    const f = RP.frames[a.fi], mm = f.v.get(a.id) ?? 0;
+    tip.innerHTML = `<div class="font-medium text-foreground">${esc(gaugeName(a.id))}</div><div class="text-muted-foreground">${esc(gaugeArea(a.id))}</div><div class="font-mono">${f1(mm)} mm, 5 min to ${hhmm(f.t)}</div><div class="font-mono text-muted-foreground">${f1(f.cum.get(a.id) ?? 0)} mm since midnight</div>`;
+    tip.hidden = false; tip.style.left = `${ev.clientX + 14}px`; tip.style.top = `${ev.clientY + 14}px`;
+  };
+  cv.onmouseleave = () => { tip.hidden = true; };
+  cv.onclick = (ev) => { const a = at(ev); if (!a) return; jumpReplay(a.fi); selectGauge(a.id, { fly: false, keep: true }); };
+  moveCursors();
+}
+// Turn the replay on (if it isn't) and move to a frame.
+function jumpReplay(fi) {
+  if (playTimer) stopPlay();
+  const redo = !RP.on || RP.cum; RP.on = true; RP.cum = false;
+  if (redo) { VIEWS.weather.update(); replayRow(); }
+  setReplay(fi);
+}
+
+// Storm cells: in each frame, wet gauges within ~8 km join one cell (rain-weighted centre);
+// a cell links to the nearest cell of the last 15 minutes within ~10 km, making a track.
+function stormTracks() {
+  if (RP._tracks) return RP._tracks;
+  const JOIN = 0.07, LINK = 0.09, tracks = [];
+  let active = [];
+  RP.frames.forEach((f, fi) => {
+    const wet = []; f.v.forEach((mm, id) => { const s = STN.get(id); if (s && mm > 0) wet.push({ s, mm }); });
+    const par = wet.map((_, i) => i), find = (i) => (par[i] === i ? i : (par[i] = find(par[i])));
+    for (let i = 0; i < wet.length; i++) for (let j = i + 1; j < wet.length; j++) if (Math.hypot(wet[i].s.lon - wet[j].s.lon, wet[i].s.lat - wet[j].s.lat) < JOIN) par[find(i)] = find(j);
+    const cells = d3.rollups(wet, (v) => { const mm = d3.sum(v, (d) => d.mm); return { lon: d3.sum(v, (d) => d.s.lon * d.mm) / mm, lat: d3.sum(v, (d) => d.s.lat * d.mm) / mm, mm, n: v.length, peak: d3.max(v, (d) => d.mm), fi, t: f.t }; }, (_, i) => find(i)).map(([, c]) => c);
+    const taken = new Set(), next = [];
+    cells.sort((a, b) => b.mm - a.mm).forEach((c) => {
+      let best = null, bd = LINK;
+      active.forEach((t) => { if (taken.has(t)) return; const p = t.pts.at(-1); const d = Math.hypot(p.lon - c.lon, p.lat - c.lat); if (d < bd) { bd = d; best = t; } });
+      if (best) { taken.add(best); best.pts.push(c); next.push(best); } else { const t = { pts: [c] }; tracks.push(t); next.push(t); }
+    });
+    active.forEach((t) => { if (!taken.has(t) && fi - t.pts.at(-1).fi < 3) next.push(t); });
+    active = next;
+  });
+  // Gauges are sparse, so a cell's centre hops between neighbours: smooth it over 15 minutes
+  // (rain-weighted) and judge movement by where it started and ended, not the summed hops.
+  RP._tracks = tracks.filter((t) => t.pts.length >= 3).map((t) => {
+    const sm = t.pts.map((_, i) => { const w = t.pts.slice(Math.max(0, i - 1), i + 2), mm = d3.sum(w, (p) => p.mm); return { lon: d3.sum(w, (p) => p.lon * p.mm) / mm, lat: d3.sum(w, (p) => p.lat * p.mm) / mm }; });
+    const a = sm[0], z = sm.at(-1), ai = areaAt(a.lon, a.lat), zi = areaAt(z.lon, z.lat);
+    const km = d3.geoDistance([a.lon, a.lat], [z.lon, z.lat]) * 6371;
+    const bearing = (Math.atan2(z.lon - a.lon, z.lat - a.lat) * 180 / Math.PI + 360) % 360;
+    const c = { lon: d3.sum(t.pts, (p) => p.lon * p.mm) / d3.sum(t.pts, (p) => p.mm), lat: d3.sum(t.pts, (p) => p.lat * p.mm) / d3.sum(t.pts, (p) => p.mm) }, ci = areaAt(c.lon, c.lat);
+    return { ...t, sm, km, moving: km >= 3, heading: compass(bearing), mm: d3.sum(t.pts, (p) => p.mm), centre: c, over: ci >= 0 ? AREAS[ci].n : 'offshore', from: ai >= 0 ? AREAS[ai].n : 'offshore', to: zi >= 0 ? AREAS[zi].n : 'offshore', start: minsOfDay(t.pts[0].t), mins: (t.pts.at(-1).fi - t.pts[0].fi + 1) * 5 };
+  }).sort((a, b) => a.start - b.start);
+  return RP._tracks;
+}
+const trackTip = (t) => `<div class="font-medium text-foreground">Rain cell, ${hhmm(t.pts[0].t)} to ${hhmm(t.pts.at(-1).t)}</div>
+  <div>${t.moving ? `${esc(t.from)} → ${esc(t.to)}, moved ${f1(t.km)} km ${t.heading}` : `Stayed over ${esc(t.over)} for ${t.mins} min`}</div>
+  <div class="font-mono text-muted-foreground">peak ${f1(d3.max(t.pts, (p) => p.peak))} mm in 5 min · up to ${d3.max(t.pts, (p) => p.n)} gauges wet</div><div class="text-muted-foreground">Click to replay it</div>`;
+VIEWS.weather.drawTracks = function () {
+  if (!this.built && !this.tiles) return;
+  pickables = pickables.filter((p) => !p.userData.track);
+  if (this.trackG) dispose(this.trackG);
+  this.trackG = new THREE.Group(); group.add(this.trackG);
+  if (RP.status !== 'ready') return;
+  const up = new THREE.Vector3(0, 1, 0);
+  stormTracks().forEach((t, ti) => {
+    const c = new THREE.Color(TRACK_COL(t.start)), dim = RP.on ? 0.95 : 0.6, ud = { track: true, pick: () => trackTip(t), onClick: () => playTrack(ti) };
+    if (!t.moving) {
+      // a cell that stayed put: a flat ring over where it rained, sized by its rain
+      const r = 0.22 + Math.sqrt(t.mm) * 0.06;
+      const ring = new THREE.Mesh(new THREE.RingGeometry(r * 0.78, r, 48), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: dim, side: THREE.DoubleSide, depthWrite: false }));
+      ring.rotation.x = -Math.PI / 2; ring.position.copy(V3(t.centre.lon, t.centre.lat, 0.06)); ring.userData = ud;
+      this.trackG.add(ring); pickables.push(ring);
+      return;
+    }
+    const pts = t.sm.map((p) => V3(p.lon, p.lat, 0.14));
+    const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+    const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(8, pts.length * 4), 0.045, 8, false), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: dim }));
+    tube.userData = ud;
+    const a = pts.at(-2), b = pts.at(-1), dir = b.clone().sub(a);
+    if (dir.lengthSq() > 1e-8) {
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.3, 12), tube.material);
+      cone.quaternion.setFromUnitVectors(up, dir.normalize()); cone.position.copy(b);
+      cone.userData = tube.userData; this.trackG.add(cone); pickables.push(cone);
+    }
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 10), tube.material); dot.position.copy(pts[0]);
+    this.trackG.add(tube, dot); pickables.push(tube);
+  });
+  this.drawMarks();
+};
+// Rings on the cells of the current replay frame.
+VIEWS.weather.drawMarks = function () {
+  if (!this.tiles) return;
+  if (this.markG) dispose(this.markG);
+  this.markG = new THREE.Group(); group.add(this.markG);
+  if (RP.status !== 'ready' || !RP.on || !this.trackG) return;
+  stormTracks().forEach((t) => {
+    const p = t.pts.find((q) => q.fi === RP.i); if (!p) return;
+    const r = 0.18 + Math.sqrt(p.mm) * 0.12;
+    const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + 0.045, 40), new THREE.MeshBasicMaterial({ color: B.amber, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false }));
+    ring.rotation.x = -Math.PI / 2; ring.position.copy(V3(p.lon, p.lat, 0.1));
+    this.markG.add(ring);
+  });
+};
+function playTrack(ti) {
+  const t = stormTracks()[ti]; if (!t) return;
+  jumpReplay(t.pts[0].fi);
+  const mid = t.pts[Math.floor(t.pts.length / 2)], c = V3(mid.lon, mid.lat, 0);
+  flyCam(c, c.clone().add(new THREE.Vector3(-2.5, 9, 10.5)));
+}
+function trackList(el) {
+  const ts = stormTracks();
+  if (!ts.length) { el.innerHTML = muted('No rain cell lasted 15 minutes or more today.'); return; }
+  const mv = ts.filter((t) => t.moving).length;
+  el.innerHTML = `<p class="text-[11px] text-muted-foreground">${ts.length} rain cell${ts.length > 1 ? 's' : ''} lasted 15 minutes or more today: ${mv ? `${mv} moved (lines with arrows)` : 'none moved far'}${ts.length - mv ? `, ${ts.length - mv} stayed put (rings)` : ''}. Coloured by time of day; click one to replay it.</p>
+    <div class="mt-1.5 space-y-0.5">${ts.map((t, i) => `<button data-track="${i}" class="flex w-full items-center gap-2 rounded px-1 py-0.5 text-left text-xs hover:bg-accent/50">
+      <span class="inline-block size-2 shrink-0 rounded-full" style="background:${TRACK_COL(t.start)}"></span>
+      <span class="w-[78px] shrink-0 font-mono text-[11px] text-ink-2">${hhmm(t.pts[0].t)}–${hhmm(t.pts.at(-1).t)}</span>
+      <span class="truncate text-ink-2">${t.moving ? `${esc(t.from)} → ${esc(t.to)} <span class="font-mono text-muted-foreground">${Math.round(t.km)} km ${t.heading}</span>` : `over ${esc(t.over)} <span class="text-muted-foreground">· stayed put</span>`}</span></button>`).join('')}</div>`;
+}
+function wettest(el) {
+  const last = RP.frames.at(-1); if (!last) return;
+  const top = [...last.cum].filter(([id, v]) => v > 0 && STN.has(id)).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  if (!top.length) { el.innerHTML = muted('Every gauge has stayed dry today.'); return; }
+  const max = top[0][1], col = d3.scaleSequentialSqrt([0, Math.max(10, max)], RAIN);
+  el.innerHTML = `<div class="space-y-1">${top.map(([id, v]) => `<button data-gauge="${esc(id)}" class="flex w-full items-center gap-2 rounded text-left text-xs hover:bg-accent/50 ${state.gauge === id ? 'text-amber' : ''}">
+      <span class="w-[118px] shrink-0 truncate ${state.gauge === id ? '' : 'text-ink-2'}" title="${esc(`${gaugeName(id)}, ${gaugeArea(id)}`)}">${esc(gaugeName(id))}</span>
+      <span class="h-2.5 rounded-sm" style="width:${(v / max) * 100}%;max-width:calc(100% - 170px);background:${state.gauge === id ? B.amber : col(v)}"></span>
+      <span class="font-mono">${f1(v)}</span></button>`).join('')}</div>`;
+}
+// One gauge's day: five-minute bars, with the replay cursor.
+function gaugeProfile(el, id) {
+  const w = el.clientWidth || 340, H = 70, m = { l: 2, r: 2, t: 6, b: 14 };
+  const pts = RP.frames.map((f) => ({ m: minsOfDay(f.t), v: f.v.get(id) ?? 0 }));
+  const x = d3.scaleLinear([0, 1440], [m.l, w - m.r]), y = d3.scaleLinear([0, Math.max(1, d3.max(pts, (p) => p.v))], [H - m.b, m.t]), bw = Math.max(1, x(5) - x(0) - 0.2);
+  el.innerHTML = `<svg width="${w}" height="${H}" class="block"><line x1="${m.l}" x2="${w - m.r}" y1="${y(0)}" y2="${y(0)}" stroke="#2b2f37"/>
+    ${pts.filter((p) => p.v > 0).map((p) => `<rect x="${x(p.m - 5)}" y="${y(p.v)}" width="${bw}" height="${y(0) - y(p.v)}" fill="${B.sky}"><title>${f1(p.v)} mm to ${String(Math.floor(p.m / 60)).padStart(2, '0')}:${String(p.m % 60).padStart(2, '0')}</title></rect>`).join('')}
+    ${[0, 6, 12, 18].map((h) => `<text x="${x(h * 60)}" y="${H - 3}" font-size="9" font-family="Source Code Pro" fill="#8b9099">${hourLbl(h)}</text>`).join('')}
+    <text x="${w - m.r}" y="${m.t + 4}" text-anchor="end" font-size="9" font-family="Source Code Pro" fill="#8b9099">max ${f1(y.domain()[1])} mm</text>
+    <line class="rp-cur" data-l="${x(0)}" data-r="${x(1440)}" y1="0" y2="${H - m.b}" stroke="${B.amber}" stroke-width="1.2" opacity="0"/></svg>`;
+  moveCursors();
+}
+function selectGauge(id, { fly: doFly = true, keep = false } = {}) {
+  state.gauge = keep ? id : state.gauge === id ? null : id; state.area = null;
+  VIEWS.weather.update(); VIEWS.weather.fill(); renderDetail();
+  const s = STN.get(state.gauge);
+  if (doFly && s) { const c = V3(s.lon, s.lat, 0); flyCam(c, c.clone().add(new THREE.Vector3(-1.8, 5.5, 7))); }
+}
+
+// ---------- air quality ----------
+// NEA reports five regions, so the island is drawn as five regions (tinted, with their borders) and
+// each region gets one column at its centre. In PSI mode a ring of thin bars around the column shows
+// every pollutant's sub-index: the PSI is the highest of them, so the tallest bar is the one setting it.
+const POLL = [['pm25', 'PM2.5', '#e58fb0'], ['pm10', 'PM10', '#f6c453'], ['o3', 'Ozone', '#7cc4dc'], ['so2', 'SO₂', '#c9a4f5'], ['co', 'CO', '#9ccf7f']];
+const POLL_NAME = Object.fromEntries(POLL.map(([k, n]) => [k, n])), POLL_COL = Object.fromEntries(POLL.map(([k, , c]) => [k, c]));
+const cap = (r) => (r ? r[0].toUpperCase() + r.slice(1) : '');
+const subIndex = (r, k) => AIR.psi?.readings?.[`${k}_sub_index`]?.[r];
+function driver(r) { const s = POLL.map(([k]) => [k, subIndex(r, k)]).filter(([, v]) => v != null); return s.length ? d3.greatest(s, (d) => d[1]) : null; }
+const airKey = () => (state.air === 'psi' ? 'psi_twenty_four_hourly' : 'pm25_one_hourly');
+const airDay = () => (state.air === 'psi' ? AIR.psiDay : AIR.pmDay);
+function airSeries(r, items = airDay(), key = airKey()) {
+  return (items ?? []).map((it) => ({ t: new Date(it.timestamp), m: minsOfDay(it.timestamp), v: it.readings?.[key]?.[r] })).filter((p) => p.v != null).sort((a, b) => a.t - b.t);
+}
+// Rising or falling over the last three hours of today's series.
+function trend(r) {
+  const s = airSeries(r); if (s.length < 2) return null;
+  const last = s.at(-1), ref = s.filter((p) => last.t - p.t >= 3 * 3600e3).at(-1); if (!ref) return null;
+  const d = last.v - ref.v, th = state.air === 'psi' ? 3 : 5;
+  return { d, dir: d >= th ? 'up' : d <= -th ? 'down' : 'flat' };
+}
+const trendIcon = (tr, cls = '') => (!tr ? '' : tr.dir === 'up' ? `<i class="fi fi-rr-arrow-trend-up ${cls}" style="color:#e8894a" title="Up ${Math.round(tr.d)} in 3 hours"></i>` : tr.dir === 'down' ? `<i class="fi fi-rr-arrow-trend-down ${cls}" style="color:#5fbf8f" title="Down ${Math.round(-tr.d)} in 3 hours"></i>` : `<i class="fi fi-rr-arrow-right ${cls} text-muted-foreground" title="About steady over 3 hours"></i>`);
+const trendText = (tr) => (!tr ? '' : tr.dir === 'up' ? `up ${Math.round(tr.d)} in 3 h` : tr.dir === 'down' ? `down ${Math.round(-tr.d)} in 3 h` : 'steady over 3 h');
+// Planning-area edges shared by two areas in different regions: the region borders.
+function regionBorders() {
+  const seen = new Map(), out = [], key = (p) => `${p[0].toFixed(5)},${p[1].toFixed(5)}`;
+  AREAS.forEach((a) => {
+    const r = VIEWS.air.regionOf(a);
+    a.p.forEach((poly) => poly.forEach((ring) => ring.forEach((pt, i) => {
+      const q = ring[(i + 1) % ring.length], k = [key(pt), key(q)].sort().join('|'), o = seen.get(k);
+      if (o) { if (o !== r) out.push(pt, q); } else seen.set(k, r);
+    })));
+  });
+  return out;
+}
+
+// A soft glow shell: brightest where the surface faces the camera, fading towards the top.
+function glowMaterial() {
+  return new THREE.ShaderMaterial({
+    uniforms: { color: { value: new THREE.Color(B.signal) }, strength: { value: 1 } },
+    vertexShader: 'varying vec3 vN; varying vec3 vV; varying float vY; void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); vY = uv.y; gl_Position = projectionMatrix * mv; }',
+    fragmentShader: 'uniform vec3 color; uniform float strength; varying vec3 vN; varying vec3 vV; varying float vY; void main() { float f = pow(abs(dot(vN, vV)), 1.6); float fade = mix(1.0, 0.35, vY); gl_FragColor = vec4(color * (0.6 + f), (0.12 + f) * fade * 0.9 * strength); }',
+    transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+  });
+}
+VIEWS.air = {
+  tab: 'Air', icon: 'fi-rr-wind',
+  title: 'How clean the air is',
+  blurb: 'NEA measures air quality for five regions. Each region is a glowing pillar, as tall as its 24-hour PSI or the last hour of fine particles (PM2.5) and coloured by NEA’s health bands. At its foot, a sunburst: one petal per pollutant (the brightest sets the PSI) inside a ring that fills to the reading.',
+  how: ['Region assignment, the health bands, what sets the PSI, the island-wide wind, today’s small multiples and the hour-by-hour grid.', 'Regions tinted with their borders; a glow-shaded pillar and a flat sunburst per region; drifting particles carried by the wind interpolated between stations.'],
+  camera: [-2, 17, 19], target: [0.5, 0, 0.6],
+  regionOf(a) {
+    if (a.reg) return a.reg;
+    if (!AIR.meta) return null;
+    let best = null, bd = Infinity;
+    AIR.meta.forEach((m) => { const d = (m.labelLocation.longitude - a.c[0]) ** 2 + (m.labelLocation.latitude - a.c[1]) ** 2; if (d < bd) { bd = d; best = m.name; } });
+    return (a.reg = best);
+  },
+  value(r) { return state.air === 'psi' ? AIR.psi?.readings?.psi_twenty_four_hourly?.[r] : AIR.pm?.readings?.pm25_one_hourly?.[r]; },
+  bands() { return state.air === 'psi' ? PSI_BANDS : PM_BANDS; },
+  build() {
+    this.tiles = island();
+    this.tiles.forEach((t) => { t.userData.pick = () => this.tip(AREAS[t.userData.area]); pickables.push(t); });
+    this.cols = null; this.borders = null;
+    const t0 = performance.now();
+    tickers.add(() => this.cols?.forEach((c, i) => {
+      const d = c.h - c.cur; if (Math.abs(d) > 1e-4) c.cur += reduceMotion ? d : d * 0.12;
+      c.core.scale.y = c.shell.scale.y = Math.max(c.cur, 1e-3); c.cap.position.y = c.cur; c.label.position.y = c.cur + 0.5;
+      // a slow breath in the glow, out of step between regions
+      const p = reduceMotion ? 1 : 0.85 + 0.15 * Math.sin((performance.now() - t0) / 900 + i * 1.3);
+      c.shell.material.uniforms.strength.value = c.glow * p; c.cap.material.opacity = 0.9 * c.glow * p;
+      c.rose.forEach((m) => { m.scale.setScalar(m.scale.x + (m.userData.s - m.scale.x) * (reduceMotion ? 1 : 0.12)); });
+    }));
+    this.update();
+  },
+  // Per region: a glowing pillar (bright core, glow shell, light at the top, a pool of light on the ground)
+  // and a flat sunburst at its foot: an inner rose of the five pollutant sub-indices (one petal each,
+  // length by value) and an outer gauge that fills clockwise from north to the reading, over the bands.
+  buildCols() {
+    const cyl = (r, seg = 32) => { const g = new THREE.CylinderGeometry(r, r, 1, seg, 1, true); g.translate(0, 0.5, 0); return g; };
+    const coreG = cyl(0.07, 16), shellG = cyl(0.3, 40);
+    const flat = (m) => { m.rotation.x = -Math.PI / 2; return m; };
+    const add = (blend = true) => ({ transparent: true, depthWrite: false, side: THREE.DoubleSide, ...(blend ? { blending: THREE.AdditiveBlending } : {}) });
+    this.cols = AIR.meta.map((mt) => {
+      const r = mt.name, g = new THREE.Group(), ud = { pick: () => this.colTip(r), onClick: () => selectRegion(r) };
+      g.position.copy(V3(mt.labelLocation.longitude, mt.labelLocation.latitude, 0));
+      const core = new THREE.Mesh(coreG, new THREE.MeshBasicMaterial({ color: '#ffffff', ...add() }));
+      const shell = new THREE.Mesh(shellG, glowMaterial());
+      const cap = new THREE.Sprite(new THREE.SpriteMaterial({ map: DOT, color: '#ffffff', ...add() })); cap.scale.setScalar(0.9);
+      const pool = flat(new THREE.Mesh(new THREE.CircleGeometry(1.25, 48), new THREE.MeshBasicMaterial({ map: DOT, color: '#ffffff', opacity: 0.35, ...add() }))); pool.position.y = 0.015;
+      shell.userData = ud; core.userData = ud;
+      // sunburst: the rose petals (unit petals scaled per value) and the gauge ring
+      const R0 = 0.3, span = (Math.PI * 2) / POLL.length;
+      const rose = POLL.map(([k], i) => {
+        const m = flat(new THREE.Mesh(new THREE.RingGeometry(0.0001, 1, 20, 1, Math.PI / 2 - (i + 1) * span + 0.06, span - 0.12), new THREE.MeshBasicMaterial({ color: POLL_COL[k], opacity: 0.85, ...add(false) })));
+        m.position.y = 0.03; m.scale.setScalar(0.001); m.userData = { s: 0.001, pick: () => this.subTip(r, k), onClick: ud.onClick };
+        return m;
+      });
+      const hole = flat(new THREE.Mesh(new THREE.CircleGeometry(R0, 32), new THREE.MeshBasicMaterial({ color: '#15171b', opacity: 0.85, ...add(false) }))); hole.position.y = 0.035;
+      const gauge = new THREE.Group(); gauge.position.y = 0.04;
+      [core, shell, cap, pool, hole, gauge, ...rose].forEach((o) => g.add(o));
+      [shell, core, ...rose].forEach((o) => pickables.push(o));
+      const label = lbl('', new THREE.Vector3(0, 0.5, 0), 'bg', g, true);
+      group.add(g);
+      return { r, g, core, shell, cap, pool, rose, gauge, label, h: 0.001, cur: 0.001, glow: 1 };
+    });
+  },
+  update() {
+    if (!this.tiles) return;
+    if (AIR.meta && !this.cols) this.buildCols();
+    if (AIR.meta && !this.borders) {
+      const pts = regionBorders();
+      if (pts.length) { this.borders = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts.map(([lon, lat]) => V3(lon, lat, 0.012))), new THREE.LineBasicMaterial({ color: '#8b9099', transparent: true, opacity: 0.9 })); group.add(this.borders); }
+    }
+    // tiles: a soft tint per region, brighter for the selected one
+    this.tiles.forEach((t) => {
+      const r = this.regionOf(AREAS[t.userData.area]);
+      const k = r == null ? 0 : state.region == null ? 0.16 : state.region === r ? 0.32 : 0.06;
+      t.material.color.set(r == null ? '#262a31' : d3.interpolateRgb('#22252b', REG_COL[r])(k));
+    });
+    if (!this.cols) { legend(); return; }
+    const psi = state.air === 'psi', bands = this.bands();
+    const top = Math.max(psi ? 100 : 80, d3.max(this.cols, (c) => this.value(c.r) ?? 0) * 1.1);
+    const sh = d3.scaleLinear([0, top], [0.05, 3.4]);
+    const subTop = Math.max(100, d3.max(this.cols, (c) => d3.max(POLL, ([k]) => subIndex(c.r, k) ?? 0)));
+    const gaugeMax = psi ? 400 : 350, ang = (v) => (Math.min(v, gaugeMax) / gaugeMax) * Math.PI * 2;
+    const arc = (r0, r1, a0, a1, color, opacity) => { const m = new THREE.Mesh(new THREE.RingGeometry(r0, r1, Math.max(6, Math.ceil((a1 - a0) * 20)), 1, Math.PI / 2 - a1, a1 - a0), new THREE.MeshBasicMaterial({ color, opacity, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); m.rotation.x = -Math.PI / 2; return m; };
+    this.cols.forEach((c) => {
+      const v = this.value(c.r), dim = state.region != null && state.region !== c.r, dr = psi ? driver(c.r) : null;
+      const col = new THREE.Color(v != null ? band(bands, v)[2] : '#3a3f48');
+      c.h = v != null ? sh(v) : 0.02; c.glow = dim ? 0.3 : 1;
+      c.shell.material.uniforms.color.value.copy(col);
+      c.core.material.color.copy(col.clone().lerp(new THREE.Color('#ffffff'), 0.55)); c.core.material.opacity = dim ? 0.35 : 1;
+      c.cap.material.color.copy(col.clone().lerp(new THREE.Color('#ffffff'), 0.3));
+      c.pool.material.color.copy(col); c.pool.material.opacity = dim ? 0.12 : 0.35;
+      // rose: petal length by sub-index, the PSI-setting pollutant at full strength
+      c.rose.forEach((m, i) => {
+        const k = POLL[i][0], sv = subIndex(c.r, k);
+        m.visible = psi && sv != null; m.userData.s = psi && sv != null ? 0.3 + (sv / subTop) * 0.95 : 0.001;
+        m.material.opacity = dim ? 0.18 : dr && dr[0] === k ? 0.95 : 0.4;
+      });
+      // gauge: faint band segments all the way round, the reading filled bright
+      dispose(c.gauge); c.gauge = new THREE.Group(); c.gauge.position.y = 0.04; c.g.add(c.gauge);
+      const R1 = 1.38, R2 = 1.5;
+      bands.forEach(([hi, , bc], j, a) => { const lo = j ? a[j - 1][0] : 0; if (lo >= gaugeMax) return; c.gauge.add(arc(R1, R2, ang(lo) + 0.01, ang(Math.min(hi, gaugeMax)) - 0.01, bc, dim ? 0.05 : 0.14)); });
+      if (v != null) { const fill = arc(R1 - 0.02, R2 + 0.02, 0, Math.max(0.02, ang(v)), band(bands, v)[2], dim ? 0.25 : 0.95); fill.userData = { pick: () => this.colTip(c.r), onClick: () => selectRegion(c.r) }; c.gauge.add(fill); pickables = pickables.filter((p) => p.userData.gaugeOf !== c.r); fill.userData.gaugeOf = c.r; pickables.push(fill); }
+      c.label.element.className = `lbl bg ${state.region === c.r ? 'sel' : 'strong'}`;
+      c.label.element.style.opacity = dim ? 0.5 : 1;
+      c.label.element.innerHTML = `<div style="text-align:center">${cap(c.r)} <span style="font-family:Source Code Pro">${v ?? '–'}</span> ${trendIcon(trend(c.r))}</div>${dr ? `<div style="text-align:center;font:400 10px Source Code Pro;color:${POLL_COL[dr[0]]}">set by ${POLL_NAME[dr[0]]}</div>` : ''}`;
+    });
+    this.drawFlow();
+    legend();
+  },
+  tip(a) {
+    const r = this.regionOf(a); if (!r) return `<div class="font-medium text-foreground">${esc(a.n)}</div><div class="text-muted-foreground">Sync “Air quality now” for readings</div>`;
+    const p = AIR.psi?.readings?.psi_twenty_four_hourly?.[r], pm = AIR.pm?.readings?.pm25_one_hourly?.[r];
+    return `<div class="font-medium text-foreground">${esc(a.n)}</div><div class="text-muted-foreground">${cap(r)} region</div>
+      ${p != null ? `<div class="font-mono">PSI ${p} · ${band(PSI_BANDS, p)[1]}</div>` : ''}${pm != null ? `<div class="font-mono">PM2.5 ${pm} µg/m³ · ${bandName(PM_BANDS, pm)}</div>` : ''}`;
+  },
+  colTip(r) {
+    const v = this.value(r), tr = trend(r), dr = driver(r);
+    return `<div class="font-medium text-foreground">${cap(r)} region</div>
+      <div class="font-mono">${state.air === 'psi' ? 'PSI' : 'PM2.5'} ${v ?? '–'}${state.air === 'psi' ? '' : ' µg/m³'} · ${v != null ? bandName(this.bands(), v) : ''}</div>
+      ${tr ? `<div class="text-muted-foreground">${trendText(tr)}</div>` : ''}${state.air === 'psi' && dr ? `<div style="color:${POLL_COL[dr[0]]}">Set by ${POLL_NAME[dr[0]]}</div>` : ''}<div class="text-muted-foreground">Click for every pollutant</div>`;
+  },
+  subTip(r, k) {
+    const s = subIndex(r, k), dr = driver(r);
+    return `<div class="font-medium text-foreground">${POLL_NAME[k]}, ${cap(r)}</div><div class="font-mono">sub-index ${s ?? '–'}</div><div class="text-muted-foreground">${dr?.[0] === k ? 'The highest sub-index, so it sets the PSI' : `Below ${POLL_NAME[dr?.[0]] ?? 'the top'} (${dr?.[1] ?? '–'})`}</div>`;
+  },
+  tilesHtml() {
+    const vals = REGIONS.map((r) => [r, this.value(r)]).filter(([, v]) => v != null);
+    if (!vals.length) return tile('Highest', '–', 'sync “Air quality now”') + tile('', '–');
+    const [hr, hv] = d3.greatest(vals, (d) => d[1]), [lr, lv] = d3.least(vals, (d) => d[1]), bd = band(this.bands(), hv);
+    const unit = state.air === 'psi' ? '' : '<span class="text-xs text-muted-foreground"> µg/m³</span>', when = (state.air === 'psi' ? AIR.psi : AIR.pm)?.timestamp;
+    const tr = trend(hr);
+    let second;
+    if (state.air === 'psi') {
+      const drs = REGIONS.map((r) => driver(r)?.[0]).filter(Boolean), [k, n] = d3.greatest(d3.rollups(drs, (v) => v.length, (d) => d), (d) => d[1]) ?? [];
+      second = tile('Main pollutant', k ? `<span style="color:${POLL_COL[k]}">${POLL_NAME[k]}</span>` : '–', k ? `sets the PSI in ${n} of ${drs.length} regions` : '');
+    } else second = tile(`Lowest: ${cap(lr)}`, `${lv}${unit}`, bandName(this.bands(), lv));
+    return tile(`Highest: ${cap(hr)}`, `<span style="color:${bd[2]}">${hv}</span>${unit} ${trendIcon(tr, 'text-[13px] align-[-1px]')}`, `${bandName(this.bands(), hv)}${tr ? ` · ${trendText(tr)}` : ''}`)
+      + second
+      + adviceBox();
+  },
+  opts() { return `<div class="mt-3 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Measure</span>${seg('air', [['psi', 'PSI, 24-hour'], ['pm25', 'PM2.5, 1-hour']], state.air)}</div>`; },
+  fill() {
+    const el = $('#body'); if (!el) return;
+    const psi = state.air === 'psi';
+    el.innerHTML = `${sec('Where the air is coming from', 'wind across the stations')}<div id="airwind"></div>
+      ${psi ? `${sec('What sets the PSI', 'sub-index by pollutant · the highest wins')}<div id="airdrv"></div>` : ''}
+      ${sec(psi ? '24-hour PSI today' : 'PM2.5 today, 1-hour', 'one scale · bands shaded')}<div id="airsm"></div>
+      ${sec('PM2.5 hour by hour', 'NEA 1-hour bands')}<div id="airgrid"></div>`;
+    windCard($('#airwind'));
+    if (psi) driverChart($('#airdrv'));
+    airMultiples($('#airsm')); pmGrid($('#airgrid'));
+  },
+  detail(el) {
+    if (state.region == null) { el.innerHTML = muted('<i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Click a region, a pillar or a chart row for every pollutant.'); return; }
+    const r = state.region, rd = AIR.psi?.readings ?? {}, g = (k) => rd[k]?.[r], dr = driver(r);
+    const rows = [['PSI, 24-hour', g('psi_twenty_four_hourly'), '', null], ['PM2.5, 1-hour', AIR.pm?.readings?.pm25_one_hourly?.[r], 'µg/m³', null], ['PM2.5, 24-hour', g('pm25_twenty_four_hourly'), 'µg/m³', 'pm25'], ['PM10, 24-hour', g('pm10_twenty_four_hourly'), 'µg/m³', 'pm10'], ['Ozone, 8-hour max', g('o3_eight_hour_max'), 'µg/m³', 'o3'], ['SO₂, 24-hour', g('so2_twenty_four_hourly'), 'µg/m³', 'so2'], ['CO, 8-hour max', g('co_eight_hour_max'), 'mg/m³', 'co'], ['NO₂, 1-hour max', g('no2_one_hour_max'), 'µg/m³', null]];
+    const areas = AREAS.filter((a) => this.regionOf(a) === r).map((a) => a.n);
+    el.innerHTML = `${headRow(`${cap(r)} region`, `${areas.length} planning areas`)}
+      <table class="mt-2 w-full text-xs"><thead><tr class="text-[11px] text-muted-foreground"><th class="pb-1 text-left font-normal">Reading</th><th class="pb-1 text-right font-normal">Value</th><th class="pb-1 text-right font-normal">Sub-index</th></tr></thead>
+      <tbody>${rows.map(([n, v, u, k]) => `<tr class="border-t ${k && dr?.[0] === k ? 'text-foreground' : ''}"><td class="py-1 ${k && dr?.[0] === k ? '' : 'text-ink-2'}">${k ? `<span class="mr-1 inline-block size-2 rounded-full" style="background:${POLL_COL[k]}"></span>` : ''}${n}</td><td class="py-1 text-right font-mono">${v ?? '–'} <span class="text-muted-foreground">${u}</span></td><td class="py-1 text-right font-mono">${k ? `${subIndex(r, k) ?? '–'}${dr?.[0] === k ? ' <span class="text-amber">sets PSI</span>' : ''}` : ''}</td></tr>`).join('')}</tbody></table>
+      <p class="mt-2 text-[11px] leading-relaxed text-muted-foreground">${esc(areas.join(', '))}</p>`;
+  },
+  legend() {
+    const b = `<div class="mb-1 text-foreground">${state.air === 'psi' ? '24-hour PSI' : 'PM2.5, 1-hour (µg/m³)'}</div>${this.bands().map(([hi, n, c], i, a) => `<div class="flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm" style="background:${c}"></span>${state.air === 'psi' ? n : `Band ${i + 1} · ${n}`} <span class="font-mono text-[10.5px]">${i ? a[i - 1][0] + 1 : 0}${hi === Infinity ? '+' : `–${hi}`}</span></div>`).join('')}`;
+    const flow = windField() ? '<div class="mt-2 border-t pt-1.5">Drifting light-blue dots: the wind, from the weather stations</div>' : '';
+    return state.air === 'psi' ? `${b}${flow}<div class="mb-1 mt-2 border-t pt-1.5 text-foreground">Sunburst petals: pollutant sub-indices</div><div class="flex flex-wrap gap-x-2.5 gap-y-0.5">${POLL.map(([, n, c]) => `<span class="flex items-center gap-1"><span class="inline-block size-2 rounded-full" style="background:${c}"></span>${n}</span>`).join('')}</div>` : b + flow;
+  },
+};
+// ---------- wind over the air map ----------
+// Wind from the Weather tab's stations (synced with "Weather now"), as vectors in world units:
+// x east, z south; meteorological direction is where the wind comes from.
+function windField() {
+  if (!W.wd || !W.ws) return null;
+  const vs = [];
+  W.wd.v.forEach((deg, id) => { const kn = W.ws.v.get(id), s = STN.get(id); if (!s || deg == null || kn == null) return; const to = ((deg + 180) * Math.PI) / 180, [x, z] = P(s.lon, s.lat); vs.push({ x, z, u: Math.sin(to) * kn, w: -Math.cos(to) * kn, kn }); });
+  if (!vs.length) return null;
+  const U = d3.mean(vs, (d) => d.u), Wz = d3.mean(vs, (d) => d.w), net = Math.hypot(U, Wz), avg = d3.mean(vs, (d) => d.kn);
+  const from = ((Math.atan2(U, -Wz) * 180) / Math.PI + 180 + 360) % 360;
+  return { vs, from, net, avg, steady: avg > 0 && net / avg > 0.45 && avg >= 2, ts: W.wd.ts };
+}
+const COMPASS_LONG = { N: 'north', NE: 'north-east', E: 'east', SE: 'south-east', S: 'south', SW: 'south-west', W: 'west', NW: 'north-west' };
+function windCard(el) {
+  const wf = windField();
+  if (!wf) { el.innerHTML = `<div class="flex items-center justify-between gap-2 rounded-lg border bg-background/40 p-2 text-xs text-muted-foreground"><span>Sync “Weather now” for the wind, to see where the air is coming from.</span><button data-sync-group="weather" class="inline-flex size-7 shrink-0 items-center justify-center rounded-md hover:bg-accent hover:text-foreground" aria-label="Sync Weather now"><i class="fi fi-rr-refresh"></i></button></div>`; return; }
+  const dir = COMPASS_LONG[compass(wf.from)], to = (wf.from + 180) % 360;
+  el.innerHTML = `<div class="flex items-center gap-3 rounded-lg border bg-background/40 p-2.5">
+    <svg width="44" height="44" viewBox="-22 -22 44 44" class="shrink-0"><circle r="20" fill="none" stroke="#2b2f37"/>${['N', 'E', 'S', 'W'].map((c, i) => { const a = (i * Math.PI) / 2; return `<text x="${Math.sin(a) * 15}" y="${-Math.cos(a) * 15 + 3}" text-anchor="middle" font-size="7" font-family="Source Code Pro" fill="#8b9099">${c}</text>`; }).join('')}
+      <g transform="rotate(${to})"><line x1="0" y1="9" x2="0" y2="-7" stroke="${wf.steady ? B.ink : '#8b9099'}" stroke-width="2"/><path d="M0 -12 L4.5 -5 L-4.5 -5 Z" fill="${wf.steady ? B.ink : '#8b9099'}"/></g></svg>
+    <div class="min-w-0 text-xs"><div class="text-sm font-medium text-foreground">${wf.steady ? `Wind from the ${dir}` : 'Light, variable wind'}</div>
+      <div class="font-mono text-muted-foreground">${f1(wf.avg)} knots on average · ${wf.vs.length} stations · ${hhmm(wf.ts)}</div>
+      <div class="mt-0.5 text-ink-2">${wf.steady ? `Air is reaching the island from the ${dir}: in haze season, smoke arrives on this side first.` : 'No steady direction, so air lingers rather than being carried across.'}</div></div></div>`;
+}
+VIEWS.air.drawFlow = function () {
+  if (this.flow) { tickers.delete(this.flow.tick); dispose(this.flow.pts); this.flow = null; }
+  const wf = windField(); if (!wf || !this.cols) return;
+  const N = 1100, X0 = -12.5, X1 = 12.5, Z0 = -8, Z1 = 8;
+  const pos = new Float32Array(N * 3), age = new Float32Array(N), life = new Float32Array(N);
+  const spawn = (i, fresh) => {
+    const x = X0 + Math.random() * (X1 - X0), z = Z0 + Math.random() * (Z1 - Z0);
+    pos[i * 3] = x; pos[i * 3 + 1] = 0.25 + Math.random() * 0.5; pos[i * 3 + 2] = z;
+    life[i] = 120 + Math.random() * 200; age[i] = fresh ? Math.random() * life[i] : 0;
+  };
+  for (let i = 0; i < N; i++) spawn(i, true);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.11, map: DOT, color: '#cfe9ff', transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending }));
+  group.add(pts);
+  // velocity at a point: inverse-distance mix of the station vectors
+  const vel = (x, z) => { let sw = 0, su = 0, sv = 0; for (const d of wf.vs) { const w = 1 / ((d.x - x) ** 2 + (d.z - z) ** 2 + 0.3); sw += w; su += w * d.u; sv += w * d.w; } return [su / sw, sv / sw]; };
+  const K = 0.0035, MIN = 0.006;   // world units per frame per knot; light winds still visibly drift
+  const tick = () => {
+    if (reduceMotion) return;
+    for (let i = 0; i < N; i++) {
+      const x = pos[i * 3], z = pos[i * 3 + 2], [u, w] = vel(x, z);
+      const sp = Math.hypot(u, w) * K, f = sp > 0 && sp < MIN ? MIN / sp : 1;
+      pos[i * 3] = x + u * K * f; pos[i * 3 + 2] = z + w * K * f; age[i]++;
+      if (age[i] > life[i] || pos[i * 3] < X0 || pos[i * 3] > X1 || pos[i * 3 + 2] < Z0 || pos[i * 3 + 2] > Z1) spawn(i, false);
+    }
+    geo.attributes.position.needsUpdate = true;
+  };
+  tickers.add(tick);
+  this.flow = { pts, tick };
+};
+// NEA's advice table, for the band of the highest 24-hour PSI across the regions.
+function adviceBox() {
+  const ps = REGIONS.map((r) => AIR.psi?.readings?.psi_twenty_four_hourly?.[r]).filter((v) => v != null);
+  if (!ps.length) return '';
+  const hi = d3.max(ps), [top, name, c] = band(PSI_BANDS, hi), i = PSI_BANDS.findIndex((b) => b[1] === name), lo = i ? PSI_BANDS[i - 1][0] + 1 : 0;
+  return `<div class="col-span-2 overflow-hidden rounded-lg border bg-background/40 text-xs">
+    <div class="flex items-center justify-between gap-2 border-b px-2.5 py-1.5"><span class="text-[10.5px] font-medium uppercase tracking-wide text-muted-foreground">Advice for</span>
+      <span class="flex items-center gap-2"><span class="h-6 w-1 rounded-full" style="background:${c}"></span><span class="text-right"><span class="block font-medium text-foreground">${name}</span><span class="block font-mono text-[10.5px] text-muted-foreground">PSI ${lo}${top === Infinity ? '+' : `–${top}`}</span></span></span></div>
+    ${ADVICE_GROUPS.map((g, k) => `<div class="grid grid-cols-[1fr_1fr] gap-2 px-2.5 py-1.5 ${k ? 'border-t' : ''}"><span class="font-medium text-ink-2">${g}</span><span class="text-muted-foreground">${AIR_ADVICE[name][k]}</span></div>`).join('')}
+    <p class="border-t px-2.5 py-1.5 text-[11px] text-muted-foreground"><i class="fi fi-rr-info mr-1 align-[-1px]"></i>NEA’s advisory, based on the highest 24-hour PSI now (${hi}).</p></div>`;
+}
+function selectRegion(r) {
+  state.region = state.region === r ? null : r; state.area = null;
+  VIEWS.air.update(); VIEWS.air.fill(); renderDetail();
+}
+// Each region's row: a dot per pollutant sub-index on the PSI scale, health bands behind; the highest is ringed.
+function driverChart(el) {
+  if (!AIR.psi) { el.innerHTML = muted('Sync “Air quality now” above.'); return; }
+  const rs = REGIONS.filter((r) => AIR.psi.readings.psi_twenty_four_hourly?.[r] != null).sort((a, b) => AIR.psi.readings.psi_twenty_four_hourly[b] - AIR.psi.readings.psi_twenty_four_hourly[a]);
+  const w = el.clientWidth || 340, m = { l: 62, r: 62, t: 4, b: 16 }, rowH = 22, H = m.t + rs.length * rowH + m.b;
+  const max = Math.max(100, d3.max(rs, (r) => d3.max(POLL, ([k]) => subIndex(r, k) ?? 0)) * 1.1);
+  const x = d3.scaleLinear([0, max], [m.l, w - m.r]);
+  el.innerHTML = `<div class="mb-1 flex flex-wrap gap-x-2.5 gap-y-0.5 text-[11px] text-muted-foreground">${POLL.map(([, n, c]) => `<span class="flex items-center gap-1"><span class="inline-block size-2 rounded-full" style="background:${c}"></span>${n}</span>`).join('')}</div>
+    <svg width="${w}" height="${H}" class="block">
+    ${PSI_BANDS.map(([hi, , c], i, a) => { const lo = i ? a[i - 1][0] : 0; if (lo >= max) return ''; return `<rect x="${x(lo)}" y="${m.t}" width="${x(Math.min(hi, max)) - x(lo)}" height="${rs.length * rowH}" fill="${c}" fill-opacity="0.07"/>`; }).join('')}
+    ${rs.map((r, i) => {
+      const y = m.t + i * rowH + rowH / 2, dr = driver(r), sel = state.region === r;
+      const dots = POLL.map(([k]) => [k, subIndex(r, k)]).filter(([, v]) => v != null).sort((a, b) => (a[0] === dr?.[0]) - (b[0] === dr?.[0]));
+      return `<g data-region="${r}" style="cursor:pointer"><rect x="0" y="${y - rowH / 2}" width="${w}" height="${rowH}" fill="${sel ? '#f6c453' : 'transparent'}" fill-opacity="${sel ? 0.08 : 0}"/>
+        <line x1="${m.l}" x2="${w - m.r}" y1="${y}" y2="${y}" stroke="#2b2f37"/>
+        <text x="4" y="${y + 3.5}" font-size="11" fill="${sel ? B.amber : '#b8b5ac'}">${cap(r)}</text><text x="${m.l - 6}" y="${y + 3.5}" text-anchor="end" font-size="10.5" font-family="Source Code Pro" fill="#e4e1d8">${AIR.psi.readings.psi_twenty_four_hourly[r]}</text>
+        ${dots.map(([k, v]) => `<circle cx="${x(v)}" cy="${y}" r="${k === dr?.[0] ? 5.5 : 3.5}" fill="${POLL_COL[k]}" stroke="${k === dr?.[0] ? '#e4e1d8' : 'none'}" stroke-width="1.2"><title>${POLL_NAME[k]}: ${v}</title></circle>`).join('')}
+        ${dr ? `<text x="${w - m.r + 6}" y="${y + 3.5}" font-size="10.5" fill="${POLL_COL[dr[0]]}">${POLL_NAME[dr[0]]}</text>` : ''}</g>`;
+    }).join('')}
+    ${[0, 50, 100, 200, 300].filter((t) => t <= max).map((t) => `<text x="${x(t)}" y="${H - 3}" text-anchor="middle" font-size="9" font-family="Source Code Pro" fill="#8b9099">${t}</text>`).join('')}
+  </svg>`;
+}
+// Today per region, one small chart each on a shared scale, health bands shaded behind.
+function airMultiples(el) {
+  const items = airDay();
+  if (!items?.length) { el.innerHTML = muted(sync.running ? 'Waiting for the sync…' : 'Sync “Air quality today” above for today’s readings.'); return; }
+  const series = REGIONS.map((r) => ({ r, s: airSeries(r) })).filter((d) => d.s.length);
+  const w = el.clientWidth || 340, m = { l: 62, r: 62 }, h = 36, gap = 6, H = series.length * (h + gap) + 14;
+  const bands = state.air === 'psi' ? PSI_BANDS : PM_BANDS, max = Math.max(state.air === 'psi' ? 100 : 60, d3.max(series, (d) => d3.max(d.s, (p) => p.v)) * 1.1);
+  const x = d3.scaleLinear([0, 1440], [m.l, w - m.r]);
+  el.innerHTML = `<svg width="${w}" height="${H}" class="block">${series.map(({ r, s }, i) => {
+    const y0 = i * (h + gap), y = d3.scaleLinear([0, max], [y0 + h, y0 + 2]), last = s.at(-1), tr = trend(r), sel = state.region === r;
+    const bg = bands.map(([hi, , c], j, a) => { const lo = j ? a[j - 1][0] : 0; if (lo >= max) return ''; return `<rect x="${m.l}" y="${y(Math.min(hi, max))}" width="${w - m.l - m.r}" height="${y(lo) - y(Math.min(hi, max))}" fill="${c}" fill-opacity="0.1"/>`; }).join('');
+    const line = d3.line().x((p) => x(p.m)).y((p) => y(p.v)).curve(d3.curveMonotoneX)(s);
+    const arrow = tr ? (tr.dir === 'up' ? '▲' : tr.dir === 'down' ? '▼' : '▬') : '', ac = tr ? (tr.dir === 'up' ? '#e8894a' : tr.dir === 'down' ? '#5fbf8f' : '#8b9099') : '';
+    return `<g data-region="${r}" style="cursor:pointer">${bg}<path d="${line}" fill="none" stroke="${sel ? B.amber : '#e4e1d8'}" stroke-width="${sel ? 2 : 1.4}"/>
+      <circle cx="${x(last.m)}" cy="${y(last.v)}" r="3" fill="${band(bands, last.v)[2]}"/>
+      <text x="4" y="${y0 + h / 2 + 4}" font-size="11" fill="${sel ? B.amber : '#b8b5ac'}">${cap(r)}</text>
+      <text x="${w - m.r + 6}" y="${y0 + h / 2 + 4}" font-size="11" font-family="Source Code Pro" fill="#e4e1d8">${last.v} <tspan fill="${ac}" font-size="9">${arrow}</tspan></text>
+      <title>${cap(r)}: ${last.v} at ${hhmm(last.t)}${tr ? `, ${trendText(tr)}` : ''}</title></g>`;
+  }).join('')}
+  ${[0, 6, 12, 18, 24].map((hh) => `<text x="${x(hh * 60)}" y="${H - 2}" text-anchor="middle" font-size="9" font-family="Source Code Pro" fill="#8b9099">${hourLbl(hh % 24)}</text>`).join('')}</svg>`;
+}
+// Region by hour, each cell the PM2.5 1-hour band.
+function pmGrid(el) {
+  const items = AIR.pmDay;
+  if (!items?.length) { el.innerHTML = muted(sync.running ? 'Waiting for the sync…' : 'Sync “Air quality today” above for the hourly grid.'); return; }
+  const w = el.clientWidth || 340, m = { l: 62, r: 4, t: 2, b: 14 }, rowH = 14, H = m.t + REGIONS.length * rowH + m.b;
+  const x = d3.scaleBand(d3.range(24), [m.l, w - m.r]).padding(0.08);
+  const byH = new Map(items.map((it) => [sgHour(new Date(it.timestamp)), it.readings?.pm25_one_hourly ?? {}]));
+  el.innerHTML = `<svg width="${w}" height="${H}" class="block">${REGIONS.map((r, i) => {
+    const y = m.t + i * rowH;
+    return `<g data-region="${r}" style="cursor:pointer"><text x="4" y="${y + rowH - 4}" font-size="10.5" fill="${state.region === r ? B.amber : '#b8b5ac'}">${cap(r)}</text>
+      ${d3.range(24).map((hh) => { const v = byH.get(hh)?.[r]; return v == null ? `<rect x="${x(hh)}" y="${y + 1}" width="${x.bandwidth()}" height="${rowH - 2}" rx="1.5" fill="none" stroke="#2b2f37"/>` : `<rect x="${x(hh)}" y="${y + 1}" width="${x.bandwidth()}" height="${rowH - 2}" rx="1.5" fill="${bandShade(PM_BANDS, v)}"><title>${cap(r)}, ${hourLbl(hh)}: PM2.5 ${v} µg/m³ (${bandName(PM_BANDS, v)})</title></rect>`; }).join('')}</g>`;
+  }).join('')}
+  ${[0, 6, 12, 18].map((hh) => `<text x="${x(hh)}" y="${H - 2}" font-size="9" font-family="Source Code Pro" fill="#8b9099">${hourLbl(hh)}</text>`).join('')}</svg>`;
+}
+
+// ---------- taxis ----------
+// Free taxis only, no IDs: what we can show is where free taxis are and how that shifts hour to hour.
+const CHANGI = [103.976, 1.332, 103.998, 1.368];   // lon/lat box around the airport terminals' taxi queues
+const HEX_R = 0.24;                                 // hex radius in world units (about 0.5 km)
+// Pointy-top hexagons in the x-z plane: axial coordinates by cube rounding.
+function hexOf(x, z) {
+  const q = ((Math.sqrt(3) / 3) * x - z / 3) / HEX_R, r = ((2 / 3) * z) / HEX_R, s = -q - r;
+  let rq = Math.round(q), rr = Math.round(r), rs = Math.round(s);
+  const dq = Math.abs(rq - q), dr = Math.abs(rr - r), ds = Math.abs(rs - s);
+  if (dq > dr && dq > ds) rq = -rr - rs; else if (dr > ds) rr = -rq - rs;
+  return `${rq},${rr}`;
+}
+const hexCentre = (k) => { const [q, r] = k.split(',').map(Number); return [HEX_R * Math.sqrt(3) * (q + r / 2), HEX_R * 1.5 * r]; };
+// Per frame, computed once: counts by planning area, at Changi Airport, and by hexagon.
+function txStats(fr) {
+  if (fr._s) return fr._s;
+  const byArea = new Int32Array(AREAS.length), hex = new Map();
+  let changi = 0;
+  fr.pts.forEach(([lon, lat]) => {
+    const a = areaAt(lon, lat); if (a >= 0) byArea[a]++;
+    if (lon >= CHANGI[0] && lon <= CHANGI[2] && lat >= CHANGI[1] && lat <= CHANGI[3]) changi++;
+    const [x, z] = P(lon, lat), k = hexOf(x, z); hex.set(k, (hex.get(k) ?? 0) + 1);
+  });
+  return (fr._s = { byArea, changi, hex });
+}
+// The frame to compare against: the one picked, or an hour before the frame shown.
+function txCompare() {
+  const B = VIEWS.taxis.shown(); if (!B || !TX.frames.length) return [null, B];
+  if (state.txFrom != null && TX.frames[state.txFrom] && TX.frames[state.txFrom] !== B) return [TX.frames[state.txFrom], B];
+  if (TX.hour != null) return [TX.frames[TX.hour - 1] ?? null, B];
+  const ref = [...TX.frames].reverse().find((f) => new Date(B.t) - new Date(f.t) >= 50 * 60e3);
+  return [ref ?? null, B];
+}
+const CHG = d3.interpolateRgbBasis(['#e58fb0', '#3a3f48', '#1fefd7']);
+const regionShort = (r) => r.replace(' Region', '');
+
+VIEWS.taxis = {
+  tab: 'Taxis', icon: 'fi-rr-taxi',
+  title: 'Every free taxi on the road',
+  blurb: 'Every taxi free for hire, as LTA reports it. See them as points, as glowing hexagons, grouped by town, or as the change since an earlier hour: where free taxis vanished, demand took them.',
+  how: ['Point-in-polygon counts by town, hexagonal binning, the change between hours, the area-by-hour heatmap and the Changi queue.', 'A point cloud, instanced hexagon columns that ease between hours, or extruded towns.'],
+  camera: [-2, 17, 19], target: [0.5, 0, 0.6],
+  shown() { return TX.hour != null && TX.frames[TX.hour] ? TX.frames[TX.hour] : TX.live; },
+  build() {
+    this.tiles = island();
+    this.tiles.forEach((t) => { t.userData.pick = () => this.areaTip(t.userData.area); pickables.push(t); });
+    this.cloud = this.hex = this.ameshes = this.alabels = null; this.hexKey = '';
+    this.update();
+  },
+  // Extruded towns, shared by the Areas and Change views; heights ease.
+  buildAreas() {
+    this.ameshes = AREAS.map((a) => {
+      const geo = new THREE.ExtrudeGeometry(a.p.map(shapeOf), { depth: 1, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
+      const m = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ color: B.signal, roughness: 0.6, metalness: 0.05 }), new THREE.MeshBasicMaterial({ color: B.signal })]);
+      m.scale.y = 0.001; m.userData = { area: a.i, h: 0.001, pick: () => this.areaTip(a.i) };
+      group.add(m); pickables.push(m); return m;
+    });
+    tickers.add(() => this.ameshes?.forEach((m) => { const d = m.userData.h - m.scale.y; if (Math.abs(d) > 1e-4) m.scale.y += reduceMotion ? d : d * 0.14; }));
+  },
+  update() {
+    const fr = this.shown(); if (!fr || !this.tiles) return;
+    const S = txStats(fr), mode = state.taxi;
+    this.tiles.forEach((t) => t.material.color.set(state.area === t.userData.area ? '#4a4128' : '#262a31'));
+    if (this.alabels) dispose(this.alabels);
+    this.alabels = new THREE.Group(); group.add(this.alabels);
+    // points
+    if (this.cloud) { dispose(this.cloud); this.cloud = null; }
+    if (mode === 'points') {
+      const xs = []; fr.pts.forEach(([lon, lat]) => { const [x, z] = P(lon, lat); xs.push(x, 0.03, z); });
+      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(xs, 3));
+      this.cloud = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.17, map: DOT, color: B.amber, transparent: true, opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending }));
+      group.add(this.cloud);
+    }
+    // hexagons: one instance per hexagon seen in any frame today, so heights ease between hours
+    if (mode === 'hex') {
+      const key = `${TX.frames.length}|${TX.live?.t}`;
+      if (!this.hex || this.hexKey !== key) {
+        if (this.hex) { tickers.delete(this.hex.tick); pickables = pickables.filter((p) => p !== this.hex.mesh); dispose(this.hex.mesh); }
+        const keys = [...new Set([...TX.frames, TX.live].filter(Boolean).flatMap((f) => [...txStats(f).hex.keys()]))];
+        this.hex = bars(keys.length, { w: HEX_R * 1.84, hexagon: true }); this.hex.keys = keys; this.hexKey = key;
+        keys.forEach((k, i) => { const [x, z] = hexCentre(k); this.hex.place(i, new THREE.Vector3(x, 0, z)); });
+        this.hex.mesh.userData = { alive: (i) => this.hex.alive(i), pick: (h) => { const k = this.hex.keys[h.instanceId], n = txStats(this.shown()).hex.get(k) ?? 0, [x, z] = hexCentre(k), [lon, lat] = proj.invert([x, z]), a = areaAt(lon, lat); return `<div class="font-mono text-foreground">${n} free taxi${n === 1 ? '' : 's'}</div><div class="text-muted-foreground">${a >= 0 ? esc(AREAS[a].n) : 'at sea or the border'} · hexagon about ${f1(HEX_R * Math.sqrt(3) * kmPerUnit())} km across</div>`; } };
+        pickables.push(this.hex.mesh);
+      }
+      const max = d3.max([...TX.frames, TX.live].filter(Boolean), (f) => d3.max(txStats(f).hex.values())) || 1, col = d3.scaleSequentialSqrt([0, max], RAMP);
+      this.hex.keys.forEach((k, i) => { const n = S.hex.get(k) ?? 0; this.hex.set(i, n ? 0.05 + Math.sqrt(n / max) * 2.6 : 0, n ? col(n) : B.line); });
+      this.hex.commit();
+      this.hex.mesh.visible = true;
+    } else if (this.hex) this.hex.mesh.visible = false;
+    // towns: raised by free taxis, or by the change since the compared frame
+    if (mode === 'areas' || mode === 'change') {
+      if (!this.ameshes) this.buildAreas();
+      const [A] = mode === 'change' ? txCompare() : [null];
+      const SA = A ? txStats(A) : null;
+      const vals = AREAS.map((a) => (mode === 'areas' ? S.byArea[a.i] : SA ? S.byArea[a.i] - SA.byArea[a.i] : 0));
+      const max = d3.max(vals, (v) => Math.abs(v)) || 1, col = d3.scaleSequentialSqrt([0, max], RAMP), dv = d3.scaleDiverging([-max, 0, max], CHG);
+      this.ameshes.forEach((m, i) => {
+        const v = vals[i]; m.visible = true;
+        m.userData.h = mode === 'areas' ? (v ? 0.04 + Math.sqrt(v / max) * 2.6 : 0.001) : 0.03 + (Math.abs(v) / max) * 2.2;
+        const c = new THREE.Color(state.area === i ? B.amber : mode === 'areas' ? (v ? col(v) : '#2f333a') : dv(v));
+        m.material[0].color.copy(c); m.material[1].color.copy(c).multiplyScalar(0.55);
+      });
+      // labels on the biggest values (or the biggest moves both ways)
+      const order = d3.range(AREAS.length).filter((i) => vals[i]);
+      const pick = mode === 'areas' ? order.sort((a, b) => vals[b] - vals[a]).slice(0, 8) : [...order.sort((a, b) => vals[a] - vals[b]).slice(0, 4).filter((i) => vals[i] < 0), ...order.sort((a, b) => vals[b] - vals[a]).slice(0, 4).filter((i) => vals[i] > 0)];
+      if (state.area != null && !pick.includes(state.area)) pick.push(state.area);
+      pick.forEach((i) => { const a = AREAS[i], v = vals[i]; const o = lbl(`${a.n} ${mode === 'change' && v > 0 ? '+' : ''}${v}`, V3(...a.c, this.ameshes[i].userData.h + 0.3), `bg ${state.area === i ? 'sel' : ''}`, this.alabels); o.element.style.color = mode === 'change' ? (v < 0 ? B.pink : B.signal) : ''; });
+    } else this.ameshes?.forEach((m) => { m.visible = false; });
+    legend();
+  },
+  areaTip(i) {
+    const fr = this.shown(); if (!fr) return '';
+    const n = txStats(fr).byArea[i], [A] = txCompare(), d = A ? n - txStats(A).byArea[i] : null;
+    return `<div class="font-medium text-foreground">${esc(AREAS[i].n)}</div><div class="text-muted-foreground">${esc(AREAS[i].r)}</div><div class="font-mono">${n} free taxi${n === 1 ? '' : 's'}${TX.hour != null ? ` at ${hourLbl(fr.h)}` : ''}</div>${d != null ? `<div class="font-mono" style="color:${d < 0 ? B.pink : d > 0 ? B.signal : B.fog}">${d > 0 ? '+' : ''}${d} since ${hhmm(A.t)}${d < 0 ? ', taken' : d > 0 ? ', waiting' : ''}</div>` : ''}`;
+  },
+  tilesHtml() {
+    const fr = this.shown(); if (!fr) return tile('Free taxis', '–', 'sync “Taxis now”') + tile('', '–');
+    const S = txStats(fr), n = fr.pts.length, busiest = d3.greatestIndex(S.byArea), [A] = txCompare(), d = A ? n - A.pts.length : null;
+    const prev = TX.hist.length > 1 ? TX.hist.at(-2).n : null;
+    return tile('Free taxis', f0(n), TX.hour != null ? `at ${hhmm(fr.t)}` : prev != null ? `${n - prev >= 0 ? '+' : '−'}${f0(Math.abs(n - prev))} since the last sync` : `as of ${hhmm(fr.t)}`)
+      + tile('Busiest town', busiest >= 0 ? esc(AREAS[busiest].n) : '–', busiest >= 0 ? `${S.byArea[busiest]} taxis · ${pctF(S.byArea[busiest] / n)}` : '')
+      + tile('At Changi Airport', f0(S.changi), `${pctF(S.changi / n)} of free taxis, queuing`)
+      + tile('Vs an hour earlier', d != null ? `<span style="color:${d < 0 ? B.pink : B.signal}">${d > 0 ? '+' : '−'}${f0(Math.abs(d))}</span>` : '–', d != null ? `since ${hhmm(A.t)} · ${d < 0 ? 'more taken' : 'more waiting'}` : 'sync “Taxis today”');
+  },
+  opts() {
+    const cmp = state.taxi === 'change' && TX.frames.length ? `<div class="mt-2 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Compare with</span>
+      <div class="relative"><select id="tx-from" class="h-8 w-[170px] appearance-none rounded-md border bg-background/60 pl-2.5 pr-8 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+        <option value="">An hour earlier</option>${TX.frames.map((f, i) => `<option value="${i}" ${state.txFrom === i ? 'selected' : ''}>${hourLbl(f.h)}</option>`).join('')}</select>
+      <i class="fi fi-rr-angle-small-down pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"></i></div></div>` : '';
+    return `<div class="mt-3 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Show</span>${seg('taxi', [['points', 'Taxis'], ['hex', 'Hexes'], ['areas', 'Towns'], ['change', 'Change']], state.taxi)}</div>${cmp}<div id="txday" class="mt-3"></div>`;
+  },
+  fill() {
+    txDay();
+    const el = $('#body'); if (!el) return;
+    const fr = this.shown(); if (!fr) { el.innerHTML = ''; return; }
+    el.innerHTML = `${state.taxi === 'change' ? `${sec('Where taxis got taken', '')}<div id="txchg"></div>` : ''}
+      ${sec('By town', `${TX.hour != null ? hourLbl(fr.h) : 'now'} · grouped by region`)}<div id="txtown"></div>
+      ${sec('Through the day, by town', 'free taxis on the hour')}<div id="txheat"></div>
+      ${sec('Changi Airport queue', 'free taxis at the terminals, on the hour')}<div id="txchangi"></div>
+      ${TX.hist.length > 1 && TX.hour == null ? `${sec('Since you opened the page', 'each sync')}<div id="txhist"></div>` : ''}`;
+    if ($('#txchg')) taxiChanges($('#txchg'));
+    taxiTowns($('#txtown'), fr); taxiHeat($('#txheat')); taxiChangi($('#txchangi'));
+    if ($('#txhist')) spark($('#txhist'), TX.hist.map((d) => d.n), B.amber);
+  },
+  detail(el) {
+    if (state.area == null) { el.innerHTML = muted('<i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Click a town on the map, in a list or in the heatmap for its day.'); return; }
+    const fr = this.shown(), a = AREAS[state.area], n = fr ? txStats(fr).byArea[state.area] : 0;
+    const series = TX.frames.length ? TX.frames.map((f) => txStats(f).byArea[state.area]) : null;
+    el.innerHTML = `${headRow(a.n, a.r)}<div class="mt-2 grid grid-cols-2 gap-2">${tile('Free taxis', f0(n))}${tile('Share of island', fr ? pctF(n / fr.pts.length) : '–')}</div>
+      ${series ? `<p class="mt-3 text-xs font-medium text-ink-2">Today, hour by hour</p><div id="tx-area"></div>` : ''}`;
+    if ($('#tx-area')) hourBars($('#tx-area'), series, B.amber, TX.hour, true);
+  },
+  legend() {
+    const st = (f) => d3.range(25).map((i) => f(i / 24)).join(',');
+    if (state.taxi === 'points') return `<div class="flex items-center gap-2 text-foreground"><span class="inline-block size-2.5 rounded-full bg-amber"></span>A taxi free for hire</div>`;
+    if (state.taxi === 'change') { const [A, Bf] = txCompare(); return `<div class="mb-1 text-foreground">Free taxis ${A ? `${hhmm(A.t)} → ${hhmm(Bf.t)}` : 'change'}</div><div class="h-2 w-48 rounded-full" style="background:linear-gradient(90deg,${st(CHG)})"></div><div class="mt-1 flex w-48 justify-between text-[10.5px]"><span>fewer: taken</span><span>more: waiting</span></div><div class="mt-1">height: size of the change</div>`; }
+    return `<div class="mb-1 text-foreground">${state.taxi === 'hex' ? `Free taxis per hexagon, about ${f1(HEX_R * Math.sqrt(3) * kmPerUnit())} km across` : 'Free taxis per town'}</div><div class="h-2 w-48 rounded-full" style="background:linear-gradient(90deg,${st(RAMP)})"></div><div class="mt-1 flex w-48 justify-between font-mono text-[10.5px]"><span>1</span><span>most</span></div>`;
+  },
+};
+// km per world unit at Singapore's latitude
+const kmPerUnit = () => { const [a, b] = [proj.invert([0, 0]), proj.invert([1, 0])]; return d3.geoDistance(a, b) * 6371; };
+
+// By town, grouped into URA regions: a subtotal per region, its towns inside (open state remembered).
+function taxiTowns(el, fr) {
+  const S = txStats(fr), n = fr.pts.length || 1;
+  const regs = d3.groups(AREAS.filter((a) => S.byArea[a.i] > 0), (a) => a.r).map(([r, as]) => ({ r, as: as.sort((x, y) => S.byArea[y.i] - S.byArea[x.i]), n: d3.sum(as, (a) => S.byArea[a.i]) })).sort((a, b) => b.n - a.n);
+  const maxR = regs[0]?.n || 1, maxA = d3.max(AREAS, (a) => S.byArea[a.i]) || 1;
+  TX.openReg ??= new Set();
+  el.innerHTML = `<div class="space-y-0.5">${regs.map((g) => `<details class="group" data-reg="${esc(g.r)}" ${TX.openReg.has(g.r) || g.as.some((a) => a.i === state.area) ? 'open' : ''}>
+      <summary class="flex cursor-pointer list-none items-center gap-2 rounded px-1 py-1 text-xs hover:bg-accent/50 [&::-webkit-details-marker]:hidden">
+        <i class="fi fi-rr-angle-small-right shrink-0 text-muted-foreground transition-transform group-open:rotate-90"></i>
+        <span class="w-[78px] shrink-0 truncate font-medium text-foreground">${esc(regionShort(g.r))}</span>
+        <span class="h-2.5 rounded-sm" style="width:${(g.n / maxR) * 100}%;max-width:calc(100% - 200px);background:${B.signal}"></span>
+        <span class="font-mono">${f0(g.n)}</span><span class="ml-auto shrink-0 font-mono text-[11px] text-muted-foreground">${pctF(g.n / n)} · ${g.as.length} towns</span></summary>
+      <div class="mb-1 ml-5 space-y-0.5">${g.as.map((a) => `<button data-area="${a.i}" class="flex w-full items-center gap-2 rounded text-left text-xs hover:bg-accent/50 ${state.area === a.i ? 'text-amber' : ''}">
+        <span class="w-[104px] shrink-0 truncate ${state.area === a.i ? '' : 'text-ink-2'}">${esc(a.n)}</span>
+        <span class="h-2 rounded-sm" style="width:${(S.byArea[a.i] / maxA) * 100}%;max-width:calc(100% - 150px);background:${state.area === a.i ? B.amber : RAMP(0.35)}"></span>
+        <span class="font-mono">${S.byArea[a.i]}</span></button>`).join('')}</div></details>`).join('')}</div>`;
+  el.querySelectorAll('details').forEach((d) => d.addEventListener('toggle', () => { if (d.open) TX.openReg.add(d.dataset.reg); else TX.openReg.delete(d.dataset.reg); }));
+}
+// Towns by hour: the day's rhythm. Rows are the busiest towns over the day; click a column for that hour.
+function taxiHeat(el) {
+  const F = TX.frames;
+  if (!F.length) { el.innerHTML = muted('Sync “Taxis today” above for the hour-by-hour picture.'); return; }
+  const tot = AREAS.map((_, i) => d3.sum(F, (f) => txStats(f).byArea[i]));
+  const rows = d3.range(AREAS.length).filter((i) => tot[i] > 0).sort((a, b) => tot[b] - tot[a]).slice(0, 22);
+  const w = el.clientWidth || 340, m = { l: 92, r: 2, t: 2, b: 14 }, rowH = 11, H = m.t + rows.length * rowH + m.b;
+  const x = d3.scaleBand(d3.range(24), [m.l, w - m.r]).padding(0.06);
+  // each row against its own peak, so every town's rhythm shows (Changi's queue would flatten the rest)
+  const peak = new Map(rows.map((i) => [i, d3.max(F, (f) => txStats(f).byArea[i]) || 1]));
+  const cur = TX.hour != null ? F[TX.hour]?.h : null;
+  el.innerHTML = `<svg width="${w}" height="${H}" class="block">${rows.map((i, r) => {
+    const y = m.t + r * rowH;
+    return `<text data-area="${i}" x="${m.l - 4}" y="${y + rowH - 2.5}" text-anchor="end" font-size="9.5" fill="${state.area === i ? B.amber : '#b8b5ac'}" style="cursor:pointer">${esc(AREAS[i].n.length > 17 ? `${AREAS[i].n.slice(0, 16)}…` : AREAS[i].n)}</text>
+      ${F.map((f, fi) => { const v = txStats(f).byArea[i]; return `<rect data-hour="${fi}" x="${x(f.h)}" y="${y + 0.5}" width="${x.bandwidth()}" height="${rowH - 1}" rx="1" fill="${v ? RAMP(0.08 + 0.92 * (v / peak.get(i))) : '#1f2228'}" style="cursor:pointer"><title>${esc(AREAS[i].n)}, ${hourLbl(f.h)}: ${v} free taxis (${pctF(v / peak.get(i))} of its peak)</title></rect>`; }).join('')}`;
+  }).join('')}
+    ${cur != null ? `<rect x="${x(cur) - 1}" y="${m.t - 1}" width="${x.bandwidth() + 2}" height="${rows.length * rowH + 2}" fill="none" stroke="${B.amber}" stroke-width="1.2" rx="1.5"/>` : ''}
+    ${[0, 6, 12, 18].map((hh) => `<text x="${x(hh)}" y="${H - 2}" font-size="9" font-family="Source Code Pro" fill="#8b9099">${hourLbl(hh)}</text>`).join('')}</svg>
+    <p class="mt-1 text-[11px] text-muted-foreground">The ${rows.length} busiest towns over the day, each coloured against its own peak hour. Click a cell for that hour, a name for the town.</p>`;
+}
+function taxiChangi(el) {
+  if (!TX.frames.length) { const fr = VIEWS.taxis.shown(); el.innerHTML = muted(fr ? `${txStats(fr).changi} free taxis queuing at the terminals now. Sync “Taxis today” for the day.` : ''); return; }
+  hourBars(el, TX.frames.map((f) => txStats(f).changi), B.amber, TX.hour, true);
+}
+// The two lists for the Change view: biggest drops (taken) and rises (waiting).
+function taxiChanges(el) {
+  const [A, Bf] = txCompare();
+  if (!A) { el.innerHTML = muted(TX.frames.length ? 'No earlier hour to compare with. Pick one above.' : 'Sync “Taxis today” above to compare with earlier hours.'); return; }
+  const SA = txStats(A), SB = txStats(Bf), ds = AREAS.map((a) => ({ i: a.i, d: SB.byArea[a.i] - SA.byArea[a.i] }));
+  const taken = ds.filter((d) => d.d < 0).sort((a, b) => a.d - b.d).slice(0, 6), waiting = ds.filter((d) => d.d > 0).sort((a, b) => b.d - a.d).slice(0, 6);
+  const max = d3.max([...taken, ...waiting], (d) => Math.abs(d.d)) || 1, tot = Bf.pts.length - A.pts.length;
+  const list = (xs, c) => xs.length ? xs.map((d) => `<button data-area="${d.i}" class="flex w-full items-center gap-1.5 rounded text-left text-xs hover:bg-accent/50"><span class="w-[86px] shrink-0 truncate ${state.area === d.i ? 'text-amber' : 'text-ink-2'}">${esc(AREAS[d.i].n)}</span><span class="h-2 rounded-sm" style="width:${(Math.abs(d.d) / max) * 60}%;background:${c}"></span><span class="font-mono" style="color:${c}">${d.d > 0 ? '+' : ''}${d.d}</span></button>`).join('') : muted('none');
+  el.innerHTML = `<p class="mb-1.5 text-[11px] text-muted-foreground">${hhmm(A.t)} → ${hhmm(Bf.t)}: <span class="font-mono" style="color:${tot < 0 ? B.pink : B.signal}">${tot > 0 ? '+' : ''}${f0(tot)}</span> free taxis island-wide. Where free taxis vanished, fares took them (or drivers went off duty); where they piled up, they’re waiting.</p>
+    <div class="grid grid-cols-2 gap-3"><div><p class="mb-1 text-[11px] font-medium" style="color:${B.pink}">Fewer free: taken</p><div class="space-y-0.5">${list(taken, B.pink)}</div></div>
+      <div><p class="mb-1 text-[11px] font-medium" style="color:${B.signal}">More free: waiting</p><div class="space-y-0.5">${list(waiting, B.signal)}</div></div></div>`;
+}
+
+// Hourly frames of the synced day, in hour order (stats are computed on first use).
+function buildTaxiDay(frames) {
+  TX.frames = [...frames].sort((a, b) => a.h - b.h).map((f) => ({ ...f }));
+  if (TX.hour != null && TX.hour >= TX.frames.length) TX.hour = null;
+  if (state.txFrom != null && state.txFrom >= TX.frames.length) state.txFrom = null;
+}
+function txDay() {
+  const el = $('#txday'); if (!el) return;
+  if (!TX.frames.length) { el.innerHTML = muted('<i class="fi fi-rr-time-past mr-1 align-[-1px]"></i>Sync “Taxis today” above to scrub through the day hour by hour.'); return; }
+  const n = TX.frames.length;
+  el.innerHTML = `<div class="rounded-lg border bg-background/40 p-2.5">
+    <div class="flex items-center justify-between text-xs"><span class="text-ink-2"><i class="fi fi-rr-time-past mr-1 align-[-1px]"></i>Free taxis today, on the hour</span>
+      <button id="tx-live" class="rounded px-1.5 py-0.5 ${TX.hour == null ? 'text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}">${TX.hour == null ? '● Live' : 'Back to live'}</button></div>
+    <div id="tx-bars" class="mt-1.5"></div>
+    <div class="mt-1 flex items-center gap-2">
+      <button id="play" class="inline-flex size-8 shrink-0 items-center justify-center rounded-md border bg-background/60 text-foreground transition-colors hover:bg-accent" aria-label="${playTimer ? 'Pause' : 'Play the day'}"><i class="fi ${playTimer ? 'fi-rr-pause' : 'fi-rr-play'}"></i></button>
+      <input id="tx-i" type="range" class="slider" min="0" max="${n - 1}" step="1" value="${TX.hour ?? n - 1}" style="--fill:${n > 1 ? ((TX.hour ?? n - 1) / (n - 1)) * 100 : 100}%" aria-label="Hour of day" />
+      <span class="w-[44px] shrink-0 text-right font-mono text-sm text-amber">${TX.hour != null ? hourLbl(TX.frames[TX.hour].h) : 'now'}</span></div></div>`;
+  hourBars($('#tx-bars'), TX.frames.map((f) => f.pts.length), B.amber, TX.hour, true);
+}
+function setTaxiHour(i) { TX.hour = i; VIEWS.taxis.update(); refreshPanel(); }
+
+// ---------- carparks ----------
+// A frame (live, or one per hour today) holds free and total lots per lot type, one slot per carpark
+// (-1 where a carpark has none or isn't reporting). Car (C), motorcycle (Y) and heavy vehicle (H) lots.
+const LOTS = [['C', 'Cars', 'car'], ['Y', 'Motorcycles', 'motorcycle'], ['H', 'Heavy vehicles', 'heavy-vehicle']];
+const LOT_NAME = Object.fromEntries(LOTS.map(([k, , n]) => [k, n]));
+const FULL = d3.scaleLinear([0.25, 0.5, 0.75, 0.95], ['#2b6f8a', '#1fefd7', '#f6c453', '#e58fb0']).clamp(true);   // share of lots taken; most carparks sit between 40% and 80%
+let CP_INDEX = null;
+function cpFrame(it, h = null) {
+  CP_INDEX ??= new Map(CARPARKS.map((c) => [c.id, c.i]));
+  const f = {}, n = {};
+  LOTS.forEach(([k]) => { f[k] = new Int16Array(CARPARKS.length).fill(-1); n[k] = new Int16Array(CARPARKS.length).fill(-1); });
+  it.carpark_data.forEach((c) => {
+    const i = CP_INDEX.get(c.carpark_number); if (i == null) return;
+    c.carpark_info.forEach((l) => {
+      const k = l.lot_type; if (!f[k]) return;
+      const tot = Math.max(0, +l.total_lots || 0), fr = Math.max(0, Math.min(+l.lots_available || 0, tot));
+      n[k][i] = Math.max(0, n[k][i]) + tot; f[k][i] = Math.max(0, f[k][i]) + fr;
+    });
+  });
+  return { t: it.timestamp, h, f, n };
+}
+const occ = (fr, i, lot = state.cpLot) => (fr && fr.n[lot][i] > 0 ? { free: fr.f[lot][i], total: fr.n[lot][i] } : null);
+// Totals for a frame and lot type, island-wide and by town (cached on the frame).
+function cpStats(fr, lot = state.cpLot) {
+  fr._s ??= {};
+  if (fr._s[lot]) return fr._s[lot];
+  const byArea = AREAS.map(() => ({ free: 0, total: 0, n: 0, tight: 0 }));
+  let free = 0, total = 0, n = 0, tight = 0;
+  CARPARKS.forEach((c) => {
+    const o = occ(fr, c.i, lot); if (!o) return;
+    free += o.free; total += o.total; n++; const t = o.free / o.total < 0.1; if (t) tight++;
+    if (c.area >= 0) { const a = byArea[c.area]; a.free += o.free; a.total += o.total; a.n++; if (t) a.tight++; }
+  });
+  return (fr._s[lot] = { free, total, n, tight, byArea });
+}
+const taken = (s) => (s.total ? 1 - s.free / s.total : null);
+
+VIEWS.carparks = {
+  tab: 'Carparks', icon: 'fi-rr-parking',
+  title: 'How full the HDB carparks are',
+  blurb: 'Each HDB carpark is a glass column: as tall as its lots, filled to how many are taken, and coloured from empty (teal) to full (pink). Switch to towns to compare neighbourhoods, or play today hour by hour.',
+  how: ['Carpark locations converted from SVY21, occupancy by town and hour, the day curve and the heatmap.', 'Two instanced columns per carpark, a glass shell for capacity and a solid fill for the lots taken; extruded towns.'],
+  camera: [-2, 17, 19], target: [0.5, 0, 0.6],
+  shown() { return CP.hour != null && CP.frames[CP.hour] ? CP.frames[CP.hour] : CP.liveFrame; },
+  build() {
+    this.tiles = island();
+    this.tiles.forEach((t) => { t.userData.pick = () => this.areaTip(t.userData.area); pickables.push(t); });
+    this.shell = bars(CARPARKS.length, { w: 0.1 });
+    Object.assign(this.shell.mesh.material, { transparent: true, opacity: 0.22, depthWrite: false });
+    this.glass = bars(CARPARKS.length, { w: 0.07 });
+    CARPARKS.forEach((c, i) => { const p = V3(c.lon, c.lat); this.shell.place(i, p); this.glass.place(i, p); });
+    const ud = { alive: (i) => this.shell.alive(i), pick: (h) => this.tip(CARPARKS[h.instanceId]) };
+    this.shell.mesh.userData = ud; this.glass.mesh.userData = ud;
+    pickables.push(this.shell.mesh, this.glass.mesh);
+    this.ameshes = null; this.alabels = null;
+    this.update();
+  },
+  buildAreas() {
+    this.ameshes = AREAS.map((a) => {
+      const geo = new THREE.ExtrudeGeometry(a.p.map(shapeOf), { depth: 1, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
+      const m = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ color: B.signal, roughness: 0.6, metalness: 0.05 }), new THREE.MeshBasicMaterial({ color: B.signal })]);
+      m.scale.y = 0.001; m.userData = { area: a.i, h: 0.001, pick: () => this.areaTip(a.i) };
+      group.add(m); pickables.push(m); return m;
+    });
+    tickers.add(() => this.ameshes?.forEach((m) => { const d = m.userData.h - m.scale.y; if (Math.abs(d) > 1e-4) m.scale.y += reduceMotion ? d : d * 0.14; }));
+  },
+  update() {
+    if (!this.shell) return;
+    const fr = this.shown(), towns = state.cpView === 'towns';
+    this.tiles.forEach((t) => t.material.color.set(state.area === t.userData.area ? '#4a4128' : '#262a31'));
+    if (this.alabels) dispose(this.alabels);
+    this.alabels = new THREE.Group(); group.add(this.alabels);
+    // glass columns
+    const maxT = (fr && d3.max(fr.n[state.cpLot])) || 600;
+    CARPARKS.forEach((c, i) => {
+      const o = towns ? null : occ(fr, i), sel = state.cp === i;
+      const show = !towns && o && (state.cpFilter === 'all' || o.free / o.total < 0.1 || sel);
+      const h = show ? 0.08 + Math.sqrt(o.total / maxT) * 1.6 : 0, k = o ? 1 - o.free / o.total : 0;
+      this.shell.set(i, h, sel ? B.amber : '#9aa3ad');
+      this.glass.set(i, show ? Math.max(0.02, h * k) : 0, sel ? B.ink : FULL(k));
+    });
+    this.shell.commit(); this.glass.commit();
+    // towns: raised and coloured by the share of lots taken
+    if (towns && fr) {
+      if (!this.ameshes) this.buildAreas();
+      const st = cpStats(fr);
+      this.ameshes.forEach((m, i) => {
+        const a = st.byArea[i], k = taken(a); m.visible = a.total > 0;
+        m.userData.h = a.total ? 0.05 + Math.max(0, (k - 0.2) / 0.8) * 2.8 : 0.001;   // from 20% full, so differences between towns show
+        const c = new THREE.Color(state.area === i ? B.amber : a.total ? FULL(k) : '#2f333a');
+        m.material[0].color.copy(c); m.material[1].color.copy(c).multiplyScalar(0.55);
+      });
+      const top = d3.range(AREAS.length).filter((i) => st.byArea[i].total >= 200).sort((a, b) => taken(st.byArea[b]) - taken(st.byArea[a])).slice(0, 8);
+      if (state.area != null && !top.includes(state.area)) top.push(state.area);
+      top.forEach((i) => { const a = AREAS[i]; lbl(`${a.n} ${pctF(taken(st.byArea[i]))}`, V3(...a.c, this.ameshes[i].userData.h + 0.3), `bg ${state.area === i ? 'sel' : ''}`, this.alabels); });
+    } else this.ameshes?.forEach((m) => { m.visible = false; });
+    legend();
+  },
+  areaTip(i) {
+    const fr = this.shown(); if (!fr) return `<div class="font-medium text-foreground">${esc(AREAS[i].n)}</div>`;
+    const a = cpStats(fr).byArea[i];
+    return `<div class="font-medium text-foreground">${esc(AREAS[i].n)}</div>${a.n ? `<div class="font-mono">${pctF(taken(a))} full · ${f0(a.free)} of ${f0(a.total)} ${LOT_NAME[state.cpLot]} lots free</div><div class="text-muted-foreground">${a.n} HDB carparks${a.tight ? `, ${a.tight} nearly full` : ''}${CP.hour != null ? ` · ${hourLbl(fr.h)}` : ''}</div>` : `<div class="text-muted-foreground">No HDB ${LOT_NAME[state.cpLot]} lots reporting</div>`}`;
+  },
+  tip(c) {
+    const o = occ(this.shown(), c.i);
+    return `<div class="font-medium text-foreground">${esc(title(c.address))}</div><div class="text-muted-foreground">${esc(c.id)} · ${esc(title(c.type))}</div>
+      ${o ? `<div class="font-mono">${f0(o.free)} of ${f0(o.total)} ${LOT_NAME[state.cpLot]} lots free · ${pctF(1 - o.free / o.total)} full</div>` : `<div class="text-muted-foreground">No ${LOT_NAME[state.cpLot]} lots reporting</div>`}`;
+  },
+  tilesHtml() {
+    const fr = this.shown(); if (!fr) return tile('Lots free', '–', 'sync “Carparks”') + tile('', '–');
+    const st = cpStats(fr), prev = CP.hour != null ? CP.frames[CP.hour - 1] : [...CP.frames].reverse().find((f) => new Date(fr.t) - new Date(f.t) >= 50 * 60e3);
+    const d = prev ? taken(st) - taken(cpStats(prev)) : null;
+    const byA = st.byArea.map((a, i) => [i, a]).filter(([, a]) => a.total >= 200), fullest = byA.length ? d3.greatest(byA, ([, a]) => taken(a)) : null;
+    return tile(`${LOTS.find(([k]) => k === state.cpLot)[1]}: lots free`, f0(st.free), `of ${f0(st.total)}${CP.hour != null ? ` · ${hourLbl(fr.h)}` : ''}`)
+      + tile('How full', `${pctF(taken(st))}`, d != null ? `<span style="color:${d > 0 ? B.pink : B.signal}">${d > 0 ? '+' : '−'}${Math.abs(d * 100).toFixed(1)} pts</span> since ${hhmm(prev.t)}` : `${f0(st.n)} carparks reporting`)
+      + tile('Nearly full', f0(st.tight), 'carparks under 10% free')
+      + tile('Fullest town', fullest ? esc(AREAS[fullest[0]].n) : '–', fullest ? `${pctF(taken(fullest[1]))} full` : '');
+  },
+  opts() {
+    return `<div class="mt-3 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Lots</span>${seg('cplot', LOTS.map(([k, n]) => [k, n]), state.cpLot)}</div>
+      <div class="mt-2 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Show</span><div class="flex gap-1.5">${state.cpView === 'bars' ? seg('cp', [['all', 'All'], ['tight', 'Nearly full']], state.cpFilter) : ''}${seg('cpview', [['bars', 'Carparks'], ['towns', 'Towns']], state.cpView)}</div></div>
+      <div class="relative mt-3"><i class="fi fi-rr-search pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"></i>
+        <input id="cp-search" type="search" autocomplete="off" spellcheck="false" placeholder="Find a carpark by block, street or code" aria-label="Find a carpark" class="h-9 w-full rounded-md border bg-background/60 pl-8 pr-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+        <div id="cp-list" hidden class="absolute inset-x-0 top-10 z-20 max-h-72 overflow-auto rounded-md border bg-background p-1 shadow-lg"></div></div>
+      <div id="cpday" class="mt-3"></div>`;
+  },
+  fill() {
+    cpDay();
+    const el = $('#body'); if (!el) return;
+    const fr = this.shown();
+    if (!fr) { el.innerHTML = muted(sync.running ? 'Waiting for the sync…' : 'Sync “Carparks” above for live availability.'); return; }
+    el.innerHTML = `${sec('By town', `${CP.hour != null ? hourLbl(fr.h) : 'now'} · how full, grouped by region`)}<div id="cptown"></div>
+      ${sec('Towns through the day', `share of ${LOT_NAME[state.cpLot]} lots taken`)}<div id="cpheat"></div>`;
+    cpTowns($('#cptown'), fr); cpHeat($('#cpheat'));
+  },
+  detail(el) {
+    if (state.cp != null) return cpDetail(el, CARPARKS[state.cp]);
+    const fr = this.shown();
+    if (state.area != null && fr) {
+      const a = AREAS[state.area], st = cpStats(fr).byArea[state.area];
+      const list = CARPARKS.filter((c) => c.area === state.area && occ(fr, c.i)).sort((x, y) => { const ox = occ(fr, x.i), oy = occ(fr, y.i); return ox.free / ox.total - oy.free / oy.total; }).slice(0, 8);
+      const series = CP.frames.length ? CP.frames.map((f) => Math.round((taken(cpStats(f).byArea[state.area]) ?? 0) * 100)) : null;
+      el.innerHTML = `${headRow(a.n, `${st.n} HDB carparks with ${LOT_NAME[state.cpLot]} lots`)}
+        <div class="mt-2 grid grid-cols-2 gap-2">${tile('How full', st.total ? pctF(taken(st)) : '–', st.total ? `${f0(st.free)} of ${f0(st.total)} free` : '')}${tile('Nearly full', f0(st.tight), 'under 10% free')}</div>
+        ${series ? `<p class="mt-3 text-xs font-medium text-ink-2">How full today, by hour (%)</p><div id="cp-area"></div>` : ''}
+        <p class="mt-3 text-xs font-medium text-ink-2">Fullest here</p><div class="mt-1 space-y-0.5">${list.map((c) => { const o = occ(fr, c.i); return `<button data-cp="${c.i}" class="flex w-full justify-between gap-2 rounded px-1 text-left text-xs hover:bg-accent/50"><span class="truncate text-ink-2">${esc(title(c.address))}</span><span class="shrink-0 font-mono">${o.free}/${o.total}</span></button>`; }).join('')}</div>`;
+      if ($('#cp-area')) hourBars($('#cp-area'), series, B.pink, CP.hour, true);
+      return;
+    }
+    el.innerHTML = muted('<i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Click a carpark, or a town, for its numbers and its day.');
+  },
+  legend() {
+    const st = d3.range(25).map((i) => FULL(i / 24)).join(',');
+    return `<div class="mb-1 text-foreground">Share of ${LOT_NAME[state.cpLot]} lots taken</div><div class="h-2 w-48 rounded-full" style="background:linear-gradient(90deg,${st})"></div><div class="mt-1 flex w-48 justify-between font-mono text-[10.5px]"><span>25%</span><span>50%</span><span>75%</span><span>95%+</span></div>
+      ${state.cpView === 'bars' ? '<div class="mt-1.5 flex items-center gap-1.5"><span class="inline-block h-3 w-2 rounded-[2px] border border-[#9aa3ad]/60 bg-[#9aa3ad]/15"></span>glass: all lots · fill: lots taken</div>' : '<div class="mt-1.5">height: how full the town is</div>'}`;
+  },
+};
+// By town, grouped into URA regions: how full each is, fullest first (open state remembered).
+function cpTowns(el, fr) {
+  const st = cpStats(fr);
+  const regs = d3.groups(AREAS.filter((a) => st.byArea[a.i].total > 0), (a) => a.r).map(([r, as]) => {
+    const free = d3.sum(as, (a) => st.byArea[a.i].free), total = d3.sum(as, (a) => st.byArea[a.i].total);
+    return { r, as: as.sort((x, y) => taken(st.byArea[y.i]) - taken(st.byArea[x.i])), k: total ? 1 - free / total : 0, total };
+  }).sort((a, b) => b.k - a.k);
+  CP.openReg ??= new Set();
+  const bar = (k, w = 'flex-1') => `<span class="relative h-2.5 ${w} overflow-hidden rounded-sm bg-muted"><span class="absolute inset-y-0 left-0" style="width:${k * 100}%;background:${FULL(k)}"></span></span>`;
+  el.innerHTML = `<div class="space-y-0.5">${regs.map((g) => `<details class="group" data-reg="${esc(g.r)}" ${CP.openReg.has(g.r) || g.as.some((a) => a.i === state.area) ? 'open' : ''}>
+      <summary class="flex cursor-pointer list-none items-center gap-2 rounded px-1 py-1 text-xs hover:bg-accent/50 [&::-webkit-details-marker]:hidden">
+        <i class="fi fi-rr-angle-small-right shrink-0 text-muted-foreground transition-transform group-open:rotate-90"></i>
+        <span class="w-[78px] shrink-0 truncate font-medium text-foreground">${esc(regionShort(g.r))}</span>${bar(g.k)}
+        <span class="w-9 shrink-0 text-right font-mono">${pctF(g.k)}</span><span class="w-[62px] shrink-0 text-right font-mono text-[11px] text-muted-foreground">${d3.format('.3~s')(g.total)} lots</span></summary>
+      <div class="mb-1 ml-5 space-y-0.5">${g.as.map((a) => { const s = st.byArea[a.i], k = taken(s); return `<button data-area="${a.i}" class="flex w-full items-center gap-2 rounded text-left text-xs hover:bg-accent/50 ${state.area === a.i ? 'text-amber' : ''}">
+        <span class="w-[104px] shrink-0 truncate ${state.area === a.i ? '' : 'text-ink-2'}">${esc(a.n)}</span>${bar(k)}
+        <span class="w-9 shrink-0 text-right font-mono">${pctF(k)}</span><span class="w-[44px] shrink-0 text-right font-mono text-[11px] text-muted-foreground">${s.tight ? `${s.tight} full` : ''}</span></button>`; }).join('')}</div></details>`).join('')}</div>`;
+  el.querySelectorAll('details').forEach((d) => d.addEventListener('toggle', () => { if (d.open) CP.openReg.add(d.dataset.reg); else CP.openReg.delete(d.dataset.reg); }));
+}
+// Towns by hour, the share of lots taken on one scale (0 to full); rows are the towns with the most lots.
+function cpHeat(el) {
+  const F = CP.frames;
+  if (!F.length) { el.innerHTML = muted('Sync “Carparks today” above for the hour-by-hour picture.'); return; }
+  const live = CP.liveFrame && cpStats(CP.liveFrame);
+  const rows = d3.range(AREAS.length).filter((i) => (live ?? cpStats(F.at(-1))).byArea[i].total >= 150).sort((a, b) => (live ?? cpStats(F.at(-1))).byArea[b].total - (live ?? cpStats(F.at(-1))).byArea[a].total).slice(0, 22);
+  const w = el.clientWidth || 340, m = { l: 92, r: 2, t: 2, b: 14 }, rowH = 11, H = m.t + rows.length * rowH + m.b;
+  const x = d3.scaleBand(d3.range(24), [m.l, w - m.r]).padding(0.06), cur = CP.hour != null ? F[CP.hour]?.h : null;
+  // colours stretched over the day's actual range, since towns sit within a few tens of points
+  const ks = rows.flatMap((i) => F.map((f) => taken(cpStats(f).byArea[i]))).filter((k) => k != null), [klo, khi] = d3.extent(ks);
+  const hc = d3.scaleSequential([klo, Math.max(klo + 0.05, khi)], d3.interpolateRgbBasis(['#2b6f8a', '#1fefd7', '#f6c453', '#e58fb0']));
+  el.innerHTML = `<svg width="${w}" height="${H}" class="block">${rows.map((i, r) => {
+    const y = m.t + r * rowH;
+    return `<text data-area="${i}" x="${m.l - 4}" y="${y + rowH - 2.5}" text-anchor="end" font-size="9.5" fill="${state.area === i ? B.amber : '#b8b5ac'}" style="cursor:pointer">${esc(AREAS[i].n.length > 17 ? `${AREAS[i].n.slice(0, 16)}…` : AREAS[i].n)}</text>
+      ${F.map((f, fi) => { const s = cpStats(f).byArea[i], k = taken(s); return `<rect data-hour="${fi}" x="${x(f.h)}" y="${y + 0.5}" width="${x.bandwidth()}" height="${rowH - 1}" rx="1" fill="${k != null ? hc(k) : '#1f2228'}" style="cursor:pointer"><title>${esc(AREAS[i].n)}, ${hourLbl(f.h)}: ${k != null ? `${pctF(k)} full, ${f0(s.free)} lots free` : 'no data'}</title></rect>`; }).join('')}`;
+  }).join('')}
+    ${cur != null ? `<rect x="${x(cur) - 1}" y="${m.t - 1}" width="${x.bandwidth() + 2}" height="${rows.length * rowH + 2}" fill="none" stroke="${B.amber}" stroke-width="1.2" rx="1.5"/>` : ''}
+    ${[0, 6, 12, 18].map((hh) => `<text x="${x(hh)}" y="${H - 2}" font-size="9" font-family="Source Code Pro" fill="#8b9099">${hourLbl(hh)}</text>`).join('')}</svg>
+    <div class="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground"><span class="font-mono">${pctF(klo)}</span><span class="h-1.5 w-24 rounded-full" style="background:linear-gradient(90deg,${d3.range(13).map((j) => hc(klo + ((khi - klo) * j) / 12)).join(',')})"></span><span class="font-mono">${pctF(khi)} full</span></div><p class="mt-1 text-[11px] text-muted-foreground">The ${rows.length} towns with the most ${LOT_NAME[state.cpLot]} lots, coloured over the day’s range. Click a cell for that hour, a name for the town.</p>`;
+}
+// The day control: island-wide occupancy by hour, a slider and play.
+function cpDay() {
+  const el = $('#cpday'); if (!el) return;
+  if (!CP.frames.length) { el.innerHTML = muted('<i class="fi fi-rr-time-past mr-1 align-[-1px]"></i>Sync “Carparks today” above to play the day hour by hour.'); return; }
+  const n = CP.frames.length, i = CP.hour ?? n - 1;
+  el.innerHTML = `<div class="rounded-lg border bg-background/40 p-2.5">
+    <div class="flex items-center justify-between text-xs"><span class="text-ink-2"><i class="fi fi-rr-time-past mr-1 align-[-1px]"></i>How full, island-wide, on the hour</span>
+      <button id="cp-live-btn" class="rounded px-1.5 py-0.5 ${CP.hour == null ? 'text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}">${CP.hour == null ? '● Live' : 'Back to live'}</button></div>
+    <div id="cp-bars" class="mt-1.5"></div>
+    <div class="mt-1 flex items-center gap-2">
+      <button id="play" class="inline-flex size-8 shrink-0 items-center justify-center rounded-md border bg-background/60 text-foreground transition-colors hover:bg-accent" aria-label="${playTimer ? 'Pause' : 'Play the day'}"><i class="fi ${playTimer ? 'fi-rr-pause' : 'fi-rr-play'}"></i></button>
+      <input id="cp-i" type="range" class="slider" min="0" max="${n - 1}" step="1" value="${i}" style="--fill:${n > 1 ? (i / (n - 1)) * 100 : 100}%" aria-label="Hour of day" />
+      <span class="w-[44px] shrink-0 text-right font-mono text-sm text-amber">${CP.hour != null ? hourLbl(CP.frames[CP.hour].h) : 'now'}</span></div></div>`;
+  const vals = CP.frames.map((f) => taken(cpStats(f)) ?? 0), lo = Math.max(0, d3.min(vals) - 0.05);
+  // bars from a floor just under the day's low, so a few points of change are visible; labels give the real share
+  const w = $('#cp-bars').clientWidth || 300, H = 64, xb = d3.scaleBand(d3.range(24), [0, w]).padding(0.15), y = d3.scaleLinear([lo, Math.max(lo + 0.05, d3.max(vals))], [H - 13, 4]);
+  $('#cp-bars').innerHTML = `<svg width="${w}" height="${H}" class="block">${CP.frames.map((f, fi) => `<rect data-hour="${fi}" style="cursor:pointer" x="${xb(f.h)}" y="${y(vals[fi])}" width="${xb.bandwidth()}" height="${Math.max(1, y(lo) - y(vals[fi]))}" rx="1.5" fill="${FULL(vals[fi])}" fill-opacity="${CP.hour == null || CP.hour === fi ? 0.95 : 0.4}"><title>${hourLbl(f.h)}: ${pctF(vals[fi])} full</title></rect>`).join('')}
+    ${[0, 6, 12, 18].map((hh) => `<text x="${xb(hh)}" y="${H - 2}" font-size="9" font-family="Source Code Pro" fill="#8b9099">${hourLbl(hh)}</text>`).join('')}
+    <text x="${w}" y="10" text-anchor="end" font-size="9" font-family="Source Code Pro" fill="#8b9099">${pctF(d3.min(vals))}–${pctF(d3.max(vals))} full</text></svg>`;
+}
+function setCpHour(i) { CP.hour = i; VIEWS.carparks.update(); refreshPanel(); }
+function buildCpDay(frames) {
+  CP.frames = [...frames].sort((a, b) => a.h - b.h).map((f) => ({ ...f, _s: undefined }));
+  if (CP.hour != null && CP.hour >= CP.frames.length) CP.hour = null;
+}
+function cpDetail(el, c) {
+  const l = CP.live.get(c.id), LT = { C: 'Car', Y: 'Motorcycle', H: 'Heavy vehicle', L: 'Loading bay' };
+  el.innerHTML = `${headRow(title(c.address), `${c.id} · ${title(c.type)}`, 'cp')}
+    <div id="cp-live" class="mt-2"></div>
+    <div class="mt-2 flex flex-wrap gap-1.5 text-[11px]">${c.free ? '<span class="rounded bg-primary/15 px-1.5 py-0.5 text-primary">Free parking Sun &amp; PH</span>' : ''}${c.night ? '<span class="rounded bg-muted px-1.5 py-0.5 text-ink-2">Night parking</span>' : ''}${l ? `<span class="rounded bg-muted px-1.5 py-0.5 text-muted-foreground">updated ${hhmm(`${l.upd}+08:00`)}</span>` : ''}</div>
+    ${CP.frames.length ? `<p class="mt-3 text-xs font-medium text-ink-2">${LOT_NAME[state.cpLot][0].toUpperCase()}${LOT_NAME[state.cpLot].slice(1)} lots free today, by hour</p><div id="cp-day1"></div>` : ''}
+    <div id="lmap" class="mt-3 h-[190px] overflow-hidden rounded-lg border"></div>`;
+  cpLive(c, LT);
+  if ($('#cp-day1')) hourBars($('#cp-day1'), CP.frames.map((f) => occ(f, c.i)?.free ?? 0), B.signal, CP.hour, true);
+  cpMap(c);
+}
+function cpLive(c, LT = { C: 'Car', Y: 'Motorcycle', H: 'Heavy vehicle', L: 'Loading bay' }) {
+  const el = $('#cp-live'); if (!el) return;
+  const l = CP.live.get(c.id), h = CP.hist.get(c.id) ?? [];
+  if (!l) { el.innerHTML = muted('This carpark isn’t reporting live availability.'); return; }
+  el.innerHTML = `<div class="space-y-1.5">${l.lots.map((x) => { const k = x.total ? 1 - x.free / x.total : 0; return `<div class="text-xs"><div class="flex justify-between"><span class="text-ink-2">${LT[x.type] ?? x.type} lots</span><span class="font-mono">${f0(x.free)} free of ${f0(x.total)} · ${pctF(k)} full</span></div>
+      <div class="mt-0.5 h-1.5 overflow-hidden rounded-full bg-muted"><div class="h-full" style="width:${k * 100}%;background:${FULL(k)}"></div></div></div>`; }).join('')}</div>
+    ${h.length > 1 ? `<p class="mt-2 text-[11px] text-muted-foreground">Car lots free at each sync</p><div id="cp-spark"></div>` : ''}`;
+  if ($('#cp-spark')) spark($('#cp-spark'), h.map((d) => d.v), B.signal);
+}
+const ONEMAP = 'https://www.onemap.gov.sg/maps/tiles/Night/{z}/{x}/{y}.png';
+const ONEMAP_ATTR = '<a href="https://www.onemap.gov.sg/" target="_blank" rel="noopener">OneMap</a> © contributors | <a href="https://www.sla.gov.sg/" target="_blank" rel="noopener">Singapore Land Authority</a>';
+let lmap = null, lmarkers = [];
+function dropMap() { if (lmap) { lmap.remove(); lmap = null; lmarkers = []; } }
+function cpMap(c) {
+  dropMap();
+  lmap = L.map('lmap', { scrollWheelZoom: false, minZoom: 11, maxZoom: 18, maxBounds: [[1.13, 103.55], [1.5, 104.1]] });
+  L.tileLayer(ONEMAP, { detectRetina: true, maxZoom: 18, attribution: ONEMAP_ATTR }).addTo(lmap);
+  lmap.attributionControl.setPrefix(false);
+  lmap.setView([c.lat, c.lon], 16);
+  requestAnimationFrame(() => { lmap?.invalidateSize(); lmap?.setView([c.lat, c.lon], 16); });
+  CARPARKS.filter((o) => Math.abs(o.lat - c.lat) < 0.01 && Math.abs(o.lon - c.lon) < 0.013).forEach((o) => {
+    const mk = L.circleMarker([o.lat, o.lon], { radius: o.i === c.i ? 8 : 5, weight: o.i === c.i ? 2 : 0, color: B.ink, fillOpacity: 0.95 })
+      .bindTooltip(() => { const l = CP.live.get(o.id); return `${esc(title(o.address))}<br><span style="font-family:Source Code Pro">${l ? `${l.free}/${l.total} free` : 'not live'}</span>`; }, { direction: 'top', offset: [0, -4] })
+      .on('click', () => { if (o.i !== c.i) selectCp(o.i, true); }).addTo(lmap);
+    mk.cp = o; lmarkers.push(mk);
+  });
+  styleCpMarkers();
+}
+function styleCpMarkers() {
+  const col = d3.scaleSequential([0, 0.5], FREE).clamp(true);
+  lmarkers.forEach((mk) => { const l = CP.live.get(mk.cp.id); mk.setStyle({ fillColor: l?.total ? col(l.free / l.total) : '#3a3f48' }); });
+}
+function selectCp(i, doFly = false) {
+  state.cp = i; state.area = null;
+  VIEWS.carparks.update(); renderDetail();
+  if (doFly && i != null) { const t = V3(CARPARKS[i].lon, CARPARKS[i].lat, 0.3); flyCam(t, t.clone().add(new THREE.Vector3(-2.4, 6.5, 8))); }
+}
+let cpResults = [];
+function cpSearch(q) {
+  const list = $('#cp-list'); if (!list) return;
+  const toks = q.toUpperCase().replace(/[^A-Z0-9 ]+/g, ' ').split(/\s+/).filter(Boolean);
+  cpResults = toks.length ? CARPARKS.filter((c) => toks.every((t) => c.address.includes(t) || c.id === t || c.address.split(/\W+/).includes(t))).slice(0, 8) : [];
+  list.hidden = !cpResults.length;
+  list.innerHTML = cpResults.map((c, k) => { const l = CP.live.get(c.id); return `<button data-cpick="${k}" class="flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-accent"><span class="truncate">${esc(title(c.address))}</span><span class="shrink-0 font-mono text-xs text-muted-foreground">${l ? `${l.free}/${l.total}` : c.id}</span></button>`; }).join('');
+}
+
+// ================= shared panel bits =================
+const btnCls = 'inline-flex h-8 items-center gap-1.5 rounded-md border bg-background/60 px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring';
+const seg = (name, opts, cur) => `<div class="inline-flex h-8 items-center rounded-md bg-muted p-0.5 text-xs text-muted-foreground">${opts.map(([v, t]) => `<button data-${name}="${v}" data-state="${v === cur ? 'active' : ''}" class="rounded px-2.5 py-1 font-medium transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow">${t}</button>`).join('')}</div>`;
+const tile = (label, val, sub = '') => `<div class="min-w-0 rounded-lg border bg-background/40 p-2"><div class="truncate text-[11px] text-muted-foreground">${label}</div><div class="mt-0.5 truncate font-mono text-[15px] text-foreground">${val}</div>${sub ? `<div class="truncate text-[11px] text-muted-foreground">${sub}</div>` : ''}</div>`;
+const sec = (h, sub) => `<div class="mb-1.5 mt-4 flex items-baseline justify-between gap-2"><span class="text-xs font-medium text-ink-2">${h}</span><span class="truncate text-[11px] text-muted-foreground">${sub}</span></div>`;
+const headRow = (h, sub) => `<div class="flex items-start justify-between gap-2"><div class="min-w-0"><div class="text-sm font-medium">${esc(h)}</div><div class="text-xs text-muted-foreground">${esc(sub)}</div></div>
+  <button data-clear class="shrink-0 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-cross-small mr-0.5 align-[-2px]"></i>Clear</button></div>`;
+function spark(el, vals, color) {
+  const w = el.clientWidth || 320, H = 44, x = d3.scaleLinear([0, Math.max(1, vals.length - 1)], [2, w - 30]), ext = d3.extent(vals);
+  const y = d3.scaleLinear(ext[0] === ext[1] ? [ext[0] - 1, ext[1] + 1] : ext, [H - 4, 6]);
+  el.innerHTML = `<svg width="${w}" height="${H}" class="block"><path d="${d3.line().x((_, i) => x(i)).y((v) => y(v))(vals)}" fill="none" stroke="${color}" stroke-width="1.5"/>
+    <circle cx="${x(vals.length - 1)}" cy="${y(vals.at(-1))}" r="2.5" fill="${color}"/><text x="${w - 26}" y="${y(vals.at(-1)) + 3}" font-size="10" font-family="Source Code Pro" fill="#e4e1d8">${f0(vals.at(-1))}</text></svg>`;
+}
+function hourBars(el, vals, color, active = null, clickable = false) {
+  const w = el.clientWidth || 320, H = 64, n = 24, m = { b: 13, t: 4 };
+  const x = d3.scaleBand(d3.range(n), [0, w]).padding(0.15), y = d3.scaleLinear([0, d3.max(vals) || 1], [H - m.b, m.t]);
+  el.innerHTML = `<svg width="${w}" height="${H}" class="block">${vals.map((v, h) => `<rect ${clickable ? `data-hour="${h}" style="cursor:pointer"` : ''} x="${x(h)}" y="${y(v)}" width="${x.bandwidth()}" height="${Math.max(1, y(0) - y(v))}" rx="1.5" fill="${color}" fill-opacity="${active == null || active === h ? 0.9 : 0.35}"><title>${hourLbl(h)}: ${f0(v)}</title></rect>`).join('')}
+    ${[0, 6, 12, 18].map((h) => `<text x="${x(h)}" y="${H - 2}" font-size="9" font-family="Source Code Pro" fill="#8b9099">${hourLbl(h)}</text>`).join('')}</svg>`;
+}
+
+// ================= legend, tabs and panel =================
+function legend() {
+  const v = VIEWS[state.view];
+  $('#legend').innerHTML = `${v.legend()}<div class="mt-2 border-t pt-1.5"><i class="fi fi-rr-cursor-finger mr-1 align-[-1px]"></i>Drag to turn · scroll to zoom · click to select</div>`;
+}
+const ORDER = ['weather', 'air', 'taxis', 'carparks'];
+const renderTabs = () => $('#tabs').innerHTML = ORDER.map((k) => `<button role="tab" data-tab="${k}" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi ${VIEWS[k].icon}"></i>${VIEWS[k].tab}</button>`).join('');
+
+const SOURCES = {
+  weather: 'NEA weather stations and forecasts through the data.gov.sg real-time API: air temperature, humidity and wind each minute, rainfall every five minutes, UV hourly.',
+  air: 'NEA air quality through the data.gov.sg real-time API: PSI and pollutant sub-indices hourly, PM2.5 hourly, by region.',
+  taxis: 'LTA taxi availability through data.gov.sg: every taxi free for hire, about once a minute.',
+  carparks: 'HDB carpark availability through data.gov.sg, about once a minute; locations from HDB Carpark Information (SVY21, converted).',
+};
+function renderPanel() {
+  const v = VIEWS[state.view];
+  if (renderPanel.view !== state.view) { $('#panel').scrollTop = 0; renderPanel.view = state.view; }
+  $('#panel').innerHTML = `
+    <h1 class="text-lg font-semibold leading-tight">${v.title}</h1>
+    <p class="mt-1.5 text-sm leading-relaxed text-ink-2">${v.blurb}</p>
+    <div id="live" class="mt-3"></div>
+    <div id="tiles" class="mt-3 grid grid-cols-2 gap-2"></div>
+    ${v.opts()}
+    <div id="body"></div>
+    <div id="detail" class="mt-4 border-t pt-3"></div>
+    <div class="mt-4 space-y-2 border-t pt-3 text-sm">
+      <p class="text-xs font-medium text-muted-foreground">How it’s built</p>
+      <p class="flex gap-2 text-ink-2"><span class="mt-0.5 inline-flex h-5 shrink-0 items-center rounded bg-amber/15 px-1.5 font-mono text-[10.5px] text-amber">D3</span><span>${v.how[0]}</span></p>
+      <p class="flex gap-2 text-ink-2"><span class="mt-0.5 inline-flex h-5 shrink-0 items-center rounded bg-primary/15 px-1.5 font-mono text-[10.5px] text-primary">Three.js</span><span>${v.how[1]}</span></p>
+      ${state.view === 'carparks' ? '<p class="flex gap-2 text-ink-2"><span class="mt-0.5 inline-flex h-5 shrink-0 items-center rounded bg-[#c9a4f5]/15 px-1.5 font-mono text-[10.5px] text-[#c9a4f5]">Leaflet</span><span>The street map for a carpark, on OneMap tiles.</span></p>' : ''}
+    </div>
+    <p class="mt-3 text-xs text-muted-foreground"><i class="fi fi-rr-info mr-1 align-[-1px]"></i>${SOURCES[state.view]} Planning areas from the URA Master Plan 2019. Sync fetches every layer at once and keeps it in this browser’s IndexedDB.</p>`;
+  refreshPanel();
+  renderDetail();
+}
+// Refresh the data-driven parts of the panel without touching inputs or the map.
+function refreshPanel() {
+  const v = VIEWS[state.view];
+  liveRow();
+  const t = $('#tiles'); if (t) t.innerHTML = v.tilesHtml();
+  v.fill();
+  if (state.view === 'carparks' && state.cp != null) { cpLive(CARPARKS[state.cp]); styleCpMarkers(); }
+  else if (state.view !== 'carparks' || state.area != null) { const el = $('#detail'); if (el) v.detail(el); }
+}
+function renderDetail() { const el = $('#detail'); if (!el) return; dropMap(); VIEWS[state.view].detail(el); }
+
+// ================= store and sync =================
+// The feeds come in sync groups (see GROUPS): each syncs from its own icon, or all at once.
+// Raw responses go into STORE and are saved to this browser's IndexedDB, so a reload draws
+// straight from the store. Each feed is parsed by APPLY, the same way after a fetch or a restore.
+const STORE = { feeds: {}, day: null, rainDay: [], taxiDay: [], cpDay: [], txHist: [], cpHist: [], syncedAt: null, groupAt: {}, groupErr: {} };
+const FEEDS = [
+  ['temp', 'Temperature', () => `${RTB}air-temperature`],
+  ['rh', 'Humidity', () => `${RTB}relative-humidity`],
+  ['rain', 'Rainfall', () => `${RTB}rainfall`],
+  ['ws', 'Wind speed', () => `${RTB}wind-speed`],
+  ['wd', 'Wind direction', () => `${RTB}wind-direction`],
+  ['taxi', 'Taxis', () => `${V1}taxi-availability`],
+  ['carparks', 'Carparks', () => `${V1}carpark-availability`],
+  ['psi', 'PSI', () => `${RTB}psi`],
+  ['pm25', 'PM2.5', () => `${RTB}pm25`],
+  ['uv', 'UV index', () => `${RTB}uv`],
+  ['f2', 'Two-hour forecast', () => `${RTB}two-hr-forecast`],
+  ['f24', '24-hour forecast', () => `${RTB}twenty-four-hr-forecast`],
+  ['f4', 'Four-day outlook', () => `${RTB}four-day-outlook`],
+  ['psiDay', 'PSI today', () => `${RTB}psi?date=${sgDate()}`],
+  ['pmDay', 'PM2.5 today', () => `${RTB}pm25?date=${sgDate()}`],
+];
+const VIEW_OF = { temp: 'weather', rh: 'weather', rain: 'weather', ws: 'weather', wd: 'weather', uv: 'weather', f2: 'weather', f24: 'weather', f4: 'weather', psi: 'air', pm25: 'air', psiDay: 'air', pmDay: 'air', taxi: 'taxis', carparks: 'carparks', rainDay: 'weather', taxiDay: 'taxis' };
+const station = (k) => (j) => { stationsFrom(j.data); W[k] = readingMap(j.data); };
+const APPLY = {
+  temp: station('temp'), rh: station('rh'), rain: station('rain'), ws: station('ws'), wd: station('wd'),
+  uv: (j) => { W.uv = j.data.records?.[0]; },
+  f2: (j) => { W.f2 = { meta: j.data.area_metadata, item: j.data.items?.[0] }; W.f2.byName = new Map((W.f2.item?.forecasts ?? []).map((x) => [x.area, x.forecast])); },
+  f24: (j) => { W.f24 = j.data.records?.[0]; },
+  f4: (j) => { W.f4 = j.data.records?.[0]; },
+  psi: (j) => { AIR.meta = j.data.regionMetadata; AIR.psi = j.data.items?.[0]; },
+  pm25: (j) => { AIR.pm = j.data.items?.[0]; },
+  psiDay: (j) => { AIR.psiDay = j.data.items; },
+  pmDay: (j) => { AIR.pmDay = j.data.items; },
+  taxi: (j) => {
+    const f = j.features?.[0]; if (!f) return;
+    TX.live = { t: f.properties.timestamp, pts: f.geometry.coordinates };
+    if (TX.hist.at(-1)?.t !== TX.live.t) TX.hist.push({ t: TX.live.t, n: TX.live.pts.length });
+  },
+  carparks: (j) => {
+    const it = j.items?.[0]; if (!it) return;
+    CP.ts = it.timestamp; CP.live = new Map(); CP.liveFrame = cpFrame(it);
+    it.carpark_data.forEach((c) => {
+      const lots = c.carpark_info.map((l) => ({ type: l.lot_type, free: +l.lots_available, total: +l.total_lots }));
+      const car = lots.filter((l) => l.type === 'C'), use = car.length ? car : lots;
+      const free = d3.sum(use, (l) => l.free), total = d3.sum(use, (l) => l.total);
+      CP.live.set(c.carpark_number, { free: Math.max(0, Math.min(free, total)), total, lots, upd: c.update_datetime });
+    });
+    CARPARKS.forEach((c) => { const l = CP.live.get(c.id); if (!l) return; const h = CP.hist.get(c.id) ?? []; if (h.at(-1)?.t !== CP.ts) h.push({ t: CP.ts, v: l.free }); CP.hist.set(c.id, h.slice(-200)); });
+  },
+};
+
+// ---------- IndexedDB ----------
+const IDB = { name: 'inotives-sg-pulse', store: 'kv', key: 'store' };
+function idbOpen() {
+  return new Promise((ok, no) => { const r = indexedDB.open(IDB.name, 1); r.onupgradeneeded = () => r.result.createObjectStore(IDB.store); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+}
+async function idb(mode, fn) {
+  const db = await idbOpen();
+  try { return await new Promise((ok, no) => { const tx = db.transaction(IDB.store, mode), req = fn(tx.objectStore(IDB.store)); tx.oncomplete = () => ok(req?.result); tx.onerror = () => no(tx.error); }); }
+  finally { db.close(); }
+}
+let saving = Promise.resolve();
+function saveStore() {
+  STORE.txHist = TX.hist.slice(-500);
+  STORE.cpHist = [...CP.hist];
+  const snap = { ...STORE };
+  saving = saving.then(() => idb('readwrite', (s) => s.put(snap, IDB.key))).catch(() => { /* private mode or quota: the page still works for this visit */ });
+  return saving;
+}
+async function restoreStore() {
+  let s = null;
+  try { s = await idb('readonly', (st) => st.get(IDB.key)); } catch { return false; }
+  if (!s?.syncedAt) return false;
+  s.groupAt ??= {}; s.groupErr ??= {};
+  Object.assign(STORE, s);
+  TX.hist = s.txHist ?? []; CP.hist = new Map(s.cpHist ?? []);
+  Object.entries(STORE.feeds).forEach(([k, j]) => { try { APPLY[k]?.(j); } catch { /* a malformed stored feed is skipped */ } });
+  if (STORE.day === sgDate()) { buildReplay(STORE.rainDay); buildTaxiDay(STORE.taxiDay); buildCpDay(STORE.cpDay ?? []); }
+  return true;
+}
+async function clearStore() {
+  if (sync.running) return;
+  try { await idb('readwrite', (s) => s.delete(IDB.key)); } catch { /* nothing stored */ }
+  location.reload();
+}
+
+// ---------- the sync, in groups ----------
+// Each group syncs on its own from its icon (in the Sync menu or the tab's panel), or all together.
+// Groups queue up and run one after another, since every call shares the rate-limited queue.
+const GROUPS = [
+  { id: 'weather', every: 5, view: 'weather', also: ['air'], name: 'Weather now', icon: 'fi-rr-temperature-high', feeds: ['temp', 'rh', 'rain', 'ws', 'wd'], about: 'temperature, humidity, rain, wind' },
+  { id: 'forecast', every: 30, view: 'weather', name: 'Forecasts and UV', icon: 'fi-rr-cloud-sun', feeds: ['uv', 'f2', 'f24', 'f4'], about: 'UV, 2-hour, 24-hour, 4-day' },
+  { id: 'rainDay', every: 10, view: 'weather', name: 'Today’s rain', icon: 'fi-rr-time-past', history: 'rain', about: 'five-minute history for the replay' },
+  { id: 'air', every: 15, view: 'air', name: 'Air quality now', icon: 'fi-rr-wind', feeds: ['psi', 'pm25'], about: 'PSI and PM2.5 by region' },
+  { id: 'airDay', every: 30, view: 'air', name: 'Air quality today', icon: 'fi-rr-time-past', feeds: ['psiDay', 'pmDay'], about: 'hourly readings for the chart' },
+  { id: 'taxis', every: 1, view: 'taxis', name: 'Taxis now', icon: 'fi-rr-taxi', feeds: ['taxi'], about: 'every free taxi' },
+  { id: 'taxiDay', every: 30, view: 'taxis', name: 'Taxis today', icon: 'fi-rr-time-past', history: 'taxi', about: 'on the hour, for the slider' },
+  { id: 'carparks', every: 1, view: 'carparks', name: 'Carparks', icon: 'fi-rr-parking', feeds: ['carparks'], about: 'free lots in every HDB carpark' },
+  { id: 'cpDay', every: 30, view: 'carparks', name: 'Carparks today', icon: 'fi-rr-time-past', history: 'cp', about: 'on the hour, for the slider' },
+];
+const GROUP = Object.fromEntries(GROUPS.map((g) => [g.id, g]));
+// Auto sync: off on every page load. While on, and while the tab is visible, each group re-syncs on
+// its own schedule (g.every, minutes), matched to how often its source updates. That is under 90
+// real-time calls an hour, far inside the limit, and every call still goes through the limiter.
+const auto = { on: false };
+function autoTick() {
+  if (!auto.on || document.hidden) return;
+  const now = Date.now();
+  const due = GROUPS.filter((g) => groupState(g.id) === 'idle' && now - (STORE.groupAt?.[g.id] ?? 0) >= g.every * 60e3).map((g) => g.id);
+  if (due.length) runSync(due);
+}
+setInterval(autoTick, 15e3);
+document.addEventListener('visibilitychange', autoTick);
+function setAuto(on) { auto.on = on; syncUi(); autoTick(); }
+const nextIn = (g) => { const ms = (STORE.groupAt?.[g.id] ?? 0) + g.every * 60e3 - Date.now(); return ms < 60e3 ? 'next in under a minute' : `next in ${Math.ceil(ms / 60e3)} min`; };
+const FEED = Object.fromEntries(FEEDS.map(([k, label, url]) => [k, { label, url }]));
+const sync = { running: null, queue: [], done: 0, total: 0, step: '' };
+// a group redraws its own tab, plus any tab that also uses it (wind on the Air tab)
+const shows = (g) => g.view === state.view || (g.also ?? []).includes(state.view);
+const groupState = (id) => (sync.running === id ? 'running' : sync.queue.includes(id) ? 'queued' : 'idle');
+
+function newDay() {
+  const today = sgDate();
+  if (STORE.day === today) return;
+  STORE.day = today; STORE.rainDay = []; STORE.taxiDay = []; STORE.cpDay = [];
+  delete STORE.groupAt?.rainDay; delete STORE.groupAt?.taxiDay; delete STORE.groupAt?.cpDay;
+  CP.frames = []; CP.hour = null;
+  RP.status = 'idle'; RP.frames = []; RP.on = false; TX.frames = []; TX.hour = null;
+}
+// Calls a group will make, for the progress bar (history groups only fetch what's missing).
+function estimate(g) {
+  if (g.feeds) return g.feeds.length;
+  newDay();
+  if (g.history === 'rain') { const have = STORE.rainDay.length ? d3.max(STORE.rainDay, (r) => new Date(r.timestamp)) : null; return have ? Math.max(1, Math.ceil((Date.now() - have) / (2 * 3600e3))) : Math.ceil((sgHour() + 1) / 2); }
+  return missingHours(g.history === 'cp' ? STORE.cpDay : STORE.taxiDay).length;
+}
+function missingHours(list = STORE.taxiDay) { const nowH = sgHour(), have = new Set(list.filter((f) => f.h < nowH).map((f) => f.h)); return d3.range(nowH + 1).filter((h) => !have.has(h)); }
+
+function runSync(ids = GROUPS.map((g) => g.id)) {
+  ids.filter((id) => GROUP[id] && sync.running !== id && !sync.queue.includes(id)).forEach((id) => { sync.queue.push(id); sync.total += estimate(GROUP[id]); });
+  syncUi();
+  if (!sync.running) syncLoop();
+}
+async function syncLoop() {
+  if (playTimer) stopPlay();
+  while (sync.queue.length) {
+    const g = GROUP[sync.queue.shift()];
+    sync.running = g.id; syncUi();
+    const errs = await syncGroup(g);
+    STORE.groupAt = { ...STORE.groupAt, [g.id]: Date.now() };
+    STORE.groupErr = { ...STORE.groupErr, [g.id]: errs.length ? errs.join('; ') : null };
+    STORE.syncedAt = Date.now();
+    await saveStore();
+    if (shows(g) && VIEWS[state.view].built) { VIEWS[state.view].update(); refreshPanel(); }
+  }
+  Object.assign(sync, { running: null, done: 0, total: 0, step: '' });
+  syncUi();
+}
+async function syncGroup(g) {
+  newDay();
+  const errs = [], today = STORE.day;
+  const touched = () => { if (shows(g) && VIEWS[state.view].built) { VIEWS[state.view].update(); refreshPanel(); } };
+  const step = async (label, fn) => { sync.step = `${g.name} · ${label}`; syncUi(); try { await fn(); } catch (e) { errs.push(`${label}: ${e.message ?? e}`); } sync.done++; syncUi(); };
+  if (g.feeds) {
+    for (const k of g.feeds) await step(FEED[k].label, async () => { const j = await api(FEED[k].url(), { ttl: 0 }); STORE.feeds[k] = j; APPLY[k](j); touched(); });
+  } else if (g.history === 'rain') {
+    // pages run newest first, about two hours each; stop once a page reaches stored readings
+    const have = STORE.rainDay.length ? d3.max(STORE.rainDay, (r) => new Date(r.timestamp)) : null;
+    let tok = null, p = 0, planned = estimate(g);
+    const fresh = [];
+    for (;;) {
+      let stop = true;   // stays true if the page fails, so a dead page isn't retried in a loop
+      await step(`page ${p + 1}`, async () => {
+        const j = await api(`${RTB}rainfall?date=${today}${tok ? `&paginationToken=${encodeURIComponent(tok)}` : ''}`, { ttl: 0 });
+        stationsFrom(j.data); const rs = j.data.readings ?? []; fresh.push(...rs);
+        tok = j.data.paginationToken;
+        stop = !tok || (have && rs.some((r) => new Date(r.timestamp) <= have));
+      });
+      p++;
+      if (stop || !tok || p >= 16) break;
+      if (p >= planned) { sync.total++; planned++; }   // the estimate was short
+    }
+    if (p < planned) sync.total -= planned - p;
+    if (fresh.length) { STORE.rainDay = [...new Map([...STORE.rainDay, ...fresh].map((r) => [r.timestamp, r])).values()]; buildReplay(STORE.rainDay); touched(); }
+  } else if (g.history === 'cp') {
+    // hourly carpark snapshots (~300 KB each) kept as compact free/total arrays per lot type
+    STORE.cpDay ??= [];
+    for (const h of missingHours(STORE.cpDay)) {
+      await step(hourLbl(h), async () => {
+        const j = await api(`${V1}carpark-availability?date_time=${today}T${String(h).padStart(2, '0')}:00:00`, { ttl: 0 });
+        const it = j.items?.[0]; if (!it) return;
+        const fr = cpFrame(it, h); delete fr._s;
+        STORE.cpDay = [...STORE.cpDay.filter((x) => x.h !== h), fr];
+        buildCpDay(STORE.cpDay); touched();
+      });
+    }
+  } else {
+    for (const h of missingHours()) {
+      await step(hourLbl(h), async () => {
+        const j = await api(`${V1}taxi-availability?date_time=${today}T${String(h).padStart(2, '0')}:00:00`, { ttl: 0 });
+        const f = j.features?.[0]; if (!f) return;
+        STORE.taxiDay = [...STORE.taxiDay.filter((x) => x.h !== h), { h, t: f.properties.timestamp, pts: f.geometry.coordinates }];
+        buildTaxiDay(STORE.taxiDay); touched();
+      });
+    }
+  }
+  return errs;
+}
+
+// ---------- sync UI: header button + menu, and the tab's own groups in the panel ----------
+const ago = (t) => { const m = Math.round((Date.now() - t) / 60e3); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`; };
+function groupRow(g, { compact = false } = {}) {
+  const st = groupState(g.id), at = STORE.groupAt?.[g.id], err = STORE.groupErr?.[g.id];
+  const stale = at && Date.now() - at > (g.history ? 60 : 10) * 60e3;
+  const dot = st !== 'idle' ? 'bg-primary animate-pulse' : err ? 'bg-[#e05d6f]' : !at ? 'bg-input' : stale ? 'bg-amber' : 'bg-primary';
+  const when = st === 'running' ? `syncing${sync.step.startsWith(g.name) ? ` · ${esc(sync.step.slice(g.name.length + 3))}` : ''}` : st === 'queued' ? 'queued' : (err ? 'some calls failed, try again' : at ? `synced ${hhmm(at)} · ${ago(at)}` : 'not synced yet') + (auto.on && st === 'idle' ? ` · ${nextIn(g)}` : '');
+  return `<div class="flex items-center gap-2 ${compact ? 'py-1' : 'rounded-md px-2 py-1.5 hover:bg-accent/40'}" ${err ? `title="${esc(err)}"` : ''}>
+    <span class="inline-flex size-2 shrink-0 rounded-full ${dot}"></span>
+    ${compact ? '' : `<i class="fi ${g.icon} shrink-0 text-muted-foreground"></i>`}
+    <span class="min-w-0 flex-1"><span class="block truncate text-xs text-foreground">${g.name}${compact ? '' : ` <span class="text-muted-foreground">· ${g.about}</span>`}</span>
+      <span class="block truncate text-[11px] ${err && st === 'idle' ? 'text-[#e05d6f]' : stale && st === 'idle' ? 'text-amber' : 'text-muted-foreground'}">${when}</span></span>
+    <button data-sync-group="${g.id}" ${st !== 'idle' ? 'disabled' : ''} class="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50" aria-label="Sync ${g.name}" title="Sync ${g.name}"><i class="fi fi-rr-refresh ${st === 'running' ? 'animate-spin' : ''}"></i></button>
+  </div>`;
+}
+function progressBar() {
+  if (!sync.running) return '';
+  return `<div class="mt-1 h-1 overflow-hidden rounded-full bg-muted"><div class="h-full bg-primary transition-all" style="width:${(sync.done / Math.max(1, sync.total)) * 100}%"></div></div>
+    <p class="mt-1 text-[11px] text-muted-foreground">${sync.done} of ${sync.total} calls · one at a time to stay inside data.gov.sg’s rate limit</p>`;
+}
+function syncMenu() {
+  const m = $('#sync-menu'); if (!m || m.hidden) return;
+  const tabs = ORDER.map((v) => `<p class="px-2 pb-0.5 pt-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">${VIEWS[v].tab}</p>${GROUPS.filter((g) => g.view === v).map((g) => groupRow(g)).join('')}`).join('');
+  m.innerHTML = `<div class="flex items-center justify-between gap-2 px-2 pb-1"><span class="text-sm font-medium">Sync from data.gov.sg</span>
+      <button data-sync-all ${sync.running && !sync.queue.length && GROUPS.every((g) => groupState(g.id) !== 'idle') ? 'disabled' : ''} class="${btnCls} h-7 px-2.5 text-xs"><i class="fi fi-rr-refresh"></i>Sync all</button></div>
+    <label class="mx-2 mt-1 flex cursor-pointer items-start justify-between gap-3 rounded-lg border bg-background/40 p-2">
+      <span class="min-w-0"><span class="block text-xs font-medium text-foreground"><i class="fi fi-rr-time-fast mr-1 align-[-1px] ${auto.on ? 'text-primary' : 'text-muted-foreground'}"></i>Auto sync${auto.on ? (document.hidden ? ' · paused' : ' · on') : ''}</span>
+        <span class="mt-0.5 block text-[11px] leading-snug text-muted-foreground">While this tab is open, each group refreshes on its own schedule: carparks and taxis every minute, weather every 5 min, today’s rain every 10, air every 15, forecasts and the day histories every 30. Calls stay under data.gov.sg’s limit of 6 per 10 seconds.</span></span>
+      <button id="auto-toggle" role="switch" aria-checked="${auto.on}" aria-label="Auto sync" class="relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${auto.on ? 'bg-primary' : 'bg-input'}"><span class="inline-block size-4 rounded-full bg-background shadow transition-transform ${auto.on ? 'translate-x-[18px]' : 'translate-x-0.5'}"></span></button>
+    </label>
+    <div class="px-2">${progressBar()}</div>
+    ${tabs}
+    <div class="mt-2 flex items-center justify-between gap-2 border-t px-2 pt-2 text-[11px] text-muted-foreground"><span>Kept in this browser (IndexedDB)</span>
+      <button id="sync-reset" ${sync.running ? 'disabled' : ''} class="rounded px-1.5 py-0.5 hover:bg-accent hover:text-foreground disabled:opacity-50">Clear stored data</button></div>`;
+}
+function syncUi() {
+  const b = $('#sync'), l = $('#sync-lbl');
+  if (b) b.querySelector('i').className = `fi fi-rr-refresh ${sync.running ? 'animate-spin' : ''}`;
+  if (l) l.textContent = sync.running ? `${sync.done}/${sync.total}` : auto.on ? 'Auto' : 'Sync';
+  if (b) b.classList.toggle('text-primary', auto.on && !sync.running);
+  syncMenu();
+  liveRow();
+}
+// The panel's status: just this tab's groups, each with its own sync icon.
+function liveRow() {
+  const el = $('#live'); if (!el) return;
+  const gs = GROUPS.filter((g) => g.view === state.view);
+  el.innerHTML = `<div class="rounded-lg border bg-background/40 px-2.5 py-1">${gs.map((g) => groupRow(g, { compact: true })).join('')}
+    ${sync.running && GROUP[sync.running].view === state.view ? `<div class="pb-1.5">${progressBar()}</div>` : ''}</div>`;
+}
+setInterval(() => { if (!document.hidden) { liveRow(); syncMenu(); } }, 30e3);
+
+// ================= view lifecycle =================
+let building = 0;
+async function show(view) {
+  const ticket = ++building;
+  if (playTimer) stopPlay();
+  state.view = view; state.area = null; state.region = null; state.cp = null; state.gauge = null;
+  document.querySelectorAll('[data-tab]').forEach((b) => { b.dataset.state = b.dataset.tab === view ? 'active' : ''; b.setAttribute('aria-selected', b.dataset.tab === view); });
+  clearScene();
+  dropMap();
+  try { await ready; } catch { $('#panel').innerHTML = '<p class="text-sm text-muted-foreground">The map didn’t load. Reload the page to try again.</p>'; return; }
+  if (ticket !== building) return;
+  if (!proj) setupProjection();
+  ORDER.forEach((k) => { const v = VIEWS[k]; v.tiles = v.meshes = v.bars = v.rain = v.grid = v.cloud = v.drops = v.trackG = v.markG = v.cols = v.borders = v.flow = v.hex = v.ameshes = v.alabels = v.shell = v.glass = undefined; v.rlabels = null; v.built = false; });
+  const v = VIEWS[view];
+  renderPanel();
+  v.build(); v.built = true;
+  camera.position.set(...v.camera); controls.target.set(...v.target);
+  try { history.replaceState(null, '', `?view=${view}`); } catch { /* sandboxed */ }
+  // a tab whose live data has never been synced fetches it once; history stays on its icon
+  const fresh = GROUPS.filter((g) => g.view === view && !g.history && !STORE.groupAt?.[g.id]).map((g) => g.id);
+  if (fresh.length) runSync(fresh);
+}
+// The page is ready once the base layer is in and the stored data is applied; with nothing stored, sync once.
+const ready = baseReady.then(() => restoreStore());
+
+function stopPlay() { clearInterval(playTimer); playTimer = null; const b = $('#play'); if (b) { b.innerHTML = '<i class="fi fi-rr-play"></i>'; b.setAttribute('aria-label', 'Play the day'); } }
+function play() {
+  if (playTimer) { stopPlay(); return; }
+  if (state.view === 'weather' && RP.status === 'ready') {
+    if (RP.i >= RP.frames.length - 1) setReplay(0);
+    playTimer = setInterval(() => { if (RP.i >= RP.frames.length - 1) { stopPlay(); return; } setReplay(RP.i + 1); }, reduceMotion ? 600 : 160);
+  } else if (state.view === 'carparks' && CP.frames.length) {
+    if (CP.hour == null || CP.hour >= CP.frames.length - 1) setCpHour(0);
+    playTimer = setInterval(() => { if (CP.hour >= CP.frames.length - 1) { stopPlay(); return; } setCpHour(CP.hour + 1); }, reduceMotion ? 1400 : 800);
+  } else if (state.view === 'taxis' && TX.frames.length) {
+    if (TX.hour == null || TX.hour >= TX.frames.length - 1) setTaxiHour(0);
+    playTimer = setInterval(() => { if (TX.hour >= TX.frames.length - 1) { stopPlay(); return; } setTaxiHour(TX.hour + 1); }, reduceMotion ? 1400 : 800);
+  } else return;
+  const b = $('#play'); if (b) { b.innerHTML = '<i class="fi fi-rr-pause"></i>'; b.setAttribute('aria-label', 'Pause'); }
+}
+
+// Ease the camera and its target together to a new view.
+function flyCam(target, pos, dur = 1200) {
+  if (reduceMotion) { controls.target.copy(target); camera.position.copy(pos); return; }
+  fly = { t0: performance.now(), dur, ft: controls.target.clone(), fp: camera.position.clone(), tt: target, tp: pos };
+}
+function flyArea(i) { const a = AREAS[i], t = V3(...a.c, 0); flyCam(t, t.clone().add(new THREE.Vector3(-2, 7, 8.5))); }
+function selectArea(i) {
+  state.area = state.area === i ? null : i; state.gauge = null;
+  if (state.view === 'air') { state.area = null; const r = i == null ? null : VIEWS.air.regionOf(AREAS[i]); if (r) selectRegion(r); return; }
+  if (state.view === 'carparks') state.cp = null;
+  VIEWS[state.view].update(); VIEWS[state.view].fill(); renderDetail();
+}
+
+// ================= events =================
+// Back to the tab's starting view of the whole island.
+function resetCamera() { const v = VIEWS[state.view]; flyCam(new THREE.Vector3(...v.target), new THREE.Vector3(...v.camera), 900); }
+$('#reset-cam').onclick = resetCamera;
+document.addEventListener('keydown', (e) => { if ((e.key === 'r' || e.key === 'R') && !e.metaKey && !e.ctrlKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) resetCamera(); });
+$('#sync').onclick = (e) => { e.stopPropagation(); const m = $('#sync-menu'); m.hidden = !m.hidden; $('#sync').setAttribute('aria-expanded', !m.hidden); syncMenu(); };
+$('#sync-menu').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const g = e.target.closest('[data-sync-group]'); if (g) { runSync([g.dataset.syncGroup]); return; }
+  if (e.target.closest('#auto-toggle')) { e.preventDefault(); setAuto(!auto.on); return; }
+  if (e.target.closest('[data-sync-all]')) { runSync(); return; }
+  if (e.target.closest('#sync-reset')) clearStore();
+});
+document.addEventListener('click', () => { const m = $('#sync-menu'); if (!m.hidden) { m.hidden = true; $('#sync').setAttribute('aria-expanded', 'false'); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { const m = $('#sync-menu'); if (!m.hidden) { m.hidden = true; $('#sync').focus(); } } });
+$('#tabs').onclick =(e) => { const b = e.target.closest('[data-tab]'); if (b && b.dataset.tab !== state.view) show(b.dataset.tab); };
+$('#panel').addEventListener('input', (e) => {
+  if (e.target.id === 'rp-i') { if (playTimer) stopPlay(); setReplay(+e.target.value); }
+  if (e.target.id === 'tx-i') { if (playTimer) stopPlay(); setTaxiHour(+e.target.value); }
+  if (e.target.id === 'cp-i') { if (playTimer) stopPlay(); setCpHour(+e.target.value); }
+  if (e.target.id === 'cp-search') cpSearch(e.target.value);
+});
+$('#panel').addEventListener('change', (e) => { if (e.target.id === 'tx-from') { state.txFrom = e.target.value === '' ? null : +e.target.value; VIEWS.taxis.update(); refreshPanel(); } });
+$('#panel').addEventListener('keydown', (e) => {
+  if (e.target.id === 'cp-search' && e.key === 'Enter' && cpResults[0]) { selectCp(cpResults[0].i, true); e.target.value = ''; cpSearch(''); }
+  if (e.target.id === 'cp-search' && e.key === 'Escape') { e.target.value = ''; cpSearch(''); }
+});
+$('#panel').addEventListener('click', (e) => {
+  const t = e.target;
+  const rg = t.closest('[data-region]'); if (rg) { selectRegion(rg.dataset.region); return; }
+  const gb = t.closest('[data-gauge]'); if (gb) { selectGauge(gb.dataset.gauge); return; }
+  const tb = t.closest('[data-track]'); if (tb) { playTrack(+tb.dataset.track); return; }
+  const sg = t.closest('[data-sync-group]'); if (sg) { runSync([sg.dataset.syncGroup]); return; }
+  if (t.closest('#play')) { play(); return; }
+  if (t.closest('#rp-off')) { if (playTimer) stopPlay(); RP.on = false; VIEWS.weather.update(); replayRow(); renderDetail(); return; }
+  if (t.closest('#rp-on')) { RP.on = true; VIEWS.weather.update(); replayRow(); renderDetail(); return; }
+  if (t.closest('#tx-live')) { if (playTimer) stopPlay(); TX.hour = null; VIEWS.taxis.update(); refreshPanel(); return; }
+  if (t.closest('#cp-live-btn')) { if (playTimer) stopPlay(); CP.hour = null; VIEWS.carparks.update(); refreshPanel(); return; }
+  const hb = t.closest('[data-hour]'); if (hb) { if (playTimer) stopPlay(); if (state.view === 'carparks') setCpHour(+hb.dataset.hour); else setTaxiHour(+hb.dataset.hour); return; }
+  const cl = t.closest('[data-cplot]'); if (cl) { state.cpLot = cl.dataset.cplot; markSeg('cplot', cl); VIEWS.carparks.update(); refreshPanel(); return; }
+  const cv = t.closest('[data-cpview]'); if (cv) { state.cpView = cv.dataset.cpview; renderPanel(); VIEWS.carparks.update(); return; }
+  const s = (name) => t.closest(`[data-${name}]`);
+  let b;
+  if ((b = s('wmode'))) { state.wmode = b.dataset.wmode; markSeg('wmode', b); VIEWS.weather.update(); return; }
+  if ((b = s('rpcum'))) { RP.cum = b.dataset.rpcum === '1'; markSeg('rpcum', b); VIEWS.weather.drawRain(); return; }
+  if ((b = s('air'))) { state.air = b.dataset.air; markSeg('air', b); VIEWS.air.update(); refreshPanel(); return; }
+  if ((b = s('taxi'))) { state.taxi = b.dataset.taxi; renderPanel(); VIEWS.taxis.update(); return; }
+  if ((b = s('cp'))) { state.cpFilter = b.dataset.cp; markSeg('cp', b); VIEWS.carparks.update(); return; }
+  if ((b = s('cpick'))) { selectCp(cpResults[+b.dataset.cpick].i, true); $('#cp-search').value = ''; cpSearch(''); return; }
+  if ((b = s('cp'))) return;
+  if ((b = t.closest('[data-cp]'))) return;
+  if ((b = t.closest('button[data-cp]'))) return;
+  if (t.closest('[data-clear]')) { state.area = null; state.region = null; state.gauge = null; if (state.view === 'carparks') state.cp = null; VIEWS[state.view].update(); VIEWS[state.view].fill(); renderDetail(); return; }
+  if ((b = s('area'))) { selectArea(+b.dataset.area); if (state.area != null) flyArea(state.area); }
+});
+// carpark buttons in the area list share data-cp with the filter seg, so pick them out by their numeric value
+$('#panel').addEventListener('click', (e) => { const b = e.target.closest('button[data-cp]'); if (b && /^\d+$/.test(b.dataset.cp)) selectCp(+b.dataset.cp, true); }, true);
+$('#panel').addEventListener('focusout', (e) => { if (e.target.id === 'cp-search') setTimeout(() => { if (document.activeElement?.id !== 'cp-search') { const l = $('#cp-list'); if (l) l.hidden = true; } }, 150); });
+const markSeg = (name, btn) => document.querySelectorAll(`[data-${name}]`).forEach((x) => { x.dataset.state = x === btn ? 'active' : ''; });
+
+// ================= hover and click on the 3D map =================
+const tip = $('#tip'), ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+ray.params.Points.threshold = 0.05;
+function pickAt(ev) {
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  return ray.intersectObjects(pickables, false).find((h) => h.object.visible && (h.instanceId == null || h.object.userData.alive?.(h.instanceId) !== false));
+}
+renderer.domElement.addEventListener('pointermove', (ev) => {
+  const hit = pickAt(ev);
+  renderer.domElement.style.cursor = hit ? 'pointer' : '';
+  if (!hit?.object.userData.pick) { tip.hidden = true; return; }
+  tip.innerHTML = hit.object.userData.pick(hit);
+  tip.hidden = false;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = `${ev.clientX + 14 + w > innerWidth ? ev.clientX - w - 14 : ev.clientX + 14}px`;
+  tip.style.top = `${ev.clientY + 14 + h > innerHeight ? ev.clientY - h - 14 : ev.clientY + 14}px`;
+});
+renderer.domElement.addEventListener('pointerleave', () => { tip.hidden = true; });
+let down = null;
+renderer.domElement.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  const h = pickAt(e), o = h?.object;
+  if (state.view === 'carparks' && (o === VIEWS.carparks.shell?.mesh || o === VIEWS.carparks.glass?.mesh)) { selectCp(h.instanceId === state.cp ? null : h.instanceId); return; }
+  if (o?.userData.onClick) { o.userData.onClick(h); return; }
+  const area = o?.userData.area;
+  if (area != null) { selectArea(area); return; }
+  if (!h && (state.area != null || state.region != null || state.cp != null || state.gauge != null)) { state.area = null; state.region = null; state.cp = null; state.gauge = null; VIEWS[state.view].update(); VIEWS[state.view].fill(); renderDetail(); }
+});
+
+// ================= loop =================
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h); labelR.setSize(w, h);
+  camera.aspect = w / h; camera.fov = w < 700 ? 52 : 34;
+  if (w >= 900) camera.setViewOffset(w, h, -205, 0, w, h); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+renderer.setAnimationLoop(() => {
+  tickers.forEach((f) => f());
+  if (fly) {
+    const k = Math.min(1, (performance.now() - fly.t0) / fly.dur), e = d3.easeCubicInOut(k);
+    controls.target.lerpVectors(fly.ft, fly.tt, e); camera.position.lerpVectors(fly.fp, fly.tp, e);
+    if (k === 1) fly = null;
+  }
+  controls.update(); renderer.render(scene, camera); labelR.render(scene, camera);
+});
+renderTabs();
+const initial = new URLSearchParams(location.search).get('view');
+document.fonts.ready.then(() => show(ORDER.includes(initial) ? initial : 'weather'));
+</script>
+</body>
+</html>
