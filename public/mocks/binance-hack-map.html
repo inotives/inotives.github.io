@@ -9,7 +9,8 @@
   Playground mock: an investigation map of the October 29, 2026 Binance hack, drawn in chain space.
   Amounts and times follow TRM Labs' public report (as of 00:30 UTC, October 30). Wallets are named by
   role, never by address. Edges marked as estimates fill gaps the report leaves open.
-  Three.js draws the map; D3 provides the time scale and the timeline chart; the UI recreates
+  Three.js draws the map; D3 provides the time scale and the timeline chart, and d3-sankey the
+  "Where it went" flow chart (a layout in the style of Elliptic's chart, filled with the same TRM figures); the UI recreates
   shadcn/ui components in Tailwind with the site's palette; icons are Flaticon UIcons.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -18,6 +19,7 @@
 <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
@@ -119,6 +121,21 @@
   .slider:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgb(31 239 215 / 0.35); }
   .slider:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px rgb(31 239 215 / 0.35); }
 
+  #flows { position: absolute; z-index: 25; overflow: auto; overscroll-behavior: contain; }
+  #flows[hidden] { display: none; }
+  @media (min-width: 900px) { #flows { top: 4.25rem; left: 50%; transform: translateX(-50%); width: min(1080px, calc(100% - 3rem)); max-height: calc(100% - 5.5rem); } }
+  @media (max-width: 899px) { #flows { top: 3.75rem; left: 0.75rem; right: 0.75rem; max-height: calc(100% - 4.5rem); } }
+  #flows-chart svg { display: block; }
+  .sk-link { fill: none; stroke-opacity: 0.32; transition: stroke-opacity 0.15s; }
+  .sk-dim .sk-link { stroke-opacity: 0.07; }
+  .sk-dim .sk-link.hot { stroke-opacity: 0.62; }
+  .sk-node { transition: opacity 0.15s; }
+  .sk-dim .sk-node:not(.hot) { opacity: 0.35; }
+  .sk-head { font: 500 11px "Source Code Pro", monospace; letter-spacing: 0.06em; text-transform: uppercase; fill: #8b9099; }
+  .sk-name { font: 500 13px "IBM Plex Sans Condensed", sans-serif; fill: #e4e1d8; }
+  .sk-amt { font: 600 15px "IBM Plex Sans Condensed", sans-serif; fill: #e4e1d8; }
+  .sk-mid text { paint-order: stroke; stroke: #1d2026; stroke-width: 4px; stroke-linejoin: round; }
+
   .bar { height: 3px; border-radius: 2px; background: currentColor; opacity: 0.7; }
   #chart svg { display: block; overflow: visible; }
   #chart .axis text { font: 400 10px "Source Code Pro", monospace; fill: #8b9099; }
@@ -134,7 +151,8 @@
     <a href="/playground" class="pointer-events-auto rounded-sm font-brand text-[26px] leading-none text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
     <span class="hidden text-sm text-muted-foreground sm:inline">Playground</span>
     <span class="ml-auto hidden items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium text-muted-foreground md:inline-flex"><i class="fi fi-rr-info"></i>Reported figures with marked estimates</span>
-    <button id="sources-btn" aria-expanded="false" aria-controls="sources" class="pointer-events-auto ml-auto inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background/80 px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:ml-0"><i class="fi fi-rr-link text-xs"></i>Sources</button>
+    <button id="flows-btn" aria-expanded="false" aria-controls="flows" class="pointer-events-auto ml-auto inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background/80 px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring aria-expanded:border-primary/60 aria-expanded:text-primary md:ml-0"><i class="fi fi-rr-chart-tree text-xs"></i>Where it went</button>
+    <button id="sources-btn" aria-expanded="false" aria-controls="sources" class="pointer-events-auto inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background/80 px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-link text-xs"></i>Sources</button>
   </header>
   <aside id="sources" hidden class="absolute right-3 top-14 z-30 w-[min(360px,calc(100%-1.5rem))] rounded-xl border bg-card p-4 text-card-foreground shadow-lg sm:right-6">
     <h2 class="text-base font-semibold">Sources</h2>
@@ -233,6 +251,22 @@
     </div>
     <div id="chart" class="mt-2 h-[92px] cursor-crosshair"></div>
     <input id="scrub" class="slider mt-1" type="range" min="0" max="1000" value="1000" aria-label="Time" />
+  </section>
+
+  <section id="flows" hidden role="dialog" aria-labelledby="flows-title" class="rounded-xl border bg-card/95 p-4 text-card-foreground shadow-lg backdrop-blur sm:p-5">
+    <div class="flex items-start gap-3">
+      <div class="min-w-0">
+        <h2 id="flows-title" class="text-lg font-semibold leading-tight">Where the $6.36B went</h2>
+        <p class="mt-1 text-sm text-muted-foreground">What was taken, what happened to it, and where it stood at 00:30 UTC on October 30. Figures from TRM Labs; ≈ marks estimates that balance the report's totals.</p>
+      </div>
+      <button id="flows-close" class="ml-auto inline-flex size-8 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Close"><i class="fi fi-rr-cross-small"></i></button>
+    </div>
+    <dl id="flows-kpis" class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4"></dl>
+    <div id="flows-scroll" class="relative mt-3 overflow-x-auto">
+      <div id="flows-chart"></div>
+    </div>
+    <div id="flows-tip" hidden class="pointer-events-none fixed z-40 max-w-[260px] rounded-md border bg-card px-3 py-2 text-xs shadow-lg"></div>
+    <p class="mt-2 text-xs leading-relaxed text-muted-foreground">Hover a flow or a block for detail. The flow chart's layout follows Elliptic's chart of the same theft; the amounts are this map's own, so they differ from Elliptic's later count.</p>
   </section>
 </div>
 
@@ -711,7 +745,8 @@ function main() {
             <span class="flex items-baseline justify-between gap-3 text-sm"><span class="min-w-0 truncate">${esc(n.name)}</span><span class="shrink-0 font-mono text-xs text-risk">${usd(n.risk.usd)}${n.risk.est ? '*' : ''}</span></span>
             <span class="mt-0.5 block text-xs text-muted-foreground">${esc(n.risk.asset)} on ${esc(chainName(n.chain))}</span>
             <span class="mt-1 block text-risk"><span class="bar block" style="width:${Math.max(3, (n.risk.usd / risks[0].risk.usd) * 100)}%"></span></span></button></li>`).join('')}</ul>
-          <p class="mt-2 text-xs text-muted-foreground">* Estimate. <a class="text-primary hover:underline" href="${TRM_URL}" target="_blank" rel="noopener noreferrer">TRM Labs</a> reports about $2.4B in ETH and BTC beyond reach, plus smaller amounts on other chains, and expects them to move through bridges, swap services and OTC brokers.</p>`;
+          <p class="mt-2 text-xs text-muted-foreground">* Estimate. <a class="text-primary hover:underline" href="${TRM_URL}" target="_blank" rel="noopener noreferrer">TRM Labs</a> reports about $2.4B in ETH and BTC beyond reach, plus smaller amounts on other chains, and expects them to move through bridges, swap services and OTC brokers.</p>
+          <button data-open-flows class="mt-3 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-chart-tree text-xs"></i>See where all of it went</button>`;
         side.classList.add('idle');
         document.body.dataset.detail = '';
         return;
@@ -1035,6 +1070,160 @@ function main() {
   }
   requestAnimationFrame(frame);
 }
+</script>
+<script type="module">
+// ---------- "Where it went": stolen → what happened → where it stood ----------
+// The same TRM Labs figures as the map, regrouped by asset. US$ millions.
+// Stolen: theft edges by chain (6,357 in all). Ethereum's 3,790 splits by what became of it:
+// USDT that was frozen or sold (1,740, including USDT in the re-sweeps), USDC (823),
+// RLUSD and USD1 (116.3), and ETH plus other tokens (the rest).
+// Where it stood: the freezes, Arbitrum's clawback and the exit-risk holdings; what is left
+// over is money the report doesn't follow, drawn straight to "Not traced".
+const COL = { stolen: '#b8b5ac', frozen: '#7cc4dc', held: '#f2706b', untraced: '#8b9099' };
+const SK_NODES = [
+  // stolen
+  { id: 'usdtEth', name: 'USDT (Ethereum)', kind: 'stolen', note: '1.615B in the main sweep and 55.7M by ordinary transfer, plus USDT in the re-sweeps.', est: true },
+  { id: 'tron', name: 'USDT and TRX (Tron)', kind: 'stolen', note: '612.7M USDT and 46.4M TRX.' },
+  { id: 'usdcEth', name: 'USDC (Ethereum)', kind: 'stolen', note: 'All of it frozen by Circle at 21:04.' },
+  { id: 'rlusd', name: 'RLUSD and USD1', kind: 'stolen', note: '88.5M RLUSD and 27.8M USD1 on Ethereum.' },
+  { id: 'avaxPol', name: 'Avalanche and Polygon', kind: 'stolen', note: 'The second wave at 23:05.' },
+  { id: 'l2', name: 'Arbitrum, Optimism, Base', kind: 'stolen', note: 'About $39M, mostly on Arbitrum.' },
+  { id: 'ethEth', name: 'ETH and other tokens', kind: 'stolen', note: '195,470 ETH and the rest of the 63 tokens in the Ethereum sweeps.', est: true },
+  { id: 'btc', name: 'BTC', kind: 'stolen', note: '18,270 BTC.' },
+  { id: 'xrpSol', name: 'XRP and SOL', kind: 'stolen', note: '233.46M XRP and 970,500 SOL.' },
+  // what happened
+  { id: 'mFrozen', name: 'Frozen or clawed back', kind: 'frozen', note: 'Tether, Circle, Ripple and World Liberty froze stablecoins; Arbitrum’s Security Council moved $30M out of reach.' },
+  { id: 'mSwapEth', name: 'Swapped for ETH', kind: 'held', note: 'USDT sold to market makers or borrowed against on Aave, and RLUSD sold on DEXs, to get ahead of the freezes.' },
+  { id: 'mUni', name: 'Swapped on Uniswap', kind: 'held', note: 'Tron USDT swapped out of a coin Tether can freeze.', est: true },
+  { id: 'mNot', name: 'Not converted', kind: 'held', note: 'Native coins no issuer can freeze, kept as they were taken.' },
+  // where it stood
+  { id: 'rFrozen', name: 'Frozen', kind: 'frozen', note: 'Held by the issuers; the likeliest money to come back.' },
+  { id: 'rClaw', name: 'Clawed back on Arbitrum', kind: 'frozen', note: '8,426 ETH and 74.6M ARB moved by the Security Council at 00:08.' },
+  { id: 'rEth', name: 'Held as ETH', kind: 'held', sub: 'more than 420,000 ETH', note: 'Gathered in a few consolidation wallets, plus ETH on Optimism and Base.', exit: true },
+  { id: 'rBtc', name: 'Held as BTC', kind: 'held', sub: 'in a peel chain', note: 'Split into round 1,000 and 100 BTC pieces.', exit: true },
+  { id: 'rXrpSol', name: 'Held as XRP and SOL', kind: 'held', sub: 'not moved yet', note: 'Native coins, untouched since the theft.', exit: true },
+  { id: 'rUni', name: 'Out of USDT on Tron', kind: 'held', note: 'Swapped on Uniswap.', est: true, exit: true },
+  { id: 'rAvaxPol', name: 'Held as AVAX and POL', kind: 'held', note: 'Left after the freezes on Avalanche and Polygon.', est: true, exit: true },
+  { id: 'rUntraced', name: 'Not traced', kind: 'untraced', note: 'Part of the totals the report doesn’t follow to a wallet: Ethereum re-sweeps and tokens, and TRX and USDT on Tron.', est: true },
+];
+// [from, to, US$ millions, estimate?]
+const SK_LINKS = [
+  ['usdtEth', 'mFrozen', 1380, false], ['usdtEth', 'mSwapEth', 360, true],
+  ['usdcEth', 'mFrozen', 823, false],
+  ['rlusd', 'mFrozen', 68.3, false], ['rlusd', 'mSwapEth', 48, false],
+  ['tron', 'mFrozen', 378.7, false], ['tron', 'mUni', 170, true], ['tron', 'rUntraced', 79.3, true],
+  ['avaxPol', 'mFrozen', 16.2, false], ['avaxPol', 'mNot', 21.8, true],
+  ['l2', 'mFrozen', 30, false], ['l2', 'mNot', 9, true],
+  ['ethEth', 'mNot', 522, true], ['ethEth', 'rUntraced', 588.7, true],
+  ['btc', 'mNot', 1470, false],
+  ['xrpSol', 'mNot', 392, false],
+  ['mFrozen', 'rFrozen', 2666.2, false], ['mFrozen', 'rClaw', 30, false],
+  ['mSwapEth', 'rEth', 408, true], ['mUni', 'rUni', 170, true],
+  ['mNot', 'rEth', 531, true], ['mNot', 'rBtc', 1470, false], ['mNot', 'rXrpSol', 392, false], ['mNot', 'rAvaxPol', 21.8, true],
+];
+
+const usd = (m) => (m >= 1000 ? `$${(m / 1000).toFixed(2)}B` : m >= 10 ? `$${Math.round(m)}M` : `$${m.toFixed(1)}M`);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const linkColor = (l) => (l.target.kind === 'untraced' ? COL.untraced : l.target.kind === 'frozen' ? COL.frozen : COL.held);
+
+const card = document.getElementById('flows');
+const btn = document.getElementById('flows-btn');
+const host = document.getElementById('flows-chart');
+const tip = document.getElementById('flows-tip');
+
+function kpis() {
+  const total = d3.sum(SK_LINKS.filter((l) => !l[0].startsWith('m')), (l) => l[2]);
+  const sumTo = (ids) => d3.sum(SK_LINKS.filter((l) => ids.includes(l[1])), (l) => l[2]);
+  const reach = sumTo(['rEth', 'rBtc', 'rXrpSol', 'rUni', 'rAvaxPol']);
+  const tile = (label, value, cls, sub) => `<div class="rounded-lg border bg-background/40 px-3 py-2"><dt class="text-xs text-muted-foreground">${label}</dt><dd class="font-mono text-base ${cls}">${value}</dd><dd class="text-[11px] text-muted-foreground">${sub}</dd></div>`;
+  document.getElementById('flows-kpis').innerHTML =
+    tile('Stolen', usd(total), 'text-taken', 'October 29, 20:05 to 23:56') +
+    tile('Frozen or clawed back', usd(sumTo(['rFrozen', 'rClaw'])), 'text-frozen', `${Math.round((sumTo(['rFrozen', 'rClaw']) / total) * 100)}% of the total`) +
+    tile('Beyond any issuer', usd(reach), 'text-risk', 'the exit risk on the map') +
+    tile('Not traced', usd(sumTo(['rUntraced'])), 'text-ink-2', 'estimate, balances the totals');
+}
+
+function draw() {
+  if (card.hidden) return;
+  const W = Math.max(720, host.parentElement.clientWidth);
+  const H = 700, top = 70, left = 176, right = 210;
+  const graph = d3.sankey().nodeId((d) => d.id).nodeAlign(d3.sankeyJustify).nodeSort(null)
+    .nodeWidth(12).nodePadding(44).extent([[left, top], [W - right, H - 8]])({
+      nodes: SK_NODES.map((d) => ({ ...d })),
+      links: SK_LINKS.map(([source, target, value, est]) => ({ source, target, value, est })),
+    });
+  const last = d3.max(graph.nodes, (d) => d.layer);
+  const svg = d3.create('svg').attr('width', W).attr('height', H).attr('viewBox', [0, 0, W, H]).attr('role', 'img')
+    .attr('aria-label', 'Flow chart of the stolen funds: what was taken, what happened to it, and where it stood');
+  const colX = [left, (graph.nodes.find((d) => d.layer === 1).x0 + 6), W - right];
+  svg.append('g').selectAll('text').data(['Stolen on Oct 29', 'What happened', 'Where it stood at 00:30']).join('text')
+    .attr('class', 'sk-head').attr('y', 14)
+    .attr('x', (d, i) => (i === 0 ? colX[0] - 10 : i === 1 ? colX[1] : colX[2] + 22))
+    .attr('text-anchor', (d, i) => (i === 0 ? 'end' : i === 1 ? 'middle' : 'start')).text((d) => d);
+
+  const links = svg.append('g').selectAll('path').data(graph.links).join('path')
+    .attr('class', (d) => `sk-link${d.est ? ' est' : ''}`).attr('d', d3.sankeyLinkHorizontal())
+    .attr('stroke', linkColor).attr('stroke-width', (d) => Math.max(1, d.width));
+
+  const nodes = svg.append('g').selectAll('g').data(graph.nodes).join('g')
+    .attr('class', (d) => `sk-node${d.layer === 1 ? ' sk-mid' : ''}`);
+  nodes.append('rect').attr('x', (d) => d.x0).attr('y', (d) => d.y0).attr('width', (d) => d.x1 - d.x0)
+    .attr('height', (d) => Math.max(2, d.y1 - d.y0)).attr('rx', 1.5).attr('fill', (d) => COL[d.kind]);
+  nodes.filter((d) => d.exit).append('circle').attr('cx', (d) => d.x1 + 9).attr('cy', (d) => (d.y0 + d.y1) / 2).attr('r', 3.5)
+    .attr('fill', 'none').attr('stroke', COL.held).attr('stroke-width', 1.5);
+  const label = nodes.append('text').attr('y', (d) => (d.layer === 1 ? d.y0 - 26 : (d.y0 + d.y1) / 2 - 8))
+    .attr('x', (d) => (d.layer === 0 ? d.x0 - 10 : d.layer === last ? d.x1 + 22 : (d.x0 + d.x1) / 2))
+    .attr('text-anchor', (d) => (d.layer === 0 ? 'end' : d.layer === last ? 'start' : 'middle'));
+  label.append('tspan').attr('class', 'sk-name').text((d) => d.name);
+  label.append('tspan').attr('class', 'sk-amt').attr('x', function () { return this.parentNode.getAttribute('x'); }).attr('dy', 17)
+    .text((d) => `${d.est ? '≈' : ''}${usd(d.value)}`)
+    .append('tspan').attr('class', 'sk-name').attr('fill', '#8b9099').style('font-size', '11.5px').text((d) => (d.sub ? `  ${d.sub}` : ''));
+
+  // hover: light up a block's flows, or one flow
+  const show = (ev, html) => {
+    tip.innerHTML = html; tip.hidden = false;
+    const r = tip.getBoundingClientRect();
+    tip.style.left = `${Math.min(innerWidth - r.width - 8, ev.clientX + 14)}px`;
+    tip.style.top = `${Math.min(innerHeight - r.height - 8, ev.clientY + 14)}px`;
+  };
+  const hot = (pick) => {
+    svg.classed('sk-dim', !!pick);
+    links.classed('hot', (l) => !!pick && pick.links.has(l));
+    nodes.classed('hot', (n) => !!pick && pick.nodes.has(n));
+  };
+  const chain = (n) => {
+    // everything upstream and downstream of a block
+    const set = { links: new Set(), nodes: new Set([n]) };
+    const walk = (x, dir) => { for (const l of x[dir]) { set.links.add(l); const y = dir === 'sourceLinks' ? l.target : l.source; set.nodes.add(y); walk(y, dir); } };
+    walk(n, 'sourceLinks'); walk(n, 'targetLinks');
+    return set;
+  };
+  const fine = matchMedia('(hover: hover)').matches;
+  links.on('pointermove', (ev, l) => {
+    hot({ links: new Set([l]), nodes: new Set([l.source, l.target]) });
+    if (fine) show(ev, `<div class="font-medium">${esc(l.source.name)} → ${esc(l.target.name)}</div><div class="mt-0.5 font-mono">${l.est ? '≈' : ''}${usd(l.value)}</div>${l.est ? '<div class="mt-1 text-muted-foreground">Estimate</div>' : ''}`);
+  }).on('pointerleave', () => { hot(null); tip.hidden = true; });
+  nodes.on('pointermove', (ev, n) => {
+    hot(chain(n));
+    if (fine) show(ev, `<div class="font-medium">${esc(n.name)}</div><div class="mt-0.5 font-mono">${n.est ? '≈' : ''}${usd(n.value)}</div><div class="mt-1 text-muted-foreground">${esc(n.note)}${n.est ? ' Partly estimated.' : ''}</div>`);
+  }).on('pointerleave', () => { hot(null); tip.hidden = true; });
+
+  host.replaceChildren(svg.node());
+}
+
+function toggle(open = card.hidden) {
+  card.hidden = !open;
+  btn.setAttribute('aria-expanded', String(open));
+  tip.hidden = true;
+  if (open) { draw(); card.querySelector('#flows-close').focus({ preventScroll: true }); }
+}
+kpis();
+btn.addEventListener('click', () => toggle());
+document.getElementById('flows-close').addEventListener('click', () => { toggle(false); btn.focus(); });
+document.addEventListener('click', (ev) => { if (ev.target.closest('[data-open-flows]')) toggle(true); });
+addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !card.hidden) toggle(false); });
+addEventListener('resize', draw);
+if (location.hash === '#where-it-went') toggle(true);
 </script>
 </body>
 </html>

@@ -92,8 +92,12 @@ export default function SeriesPage() {
           frontmatter will appear here.
         </p>
       ) : (
-        <ol className="ledger ledger-numbered">
-          {posts.map((post) => (
+        // Newest first; numbers still count up in publishing order
+        <ol
+          className="ledger ledger-numbered ledger-numbered-desc"
+          style={{ counterReset: `entry ${posts.length + 1}` }}
+        >
+          {[...posts].reverse().map((post) => (
             <PostCard
               key={post.slug}
               post={post}

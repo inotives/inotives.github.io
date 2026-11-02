@@ -179,7 +179,7 @@ export const PLAYGROUND_MOCKS = [
     href: '/mocks/binance-hack-map.html',
     preview: '/mocks/previews/binance-hack-map.jpg',
     description:
-      'An investigation map of the October 29, 2026 Binance hack: one lane per chain, time left to right, frozen funds sinking below the floor and laundered funds rising above it. Red rings mark the likely exits: wallets holding coins no issuer can freeze. Replay the night or pick a wallet to follow its money. Figures from TRM Labs’ report, with gaps marked as estimates.',
+      'An investigation map of the October 29, 2026 Binance hack: one lane per chain, time left to right, frozen funds sinking below the floor and laundered funds rising above it. Red rings mark the likely exits: wallets holding coins no issuer can freeze. Replay the night or pick a wallet to follow its money, and open “Where it went” for a flow chart of what was taken, what happened to it and where it stood. Figures from TRM Labs’ report, with gaps marked as estimates.',
     libraries: ['threejs', 'd3', 'shadcn', 'tailwind', 'flaticon'],
     sources: [
       { name: 'TRM Labs', href: 'https://www.trmlabs.com/resources/blog/north-korea-steals-usd-6-36-billion-from-binance-in-the-largest-hack-in-history' },
