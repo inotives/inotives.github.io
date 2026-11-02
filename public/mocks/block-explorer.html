@@ -70,15 +70,36 @@
   .live-dot { width: 7px; height: 7px; border-radius: 999px; background: #1fefd7; box-shadow: 0 0 0 0 rgb(31 239 215 / 0.6); animation: ping 1.6s ease-out infinite; }
   @keyframes ping { 70% { box-shadow: 0 0 0 6px rgb(31 239 215 / 0); } 100% { box-shadow: 0 0 0 0 rgb(31 239 215 / 0); } }
   @media (prefers-reduced-motion: reduce) { .spin, .live-dot { animation: none; } }
-  @media (min-width: 900px) { #panel { left: 1.5rem; top: 4.25rem; width: 370px; max-height: calc(100% - 5.75rem); } }
-  @media (max-width: 899px) { #panel { left: 0.75rem; right: 0.75rem; bottom: 0.75rem; max-height: 44vh; } #legend { display: none; } }
+  #drawer { --pg-panel-w: 370px; }
+
+  /* <pg-layout v1> Playground layout standard (scripts/mocks/template/playground.html).
+     Side panel: a floating card on the left from 900px wide (.pg-float); below 900px it is a
+     drawer that slides in from the left over a scrim, with the stage legend folded into it.
+     Keep this block identical across mocks; check.mjs compares it with the template. */
+  .pg-drawer { display: flex; flex-direction: column; min-height: 0; }
+  .pg-drawer-head, .pg-drawer-legend, .pg-drawer-btn, .pg-scrim { display: none; }
+  @media (min-width: 900px) {
+    .pg-float { position: absolute; z-index: 10; left: 1.5rem; top: 4.5rem; width: var(--pg-panel-w, 360px); max-height: calc(100% - 6rem); }
+  }
+  @media (max-width: 899px) {
+    .pg-drawer { position: fixed; inset: 0 auto 0 0; z-index: 45; width: min(var(--pg-drawer-w, 360px), 88vw); height: auto; max-height: none; border: 0; border-right: 1px solid #2b2f37; border-radius: 0 0.75rem 0.75rem 0; background: #1d2026; box-shadow: 0 10px 40px rgb(0 0 0 / 0.5); transform: translateX(-104%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
+    body[data-drawer="open"] .pg-drawer { transform: none; visibility: visible; transition: transform 0.22s ease; }
+    body[data-drawer="open"] .pg-scrim { display: block; position: fixed; inset: 0; z-index: 44; background: rgb(0 0 0 / 0.5); }
+    .pg-drawer-head { display: flex; align-items: center; gap: 0.625rem; flex-shrink: 0; height: 3.5rem; padding: 0 0.75rem 0 1rem; border-bottom: 1px solid #2b2f37; }
+    .pg-drawer-legend:not(:empty) { display: block; flex-shrink: 0; padding: 0.75rem 1rem; border-top: 1px solid #2b2f37; font-size: 0.75rem; color: #8b9099; }
+    .pg-drawer-btn { display: inline-flex; }
+    .pg-hide-mobile, .pg-legend { display: none !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { .pg-drawer { transition: none !important; } }
+  /* </pg-layout> */
 </style>
 </head>
 <body class="bg-background font-sans text-foreground antialiased">
 <div class="fixed inset-0 overflow-hidden">
   <div id="stage" class="absolute inset-0"></div>
   <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
-    <a href="/playground" class="pointer-events-auto rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <button id="drawer-btn" type="button" class="pg-drawer-btn pointer-events-auto size-9 shrink-0 items-center justify-center rounded-md border bg-background/80 text-base backdrop-blur hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-controls="drawer" aria-expanded="false" aria-label="Open the panel"><i class="fi fi-rr-menu-burger"></i></button>
+    <a href="/playground" class="pg-hide-mobile pointer-events-auto rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
     <span class="hidden text-sm text-muted-foreground xl:inline">Playground · Block explorer 3D</span>
     <div role="tablist" aria-label="Chains" id="tabs" class="pointer-events-auto mx-auto inline-flex h-9 max-w-full items-center overflow-x-auto rounded-lg bg-muted p-1 text-muted-foreground"></div>
     <form id="search" class="pointer-events-auto relative hidden lg:block" role="search">
@@ -87,12 +108,47 @@
     </form>
     <button id="live" type="button" class="pointer-events-auto inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-md border bg-background/80 px-3 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"></button>
   </header>
-  <aside id="panel" class="scroll-thin absolute z-10 overflow-auto rounded-xl border bg-card/90 p-4 shadow backdrop-blur"></aside>
-  <div id="legend" class="pointer-events-auto absolute bottom-3 right-4 z-10 rounded-lg border bg-card/80 px-3 py-2 text-xs text-muted-foreground backdrop-blur"></div>
+  <aside id="drawer" class="pg-drawer pg-float overflow-hidden rounded-xl border bg-card/90 shadow backdrop-blur" aria-label="Panel">
+    <div class="pg-drawer-head">
+      <a href="/playground" class="font-brand text-[24px] leading-none hover:text-primary" title="Back to the Playground">inoTives</a>
+      <span class="min-w-0 flex-1 truncate text-sm text-muted-foreground">Block explorer 3D</span>
+      <button id="drawer-close" type="button" class="inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Close the panel"><i class="fi fi-rr-cross-small"></i></button>
+    </div>
+    <div id="panel" class="scroll-thin min-h-0 flex-1 overflow-auto p-4"></div>
+    <div id="drawer-legend" class="pg-drawer-legend"></div>
+  </aside>
+  <div id="scrim" class="pg-scrim"></div>
+  <div id="legend" class="pg-legend pointer-events-auto absolute bottom-3 right-4 z-10 rounded-lg border bg-card/80 px-3 py-2 text-xs text-muted-foreground backdrop-blur"></div>
   <div id="busy" hidden class="absolute left-1/2 top-16 z-30 -translate-x-1/2 rounded-full border bg-card/95 px-3 py-1.5 text-xs shadow"><i class="fi fi-rr-refresh spin mr-1.5 text-primary"></i><span></span></div>
   <div id="toast" hidden role="status" class="absolute bottom-4 left-1/2 z-40 max-w-[90vw] -translate-x-1/2 rounded-md border bg-background/95 px-3 py-2 text-xs shadow-lg"></div>
 </div>
 <div id="tip" hidden class="pointer-events-none fixed z-40 max-w-[280px] rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
+
+<script>
+/* <pg-layout-js v1> Playground layout standard: the mobile drawer (scripts/mocks/template/playground.html).
+   Opens from #drawer-btn; closes from #drawer-close, the scrim, Escape, links to #anchors or
+   [data-drawer-close] inside it, and when the window grows past 900px. Mirrors #legend into
+   #drawer-legend. Mocks can call window.pgDrawer.open() / .close(). Keep identical across mocks. */
+(() => {
+  const body = document.body, btn = document.getElementById('drawer-btn');
+  const set = (open) => { body.dataset.drawer = open ? 'open' : ''; btn?.setAttribute('aria-expanded', String(open)); };
+  const close = (refocus) => { if (body.dataset.drawer !== 'open') return; set(false); if (refocus) btn?.focus(); };
+  btn?.addEventListener('click', () => set(body.dataset.drawer !== 'open'));
+  document.getElementById('drawer-close')?.addEventListener('click', () => close(true));
+  document.getElementById('scrim')?.addEventListener('click', () => close(false));
+  document.getElementById('drawer')?.addEventListener('click', (e) => { if (e.target.closest('a[href^="#"], [data-drawer-close]')) close(false); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && body.dataset.drawer === 'open') { e.stopImmediatePropagation(); close(true); } }, true);
+  matchMedia('(min-width: 900px)').addEventListener('change', (m) => { if (m.matches) set(false); });
+  const legend = document.getElementById('legend'), copy = document.getElementById('drawer-legend');
+  if (legend && copy) {
+    const sync = () => { copy.innerHTML = legend.hidden ? '' : legend.innerHTML.trim(); };
+    new MutationObserver(sync).observe(legend, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+    sync();
+  }
+  window.pgDrawer = { open: () => set(true), close: () => close(false) };
+})();
+/* </pg-layout-js> */
+</script>
 
 <script type="module">
 import * as THREE from 'three';
@@ -466,16 +522,15 @@ const disposeView = () => {
   current = null; selBox.visible = selBeam.visible = false;
 };
 
-// The panel sits on the left from 900px wide and along the bottom (44vh) below that;
-// the 3D view is shifted so its content centres in the space the panel leaves free.
+// From 900px the panel floats on the left, so the view is shifted to centre in the space it
+// leaves free. Below 900px the panel is a drawer over the stage and the view uses the whole screen.
 const panelWidth = () => (innerWidth >= 900 ? 370 + 24 : 0);
-const panelHeight = () => (innerWidth >= 900 ? 0 : Math.round(innerHeight * 0.44) + 12);
 const resize = () => {
   const w = stage.clientWidth, h = stage.clientHeight;
   renderer.setSize(w, h); labelR.setSize(w, h);
   camera.aspect = w / h;
-  const offX = panelWidth() / 2, offY = panelHeight() / 2;
-  if (offX || offY) camera.setViewOffset(w, h, -offX, offY, w, h); else camera.clearViewOffset();
+  const offX = panelWidth() / 2;
+  if (offX) camera.setViewOffset(w, h, -offX, 0, w, h); else camera.clearViewOffset();
   camera.updateProjectionMatrix();
 };
 addEventListener('resize', resize);
@@ -484,7 +539,7 @@ addEventListener('resize', resize);
 const frame = (box, dir, pad = 1.05, instant = false) => {
   const c = box.getCenter(new THREE.Vector3());
   const r = box.getBoundingSphere(new THREE.Sphere()).radius;
-  const freeH = stage.clientHeight - panelHeight() - 56;   // minus the header
+  const freeH = stage.clientHeight - 56;   // minus the header
   const usable = Math.max(0.4, (stage.clientWidth - panelWidth()) / freeH);
   const vf = Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * (freeH / stage.clientHeight));
   const hf = Math.atan(Math.tan(vf) * usable);
