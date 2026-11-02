@@ -60,12 +60,28 @@
   .fi { display: inline-flex; line-height: 1; }
   .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
 
-  #sidebar { transition: transform 0.2s ease; }
-  @media (max-width: 899px) {
-    #sidebar { position: fixed; inset: 0 auto 0 0; z-index: 40; width: min(320px, 88vw); transform: translateX(-100%); }
-    body[data-sidebar="open"] #sidebar { transform: none; }
-    body[data-sidebar="open"] #scrim { display: block; }
+  #drawer { --pg-drawer-w: 320px; }   /* the sidebar is a column from 900px, a drawer below */
+
+  /* <pg-layout v1> Playground layout standard (scripts/mocks/template/playground.html).
+     Side panel: a floating card on the left from 900px wide (.pg-float); below 900px it is a
+     drawer that slides in from the left over a scrim, with the stage legend folded into it.
+     Keep this block identical across mocks; check.mjs compares it with the template. */
+  .pg-drawer { display: flex; flex-direction: column; min-height: 0; }
+  .pg-drawer-head, .pg-drawer-legend, .pg-drawer-btn, .pg-scrim { display: none; }
+  @media (min-width: 900px) {
+    .pg-float { position: absolute; z-index: 10; left: 1.5rem; top: 4.5rem; width: var(--pg-panel-w, 360px); max-height: calc(100% - 6rem); }
   }
+  @media (max-width: 899px) {
+    .pg-drawer { position: fixed; inset: 0 auto 0 0; z-index: 45; width: min(var(--pg-drawer-w, 360px), 88vw); height: auto; max-height: none; border: 0; border-right: 1px solid #2b2f37; border-radius: 0 0.75rem 0.75rem 0; background: #1d2026; box-shadow: 0 10px 40px rgb(0 0 0 / 0.5); transform: translateX(-104%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
+    body[data-drawer="open"] .pg-drawer { transform: none; visibility: visible; transition: transform 0.22s ease; }
+    body[data-drawer="open"] .pg-scrim { display: block; position: fixed; inset: 0; z-index: 44; background: rgb(0 0 0 / 0.5); }
+    .pg-drawer-head { display: flex; align-items: center; gap: 0.625rem; flex-shrink: 0; height: 3.5rem; padding: 0 0.75rem 0 1rem; border-bottom: 1px solid #2b2f37; }
+    .pg-drawer-legend:not(:empty) { display: block; flex-shrink: 0; padding: 0.75rem 1rem; border-top: 1px solid #2b2f37; font-size: 0.75rem; color: #8b9099; }
+    .pg-drawer-btn { display: inline-flex; }
+    .pg-hide-mobile, .pg-legend { display: none !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { .pg-drawer { transition: none !important; } }
+  /* </pg-layout> */
 
   .orb-slot canvas { display: block; }
 
@@ -102,11 +118,11 @@
 <body class="bg-background font-sans text-foreground antialiased">
 <div class="flex h-dvh overflow-hidden">
   <!-- sidebar: MCP servers and saved charts -->
-  <aside id="sidebar" class="flex w-[290px] shrink-0 flex-col border-r bg-card" aria-label="Connections and saved charts">
+  <aside id="drawer" class="pg-drawer flex w-[290px] shrink-0 flex-col border-r bg-card" aria-label="Connections and saved charts">
     <div class="flex h-14 items-center gap-3 border-b px-4">
       <a href="/playground" class="rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
       <span class="text-sm text-muted-foreground">Playground</span>
-      <button id="close-sidebar" class="ml-auto inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-[900px]:hidden" aria-label="Close sidebar"><i class="fi fi-rr-cross-small"></i></button>
+      <button id="drawer-close" type="button" class="ml-auto inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-[900px]:hidden" aria-label="Close the sidebar"><i class="fi fi-rr-cross-small"></i></button>
     </div>
     <div class="scroll-thin flex-1 overflow-y-auto px-3 py-4">
       <section>
@@ -126,12 +142,12 @@
     </div>
     <p class="border-t px-4 py-3 text-xs leading-relaxed text-muted-foreground"><i class="fi fi-rr-info mr-1 align-[-1px]"></i>A mock: no model is connected. Replies are scripted, the servers are simulated and every figure is generated.</p>
   </aside>
-  <div id="scrim" class="fixed inset-0 z-30 hidden bg-black/50"></div>
+  <div id="scrim" class="pg-scrim"></div>
 
   <!-- chat -->
   <main class="flex min-w-0 flex-1 flex-col">
     <header class="flex h-14 shrink-0 items-center gap-2 border-b px-3 sm:px-5">
-      <button id="open-sidebar" class="inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-[900px]:hidden" aria-label="Open sidebar"><i class="fi fi-rr-menu-burger"></i></button>
+      <button id="drawer-btn" type="button" class="pg-drawer-btn size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-controls="drawer" aria-expanded="false" aria-label="Open the sidebar"><i class="fi fi-rr-menu-burger"></i></button>
       <div id="head-orb" class="orb-slot size-8 shrink-0"></div>
       <div class="min-w-0">
         <h1 class="text-[15px] font-semibold leading-tight">Chart agent</h1>
@@ -188,6 +204,32 @@
 
 <div id="tip" hidden class="rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
 <div id="toast" hidden class="fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-md border bg-card px-3 py-2 text-sm shadow-lg"></div>
+
+<script>
+/* <pg-layout-js v1> Playground layout standard: the mobile drawer (scripts/mocks/template/playground.html).
+   Opens from #drawer-btn; closes from #drawer-close, the scrim, Escape, links to #anchors or
+   [data-drawer-close] inside it, and when the window grows past 900px. Mirrors #legend into
+   #drawer-legend. Mocks can call window.pgDrawer.open() / .close(). Keep identical across mocks. */
+(() => {
+  const body = document.body, btn = document.getElementById('drawer-btn');
+  const set = (open) => { body.dataset.drawer = open ? 'open' : ''; btn?.setAttribute('aria-expanded', String(open)); };
+  const close = (refocus) => { if (body.dataset.drawer !== 'open') return; set(false); if (refocus) btn?.focus(); };
+  btn?.addEventListener('click', () => set(body.dataset.drawer !== 'open'));
+  document.getElementById('drawer-close')?.addEventListener('click', () => close(true));
+  document.getElementById('scrim')?.addEventListener('click', () => close(false));
+  document.getElementById('drawer')?.addEventListener('click', (e) => { if (e.target.closest('a[href^="#"], [data-drawer-close]')) close(false); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && body.dataset.drawer === 'open') { e.stopImmediatePropagation(); close(true); } }, true);
+  matchMedia('(min-width: 900px)').addEventListener('change', (m) => { if (m.matches) set(false); });
+  const legend = document.getElementById('legend'), copy = document.getElementById('drawer-legend');
+  if (legend && copy) {
+    const sync = () => { copy.innerHTML = legend.hidden ? '' : legend.innerHTML.trim(); };
+    new MutationObserver(sync).observe(legend, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+    sync();
+  }
+  window.pgDrawer = { open: () => set(true), close: () => close(false) };
+})();
+/* </pg-layout-js> */
+</script>
 
 <script type="module">
 import * as THREE from 'three';
@@ -794,10 +836,7 @@ $('#saved-list').addEventListener('click', (e) => {
   }
 });
 
-const closeSidebar = () => { document.body.dataset.sidebar = ''; };
-$('#open-sidebar').onclick = () => { document.body.dataset.sidebar = 'open'; };
-$('#close-sidebar').onclick = closeSidebar;
-$('#scrim').onclick = closeSidebar;
+const closeSidebar = () => window.pgDrawer?.close();   // the drawer itself is wired by the pg-layout script
 
 // ---------- toast ----------
 let toastT;

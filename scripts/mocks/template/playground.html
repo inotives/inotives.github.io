@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Playground Template</title>
+<!--
+  Playground mock template. Copy to public/mocks/<id>.html and replace the demo.
+  The design guide is scripts/mocks/template/README.md.
+
+  Keep the two marked blocks (<pg-layout v1> CSS and <pg-layout-js v1> script) identical to this
+  file: `node scripts/mocks/template/check.mjs` reports mocks whose copy has drifted, and
+  `--write` copies the current blocks into every mock that has the markers.
+
+  Describe the mock here, like the other mocks do: what Three.js / D3 draw, which views exist,
+  where the data comes from (and the capture script, if there is one).
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<!-- Optional, uncomment what the mock needs (same versions as the mocks that use them):
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-brands/css/uicons-brands.css" />   brand logos, e.g. fi-brands-bitcoin (block-explorer)
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />                  street maps (sg-hdb-3d, sg-pulse)
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>                   Chart.js charts (chartjs-3d)
+-->
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-pink: #e58fb0;
+    --color-danger: #ff7a7a;
+    --color-ink-2: #b8b5ac;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base { *, ::before, ::after { border-color: var(--color-border); } }
+</style>
+<style>
+  body { margin: 0; background: #15171b; }
+  .fi { display: inline-flex; line-height: 1; }
+  #stage { isolation: isolate; background: radial-gradient(ellipse 80% 70% at 60% 48%, #1b1e24 0%, #15171b 72%); touch-action: none; }
+  #stage canvas { display: block; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+  .lbl { font: 400 10.5px "Source Code Pro", monospace; color: #8b9099; white-space: nowrap; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
+  #drawer { --pg-panel-w: 360px; }   /* desktop panel width for this mock */
+
+  /* <pg-layout v1> Playground layout standard (scripts/mocks/template/playground.html).
+     Side panel: a floating card on the left from 900px wide (.pg-float); below 900px it is a
+     drawer that slides in from the left over a scrim, with the stage legend folded into it.
+     Keep this block identical across mocks; check.mjs compares it with the template. */
+  .pg-drawer { display: flex; flex-direction: column; min-height: 0; }
+  .pg-drawer-head, .pg-drawer-legend, .pg-drawer-btn, .pg-scrim { display: none; }
+  @media (min-width: 900px) {
+    .pg-float { position: absolute; z-index: 10; left: 1.5rem; top: 4.5rem; width: var(--pg-panel-w, 360px); max-height: calc(100% - 6rem); }
+  }
+  @media (max-width: 899px) {
+    .pg-drawer { position: fixed; inset: 0 auto 0 0; z-index: 45; width: min(var(--pg-drawer-w, 360px), 88vw); height: auto; max-height: none; border: 0; border-right: 1px solid #2b2f37; border-radius: 0 0.75rem 0.75rem 0; background: #1d2026; box-shadow: 0 10px 40px rgb(0 0 0 / 0.5); transform: translateX(-104%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
+    body[data-drawer="open"] .pg-drawer { transform: none; visibility: visible; transition: transform 0.22s ease; }
+    body[data-drawer="open"] .pg-scrim { display: block; position: fixed; inset: 0; z-index: 44; background: rgb(0 0 0 / 0.5); }
+    .pg-drawer-head { display: flex; align-items: center; gap: 0.625rem; flex-shrink: 0; height: 3.5rem; padding: 0 0.75rem 0 1rem; border-bottom: 1px solid #2b2f37; }
+    .pg-drawer-legend:not(:empty) { display: block; flex-shrink: 0; padding: 0.75rem 1rem; border-top: 1px solid #2b2f37; font-size: 0.75rem; color: #8b9099; }
+    .pg-drawer-btn { display: inline-flex; }
+    .pg-hide-mobile, .pg-legend { display: none !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { .pg-drawer { transition: none !important; } }
+  /* </pg-layout> */
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+<div class="fixed inset-0 overflow-hidden">
+  <div id="stage" class="absolute inset-0"></div>
+  <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
+    <button id="drawer-btn" type="button" class="pg-drawer-btn pointer-events-auto size-9 shrink-0 items-center justify-center rounded-md border bg-background/80 text-base backdrop-blur hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-controls="drawer" aria-expanded="false" aria-label="Open the panel"><i class="fi fi-rr-menu-burger"></i></button>
+    <a href="/playground" class="pg-hide-mobile pointer-events-auto rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <span class="hidden text-sm text-muted-foreground xl:inline">Playground · Template</span>
+    <div role="tablist" aria-label="Views" id="tabs" class="pointer-events-auto mx-auto inline-flex h-9 max-w-full items-center overflow-x-auto rounded-lg bg-muted p-1 text-muted-foreground"></div>
+    <button id="action" type="button" class="pointer-events-auto inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-md border bg-background/80 px-3 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-refresh text-primary"></i><span class="hidden sm:inline">Shuffle</span></button>
+  </header>
+  <aside id="drawer" class="pg-drawer pg-float overflow-hidden rounded-xl border bg-card/90 shadow backdrop-blur" aria-label="Panel">
+    <div class="pg-drawer-head">
+      <a href="/playground" class="font-brand text-[24px] leading-none hover:text-primary" title="Back to the Playground">inoTives</a>
+      <span class="min-w-0 flex-1 truncate text-sm text-muted-foreground">Template</span>
+      <button id="drawer-close" type="button" class="inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Close the panel"><i class="fi fi-rr-cross-small"></i></button>
+    </div>
+    <div id="panel" class="scroll-thin min-h-0 flex-1 overflow-auto p-4"></div>
+    <div id="drawer-legend" class="pg-drawer-legend"></div>
+  </aside>
+  <div id="scrim" class="pg-scrim"></div>
+  <div id="legend" class="pg-legend pointer-events-none absolute bottom-3 right-4 z-10 rounded-lg border bg-card/80 px-3 py-2 text-xs text-muted-foreground backdrop-blur"></div>
+  <div id="toast" hidden role="status" class="absolute bottom-4 left-1/2 z-40 max-w-[90vw] -translate-x-1/2 rounded-md border bg-background/95 px-3 py-2 text-xs shadow-lg"></div>
+</div>
+<div id="tip" hidden class="pointer-events-none fixed z-40 max-w-[280px] rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
+
+<script>
+/* <pg-layout-js v1> Playground layout standard: the mobile drawer (scripts/mocks/template/playground.html).
+   Opens from #drawer-btn; closes from #drawer-close, the scrim, Escape, links to #anchors or
+   [data-drawer-close] inside it, and when the window grows past 900px. Mirrors #legend into
+   #drawer-legend. Mocks can call window.pgDrawer.open() / .close(). Keep identical across mocks. */
+(() => {
+  const body = document.body, btn = document.getElementById('drawer-btn');
+  const set = (open) => { body.dataset.drawer = open ? 'open' : ''; btn?.setAttribute('aria-expanded', String(open)); };
+  const close = (refocus) => { if (body.dataset.drawer !== 'open') return; set(false); if (refocus) btn?.focus(); };
+  btn?.addEventListener('click', () => set(body.dataset.drawer !== 'open'));
+  document.getElementById('drawer-close')?.addEventListener('click', () => close(true));
+  document.getElementById('scrim')?.addEventListener('click', () => close(false));
+  document.getElementById('drawer')?.addEventListener('click', (e) => { if (e.target.closest('a[href^="#"], [data-drawer-close]')) close(false); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && body.dataset.drawer === 'open') { e.stopImmediatePropagation(); close(true); } }, true);
+  matchMedia('(min-width: 900px)').addEventListener('change', (m) => { if (m.matches) set(false); });
+  const legend = document.getElementById('legend'), copy = document.getElementById('drawer-legend');
+  if (legend && copy) {
+    const sync = () => { copy.innerHTML = legend.hidden ? '' : legend.innerHTML.trim(); };
+    new MutationObserver(sync).observe(legend, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+    sync();
+  }
+  window.pgDrawer = { open: () => set(true), close: () => close(false) };
+})();
+/* </pg-layout-js> */
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// ================= helpers =================
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const B = { paper: '#15171b', raise: '#1d2026', muted: '#23262d', line: '#2b2f37', ink: '#e4e1d8', ink2: '#b8b5ac', fog: '#8b9099', signal: '#1fefd7', amber: '#f6c453', pink: '#e58fb0', sky: '#7cc4dc' };
+const RAMP_STOPS = ['#174d49', '#1fefd7', '#f6c453', '#e58fb0'];
+const RAMP = d3.interpolateRgbBasis(RAMP_STOPS);
+let toastTimer;
+const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3200); };
+
+// shadcn/ui-style building blocks for the panel
+const kpi = (label, value, sub = '') => `<div class="min-w-0 rounded-lg border bg-background/40 px-2.5 py-2"><div class="truncate text-[11px] text-muted-foreground">${esc(label)}</div><div class="truncate text-sm font-semibold">${value}</div>${sub ? `<div class="truncate text-[11px] text-muted-foreground">${sub}</div>` : ''}</div>`;
+const section = (title, body, icon = '') => `<div class="mt-4"><div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">${icon ? `<i class="fi ${icon}"></i>` : ''}${esc(title)}</div>${body}</div>`;
+
+// ================= browser datastore (IndexedDB) =================
+// Data synced from an API is kept in IndexedDB, so the page reopens on the last sync;
+// bundled data in public/mocks/data/ is only the fallback. Wrap every call: storage can be blocked.
+const IDB = { name: 'inotives-template', store: 'kv' };
+function idbOpen() {
+  return new Promise((ok, no) => { const r = indexedDB.open(IDB.name, 1); r.onupgradeneeded = () => r.result.createObjectStore(IDB.store); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+}
+async function idb(mode, fn) {
+  const db = await idbOpen();
+  try { return await new Promise((ok, no) => { const tx = db.transaction(IDB.store, mode), req = fn(tx.objectStore(IDB.store)); tx.oncomplete = () => ok(req?.result); tx.onerror = () => no(tx.error); }); }
+  finally { db.close(); }
+}
+const store = {
+  get: async (key) => { try { return await idb('readonly', (s) => s.get(key)); } catch { return null; } },
+  put: async (key, value) => { try { await idb('readwrite', (s) => s.put(value, key)); } catch { /* private mode or quota */ } },
+};
+
+// ================= stage =================
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.appendChild(renderer.domElement);
+// HTML labels pinned to 3D positions; styled by .lbl, drawn in a layer over the canvas
+const labelR = new CSS2DRenderer(); labelR.domElement.className = 'labels'; stage.appendChild(labelR.domElement);
+const label = (parent, html, x, y, z, cls = '') => {
+  const el = document.createElement('div'); el.className = `lbl ${cls}`; el.innerHTML = html;
+  const o = new CSS2DObject(el); o.position.set(x, y, z); parent.add(o); return o;
+};
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight('#cfe9ff', B.paper, 1.25));
+const keyLight = new THREE.DirectionalLight('#ffffff', 1.5); keyLight.position.set(-8, 16, 12); scene.add(keyLight);
+const camera = new THREE.PerspectiveCamera(36, 1, 0.05, 300);
+camera.position.set(6, 6, 9);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.49;
+
+// From 900px the panel floats on the left, so the view is shifted right by half its width.
+// Below 900px the panel is a drawer over the stage, so the stage uses the whole screen.
+const panelOffset = () => (innerWidth >= 900 ? ($('#drawer').offsetWidth + 24) / 2 : 0);
+const resize = () => {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h); labelR.setSize(w, h); camera.aspect = w / h;
+  const off = panelOffset();
+  if (off) camera.setViewOffset(w, h, -off, 0, w, h); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+};
+addEventListener('resize', resize);
+
+// ================= demo content (replace) =================
+const VIEWS = { bars: { name: 'Bars', icon: 'fi-rr-chart-histogram' }, dots: { name: 'Dots', icon: 'fi-rr-dot-circle' } };
+const state = { view: 'bars', values: [] };
+const grid = new THREE.GridHelper(12, 12, B.line, B.muted); scene.add(grid);
+let group = new THREE.Group(); scene.add(group);
+const shuffle = () => { state.values = d3.range(25).map(() => Math.random()); };
+function build() {
+  // a rebuilt view must remove its label elements too: CSS2DRenderer leaves them in the DOM
+  scene.remove(group);
+  group.traverse((o) => { if (o.element instanceof Element) o.element.remove(); o.geometry?.dispose(); o.material?.dispose(); });
+  group = new THREE.Group(); scene.add(group);
+  state.values.forEach((v, i) => {
+    const geo = state.view === 'bars' ? new THREE.BoxGeometry(0.6, 0.2 + 3 * v, 0.6) : new THREE.SphereGeometry(0.2 + 0.3 * v, 16, 12);
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: RAMP(v), roughness: 0.55 }));
+    m.position.set((i % 5) * 1.1 - 2.2, state.view === 'bars' ? (0.2 + 3 * v) / 2 : 0.5 + v, Math.floor(i / 5) * 1.1 - 2.2);
+    group.add(m);
+  });
+  const top = d3.maxIndex(state.values), tv = state.values[top];
+  label(group, `<b class="text-foreground">Highest</b><br>${d3.format('.2f')(tv)}`, (top % 5) * 1.1 - 2.2, state.view === 'bars' ? 0.5 + 3 * tv : 1.3 + tv, Math.floor(top / 5) * 1.1 - 2.2);
+  $('#legend').innerHTML = `<div class="mb-1 font-medium text-foreground">Value</div><div class="h-2 w-40 rounded-full" style="background:linear-gradient(90deg,${RAMP_STOPS.join(',')})"></div><div class="mt-0.5 flex w-40 justify-between font-mono text-[10px]"><span>0</span><span>1</span></div><div class="mt-1.5 border-t pt-1.5">Drag to orbit · scroll to zoom</div>`;
+  renderPanel();
+}
+function renderPanel() {
+  $('#panel').innerHTML = `<h1 class="text-lg font-semibold leading-tight">Template</h1>
+    <p class="mt-1 text-xs text-muted-foreground">A starting point for a playground mock.</p>
+    <div class="mt-3 grid grid-cols-2 gap-2">${kpi('Items', state.values.length)}${kpi('Mean', d3.format('.2f')(d3.mean(state.values)))}</div>
+    ${section('About', '<p class="text-xs leading-relaxed text-muted-foreground">On phones this panel is a drawer: open it from the menu button. The legend is folded into the drawer below.</p>', 'fi-rr-info')}`;
+}
+const renderTabs = () => {
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([k, v]) => `<button role="tab" data-tab="${k}" aria-label="${v.name}" aria-selected="${k === state.view}" data-state="${k === state.view ? 'active' : ''}" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi ${v.icon}"></i><span class="hidden sm:inline">${v.name}</span></button>`).join('');
+};
+$('#tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) { state.view = b.dataset.tab; renderTabs(); build(); } });
+$('#action').addEventListener('click', () => { shuffle(); build(); store.put('values', state.values); toast('Shuffled and saved in this browser'); });
+
+renderer.setAnimationLoop(() => {
+  if (!reduceMotion) group.rotation.y += 0.002;
+  controls.update(); renderer.render(scene, camera); labelR.render(scene, camera);
+});
+
+(async () => {
+  resize(); renderTabs();
+  state.values = (await store.get('values')) || (shuffle(), state.values);
+  build();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Block Explorer 3D</title>
+<!--
+  Playground mock: a block explorer for Bitcoin, Ethereum and Solana drawn in 3D.
+  Three.js draws each chain in its own way: Bitcoin's mined blocks beside the queue of
+  projected mempool blocks, Ethereum's blocks as gas columns against the target with blobs and
+  the base fee, and Solana's slots on a spiral grouped by leader. Open a block to see every
+  transaction in it, then pick one for its details. D3 handles colour scales and number formats.
+  UI recreates shadcn/ui in Tailwind with the inoTives brand kit. Icons: Flaticon UIcons.
+  Data: a snapshot captured from mempool.space, publicnode's Ethereum RPC and publicnode's
+  Solana RPC (data/block-explorer.json, made by scripts/mocks/block-explorer/capture.mjs, which
+  imports the loaders between the chain-data markers below). "Go live" calls the same loaders
+  from the browser.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-brands/css/uicons-brands.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-pink: #e58fb0;
+    --color-danger: #ff7a7a;
+    --color-ink-2: #b8b5ac;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base { *, ::before, ::after { border-color: var(--color-border); } }
+</style>
+<style>
+  body { margin: 0; background: #15171b; }
+  .fi { display: inline-flex; line-height: 1; }
+  #stage { isolation: isolate; background: radial-gradient(ellipse 80% 70% at 60% 48%, #1b1e24 0%, #15171b 72%); touch-action: none; }
+  #stage canvas { display: block; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+  .lbl { font: 400 10.5px "Source Code Pro", monospace; color: #8b9099; white-space: nowrap; text-align: center; line-height: 1.25; }
+  .lbl b { font: 500 12px "IBM Plex Sans Condensed", sans-serif; color: #e4e1d8; }
+  .lbl.bg { padding: 1px 5px; border-radius: 4px; background: rgb(21 23 27 / 0.72); }
+  .lbl.amber { color: #f6c453; }
+  .lbl.big { font: 500 14px "IBM Plex Sans Condensed", sans-serif; color: #e4e1d8; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
+  .spin { animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .live-dot { width: 7px; height: 7px; border-radius: 999px; background: #1fefd7; box-shadow: 0 0 0 0 rgb(31 239 215 / 0.6); animation: ping 1.6s ease-out infinite; }
+  @keyframes ping { 70% { box-shadow: 0 0 0 6px rgb(31 239 215 / 0); } 100% { box-shadow: 0 0 0 0 rgb(31 239 215 / 0); } }
+  @media (prefers-reduced-motion: reduce) { .spin, .live-dot { animation: none; } }
+  #drawer { --pg-panel-w: 370px; }
+
+  /* <pg-layout v1> Playground layout standard (scripts/mocks/template/playground.html).
+     Side panel: a floating card on the left from 900px wide (.pg-float); below 900px it is a
+     drawer that slides in from the left over a scrim, with the stage legend folded into it.
+     Keep this block identical across mocks; check.mjs compares it with the template. */
+  .pg-drawer { display: flex; flex-direction: column; min-height: 0; }
+  .pg-drawer-head, .pg-drawer-legend, .pg-drawer-btn, .pg-scrim { display: none; }
+  @media (min-width: 900px) {
+    .pg-float { position: absolute; z-index: 10; left: 1.5rem; top: 4.5rem; width: var(--pg-panel-w, 360px); max-height: calc(100% - 6rem); }
+  }
+  @media (max-width: 899px) {
+    .pg-drawer { position: fixed; inset: 0 auto 0 0; z-index: 45; width: min(var(--pg-drawer-w, 360px), 88vw); height: auto; max-height: none; border: 0; border-right: 1px solid #2b2f37; border-radius: 0 0.75rem 0.75rem 0; background: #1d2026; box-shadow: 0 10px 40px rgb(0 0 0 / 0.5); transform: translateX(-104%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
+    body[data-drawer="open"] .pg-drawer { transform: none; visibility: visible; transition: transform 0.22s ease; }
+    body[data-drawer="open"] .pg-scrim { display: block; position: fixed; inset: 0; z-index: 44; background: rgb(0 0 0 / 0.5); }
+    .pg-drawer-head { display: flex; align-items: center; gap: 0.625rem; flex-shrink: 0; height: 3.5rem; padding: 0 0.75rem 0 1rem; border-bottom: 1px solid #2b2f37; }
+    .pg-drawer-legend:not(:empty) { display: block; flex-shrink: 0; padding: 0.75rem 1rem; border-top: 1px solid #2b2f37; font-size: 0.75rem; color: #8b9099; }
+    .pg-drawer-btn { display: inline-flex; }
+    .pg-hide-mobile, .pg-legend { display: none !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { .pg-drawer { transition: none !important; } }
+  /* </pg-layout> */
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+<div class="fixed inset-0 overflow-hidden">
+  <div id="stage" class="absolute inset-0"></div>
+  <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
+    <button id="drawer-btn" type="button" class="pg-drawer-btn pointer-events-auto size-9 shrink-0 items-center justify-center rounded-md border bg-background/80 text-base backdrop-blur hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-controls="drawer" aria-expanded="false" aria-label="Open the panel"><i class="fi fi-rr-menu-burger"></i></button>
+    <a href="/playground" class="pg-hide-mobile pointer-events-auto rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <span class="hidden text-sm text-muted-foreground xl:inline">Playground · Block explorer 3D</span>
+    <div role="tablist" aria-label="Chains" id="tabs" class="pointer-events-auto mx-auto inline-flex h-9 max-w-full items-center overflow-x-auto rounded-lg bg-muted p-1 text-muted-foreground"></div>
+    <form id="search" class="pointer-events-auto relative hidden lg:block" role="search">
+      <i class="fi fi-rr-search pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"></i>
+      <input id="q" type="search" autocomplete="off" spellcheck="false" class="h-9 w-[230px] rounded-md border border-input bg-background/80 pl-8 pr-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+    </form>
+    <button id="live" type="button" class="pointer-events-auto inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-md border bg-background/80 px-3 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"></button>
+  </header>
+  <aside id="drawer" class="pg-drawer pg-float overflow-hidden rounded-xl border bg-card/90 shadow backdrop-blur" aria-label="Panel">
+    <div class="pg-drawer-head">
+      <a href="/playground" class="font-brand text-[24px] leading-none hover:text-primary" title="Back to the Playground">inoTives</a>
+      <span class="min-w-0 flex-1 truncate text-sm text-muted-foreground">Block explorer 3D</span>
+      <button id="drawer-close" type="button" class="inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Close the panel"><i class="fi fi-rr-cross-small"></i></button>
+    </div>
+    <div id="panel" class="scroll-thin min-h-0 flex-1 overflow-auto p-4"></div>
+    <div id="drawer-legend" class="pg-drawer-legend"></div>
+  </aside>
+  <div id="scrim" class="pg-scrim"></div>
+  <div id="legend" class="pg-legend pointer-events-auto absolute bottom-3 right-4 z-10 rounded-lg border bg-card/80 px-3 py-2 text-xs text-muted-foreground backdrop-blur"></div>
+  <div id="busy" hidden class="absolute left-1/2 top-16 z-30 -translate-x-1/2 rounded-full border bg-card/95 px-3 py-1.5 text-xs shadow"><i class="fi fi-rr-refresh spin mr-1.5 text-primary"></i><span></span></div>
+  <div id="toast" hidden role="status" class="absolute bottom-4 left-1/2 z-40 max-w-[90vw] -translate-x-1/2 rounded-md border bg-background/95 px-3 py-2 text-xs shadow-lg"></div>
+</div>
+<div id="tip" hidden class="pointer-events-none fixed z-40 max-w-[280px] rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
+
+<script>
+/* <pg-layout-js v1> Playground layout standard: the mobile drawer (scripts/mocks/template/playground.html).
+   Opens from #drawer-btn; closes from #drawer-close, the scrim, Escape, links to #anchors or
+   [data-drawer-close] inside it, and when the window grows past 900px. Mirrors #legend into
+   #drawer-legend. Mocks can call window.pgDrawer.open() / .close(). Keep identical across mocks. */
+(() => {
+  const body = document.body, btn = document.getElementById('drawer-btn');
+  const set = (open) => { body.dataset.drawer = open ? 'open' : ''; btn?.setAttribute('aria-expanded', String(open)); };
+  const close = (refocus) => { if (body.dataset.drawer !== 'open') return; set(false); if (refocus) btn?.focus(); };
+  btn?.addEventListener('click', () => set(body.dataset.drawer !== 'open'));
+  document.getElementById('drawer-close')?.addEventListener('click', () => close(true));
+  document.getElementById('scrim')?.addEventListener('click', () => close(false));
+  document.getElementById('drawer')?.addEventListener('click', (e) => { if (e.target.closest('a[href^="#"], [data-drawer-close]')) close(false); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && body.dataset.drawer === 'open') { e.stopImmediatePropagation(); close(true); } }, true);
+  matchMedia('(min-width: 900px)').addEventListener('change', (m) => { if (m.matches) set(false); });
+  const legend = document.getElementById('legend'), copy = document.getElementById('drawer-legend');
+  if (legend && copy) {
+    const sync = () => { copy.innerHTML = legend.hidden ? '' : legend.innerHTML.trim(); };
+    new MutationObserver(sync).observe(legend, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+    sync();
+  }
+  window.pgDrawer = { open: () => set(true), close: () => close(false) };
+})();
+/* </pg-layout-js> */
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// <chain-data>
+// Loaders for the three public APIs. Pure functions (fetch only, no DOM): the page uses them for
+// "Go live" and scripts/mocks/block-explorer/capture.mjs imports this block to build the snapshot,
+// so the snapshot and live data always have the same shape.
+const API = {
+  btc: 'https://mempool.space/api',
+  eth: 'https://ethereum-rpc.publicnode.com',
+  sol: 'https://solana-rpc.publicnode.com',
+};
+const getJSON = async (url) => {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`${r.status} from ${new URL(url).host}`);
+  return r.json();
+};
+// One JSON-RPC batch. Results come back in call order; with `lenient`, failed calls become null.
+const rpc = async (url, calls, lenient = false) => {
+  const body = calls.map(([method, params], id) => ({ jsonrpc: '2.0', id, method, params }));
+  const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(`${r.status} from ${new URL(url).host}`);
+  const out = await r.json();
+  if (!Array.isArray(out)) throw new Error(out?.error?.message || 'RPC error');
+  const byId = new Map(out.map((x) => [x.id, x]));
+  return calls.map((_, id) => {
+    const x = byId.get(id);
+    if (x && !x.error) return x.result;
+    if (lenient) return null;
+    throw new Error(x?.error?.message || 'RPC error');
+  });
+};
+const rpcChunked = async (url, calls, size) => {
+  const out = [];
+  for (let i = 0; i < calls.length; i += size) out.push(...(await rpc(url, calls.slice(i, i + size), true)));
+  return out;
+};
+const hexN = (h) => (h == null ? 0 : Number(BigInt(h)));
+const gwei = (h) => (h == null ? null : Number(BigInt(h)) / 1e9);
+const ether = (h) => Number(BigInt(h || '0x0') / 1_000_000_000n) / 1e9;
+const asciiOf = (hex) => {
+  let s = '';
+  for (let i = 2; i + 1 < (hex || '').length; i += 2) {
+    const c = parseInt(hex.slice(i, i + 2), 16);
+    if (c >= 32 && c < 127) s += String.fromCharCode(c);
+  }
+  return s.trim();
+};
+
+// ---- Bitcoin (mempool.space REST) ----
+const trimBtcBlock = (b) => {
+  const x = b.extras || {};
+  return {
+    id: b.id, height: b.height, time: b.timestamp, txCount: b.tx_count, size: b.size, weight: b.weight,
+    difficulty: b.difficulty, nonce: b.nonce, prev: b.previousblockhash, merkle: b.merkle_root,
+    reward: x.reward, fees: x.totalFees, medianFee: x.medianFee, feeRange: x.feeRange, avgFeeRate: x.avgFeeRate,
+    pool: x.pool?.name || 'Unknown', inputs: x.totalInputs, outputs: x.totalOutputs, outAmt: x.totalOutputAmt,
+    segwit: x.segwitTotalTxs, utxoChange: x.utxoSetChange, vsize: x.virtualSize,
+    tag: (x.coinbaseSignatureAscii || '').replace(/[^\x20-\x7e]/g, '').trim().slice(0, 48),
+  };
+};
+const trimBtcTx = (t) => ({
+  txid: t.txid, version: t.version, locktime: t.locktime, size: t.size, weight: t.weight, fee: t.fee,
+  vinCount: t.vin.length, voutCount: t.vout.length,
+  inValue: t.vin.reduce((a, i) => a + (i.prevout?.value || 0), 0),
+  outValue: t.vout.reduce((a, o) => a + (o.value || 0), 0),
+  vin: t.vin.slice(0, 12).map((i) => ({ coinbase: !!i.is_coinbase, txid: i.txid, vout: i.vout, type: i.prevout?.scriptpubkey_type || null, address: i.prevout?.scriptpubkey_address || null, value: i.prevout?.value ?? null })),
+  vout: t.vout.slice(0, 12).map((o) => ({ type: o.scriptpubkey_type, address: o.scriptpubkey_address || null, value: o.value })),
+});
+const loadBtcOverview = async () => {
+  const [blocks, mempoolBlocks, mempool, fees] = await Promise.all([
+    getJSON(`${API.btc}/v1/blocks`),
+    getJSON(`${API.btc}/v1/fees/mempool-blocks`),
+    getJSON(`${API.btc}/mempool`),
+    getJSON(`${API.btc}/v1/fees/recommended`),
+  ]);
+  return {
+    blocks: blocks.map(trimBtcBlock),
+    mempoolBlocks: mempoolBlocks.map((m) => ({ vsize: m.blockVSize, nTx: m.nTx, fees: m.totalFees, medianFee: m.medianFee, feeRange: m.feeRange })),
+    mempool: { count: mempool.count, vsize: mempool.vsize, fees: mempool.total_fee },
+    fees,
+  };
+};
+// Every transaction in a block, compact: [txid, fee (sats), vsize, value (sats), mempool.space flags]
+const loadBtcBlockTxs = async (hash) =>
+  (await getJSON(`${API.btc}/v1/block/${hash}/summary`)).map((t) => [t.txid, t.fee, t.vsize, t.value, t.flags]);
+const loadBtcTx = async (txid) => trimBtcTx(await getJSON(`${API.btc}/tx/${txid}`));
+
+// ---- Ethereum (JSON-RPC) ----
+const trimEthHeader = (b) => ({
+  number: hexN(b.number), hash: b.hash, parent: b.parentHash, time: hexN(b.timestamp), miner: b.miner,
+  gasUsed: hexN(b.gasUsed), gasLimit: hexN(b.gasLimit), baseFee: gwei(b.baseFeePerGas),
+  blobGas: hexN(b.blobGasUsed), excessBlobGas: hexN(b.excessBlobGas), size: hexN(b.size),
+  txCount: b.transactions.length, withdrawals: (b.withdrawals || []).length, extra: asciiOf(b.extraData),
+});
+const trimEthTx = (t, r) => ({
+  hash: t.hash, i: hexN(t.transactionIndex), from: t.from, to: t.to, value: ether(t.value), type: hexN(t.type),
+  nonce: hexN(t.nonce), gas: hexN(t.gas), sel: t.input && t.input.length >= 10 ? t.input.slice(0, 10) : '0x',
+  inLen: Math.max(0, ((t.input || '0x').length - 2) / 2), maxFee: gwei(t.maxFeePerGas), maxPrio: gwei(t.maxPriorityFeePerGas),
+  blobs: (t.blobVersionedHashes || []).length, status: r ? hexN(r.status) : null, gasUsed: r ? hexN(r.gasUsed) : null,
+  price: gwei(r?.effectiveGasPrice ?? t.gasPrice), created: r?.contractAddress || null, logs: r ? r.logs.length : 0,
+  topics: [...new Set((r?.logs || []).map((l) => (l.topics[0] || '').slice(0, 10)).filter(Boolean))].slice(0, 8),
+});
+const loadEthOverview = async (n = 12) => {
+  const [head] = await rpc(API.eth, [['eth_blockNumber', []]]);
+  const top = hexN(head);
+  const calls = Array.from({ length: n }, (_, i) => ['eth_getBlockByNumber', ['0x' + (top - i).toString(16), false]]);
+  return { blocks: (await rpc(API.eth, calls, true)).filter(Boolean).map(trimEthHeader) };
+};
+const loadEthBlock = async (number) => {
+  const tag = '0x' + number.toString(16);
+  const [b, receipts] = await rpc(API.eth, [['eth_getBlockByNumber', [tag, true]], ['eth_getBlockReceipts', [tag]]]);
+  const byHash = new Map(receipts.map((r) => [r.transactionHash, r]));
+  return { ...trimEthHeader(b), txs: b.transactions.map((t) => trimEthTx(t, byHash.get(t.hash))) };
+};
+
+// ---- Solana (JSON-RPC) ----
+const SOL_BLOCK = (details) => ({ commitment: 'confirmed', maxSupportedTransactionVersion: 1, transactionDetails: details, rewards: false });
+const trimSolTx = (t, i) => {
+  const m = t.transaction.message;
+  const keys = [...m.accountKeys, ...(t.meta.loadedAddresses?.writable || []), ...(t.meta.loadedAddresses?.readonly || [])];
+  return {
+    sig: t.transaction.signatures[0], i, fee: t.meta.fee, cu: t.meta.computeUnitsConsumed ?? 0,
+    err: t.meta.err ? JSON.stringify(t.meta.err).slice(0, 90) : null, v: t.version, signers: m.header.numRequiredSignatures,
+    accounts: keys.length, programs: [...new Set(m.instructions.map((ix) => keys[ix.programIdIndex]))],
+    payer: keys[0], payerDelta: t.meta.postBalances[0] - t.meta.preBalances[0],
+    tokenBalances: (t.meta.postTokenBalances || []).length,
+    inner: (t.meta.innerInstructions || []).reduce((a, x) => a + x.instructions.length, 0),
+  };
+};
+const loadSolOverview = async (n = 48) => {
+  const [slot, epoch, perf] = await rpc(API.sol, [
+    ['getSlot', [{ commitment: 'confirmed' }]],
+    ['getEpochInfo', [{ commitment: 'confirmed' }]],
+    ['getRecentPerformanceSamples', [6]],
+  ]);
+  const end = slot - 2, start = end - n + 1;
+  const [produced, leaders] = await rpc(API.sol, [
+    ['getBlocks', [start, end, { commitment: 'confirmed' }]],
+    ['getSlotLeaders', [start, n]],
+  ]);
+  const sigs = await rpcChunked(API.sol, produced.map((s) => ['getBlock', [s, SOL_BLOCK('signatures')]]), 12);
+  const info = new Map(produced.map((s, i) => [s, sigs[i]]));
+  return {
+    epoch: { epoch: epoch.epoch, slotIndex: epoch.slotIndex, slotsInEpoch: epoch.slotsInEpoch, blockHeight: epoch.blockHeight, txTotal: epoch.transactionCount },
+    perf: perf.map((p) => ({ slot: p.slot, txs: p.numTransactions, nonVote: p.numNonVoteTransactions, slots: p.numSlots, secs: p.samplePeriodSecs })),
+    slots: Array.from({ length: n }, (_, i) => {
+      const s = start + i, b = info.get(s);
+      return b ? { slot: s, leader: leaders[i], produced: true, txCount: b.signatures.length, time: b.blockTime, hash: b.blockhash }
+        : { slot: s, leader: leaders[i], produced: info.has(s) };
+    }),
+  };
+};
+const loadSolBlock = async (slot) => {
+  const [b] = await rpc(API.sol, [['getBlock', [slot, SOL_BLOCK('full')]]]);
+  return { slot, hash: b.blockhash, parent: b.parentSlot, time: b.blockTime, height: b.blockHeight, txs: b.transactions.map(trimSolTx) };
+};
+
+const CHAIN_DATA = { API, loadBtcOverview, loadBtcBlockTxs, loadBtcTx, loadEthOverview, loadEthBlock, loadSolOverview, loadSolBlock };
+// </chain-data>
+
+// ================= helpers =================
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const B = { paper: '#15171b', raise: '#1d2026', muted: '#23262d', line: '#2b2f37', ink: '#e4e1d8', ink2: '#b8b5ac', fog: '#8b9099', signal: '#1fefd7', amber: '#f6c453', pink: '#e58fb0', sky: '#7cc4dc', lime: '#9ccf7f', violet: '#b9a2ff', coral: '#ff9b6b', danger: '#ff7a7a' };
+const RAMP_STOPS = ['#174d49', '#1fefd7', '#f6c453', '#e58fb0'];
+const RAMP = d3.interpolateRgbBasis(RAMP_STOPS);
+const f = { int: d3.format(','), n1: d3.format(',.1f'), n2: d3.format(',.2f'), pct: d3.format('.0%'), pct1: d3.format('.1%'), si: d3.format('.3~s') };
+const short = (s, a = 6, b = 4) => (!s ? '—' : s.length > a + b + 1 ? `${s.slice(0, a)}…${s.slice(-b)}` : s);
+const num = (v, d = 4) => Number(v).toLocaleString('en-US', { maximumFractionDigits: d });
+const btcAmt = (sats, d = 4) => `${num(sats / 1e8, d)} BTC`;
+const solAmt = (lamports, d = 6) => `${num(lamports / 1e9, d)} SOL`;
+const ethAmt = (v, d = 4) => `${num(v, d)} ETH`;
+const satvb = (v) => (v == null ? '—' : `${v < 10 ? num(v, 2) : f.int(Math.round(v))} sat/vB`);
+const gweiTxt = (v) => (v == null ? '—' : `${v < 0.01 ? num(v, 4) : v < 10 ? num(v, 3) : f.n1(v)} gwei`);
+const clock = (sec) => new Date(sec * 1000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+// Times read relative to when the data was taken: now while live, else the sync or capture time
+const refNow = () => (sourceOf() === 'synced' ? (state.polling ? Date.now() : state.liveAt[state.chain]) : state.snapshot.capturedAt) / 1000;
+const ago = (sec) => {
+  if (!sec) return '—';
+  const d = Math.max(0, refNow() - sec);
+  const t = d < 90 ? `${Math.round(d)}s` : d < 5400 ? `${Math.round(d / 60)} min` : `${(d / 3600).toFixed(1)} h`;
+  return sourceOf() === 'synced' ? (state.polling ? `${t} ago` : `${t} before sync`) : `${t} before snapshot`;
+};
+
+// Bitcoin transaction kinds from mempool.space's flag bits (features, address types, data, heuristics)
+const bit = (n) => 1n << BigInt(n);
+const BTC_KINDS = {
+  coinbase: { label: 'Coinbase', color: B.amber },
+  taproot: { label: 'Taproot', color: B.violet },
+  segwit: { label: 'SegWit', color: B.signal },
+  legacy: { label: 'Legacy', color: B.ink2 },
+  data: { label: 'Data (inscription, OP_RETURN)', color: B.pink },
+  consolidation: { label: 'Consolidation', color: B.lime },
+  batch: { label: 'Batch payout', color: B.sky },
+  coinjoin: { label: 'Coinjoin', color: B.coral },
+};
+const btcKind = (flags, coinbase) => {
+  if (coinbase) return 'coinbase';
+  const fl = BigInt(Math.round(flags || 0));
+  if (fl & (bit(24) | bit(25) | bit(26) | bit(27))) return 'data';
+  if (fl & bit(32)) return 'coinjoin';
+  if (fl & bit(33)) return 'consolidation';
+  if (fl & bit(34)) return 'batch';
+  if (fl & bit(14)) return 'taproot';
+  if (fl & (bit(12) | bit(13))) return 'segwit';
+  return 'legacy';
+};
+
+// Ethereum transaction kinds from type, input and the event topics in the receipt
+const ETH_KINDS = {
+  eth: { label: 'ETH transfer', color: B.sky },
+  token: { label: 'Token transfer / approval', color: B.signal },
+  swap: { label: 'DEX swap', color: B.amber },
+  call: { label: 'Other contract call', color: B.violet },
+  create: { label: 'Contract creation', color: B.lime },
+  blob: { label: 'Blob (rollup data)', color: B.pink },
+  failed: { label: 'Failed', color: B.danger },
+};
+const TOPIC = {
+  '0xddf252ad': 'Transfer', '0x8c5be1e5': 'Approval', '0xd78ad95f': 'Swap (Uniswap v2)', '0xc42079f9': 'Swap (Uniswap v3)',
+  '0x40e9cecb': 'Swap (Uniswap v4)', '0x8b3e96f2': 'TokenExchange (Curve)', '0x2170c741': 'Swap (Balancer)',
+  '0xe1fffcc4': 'Deposit (WETH)', '0x7fcf532c': 'Withdrawal (WETH)', '0x1c411e9a': 'Sync', '0x4dfe1bbb': 'Mint', '0xdccd412f': 'Burn',
+};
+const SWAP_TOPICS = new Set(['0xd78ad95f', '0xc42079f9', '0x40e9cecb', '0x8b3e96f2', '0x2170c741']);
+const METHOD = {
+  '0xa9059cbb': 'transfer', '0x23b872dd': 'transferFrom', '0x095ea7b3': 'approve', '0x3593564c': 'execute (Universal Router)',
+  '0x24856bc3': 'execute (Universal Router)', '0x7ff36ab5': 'swapExactETHForTokens', '0x38ed1739': 'swapExactTokensForTokens',
+  '0x18cbafe5': 'swapExactTokensForETH', '0xb6f9de95': 'swapExactETHForTokensSupportingFee…', '0x791ac947': 'swapExactTokensForETHSupportingFee…',
+  '0x5ae401dc': 'multicall', '0xac9650d8': 'multicall', '0x07ed2379': 'swap (1inch)', '0x12aa3caf': 'swap (1inch)',
+  '0xd0e30db0': 'deposit (WETH)', '0x2e1a7d4d': 'withdraw (WETH)', '0x6a761202': 'execTransaction (Safe)', '0x0x': '',
+};
+const ETH_TYPES = { 0: 'Legacy', 1: 'Access list (2930)', 2: 'Dynamic fee (1559)', 3: 'Blob (4844)', 4: 'Set code (7702)' };
+const ethKind = (t) => {
+  if (t.status === 0) return 'failed';
+  if (t.type === 3) return 'blob';
+  if (!t.to) return 'create';
+  if (t.topics.some((x) => SWAP_TOPICS.has(x))) return 'swap';
+  if (t.inLen === 0) return 'eth';
+  if (['0xa9059cbb', '0x23b872dd', '0x095ea7b3'].includes(t.sel)) return 'token';
+  return 'call';
+};
+const BUILDERS = { '0x4838b106fce9647bdf1e7877bf73ce8b0bad5f97': 'Titan', '0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5': 'beaverbuild', '0x1f9090aae28b8a3dceadf281b0f12828e676c326': 'rsync' };
+const builderOf = (b) => BUILDERS[(b.miner || '').toLowerCase()] || (b.extra && b.extra.length > 2 ? b.extra.split(' (')[0].slice(0, 18) : short(b.miner));
+
+// Solana programs and the category used for colour
+const SOL_PROGRAMS = {
+  '11111111111111111111111111111111': ['System', 'transfer'],
+  ComputeBudget111111111111111111111111111111: ['Compute Budget', null],
+  TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA: ['SPL Token', 'token'],
+  TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb: ['Token-2022', 'token'],
+  ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL: ['Associated Token', 'token'],
+  MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr: ['Memo', null],
+  L2TExMFKdjpN9kozasaurPirfHy9P8sbXoAN1qA3S95: ['Lighthouse (assertions)', null],
+  JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4: ['Jupiter', 'dex'],
+  whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc: ['Orca Whirlpools', 'dex'],
+  '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8': ['Raydium AMM', 'dex'],
+  CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK: ['Raydium CLMM', 'dex'],
+  CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C: ['Raydium CPMM', 'dex'],
+  LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo: ['Meteora DLMM', 'dex'],
+  cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG: ['Meteora DAMM v2', 'dex'],
+  '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P': ['Pump.fun', 'dex'],
+  pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA: ['PumpSwap', 'dex'],
+  PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY: ['Phoenix', 'dex'],
+  FarmsPZpWu9i7Kky8tPN37rs2TpmMrAZrC7S7vJa91Hr: ['Kamino Farms', 'defi'],
+  KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD: ['Kamino Lend', 'defi'],
+  dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH: ['Drift', 'defi'],
+  Stake11111111111111111111111111111111111111: ['Stake', 'defi'],
+  Vote111111111111111111111111111111111111111: ['Vote', null],
+};
+const SOL_KINDS = {
+  dex: { label: 'DEX / launchpad trade', color: B.amber },
+  defi: { label: 'Lending, farms, staking', color: B.violet },
+  token: { label: 'Token transfer / account', color: B.signal },
+  transfer: { label: 'SOL transfer (System)', color: B.sky },
+  other: { label: 'Other programs', color: B.ink2 },
+  failed: { label: 'Failed', color: B.danger },
+};
+const progName = (id) => SOL_PROGRAMS[id]?.[0] || short(id, 5, 4);
+const solKind = (t) => {
+  if (t.err) return 'failed';
+  const cats = t.programs.map((p) => SOL_PROGRAMS[p]?.[1]).filter(Boolean);
+  for (const c of ['dex', 'defi', 'token', 'transfer']) if (cats.includes(c)) return c;
+  return t.programs.some((p) => !SOL_PROGRAMS[p]) ? 'other' : cats.length ? cats[0] : 'other';
+};
+const solPriority = (t) => Math.max(0, t.fee - 5000 * t.signers);
+const LEADER_COLORS = [B.signal, B.amber, B.pink, B.sky, B.lime, B.violet, B.coral, '#d9d39b'];
+const leaderColor = (pk) => { let h = 0; for (const c of pk || '') h = (h * 31 + c.charCodeAt(0)) >>> 0; return LEADER_COLORS[h % LEADER_COLORS.length]; };
+
+// Colour scales (log scales clamp, so a zero fee lands on the low end)
+const FEE_DOMAIN = [0.1, 30];        // sat/vB
+const PRIO_DOMAIN = [0.001, 3];      // gwei
+const SOLPRIO_DOMAIN = [1000, 2e6];  // lamports
+const logScale = (domain) => { const s = d3.scaleSequentialLog(RAMP).domain(domain).clamp(true); return (v) => s(Math.max(domain[0], v || 0)); };
+const feeColor = logScale(FEE_DOMAIN), prioColor = logScale(PRIO_DOMAIN), solPrioColor = logScale(SOLPRIO_DOMAIN);
+
+// ================= state =================
+const CHAINS = {
+  btc: { name: 'Bitcoin', icon: 'fi-brands-bitcoin', search: 'Height, block hash or txid', explorer: 'mempool.space' },
+  eth: { name: 'Ethereum', icon: 'fi-brands-ethereum', search: 'Block number, hash or tx hash', explorer: 'Etherscan' },
+  sol: { name: 'Solana', icon: 'fi-rr-bolt', search: 'Slot, blockhash or signature', explorer: 'Solscan' },
+};
+const ORDER = ['btc', 'eth', 'sol'];
+const emptyChain = () => ({ overview: null, blocks: {}, txs: {} });
+const state = {
+  chain: ORDER.includes(new URLSearchParams(location.search).get('chain')) ? new URLSearchParams(location.search).get('chain') : 'btc',
+  // mode 'synced' reads data synced from the public APIs into the browser (IndexedDB); a chain
+  // that has never been synced falls back to the bundled snapshot. `polling` keeps syncing.
+  mode: 'snapshot', polling: false, snapshot: null, live: { btc: emptyChain(), eth: emptyChain(), sol: emptyChain() },
+  view: { type: 'chain' }, sel: null, color: { btc: 'fee', eth: 'kind', sol: 'kind' }, liveAt: {},
+};
+const sourceOf = (c = state.chain) => (state.mode === 'synced' && state.live[c].overview ? 'synced' : 'snapshot');
+const data = () => (sourceOf() === 'synced' ? state.live[state.chain] : state.snapshot[state.chain]);
+const hasSynced = () => ORDER.some((c) => state.live[c].overview);
+
+// ================= stage =================
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.appendChild(renderer.domElement);
+const labelR = new CSS2DRenderer(); labelR.domElement.className = 'labels'; stage.appendChild(labelR.domElement);
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(B.paper, 30, 80);
+scene.add(new THREE.HemisphereLight('#cfe9ff', B.paper, 1.25));
+const keyLight = new THREE.DirectionalLight('#ffffff', 1.5); keyLight.position.set(-8, 16, 12); scene.add(keyLight);
+const rim = new THREE.DirectionalLight('#1fefd7', 0.35); rim.position.set(10, 4, -10); scene.add(rim);
+const camera = new THREE.PerspectiveCamera(36, 1, 0.05, 300);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.minDistance = 1.2; controls.maxDistance = 60; controls.maxPolarAngle = Math.PI * 0.49;
+let fly = null;
+controls.addEventListener('start', () => { fly = null; });
+
+const BOX = new THREE.BoxGeometry(1, 1, 1);
+const BOX_BASE = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
+const HEX_BASE = new THREE.CylinderGeometry(0.5, 0.5, 1, 6).translate(0, 0.5, 0);
+const BOX_EDGES = new THREE.EdgesGeometry(BOX);
+const SHARED = new Set([BOX, BOX_BASE, HEX_BASE, BOX_EDGES]);
+const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.06, ...extra });
+const edges = (parent, color, opacity = 0.35) => {
+  const l = new THREE.LineSegments(BOX_EDGES, new THREE.LineBasicMaterial({ color, transparent: true, opacity }));
+  parent.add(l); return l;
+};
+const label = (parent, html, x, y, z, cls = '') => {
+  const el = document.createElement('div'); el.className = `lbl ${cls}`; el.innerHTML = html;
+  const o = new CSS2DObject(el); o.position.set(x, y, z); parent.add(o); return o;
+};
+const floor = (g, size, y = 0) => {
+  const grid = new THREE.GridHelper(size, Math.round(size / 1.5), B.line, B.muted);
+  grid.material.transparent = true; grid.material.opacity = 0.55; grid.position.y = y; g.add(grid);
+};
+
+const selBox = new THREE.LineSegments(BOX_EDGES, new THREE.LineBasicMaterial({ color: B.amber }));
+selBox.visible = false; scene.add(selBox);
+// a thin beam above the selection, so a single small box stays easy to spot
+const selBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1, 6).translate(0, 0.5, 0), new THREE.MeshBasicMaterial({ color: B.amber, transparent: true, opacity: 0.85 }));
+selBeam.visible = false; scene.add(selBeam);
+
+let current = null;   // { group, picks, ticks, legend }
+const disposeView = () => {
+  if (!current) return;
+  scene.remove(current.group);
+  current.group.traverse((o) => {
+    if (o.element instanceof Element) o.element.remove();
+    if (o.geometry && !SHARED.has(o.geometry)) o.geometry.dispose();
+    if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose());
+  });
+  current = null; selBox.visible = selBeam.visible = false;
+};
+
+// From 900px the panel floats on the left, so the view is shifted to centre in the space it
+// leaves free. Below 900px the panel is a drawer over the stage and the view uses the whole screen.
+const panelWidth = () => (innerWidth >= 900 ? 370 + 24 : 0);
+const resize = () => {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h); labelR.setSize(w, h);
+  camera.aspect = w / h;
+  const offX = panelWidth() / 2;
+  if (offX) camera.setViewOffset(w, h, -offX, 0, w, h); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+};
+addEventListener('resize', resize);
+
+// Frame a box from a direction, leaving room for the panel
+const frame = (box, dir, pad = 1.05, instant = false) => {
+  const c = box.getCenter(new THREE.Vector3());
+  const r = box.getBoundingSphere(new THREE.Sphere()).radius;
+  const freeH = stage.clientHeight - 56;   // minus the header
+  const usable = Math.max(0.4, (stage.clientWidth - panelWidth()) / freeH);
+  const vf = Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * (freeH / stage.clientHeight));
+  const hf = Math.atan(Math.tan(vf) * usable);
+  const dist = (r * pad) / Math.sin(Math.min(vf, hf));
+  const pos = c.clone().add(dir.clone().normalize().multiplyScalar(dist));
+  if (instant || reduceMotion) { camera.position.copy(pos); controls.target.copy(c); fly = null; return; }
+  fly = { p0: camera.position.clone(), t0: controls.target.clone(), p1: pos, t1: c, start: performance.now(), dur: 850 };
+};
+
+// ================= views =================
+// Each builder returns { group, picks, ticks, legend, focus }. A pickable mesh carries
+// userData.pick(instanceId) → { key, tip, click } and userData.boxOf(instanceId) → Box3 for the outline.
+const meshBox = (m) => () => new THREE.Box3().setFromObject(m);
+const instBox = (inst, geomBox) => (id) => {
+  const m = new THREE.Matrix4(); inst.getMatrixAt(id, m);
+  return geomBox.clone().applyMatrix4(m).applyMatrix4(inst.matrixWorld);
+};
+const BOX_BASE_BOUNDS = new THREE.Box3(new THREE.Vector3(-0.5, 0, -0.5), new THREE.Vector3(0.5, 1, 0.5));
+const BOX_BOUNDS = new THREE.Box3(new THREE.Vector3(-0.5, -0.5, -0.5), new THREE.Vector3(0.5, 0.5, 0.5));
+
+function buildBtcChain(ov) {
+  const g = new THREE.Group(), picks = [], ticks = [];
+  const S = 1.15, GAP = 0.95, STEP = S + GAP;
+  const blocks = [...ov.blocks].sort((a, b) => b.height - a.height);
+  floor(g, 64);
+  blocks.forEach((b, i) => {
+    const h = S * Math.max(0.12, b.weight / 4e6), x = -1.7 - i * STEP;
+    const m = new THREE.Mesh(BOX, mat(feeColor(b.medianFee)));
+    m.scale.set(S, h, S); m.position.set(x, h / 2, 0); edges(m, B.ink, 0.28); g.add(m); picks.push(m);
+    m.userData.pick = () => ({ key: `b:${b.id}`, tip: `<b>Block ${f.int(b.height)}</b> · ${esc(b.pool)}<br>${f.int(b.txCount)} txs · median ${satvb(b.medianFee)}<br><span class="text-muted-foreground">${ago(b.time)}</span>`, click: () => openBlock(b.id) });
+    m.userData.boxOf = meshBox(m);
+    label(g, `<b>${f.int(b.height)}</b><br>${esc(b.pool)}`, x, h + 0.42, 0);
+  });
+  // Projected blocks waiting in the mempool, nearest first
+  ov.mempoolBlocks.forEach((p, j) => {
+    const last = j === ov.mempoolBlocks.length - 1;
+    const h = S * Math.min(1, Math.max(0.1, p.vsize / 1e6)), x = 1.7 + j * STEP;
+    const m = new THREE.Mesh(BOX, mat(feeColor(p.medianFee), { transparent: true, opacity: 0.38, depthWrite: false }));
+    m.scale.set(S, h, S); m.position.set(x, h / 2, 0); edges(m, feeColor(p.medianFee), 0.85); g.add(m); picks.push(m);
+    const when = last && p.vsize > 1e6 ? `+${f.n1(p.vsize / 1e6)} vMB more` : `~${(j + 1) * 10} min`;
+    m.userData.pick = () => ({ key: `m:${j}`, tip: `<b>Projected block ${j + 1}</b> · ${when}<br>${f.int(p.nTx)} txs · median ${satvb(p.medianFee)}`, click: () => selectMempool(j) });
+    m.userData.boxOf = meshBox(m);
+    m.userData.bob = j;
+    label(g, `<b>${when}</b><br>${f.int(p.nTx)} txs`, x, h + 0.42, 0, 'amber');
+  });
+  // "Now" divider and transactions drifting from the mempool toward the next block
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(0.03, 2.1, 2.1), mat(B.signal, { emissive: B.signal, emissiveIntensity: 0.6, transparent: true, opacity: 0.35 }));
+  wall.position.set(0, 1.05, 0); g.add(wall);
+  label(g, '<b>Next block</b><br>mined ~every 10 min', 0, 2.45, 0, 'bg');
+  const N = 160, motes = new THREE.InstancedMesh(BOX, mat(B.signal, { emissive: B.signal, emissiveIntensity: 0.5 }), N);
+  const span = 1.7 + ov.mempoolBlocks.length * STEP, seeds = Array.from({ length: N }, () => [Math.random() * span, 0.1 + Math.random() * 1.0, (Math.random() - 0.5) * 1.0, 0.02 + Math.random() * 0.05, 0.3 + Math.random() * 0.8]);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3(), sc = new THREE.Vector3();
+  const placeMotes = (t) => {
+    seeds.forEach(([x0, y, z, s, sp], k) => {
+      const x = span - ((span - x0 + t * sp) % span);
+      sc.setScalar(s); m4.compose(v.set(x, y, z), q, sc); motes.setMatrixAt(k, m4);
+    });
+    motes.instanceMatrix.needsUpdate = true;
+  };
+  placeMotes(0); g.add(motes);
+  ticks.push((t) => {
+    placeMotes(t);
+    g.children.forEach((o) => { if (o.userData.bob != null) o.position.y = o.scale.y / 2 + 0.06 * Math.sin(t * 1.4 + o.userData.bob); });
+  });
+  const focus = new THREE.Box3(new THREE.Vector3(-1.7 - 4 * STEP, 0, -1), new THREE.Vector3(1.7 + 3 * STEP, 2.4, 1));
+  return { group: g, picks, ticks, focus, dir: new THREE.Vector3(0.28, 0.62, 1), legend: legendRamp('Median fee rate', FEE_DOMAIN, (v) => `${v} sat/vB`) + `<div class="mt-1.5 flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm border border-amber/70"></span>Glass blocks wait in the mempool</div>` };
+}
+
+function buildBtcBlock(b, txs) {
+  const g = new THREE.Group(), picks = [];
+  const N = txs.length, rate = (t) => (t[2] ? t[1] / t[2] : 0);
+  const order = txs.map((_, i) => i).sort((a, c) => (a === 0 ? -1 : c === 0 ? 1 : rate(txs[c]) - rate(txs[a])));
+  const layers = Math.max(1, Math.round(Math.cbrt(N) * 0.75)), side = Math.ceil(Math.sqrt(N / layers));
+  const cell = 0.16, half = (side - 1) * cell / 2, top = layers * cell;
+  const inst = new THREE.InstancedMesh(BOX, mat('#ffffff'), N);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3(), sc = new THREE.Vector3();
+  const idx = new Int32Array(N);
+  order.forEach((ti, k) => {
+    const layer = Math.floor(k / (side * side)), r = k % (side * side);
+    const s = cell * (0.32 + 0.62 * Math.min(1, Math.sqrt(txs[ti][2] / 1500)));
+    m4.compose(v.set((r % side) * cell - half, top - layer * cell - cell / 2, Math.floor(r / side) * cell - half), q, sc.setScalar(s));
+    inst.setMatrixAt(k, m4); idx[k] = ti;
+  });
+  const recolor = () => {
+    const c = new THREE.Color();
+    for (let k = 0; k < N; k++) {
+      const t = txs[idx[k]];
+      c.set(state.color.btc === 'fee' && idx[k] !== 0 ? feeColor(rate(t)) : BTC_KINDS[btcKind(t[4], idx[k] === 0)].color);
+      inst.setColorAt(k, c);
+    }
+    inst.instanceColor.needsUpdate = true;
+  };
+  recolor();
+  inst.userData.pick = (k) => {
+    const t = txs[idx[k]], kind = btcKind(t[4], idx[k] === 0);
+    return { key: `t:${t[0]}`, tip: `<b>${short(t[0], 8, 6)}</b><br>${BTC_KINDS[kind].label} · ${satvb(rate(t))}<br>${f.int(Math.round(t[2]))} vB · ${btcAmt(t[3])}`, click: () => selectTx(t[0]) };
+  };
+  inst.userData.boxOf = instBox(inst, BOX_BOUNDS);
+  inst.userData.find = (txid) => { for (let k = 0; k < N; k++) if (txs[idx[k]][0] === txid) return k; return -1; };
+  g.add(inst); picks.push(inst);
+  const shellW = side * cell + 0.12, shell = new THREE.Mesh(BOX, mat(B.signal, { transparent: true, opacity: 0.04, depthWrite: false }));
+  shell.scale.set(shellW, top + 0.12, shellW); shell.position.y = top / 2; edges(shell, B.signal, 0.35); g.add(shell);
+  floor(g, Math.max(8, shellW * 3));
+  label(g, `<b>Block ${f.int(b.height)}</b><br>${f.int(N)} txs · highest fee rate on top`, 0, top + 0.5, 0, 'bg');
+  const legend = state.color.btc === 'fee'
+    ? legendRamp('Fee rate', FEE_DOMAIN, (x) => `${x} sat/vB`) + legendSw([['Coinbase', B.amber]])
+    : legendSw(Object.values(BTC_KINDS).map((k) => [k.label, k.color]), 'Kind (mempool.space flags)');
+  return { group: g, picks, ticks: [], recolor, focus: new THREE.Box3().setFromObject(shell), dir: new THREE.Vector3(0.9, 0.75, 1.2), legend, sizeNote: 'Box size follows virtual size' };
+}
+
+function buildEthChain(ov) {
+  const g = new THREE.Group(), picks = [];
+  const blocks = [...ov.blocks].sort((a, b) => b.number - a.number);
+  const H = 3, W = 1.05, STEP = 1.65;
+  const fills = d3.scaleLinear([0, 0.5, 1], [B.sky, B.signal, B.pink]).clamp(true);
+  const bf = blocks.map((b) => b.baseFee);
+  const bfY = d3.scaleLinear([d3.min(bf), d3.max(bf) || 1], [H + 0.9, H + 1.9]);
+  floor(g, 50);
+  const pts = [];
+  blocks.forEach((b, i) => {
+    const x = -i * STEP, ratio = b.gasUsed / b.gasLimit;
+    const shell = new THREE.Mesh(BOX_BASE, mat(B.ink, { transparent: true, opacity: 0.05, depthWrite: false }));
+    shell.scale.set(W, H, W); shell.position.set(x, 0, 0); edges(shell, B.ink2, 0.3).position.y = 0.5; g.add(shell);
+    const fill = new THREE.Mesh(BOX_BASE, mat(fills(ratio)));
+    fill.scale.set(W * 0.9, Math.max(0.04, H * ratio), W * 0.9); fill.position.set(x, 0, 0); g.add(fill); picks.push(fill, shell);
+    // gas target: half the limit
+    const tgt = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(W, W).rotateX(-Math.PI / 2)), new THREE.LineBasicMaterial({ color: B.amber }));
+    tgt.position.set(x, H / 2, 0); g.add(tgt);
+    const blobs = Math.round(b.blobGas / 131072);
+    for (let k = 0; k < blobs; k++) {
+      const s = new THREE.Mesh(new THREE.SphereGeometry(0.1, 14, 10), mat(B.pink, { emissive: B.pink, emissiveIntensity: 0.25 }));
+      s.position.set(x - 0.32 + (k % 4) * 0.21, H + 0.14 + Math.floor(k / 4) * 0.22, 0.28); g.add(s);
+    }
+    const pick = () => ({ key: `b:${b.number}`, tip: `<b>Block ${f.int(b.number)}</b> · ${esc(builderOf(b))}<br>${f.int(b.txCount)} txs · gas ${f.pct(ratio)} of limit<br>base fee ${gweiTxt(b.baseFee)} · ${blobs} blobs`, click: () => openBlock(b.number) });
+    fill.userData.pick = shell.userData.pick = pick;
+    fill.userData.boxOf = shell.userData.boxOf = meshBox(shell);
+    const y = bfY(b.baseFee); pts.push(new THREE.Vector3(x, y, 0));
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 8), mat(B.amber, { emissive: B.amber, emissiveIntensity: 0.6 })); dot.position.set(x, y, 0); g.add(dot);
+    if (i % 2 === 0) label(g, gweiTxt(b.baseFee), x, y + 0.3, 0, 'amber');
+    label(g, `<b>${f.int(b.number)}</b><br>${esc(builderOf(b))}`, x, -0.42, 0.7);
+  });
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: B.amber, transparent: true, opacity: 0.7 }));
+  g.add(line);
+  label(g, 'base fee', pts.at(-1).x - 0.9, pts.at(-1).y, 0, 'amber');
+  const focus = new THREE.Box3(new THREE.Vector3(-STEP * 7.5, -0.6, -1), new THREE.Vector3(0.8, H + 2.1, 1));
+  return { group: g, picks, ticks: [], focus, dir: new THREE.Vector3(0.18, 0.32, 1), legend: legendRampCustom('Gas used, share of limit', [B.sky, B.signal, B.pink], ['0%', '50% target', '100%']) + legendSw([['Gas target (half the limit)', B.amber], ['Blob (rollup data)', B.pink]]) };
+}
+
+function buildEthBlock(b) {
+  const g = new THREE.Group(), picks = [];
+  const txs = b.txs, N = txs.length, side = Math.ceil(Math.sqrt(N)), cell = 0.3, half = (side - 1) * cell / 2;
+  const inst = new THREE.InstancedMesh(BOX_BASE, mat('#ffffff'), N);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3(), sc = new THREE.Vector3();
+  txs.forEach((t, k) => {
+    const row = Math.floor(k / side), col = row % 2 ? side - 1 - (k % side) : k % side;   // snake rows in index order
+    const h = 0.06 + 0.42 * Math.log2(Math.max(1, (t.gasUsed || t.gas) / 21000));
+    m4.compose(v.set(col * cell - half, 0, row * cell - half), q, sc.set(0.22, h, 0.22)); inst.setMatrixAt(k, m4);
+  });
+  const recolor = () => {
+    const c = new THREE.Color();
+    txs.forEach((t, k) => {
+      const kind = ethKind(t);
+      c.set(state.color.eth === 'prio' && kind !== 'failed' ? prioColor(Math.max(0, (t.price ?? 0) - b.baseFee)) : ETH_KINDS[kind].color);
+      inst.setColorAt(k, c);
+    });
+    inst.instanceColor.needsUpdate = true;
+  };
+  recolor();
+  inst.userData.pick = (k) => {
+    const t = txs[k], kind = ethKind(t);
+    return { key: `t:${t.hash}`, tip: `<b>${short(t.hash, 8, 6)}</b> · #${t.i}<br>${ETH_KINDS[kind].label}${METHOD[t.sel] ? ` · ${METHOD[t.sel]}` : ''}<br>${f.int(t.gasUsed ?? t.gas)} gas · ${ethAmt(t.value)}`, click: () => selectTx(t.hash) };
+  };
+  inst.userData.boxOf = instBox(inst, BOX_BASE_BOUNDS);
+  inst.userData.find = (h) => txs.findIndex((t) => t.hash === h);
+  g.add(inst); picks.push(inst);
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(side * cell + 0.3, 0.05, side * cell + 0.3), mat(B.raise));
+  plate.position.y = -0.03; g.add(plate);
+  floor(g, Math.max(10, side * cell * 3), -0.06);
+  label(g, `<b>Block ${f.int(b.number)}</b><br>${f.int(N)} txs in index order`, 0, 0.1, half + 0.6, 'bg');
+  const legend = state.color.eth === 'prio'
+    ? legendRamp('Priority fee', PRIO_DOMAIN, (x) => `${x} gwei`) + legendSw([['Failed', B.danger]])
+    : legendSw(Object.values(ETH_KINDS).map((k) => [k.label, k.color]), 'Kind');
+  return { group: g, picks, ticks: [], recolor, focus: new THREE.Box3().setFromObject(inst).union(new THREE.Box3().setFromObject(plate)), dir: new THREE.Vector3(0.7, 0.9, 1.1), legend, sizeNote: 'Bar height follows gas used (log)' };
+}
+
+function buildSolChain(ov) {
+  const g = new THREE.Group(), picks = [], ticks = [];
+  const slots = ov.slots, n = slots.length, R = 4.2, DY = 0.09, TURN = (Math.PI * 2) / 24;
+  const maxTx = d3.max(slots, (s) => s.txCount || 0) || 1;
+  const rot = Math.PI / 2 - (n - 1) * TURN;   // newest slot faces the camera
+  const at = (k) => new THREE.Vector3(R * Math.cos(k * TURN + rot), k * DY, R * Math.sin(k * TURN + rot));
+  floor(g, 30);
+  const rail = new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({ length: (n - 1) * 6 + 1 }, (_, i) => at(i / 6))), new THREE.LineBasicMaterial({ color: B.fog, transparent: true, opacity: 0.35 }));
+  g.add(rail);
+  slots.forEach((s, k) => {
+    const p = at(k);
+    if (s.produced) {
+      const h = 0.15 + 1.9 * (s.txCount || 0) / maxTx;
+      const m = new THREE.Mesh(HEX_BASE, mat(leaderColor(s.leader)));
+      m.scale.set(0.36, h, 0.36); m.position.copy(p); g.add(m); picks.push(m);
+      m.userData.pick = () => ({ key: `b:${s.slot}`, tip: `<b>Slot ${f.int(s.slot)}</b><br>${f.int(s.txCount || 0)} txs · leader ${short(s.leader, 5, 4)}<br><span class="text-muted-foreground">${ago(s.time)}</span>`, click: () => openBlock(s.slot) });
+      m.userData.boxOf = meshBox(m);
+    } else {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.025, 8, 24).rotateX(Math.PI / 2), mat(B.danger, { emissive: B.danger, emissiveIntensity: 0.3 }));
+      ring.position.copy(p).add(new THREE.Vector3(0, 0.03, 0)); g.add(ring); picks.push(ring);
+      ring.userData.pick = () => ({ key: `s:${s.slot}`, tip: `<b>Slot ${f.int(s.slot)} skipped</b><br>leader ${short(s.leader, 5, 4)} produced no block` });
+      ring.userData.boxOf = meshBox(ring);
+    }
+    if (k % 4 === 0) label(g, `${short(s.leader, 4, 3)}`, p.x * 1.18, p.y + 0.05, p.z * 1.18);
+  });
+  label(g, `<b>${f.int(slots.at(-1).slot)}</b><br>newest`, at(n - 1).x * 1.12, at(n - 1).y + 2.3, at(n - 1).z * 1.12, 'bg');
+  // epoch progress ring in the middle
+  const e = ov.epoch, prog = e.slotIndex / e.slotsInEpoch;
+  const base = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.05, 8, 96).rotateX(Math.PI / 2), mat(B.muted)); base.position.y = 0.6; g.add(base);
+  const arc = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.07, 8, 96, Math.PI * 2 * prog).rotateX(Math.PI / 2), mat(B.signal, { emissive: B.signal, emissiveIntensity: 0.5 })); arc.position.y = 0.6; g.add(arc);
+  const tps = d3.mean(ov.perf, (p) => p.txs / p.secs);
+  label(g, `<span class="lbl big">Epoch ${f.int(e.epoch)}</span><br>${f.pct(prog)} done · ~${f.int(Math.round(tps))} tx/s`, 0, 0.95, 0);
+  // a light runs along the spiral at the measured slot time
+  const runner = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 8), mat(B.ink, { emissive: B.signal, emissiveIntensity: 1.2 }));
+  g.add(runner); runner.position.copy(at(n - 1));
+  const slotSec = d3.mean(ov.perf, (p) => p.secs / p.slots) || 0.4;
+  ticks.push((t) => { const k = (t / slotSec) % n; runner.position.copy(at(k)).add(new THREE.Vector3(0, 0.02, 0)); });
+  const focus = new THREE.Box3(new THREE.Vector3(-R - 0.5, 0, -R - 0.5), new THREE.Vector3(R + 0.5, n * DY + 2, R + 0.5));
+  return { group: g, picks, ticks, focus, dir: new THREE.Vector3(0, 0.62, 1), legend: legendSw([['Produced slot (height = txs)', B.ink2], ['Skipped slot', B.danger], ['Colour = leader (4 slots each)', B.signal]]) };
+}
+
+function buildSolBlock(b) {
+  const g = new THREE.Group(), picks = [];
+  const txs = b.txs, N = txs.length, golden = Math.PI * (3 - Math.sqrt(5)), c = 0.17;
+  const inst = new THREE.InstancedMesh(HEX_BASE, mat('#ffffff'), N);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3(), sc = new THREE.Vector3();
+  let rMax = 0;
+  txs.forEach((t, k) => {
+    const r = c * Math.sqrt(k + 0.5), a = k * golden; rMax = Math.max(rMax, r);
+    const h = 0.05 + 0.3 * Math.log2(1 + t.cu / 5000);
+    m4.compose(v.set(r * Math.cos(a), 0, r * Math.sin(a)), q, sc.set(0.15, h, 0.15)); inst.setMatrixAt(k, m4);
+  });
+  const recolor = () => {
+    const col = new THREE.Color();
+    txs.forEach((t, k) => {
+      const kind = solKind(t);
+      col.set(state.color.sol === 'prio' && kind !== 'failed' ? solPrioColor(solPriority(t)) : SOL_KINDS[kind].color);
+      inst.setColorAt(k, col);
+    });
+    inst.instanceColor.needsUpdate = true;
+  };
+  recolor();
+  inst.userData.pick = (k) => {
+    const t = txs[k], kind = solKind(t), named = t.programs.filter((p) => SOL_PROGRAMS[p]?.[1] !== null).map(progName);
+    return { key: `t:${t.sig}`, tip: `<b>${short(t.sig, 8, 6)}</b> · #${t.i}<br>${SOL_KINDS[kind].label}${named.length ? ` · ${esc(named.slice(0, 2).join(', '))}` : ''}<br>${f.int(t.cu)} CU · fee ${solAmt(t.fee, 6)}`, click: () => selectTx(t.sig) };
+  };
+  inst.userData.boxOf = instBox(inst, BOX_BASE_BOUNDS);
+  inst.userData.find = (s) => txs.findIndex((t) => t.sig === s);
+  g.add(inst); picks.push(inst);
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(rMax + 0.25, rMax + 0.25, 0.04, 64), mat(B.raise)); disc.position.y = -0.02; g.add(disc);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(rMax + 0.25, 0.02, 6, 96).rotateX(Math.PI / 2), mat(B.signal, { emissive: B.signal, emissiveIntensity: 0.4 })); g.add(ring);
+  floor(g, Math.max(10, rMax * 5), -0.05);
+  label(g, `<b>Slot ${f.int(b.slot)}</b><br>${f.int(N)} txs, first at the centre`, 0, 0.1, rMax + 0.7, 'bg');
+  const legend = state.color.sol === 'prio'
+    ? legendRamp('Priority fee', SOLPRIO_DOMAIN.map((x) => x / 1e9), (x) => `${x} SOL`) + legendSw([['Failed', B.danger]])
+    : legendSw(Object.values(SOL_KINDS).map((k) => [k.label, k.color]), 'Programs called');
+  return { group: g, picks, ticks: [], recolor, focus: new THREE.Box3().setFromObject(disc).expandByVector(new THREE.Vector3(0, 1, 0)), dir: new THREE.Vector3(0.5, 1.05, 1), legend, sizeNote: 'Column height follows compute units (log)' };
+}
+
+// legends
+function legendRamp(title, domain, fmt) {
+  return `<div class="mb-1 font-medium text-foreground">${esc(title)}</div>
+    <div class="h-2 w-44 rounded-full" style="background:linear-gradient(90deg,${RAMP_STOPS.join(',')})"></div>
+    <div class="mt-0.5 flex w-44 justify-between font-mono text-[10px]"><span>≤ ${esc(fmt(domain[0]))}</span><span>≥ ${esc(fmt(domain[1]))}</span></div>`;
+}
+function legendRampCustom(title, stops, ticks) {
+  return `<div class="mb-1 font-medium text-foreground">${esc(title)}</div>
+    <div class="h-2 w-44 rounded-full" style="background:linear-gradient(90deg,${stops.join(',')})"></div>
+    <div class="mt-0.5 flex w-44 justify-between font-mono text-[10px]">${ticks.map((t) => `<span>${esc(t)}</span>`).join('')}</div>`;
+}
+function legendSw(items, title) {
+  return `${title ? `<div class="mb-1 font-medium text-foreground">${esc(title)}</div>` : '<div class="mt-1.5"></div>'}
+    <div class="grid gap-0.5">${items.map(([l, c]) => `<div class="flex items-center gap-1.5"><span class="inline-block size-2.5 shrink-0 rounded-sm" style="background:${c}"></span>${esc(l)}</div>`).join('')}</div>`;
+}
+
+// ================= navigation =================
+async function show(opts = {}) {
+  const d = data();
+  disposeView(); hideTip();
+  let v;
+  if (state.view.type === 'chain') {
+    if (!d.overview) return renderPanel();
+    v = { btc: buildBtcChain, eth: buildEthChain, sol: buildSolChain }[state.chain](d.overview);
+  } else {
+    const id = state.view.id, blk = d.blocks[id];
+    if (state.chain === 'btc') v = blk ? buildBtcBlock(btcHeader(id), blk) : null;
+    else v = blk ? (state.chain === 'eth' ? buildEthBlock(blk) : buildSolBlock(blk)) : null;
+    if (!v) return renderPanel();
+  }
+  current = v; scene.add(v.group); v.group.updateMatrixWorld(true);
+  $('#legend').innerHTML = v.legend + (v.sizeNote ? `<div class="mt-1.5">${esc(v.sizeNote)}</div>` : '') + '<div class="mt-1.5 border-t pt-1.5">Drag to orbit · scroll to zoom · click to select</div>';
+  if (!opts.keepCamera) frame(v.focus, v.dir, 1.0, opts.instant);
+  renderPanel();
+  if (state.sel) outline(state.sel);
+}
+
+const btcHeader = (hash) => data().overview?.blocks.find((b) => b.id === hash) || { id: hash, height: '?', txCount: data().blocks[hash]?.length };
+
+async function setChain(c) {
+  if (c === state.chain) return;
+  state.chain = c; state.view = { type: 'chain' }; state.sel = null;
+  history.replaceState(null, '', `?chain=${c}`);
+  renderTabs(); $('#q').placeholder = CHAINS[c].search;
+  // while live, a chain that is missing or stale syncs as soon as its tab opens
+  if (state.polling && Date.now() - (state.liveAt[c] || 0) > 20000) { try { await refreshLive(); } catch { /* keeps what is stored */ } }
+  renderLive(); show();
+}
+
+async function openBlock(id) {
+  const d = data();
+  state.view = { type: 'block', id }; state.sel = null;
+  if (!d.blocks[id] && sourceOf() === 'synced') {
+    try {
+      await withBusy(`Loading ${state.chain === 'sol' ? 'slot' : 'block'} ${f.int(state.chain === 'btc' ? btcHeader(id).height : id)}…`, async () => {
+        d.blocks[id] = state.chain === 'btc' ? await CHAIN_DATA.loadBtcBlockTxs(id) : state.chain === 'eth' ? await CHAIN_DATA.loadEthBlock(id) : await CHAIN_DATA.loadSolBlock(id);
+      });
+      saveChain(state.chain);
+    } catch { /* panel explains the block is missing */ }
+  }
+  show();
+}
+
+function backToChain() { state.view = { type: 'chain' }; state.sel = null; show(); }
+
+function selectMempool(j) { state.sel = { type: 'mempool', id: j }; outline(state.sel); renderPanel(); }
+
+async function selectTx(id) {
+  state.sel = { type: 'tx', id }; outline(state.sel); renderPanel();
+  const d = data();
+  if (state.chain === 'btc' && !d.txs[id] && sourceOf() === 'synced') {
+    try { d.txs[id] = await CHAIN_DATA.loadBtcTx(id); saveChain('btc'); if (state.sel?.id === id) renderPanel(); }
+    catch (e) { toast(`Couldn't load the transaction: ${e.message}`); }
+  }
+}
+
+function outline(sel) {
+  selBox.visible = selBeam.visible = false;
+  if (!current || !sel) return;
+  for (const p of current.picks) {
+    let box = null;
+    if (sel.type === 'tx' && p.userData.find) { const k = p.userData.find(sel.id); if (k >= 0) box = p.userData.boxOf(k); }
+    else if (sel.type === 'mempool' && p.userData.pick && !p.isInstancedMesh) { if (p.userData.pick().key === `m:${sel.id}`) box = p.userData.boxOf(); }
+    if (box) {
+      const size = box.getSize(new THREE.Vector3()).multiplyScalar(1.12).addScalar(0.02).max(new THREE.Vector3(0.2, 0.2, 0.2));
+      selBox.scale.copy(size); selBox.position.copy(box.getCenter(new THREE.Vector3())); selBox.visible = true;
+      if (sel.type === 'tx') {
+        const top = current.focus.max.y + 1.2, y0 = box.max.y + size.y * 0.1;
+        selBeam.position.set(selBox.position.x, y0, selBox.position.z); selBeam.scale.set(1, Math.max(0.2, top - y0), 1); selBeam.visible = true;
+      }
+      return;
+    }
+  }
+}
+
+// ================= picking =================
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+const hit = (e) => {
+  if (!current) return null;
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const h = ray.intersectObjects(current.picks, false)[0];
+  return h ? h.object.userData.pick(h.instanceId) : null;
+};
+const tip = $('#tip');
+const hideTip = () => { tip.hidden = true; renderer.domElement.style.cursor = ''; };
+let hoverQueued = null;
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  hoverQueued = e;
+});
+renderer.domElement.addEventListener('pointerleave', () => { hoverQueued = null; hideTip(); });
+const runHover = () => {
+  if (!hoverQueued) return;
+  const e = hoverQueued; hoverQueued = null;
+  const p = hit(e);
+  if (!p) return hideTip();
+  tip.innerHTML = p.tip; tip.hidden = false;
+  renderer.domElement.style.cursor = p.click ? 'pointer' : '';
+  const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8), y = Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8);
+  tip.style.left = `${x}px`; tip.style.top = `${y}px`;
+};
+let down = null;
+renderer.domElement.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  const p = hit(e);
+  if (p?.click) { hideTip(); p.click(); }
+});
+
+// ================= panel =================
+const btnCls = 'inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border bg-background px-3 text-xs font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50';
+const card = (body, cls = '') => `<div class="rounded-lg border bg-background/40 p-3 ${cls}">${body}</div>`;
+const kpi = (label, value, sub = '') => `<div class="min-w-0 rounded-lg border bg-background/40 px-2.5 py-2"><div class="truncate text-[11px] text-muted-foreground">${esc(label)}</div><div class="truncate text-sm font-semibold">${value}</div>${sub ? `<div class="truncate text-[11px] text-muted-foreground">${sub}</div>` : ''}</div>`;
+const row = (k, v) => `<div class="flex items-baseline justify-between gap-3 py-0.5"><span class="shrink-0 text-muted-foreground">${esc(k)}</span><span class="min-w-0 truncate text-right font-mono text-[12px]">${v}</span></div>`;
+const copyable = (val, shown) => `<button type="button" data-act="copy" data-v="${esc(val)}" class="rounded font-mono text-[12px] hover:text-primary" title="Copy ${esc(val)}">${esc(shown ?? short(val, 8, 6))} <i class="fi fi-rr-copy text-[10px] text-muted-foreground"></i></button>`;
+const bar = (ratio, color = B.signal, marker = null) => `<div class="relative h-1.5 w-full overflow-hidden rounded-full bg-muted"><div class="h-full rounded-full" style="width:${Math.min(100, ratio * 100)}%;background:${color}"></div>${marker != null ? `<div class="absolute inset-y-0 w-0.5 bg-amber" style="left:${marker * 100}%"></div>` : ''}</div>`;
+const section = (title, body, icon = '') => `<div class="mt-4"><div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">${icon ? `<i class="fi ${icon}"></i>` : ''}${esc(title)}</div>${body}</div>`;
+const toggle = (opts, value, act) => `<div class="inline-flex h-8 items-center rounded-md bg-muted p-0.5 text-xs text-muted-foreground">${opts.map(([v, l]) => `<button type="button" data-act="${act}" data-v="${v}" data-state="${v === value ? 'active' : ''}" class="rounded px-2.5 py-1 font-medium transition-colors hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow">${esc(l)}</button>`).join('')}</div>`;
+const extLink = (href, text) => `<a href="${esc(href)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-xs text-primary hover:underline">${esc(text)} <i class="fi fi-rr-arrow-up-right-from-square text-[10px]"></i></a>`;
+const breakdown = (counts, kinds) => {
+  const total = d3.sum(Object.values(counts)) || 1;
+  const parts = Object.entries(counts).filter(([, n]) => n).sort((a, b) => b[1] - a[1]);
+  return `<div class="flex h-2 w-full overflow-hidden rounded-full bg-muted">${parts.map(([k, n]) => `<div style="width:${(n / total) * 100}%;background:${kinds[k].color}" title="${esc(kinds[k].label)}: ${n}"></div>`).join('')}</div>
+    <div class="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px]">${parts.map(([k, n]) => `<div class="flex items-center gap-1.5"><span class="inline-block size-2 shrink-0 rounded-sm" style="background:${kinds[k].color}"></span><span class="truncate">${esc(kinds[k].label)}</span><span class="ml-auto font-mono text-muted-foreground">${f.int(n)}</span></div>`).join('')}</div>`;
+};
+
+function header(title, sub) {
+  const c = CHAINS[state.chain];
+  const crumbs = [`<button type="button" data-act="back" class="hover:text-foreground">${esc(c.name)}</button>`];
+  if (state.view.type === 'block') crumbs.push(`<span>${state.chain === 'sol' ? 'Slot' : 'Block'} ${f.int(state.chain === 'btc' ? btcHeader(state.view.id).height : state.view.id)}</span>`);
+  if (state.sel?.type === 'tx') crumbs.push('<span>Transaction</span>');
+  const when = (ms) => new Date(ms).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const mode = sourceOf() === 'synced'
+    ? `<span class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-primary/40 px-1.5 py-0.5 text-[11px] text-primary" title="Synced from the public API into this browser">${state.polling ? '<span class="live-dot"></span>Live' : '<i class="fi fi-rr-database"></i>Browser'} · ${state.polling ? clock(state.liveAt[state.chain] / 1000) : esc(when(state.liveAt[state.chain]))}</span>`
+    : `<span class="shrink-0 whitespace-nowrap rounded-md border px-1.5 py-0.5 text-[11px] text-muted-foreground" title="Captured ${esc(new Date(state.snapshot.capturedAt).toString())}">Snapshot · ${esc(when(state.snapshot.capturedAt))}</span>`;
+  return `<div class="flex items-center justify-between gap-2 text-xs text-muted-foreground"><div class="flex min-w-0 items-center gap-1.5 truncate">${crumbs.join('<i class="fi fi-rr-angle-small-right"></i>')}</div>${mode}</div>
+    <div class="mt-2 flex items-start gap-2.5">
+      <span class="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-lg text-primary"><i class="fi ${c.icon}"></i></span>
+      <div class="min-w-0"><h1 class="truncate text-lg font-semibold leading-tight">${title}</h1><div class="truncate text-xs text-muted-foreground">${sub}</div></div>
+    </div>`;
+}
+
+function renderPanel() {
+  const d = data(), p = $('#panel');
+  if (!d.overview) {
+    p.innerHTML = header(CHAINS[state.chain].name, 'Loading…') + `<p class="mt-4 text-sm text-muted-foreground">No data for this chain yet.</p>`;
+    return;
+  }
+  let html;
+  if (state.view.type === 'chain') html = { btc: panelBtcChain, eth: panelEthChain, sol: panelSolChain }[state.chain](d);
+  else if (!d.blocks[state.view.id]) html = panelMissing();
+  else html = { btc: panelBtcBlock, eth: panelEthBlock, sol: panelSolBlock }[state.chain](d);
+  p.innerHTML = html + sourceFooter();
+}
+
+// Where the data comes from, and switching between the browser store and the snapshot
+function sourceFooter() {
+  const link = (act, text) => `<button type="button" data-act="${act}" class="hover:text-foreground hover:underline">${text}</button>`;
+  const parts = [];
+  if (sourceOf() === 'synced') {
+    parts.push(`Synced into this browser ${esc(new Date(state.liveAt[state.chain]).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }))}`);
+    parts.push(link('use-snapshot', 'Use snapshot'));
+  } else {
+    parts.push(state.mode === 'synced' ? 'Bundled snapshot (not synced yet)' : 'Bundled snapshot');
+    if (hasSynced() && state.mode === 'snapshot') parts.push(link('use-synced', 'Use synced data'));
+  }
+  if (hasSynced()) parts.push(link('clear', 'Clear stored data'));
+  return `<div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t pt-2.5 text-[11px] text-muted-foreground"><i class="fi fi-rr-database"></i>${parts.join('<span>·</span>')}</div>`;
+}
+
+function panelMissing() {
+  const what = state.chain === 'sol' ? 'slot' : 'block';
+  return header(`${what[0].toUpperCase() + what.slice(1)} ${f.int(state.chain === 'btc' ? btcHeader(state.view.id).height : state.view.id)}`, 'Transactions not in the snapshot')
+    + `<p class="mt-4 text-sm text-muted-foreground">${sourceOf() === 'synced' ? `This ${what} couldn't be loaded from the public API. Try again, or go back.` : `The snapshot keeps every transaction for the newest few ${what}s only. Go live to load this ${what} from the public API and keep it in this browser.`}</p>
+    <div class="mt-3 flex gap-2"><button type="button" data-act="live" class="${btnCls} border-primary/50 bg-primary text-primary-foreground hover:bg-primary/90"><i class="fi fi-rr-signal-stream"></i>Go live</button><button type="button" data-act="back" class="${btnCls}"><i class="fi fi-rr-arrow-left"></i>Back</button></div>`;
+}
+
+const blockList = (items) => `<div class="scroll-thin max-h-60 overflow-auto rounded-lg border bg-background/40 p-1">${items.join('')}</div>`;
+const listBtn = (id, left, mid, right, has) => `<button type="button" data-act="open" data-id="${esc(id)}" class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-accent">
+  <span class="w-[4.75rem] shrink-0 font-mono">${left}</span><span class="min-w-0 flex-1 truncate text-muted-foreground">${mid}</span><span class="shrink-0 font-mono text-[11px]">${right}</span>${has ? '<i class="fi fi-rr-cube text-[11px] text-primary" title="Transactions included"></i>' : '<span class="w-[11px]"></span>'}</button>`;
+
+function panelBtcChain(d) {
+  const ov = d.overview, tip = [...ov.blocks].sort((a, b) => b.height - a.height)[0];
+  const times = [...ov.blocks].sort((a, b) => a.height - b.height).map((b) => b.time);
+  const interval = d3.mean(d3.pairs(times), ([a, b]) => b - a) / 60;
+  const sel = state.sel?.type === 'mempool' ? ov.mempoolBlocks[state.sel.id] : null;
+  return header(`Block ${f.int(tip.height)}`, `Newest block · ${esc(tip.pool)} · ${ago(tip.time)}`)
+    + `<div class="mt-3 grid grid-cols-2 gap-2">
+      ${kpi('Mempool', `${f.int(ov.mempool.count)} txs`, `${f.n1(ov.mempool.vsize / 1e6)} vMB waiting`)}
+      ${kpi('Next block fee', satvb(ov.mempoolBlocks[0]?.medianFee), 'median, projected')}
+      ${kpi('Fastest / 1 h', `${num(ov.fees.fastestFee, 2)} / ${num(ov.fees.hourFee, 2)}`, 'sat/vB recommended')}
+      ${kpi('Block interval', `${f.n1(interval)} min`, `mean of last ${ov.blocks.length}`)}
+    </div>`
+    + (sel ? section('Projected block', card(`${row('Position', `${state.sel.id + 1} of ${ov.mempoolBlocks.length}`)}${row('Transactions', f.int(sel.nTx))}${row('Virtual size', `${f.n2(sel.vsize / 1e6)} vMB`)}${row('Total fees', btcAmt(sel.fees, 6))}${row('Median fee', satvb(sel.medianFee))}${row('Fee range', `${satvb(sel.feeRange[0])} – ${satvb(sel.feeRange.at(-1))}`)}`), 'fi-rr-hourglass-end') : '')
+    + section('Recent blocks', blockList([...ov.blocks].sort((a, b) => b.height - a.height).map((b) => listBtn(b.id, f.int(b.height), esc(b.pool), satvb(b.medianFee), !!d.blocks[b.id]))), 'fi-rr-cubes')
+    + `<p class="mt-3 text-[11px] leading-relaxed text-muted-foreground">Solid blocks are mined; glass blocks are what mempool.space expects the next blocks to hold. Height shows how full each block is. Click a block to open it.</p>`;
+}
+
+function panelBtcBlock(d) {
+  const b = btcHeader(state.view.id), txs = d.blocks[state.view.id];
+  const counts = {}; txs.forEach((t, i) => { const k = btcKind(t[4], i === 0); counts[k] = (counts[k] || 0) + 1; });
+  let html = header(`Block ${f.int(b.height)}`, `${esc(b.pool || '')} · ${b.time ? `${clock(b.time)} · ${ago(b.time)}` : ''}`)
+    + `<div class="mt-3 flex flex-wrap items-center gap-2">${toggle([['fee', 'Fee rate'], ['kind', 'Kind']], state.color.btc, 'color')}<button type="button" data-act="back" class="${btnCls}"><i class="fi fi-rr-arrow-left"></i>All blocks</button></div>`;
+  if (b.weight) {
+    html += `<div class="mt-3 grid grid-cols-2 gap-2">${kpi('Transactions', f.int(b.txCount))}${kpi('Fees', btcAmt(b.fees, 4), `median ${satvb(b.medianFee)}`)}${kpi('Reward', btcAmt(b.reward, 4), 'subsidy + fees')}${kpi('Size', `${f.n2(b.size / 1e6)} MB`, `${f.pct(b.weight / 4e6)} of weight limit`)}</div>`
+      + section('Block', card(`${row('Hash', copyable(b.id))}${row('Previous', copyable(b.prev))}${row('Weight', `${f.int(b.weight)} WU`)}<div class="my-1">${bar(b.weight / 4e6)}</div>${row('Inputs / outputs', `${f.int(b.inputs)} / ${f.int(b.outputs)}`)}${row('UTXO set change', `${b.utxoChange > 0 ? '+' : ''}${f.int(b.utxoChange)}`)}${row('SegWit txs', f.pct(b.segwit / b.txCount))}${row('Difficulty', f.si(b.difficulty))}${row('Nonce', f.int(b.nonce))}${b.tag ? row('Coinbase tag', esc(b.tag)) : ''}`), 'fi-rr-cube');
+  }
+  html += section('What is inside', breakdown(counts, BTC_KINDS), 'fi-rr-apps');
+  html += txPanelBtc(d);
+  return html + `<div class="mt-3">${extLink(`https://mempool.space/block/${b.id}`, 'Block on mempool.space')}</div>`;
+}
+
+function txPanelBtc(d) {
+  if (state.sel?.type !== 'tx') return section('Transaction', `<p class="text-xs text-muted-foreground">Click a box to see a transaction.</p>`, 'fi-rr-receipt');
+  const txs = d.blocks[state.view.id], i = txs.findIndex((t) => t[0] === state.sel.id), t = txs[i];
+  if (!t) return '';
+  const kind = btcKind(t[4], i === 0), full = d.txs[t[0]];
+  let body = `${row('Txid', copyable(t[0]))}${row('Kind', `<span style="color:${BTC_KINDS[kind].color}">${esc(BTC_KINDS[kind].label)}</span>`)}${row('Position', `#${i} in block`)}${row('Fee', `${f.int(t[1])} sats`)}${row('Fee rate', satvb(t[2] ? t[1] / t[2] : 0))}${row('Virtual size', `${f.int(Math.round(t[2]))} vB`)}${row('Output value', btcAmt(t[3], 8))}`;
+  if (full) {
+    const io = (xs, more, isIn) => xs.map((x) => `<div class="flex items-center justify-between gap-2 py-0.5 text-[11px]"><span class="min-w-0 truncate font-mono">${x.coinbase ? 'coinbase (new coins)' : esc(short(x.address || x.type || '—', 8, 6))}</span><span class="shrink-0 font-mono text-muted-foreground">${x.value != null ? btcAmt(x.value, 8) : ''}</span></div>`).join('') + (more > 0 ? `<div class="text-[11px] text-muted-foreground">+ ${f.int(more)} more ${isIn ? 'inputs' : 'outputs'}</div>` : '');
+    const total = Math.max(1, full.inValue || full.outValue + full.fee);
+    body += `<div class="mt-2 text-[11px] text-muted-foreground">Value flow</div>
+      <div class="mt-1 flex h-2 overflow-hidden rounded-full bg-muted"><div style="width:${(full.outValue / total) * 100}%;background:${B.signal}" title="Outputs"></div><div style="width:${(full.fee / total) * 100}%;background:${B.amber}" title="Fee"></div></div>
+      <div class="mt-2 grid grid-cols-2 gap-2"><div><div class="text-[11px] font-medium">${f.int(full.vinCount)} input${full.vinCount === 1 ? '' : 's'}</div>${io(full.vin, full.vinCount - full.vin.length, true)}</div><div><div class="text-[11px] font-medium">${f.int(full.voutCount)} output${full.voutCount === 1 ? '' : 's'}</div>${io(full.vout, full.voutCount - full.vout.length, false)}</div></div>`;
+  } else {
+    body += `<p class="mt-2 text-[11px] text-muted-foreground">${sourceOf() === 'synced' ? 'Loading inputs and outputs…' : 'Inputs and outputs were captured for a sample of transactions only. Go live to load any of them.'}</p>`;
+  }
+  return section('Transaction', card(body) + `<div class="mt-2">${extLink(`https://mempool.space/tx/${t[0]}`, 'Transaction on mempool.space')}</div>`, 'fi-rr-receipt');
+}
+
+function panelEthChain(d) {
+  const blocks = [...d.overview.blocks].sort((a, b) => b.number - a.number), tip = blocks[0];
+  const burnt = d3.sum(blocks, (b) => (b.baseFee * b.gasUsed) / 1e9);
+  const blobs = d3.sum(blocks, (b) => b.blobGas / 131072);
+  return header(`Block ${f.int(tip.number)}`, `Newest block · ${esc(builderOf(tip))} · ${ago(tip.time)}`)
+    + `<div class="mt-3 grid grid-cols-2 gap-2">
+      ${kpi('Base fee', gweiTxt(tip.baseFee), 'paid per gas, burnt')}
+      ${kpi('Gas used', f.pct(d3.mean(blocks, (b) => b.gasUsed / b.gasLimit)), `of ${f.si(tip.gasLimit)} limit, mean`)}
+      ${kpi('Burnt', ethAmt(burnt, 4), `last ${blocks.length} blocks`)}
+      ${kpi('Blobs', f.int(blobs), `last ${blocks.length} blocks`)}
+    </div>`
+    + section('Recent blocks', blockList(blocks.map((b) => listBtn(b.number, f.int(b.number), `${esc(builderOf(b))} · ${f.int(b.txCount)} txs`, f.pct(b.gasUsed / b.gasLimit), !!d.blocks[b.number]))), 'fi-rr-cubes')
+    + `<p class="mt-3 text-[11px] leading-relaxed text-muted-foreground">Each column is one block: the fill is gas used against the gas limit, the amber square marks the target (half the limit) that the base fee steers toward, and pink spheres are blobs of rollup data. Click a block to open it.</p>`;
+}
+
+function panelEthBlock(d) {
+  const b = d.blocks[state.view.id], txs = b.txs;
+  const counts = {}; txs.forEach((t) => { const k = ethKind(t); counts[k] = (counts[k] || 0) + 1; });
+  const burnt = (b.baseFee * b.gasUsed) / 1e9;
+  const tips = d3.sum(txs, (t) => Math.max(0, (t.price ?? 0) - b.baseFee) * (t.gasUsed || 0)) / 1e9;
+  let html = header(`Block ${f.int(b.number)}`, `${esc(builderOf(b))} · ${clock(b.time)} · ${ago(b.time)}`)
+    + `<div class="mt-3 flex flex-wrap items-center gap-2">${toggle([['kind', 'Kind'], ['prio', 'Priority fee']], state.color.eth, 'color')}<button type="button" data-act="back" class="${btnCls}"><i class="fi fi-rr-arrow-left"></i>All blocks</button></div>`
+    + `<div class="mt-3 grid grid-cols-2 gap-2">${kpi('Transactions', f.int(txs.length))}${kpi('Base fee', gweiTxt(b.baseFee))}${kpi('Burnt', ethAmt(burnt, 5), 'base fee × gas used')}${kpi('Tips to builder', ethAmt(tips, 5), 'priority fees')}</div>`
+    + section('Block', card(`${row('Hash', copyable(b.hash))}${row('Gas used', `${f.int(b.gasUsed)} (${f.pct(b.gasUsed / b.gasLimit)})`)}<div class="my-1">${bar(b.gasUsed / b.gasLimit, B.signal, 0.5)}</div>${row('Gas limit', f.int(b.gasLimit))}${row('Blobs', f.int(b.blobGas / 131072))}${row('Withdrawals', f.int(b.withdrawals))}${row('Size', `${f.int(b.size)} bytes`)}${row('Fee recipient', copyable(b.miner))}${b.extra ? row('Extra data', esc(b.extra)) : ''}`), 'fi-rr-cube')
+    + section('What is inside', breakdown(counts, ETH_KINDS), 'fi-rr-apps');
+  if (state.sel?.type === 'tx') {
+    const t = txs.find((x) => x.hash === state.sel.id);
+    if (t) {
+      const kind = ethKind(t), prio = Math.max(0, (t.price ?? 0) - b.baseFee), fee = ((t.price ?? 0) * (t.gasUsed || 0)) / 1e9;
+      const events = t.topics.map((x) => TOPIC[x] || x).join(', ');
+      html += section('Transaction', card(`${row('Hash', copyable(t.hash))}${row('Status', t.status === 0 ? '<span class="text-danger">Failed</span>' : '<span class="text-primary">Success</span>')}${row('Kind', `<span style="color:${ETH_KINDS[kind].color}">${esc(ETH_KINDS[kind].label)}</span>`)}${t.sel !== '0x' ? row('Method', esc(METHOD[t.sel] || t.sel)) : ''}${row('From', copyable(t.from))}${row('To', t.to ? copyable(t.to) : t.created ? `new ${copyable(t.created)}` : '—')}${row('Value', ethAmt(t.value, 6))}${row('Gas used', `${f.int(t.gasUsed || 0)} of ${f.int(t.gas)}`)}${row('Gas price', gweiTxt(t.price))}${row('Priority fee', gweiTxt(prio))}${row('Fee paid', ethAmt(fee, 6))}${row('Type', esc(ETH_TYPES[t.type] || t.type))}${t.blobs ? row('Blobs', t.blobs) : ''}${row('Events', t.logs ? `${t.logs}${events ? ` · ${esc(events)}` : ''}` : 'none')}${row('Position', `#${t.i}`)}`) + `<div class="mt-2">${extLink(`https://etherscan.io/tx/${t.hash}`, 'Transaction on Etherscan')}</div>`, 'fi-rr-receipt');
+    }
+  } else html += section('Transaction', `<p class="text-xs text-muted-foreground">Click a bar to see a transaction.</p>`, 'fi-rr-receipt');
+  return html + `<div class="mt-3">${extLink(`https://etherscan.io/block/${b.number}`, 'Block on Etherscan')}</div>`;
+}
+
+function panelSolChain(d) {
+  const ov = d.overview, slots = ov.slots, produced = slots.filter((s) => s.produced), skipped = slots.length - produced.length;
+  const tip = produced.at(-1), e = ov.epoch;
+  const tps = d3.mean(ov.perf, (p) => p.txs / p.secs), slotTime = d3.mean(ov.perf, (p) => p.secs / p.slots);
+  const groups = d3.groups(slots, (s) => Math.floor((s.slot - slots[0].slot) / 4)).map(([, ss]) => ss).reverse().slice(0, 8);
+  return header(`Slot ${f.int(tip.slot)}`, `Newest block · ${f.int(tip.txCount)} txs · ${ago(tip.time)}`)
+    + `<div class="mt-3 grid grid-cols-2 gap-2">
+      ${kpi('Throughput', `${f.int(Math.round(tps))} tx/s`, 'recent performance samples')}
+      ${kpi('Slot time', `${f.int(Math.round(slotTime * 1000))} ms`, 'mean')}
+      ${kpi('Skipped', `${skipped} of ${slots.length}`, 'slots in view')}
+      ${kpi('Epoch', f.int(e.epoch), `${f.pct1(e.slotIndex / e.slotsInEpoch)} through`)}
+    </div>
+    <div class="mt-2">${bar(e.slotIndex / e.slotsInEpoch)}</div>`
+    + section('Leaders, newest first', `<div class="grid gap-1">${groups.map((ss) => `<div class="flex items-center gap-2 rounded-md border bg-background/40 px-2 py-1 text-xs"><span class="inline-block size-2.5 rounded-sm" style="background:${leaderColor(ss[0].leader)}"></span><span class="min-w-0 flex-1 truncate font-mono text-[11px]">${esc(short(ss[0].leader, 6, 4))}</span>${ss.map((s) => s.produced ? `<button type="button" data-act="open" data-id="${s.slot}" class="rounded px-1 font-mono text-[11px] hover:bg-accent" title="Slot ${s.slot}: ${s.txCount} txs">${f.int(s.txCount)}${d.blocks[s.slot] ? '<i class="fi fi-rr-cube ml-0.5 text-[9px] text-primary"></i>' : ''}</button>` : '<span class="px-1 font-mono text-[11px] text-danger" title="Skipped">skip</span>').join('')}</div>`).join('')}</div>`, 'fi-rr-users')
+    + `<p class="mt-3 text-[11px] leading-relaxed text-muted-foreground">Each leader gets four slots in a row, about ${f.int(Math.round(slotTime * 1000))} ms each in these samples. Column height is the number of transactions in the block, and red rings are slots the leader skipped. In these samples every transaction is a non-vote transaction: no vote-program transactions appear in the blocks. Click a column to open the block.</p>`;
+}
+
+function panelSolBlock(d) {
+  const b = d.blocks[state.view.id], txs = b.txs, slotInfo = d.overview.slots.find((s) => s.slot === b.slot);
+  const counts = {}; txs.forEach((t) => { const k = solKind(t); counts[k] = (counts[k] || 0) + 1; });
+  const fees = d3.sum(txs, (t) => t.fee), prio = d3.sum(txs, solPriority), cu = d3.sum(txs, (t) => t.cu), failed = txs.filter((t) => t.err).length;
+  const progs = d3.rollups(txs.flatMap((t) => t.programs.filter((p) => SOL_PROGRAMS[p]?.[1] !== null)), (v) => v.length, (p) => p).sort((a, c) => c[1] - a[1]).slice(0, 6);
+  const versions = d3.rollups(txs, (v) => v.length, (t) => String(t.v));
+  let html = header(`Slot ${f.int(b.slot)}`, `${slotInfo ? `leader ${esc(short(slotInfo.leader, 5, 4))} · ` : ''}${clock(b.time)} · ${ago(b.time)}`)
+    + `<div class="mt-3 flex flex-wrap items-center gap-2">${toggle([['kind', 'Programs'], ['prio', 'Priority fee']], state.color.sol, 'color')}<button type="button" data-act="back" class="${btnCls}"><i class="fi fi-rr-arrow-left"></i>All slots</button></div>`
+    + `<div class="mt-3 grid grid-cols-2 gap-2">${kpi('Transactions', f.int(txs.length), `${f.pct(failed / txs.length)} failed`)}${kpi('Compute', `${f.n1(cu / 1e6)}M CU`)}${kpi('Fees', solAmt(fees, 4), `${solAmt(prio, 4)} priority`)}${kpi('Block height', f.int(b.height))}</div>`
+    + section('Block', card(`${row('Blockhash', copyable(b.hash))}${row('Parent slot', f.int(b.parent))}${row('Versions', versions.map(([v, n]) => `${v === 'legacy' ? 'legacy' : `v${v}`} ${n}`).join(' · '))}`), 'fi-rr-cube')
+    + section('What is inside', breakdown(counts, SOL_KINDS), 'fi-rr-apps')
+    + section('Busiest programs', `<div class="grid gap-0.5 text-xs">${progs.map(([p, n]) => `<div class="flex items-center justify-between gap-2"><span class="truncate">${esc(progName(p))}</span><span class="font-mono text-muted-foreground">${f.int(n)}</span></div>`).join('')}</div>`, 'fi-rr-chart-network');
+  if (state.sel?.type === 'tx') {
+    const t = txs.find((x) => x.sig === state.sel.id);
+    if (t) {
+      const kind = solKind(t);
+      html += section('Transaction', card(`${row('Signature', copyable(t.sig))}${row('Status', t.err ? `<span class="text-danger" title="${esc(t.err)}">Failed</span>` : '<span class="text-primary">Success</span>')}${row('Kind', `<span style="color:${SOL_KINDS[kind].color}">${esc(SOL_KINDS[kind].label)}</span>`)}${row('Fee', solAmt(t.fee, 9))}${row('of which priority', solAmt(solPriority(t), 9))}${row('Compute units', f.int(t.cu))}${row('Signers / accounts', `${t.signers} / ${t.accounts}`)}${row('Fee payer', copyable(t.payer))}${row('Payer balance', `${t.payerDelta >= 0 ? '+' : ''}${solAmt(t.payerDelta, 6)}`)}${row('Inner instructions', f.int(t.inner))}${row('Version', t.v === 'legacy' ? 'legacy' : `v${t.v}`)}${row('Position', `#${t.i}`)}${t.err ? row('Error', esc(t.err)) : ''}`)
+        + `<div class="mt-2 flex flex-wrap gap-1">${t.programs.map((p) => `<span class="rounded-md border px-1.5 py-0.5 text-[11px]" title="${esc(p)}">${esc(progName(p))}</span>`).join('')}</div>`
+        + `<div class="mt-2">${extLink(`https://solscan.io/tx/${t.sig}`, 'Transaction on Solscan')}</div>`, 'fi-rr-receipt');
+    }
+  } else html += section('Transaction', `<p class="text-xs text-muted-foreground">Click a column to see a transaction.</p>`, 'fi-rr-receipt');
+  return html + `<div class="mt-3">${extLink(`https://solscan.io/block/${b.slot}`, 'Block on Solscan')}</div>`;
+}
+
+$('#panel').addEventListener('click', (e) => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const act = el.dataset.act, v = el.dataset.v;
+  if (act === 'back') backToChain();
+  else if (act === 'open') openBlock(state.chain === 'btc' ? el.dataset.id : Number(el.dataset.id));
+  else if (act === 'color') { state.color[state.chain] = v; show({ keepCamera: true }); }
+  else if (act === 'copy') navigator.clipboard?.writeText(v).then(() => toast('Copied'), () => toast(v));
+  else if (act === 'live') toggleLive();
+  else if (act === 'use-snapshot') { stopPolling(); state.mode = 'snapshot'; state.view = { type: 'chain' }; state.sel = null; renderLive(); show(); }
+  else if (act === 'use-synced') { state.mode = 'synced'; state.view = { type: 'chain' }; state.sel = null; renderLive(); show(); }
+  else if (act === 'clear') clearStore();
+});
+
+// ================= search =================
+$('#search').addEventListener('submit', (e) => { e.preventDefault(); search($('#q').value.trim()); });
+async function search(q) {
+  if (!q) return;
+  const d = data(), ov = d.overview, ql = q.toLowerCase().replace(/,/g, '');
+  const isNum = /^\d+$/.test(ql);
+  if (state.chain === 'btc') {
+    const b = ov.blocks.find((x) => (isNum && x.height === Number(ql)) || x.id.startsWith(ql));
+    if (b) return openBlock(b.id);
+    for (const [hash, txs] of Object.entries(d.blocks)) if (txs.some((t) => t[0].startsWith(ql))) { await openBlock(hash); return selectTx(txs.find((t) => t[0].startsWith(ql))[0]); }
+  } else if (state.chain === 'eth') {
+    const b = ov.blocks.find((x) => (isNum && x.number === Number(ql)) || x.hash.startsWith(ql));
+    if (b) return openBlock(b.number);
+    for (const [n, blk] of Object.entries(d.blocks)) { const t = blk.txs.find((x) => x.hash.startsWith(ql)); if (t) { await openBlock(Number(n)); return selectTx(t.hash); } }
+  } else {
+    const s = ov.slots.find((x) => (isNum && x.slot === Number(ql)) || (x.hash && x.hash.toLowerCase().startsWith(ql)));
+    if (s?.produced) return openBlock(s.slot);
+    for (const [n, blk] of Object.entries(d.blocks)) { const t = blk.txs.find((x) => x.sig.toLowerCase().startsWith(ql)); if (t) { await openBlock(Number(n)); return selectTx(t.sig); } }
+  }
+  toast(`Nothing matching “${q}” in the ${sourceOf() === 'synced' ? 'synced' : 'snapshot'} data.`);
+}
+
+// ================= browser datastore (IndexedDB) =================
+// Everything synced from the public APIs is kept per chain in IndexedDB, so the page reopens on
+// the last synced data. The bundled snapshot is only the fallback for chains never synced here.
+const IDB = { name: 'inotives-block-explorer', store: 'chains' };
+const KEEP_BLOCKS = 6, KEEP_TXS = 300;   // per chain, newest kept
+function idbOpen() {
+  return new Promise((ok, no) => { const r = indexedDB.open(IDB.name, 1); r.onupgradeneeded = () => r.result.createObjectStore(IDB.store); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+}
+async function idb(mode, fn) {
+  const db = await idbOpen();
+  try { return await new Promise((ok, no) => { const tx = db.transaction(IDB.store, mode), req = fn(tx.objectStore(IDB.store)); tx.oncomplete = () => ok(req?.result); tx.onerror = () => no(tx.error); }); }
+  finally { db.close(); }
+}
+const blockOrder = (c, key) => (c === 'btc' ? state.live.btc.overview?.blocks.find((b) => b.id === key)?.height ?? 0 : Number(key));
+function prune(c) {
+  const d = state.live[c];
+  const keys = Object.keys(d.blocks).sort((a, b) => blockOrder(c, b) - blockOrder(c, a));
+  keys.slice(KEEP_BLOCKS).forEach((k) => delete d.blocks[k]);
+  const txKeys = Object.keys(d.txs);
+  txKeys.slice(0, Math.max(0, txKeys.length - KEEP_TXS)).forEach((k) => delete d.txs[k]);
+}
+let saving = Promise.resolve();
+function saveChain(c) {
+  prune(c);
+  const rec = { ...state.live[c], syncedAt: state.liveAt[c] };
+  saving = saving.then(() => idb('readwrite', (s) => s.put(rec, c))).catch(() => { /* private mode or quota: this visit still works */ });
+  return saving;
+}
+async function restoreStore() {
+  for (const c of ORDER) {
+    try {
+      const rec = await idb('readonly', (s) => s.get(c));
+      if (rec?.overview) { state.live[c] = { overview: rec.overview, blocks: rec.blocks || {}, txs: rec.txs || {} }; state.liveAt[c] = rec.syncedAt; }
+    } catch { return; }
+  }
+}
+async function clearStore() {
+  stopPolling();
+  try { await idb('readwrite', (s) => s.clear()); } catch { /* nothing stored */ }
+  state.live = { btc: emptyChain(), eth: emptyChain(), sol: emptyChain() }; state.liveAt = {};
+  state.mode = 'snapshot'; state.view = { type: 'chain' }; state.sel = null;
+  renderLive(); show(); toast('Cleared the data stored in this browser');
+}
+
+// ================= live sync =================
+let pollTimer = null;
+const withBusy = async (text, fn) => {
+  const el = $('#busy'); el.querySelector('span').textContent = text; el.hidden = false;
+  try { return await fn(); } catch (e) { toast(`Couldn't reach the API: ${e.message}`); throw e; } finally { el.hidden = true; }
+};
+async function refreshLive(quiet = false) {
+  const c = state.chain, loader = { btc: CHAIN_DATA.loadBtcOverview, eth: CHAIN_DATA.loadEthOverview, sol: CHAIN_DATA.loadSolOverview }[c];
+  const run = async () => { state.live[c].overview = await loader(); state.liveAt[c] = Date.now(); saveChain(c); };
+  if (quiet) { try { await run(); } catch { return false; } } else await withBusy(`Syncing ${CHAINS[c].name}…`, run);
+  return true;
+}
+function stopPolling() { state.polling = false; clearInterval(pollTimer); pollTimer = null; }
+async function toggleLive() {
+  if (state.polling) { stopPolling(); renderLive(); return renderPanel(); }
+  try { await refreshLive(); } catch { return; }
+  const wasSynced = sourceOf() === 'synced';
+  state.mode = 'synced'; state.polling = true; renderLive();
+  if (!wasSynced) { state.view = { type: 'chain' }; state.sel = null; }
+  show({ keepCamera: wasSynced && state.view.type === 'chain' });
+  // keep syncing the open chain; the 3D view only rebuilds while the chain overview is showing
+  pollTimer = setInterval(async () => {
+    if (document.hidden || !state.polling) return;
+    if (await refreshLive(true) && state.polling && state.view.type === 'chain') show({ keepCamera: true });
+    else if (state.polling) renderPanel();
+  }, 20000);
+}
+const renderLive = () => {
+  const b = $('#live');
+  if (state.polling) { b.innerHTML = '<span class="live-dot"></span>Live<span class="text-muted-foreground">· pause</span>'; b.title = 'Stop syncing; the synced data stays in this browser'; }
+  else if (hasSynced()) { b.innerHTML = '<i class="fi fi-rr-signal-stream text-primary"></i>Resume live'; b.title = 'Sync the latest blocks into this browser again'; }
+  else { b.innerHTML = '<i class="fi fi-rr-signal-stream text-primary"></i>Go live'; b.title = 'Load the latest blocks from the public APIs and keep them in this browser'; }
+};
+$('#live').addEventListener('click', toggleLive);
+
+// ================= chrome =================
+const renderTabs = () => {
+  $('#tabs').innerHTML = ORDER.map((k) => `<button role="tab" data-tab="${k}" aria-label="${CHAINS[k].name}" aria-selected="${k === state.chain}" data-state="${k === state.chain ? 'active' : ''}" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi ${CHAINS[k].icon}"></i><span class="hidden sm:inline">${CHAINS[k].name}</span></button>`).join('');
+};
+$('#tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) setChain(b.dataset.tab); });
+let toastTimer;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3200); }
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.view.type === 'block') { if (state.sel) { state.sel = null; outline(null); renderPanel(); } else backToChain(); } });
+
+// ================= loop =================
+const clockStart = performance.now();
+renderer.setAnimationLoop(() => {
+  const now = performance.now();
+  if (fly) {
+    const k = Math.min(1, (now - fly.start) / fly.dur), e = 1 - Math.pow(1 - k, 3);
+    camera.position.lerpVectors(fly.p0, fly.p1, e); controls.target.lerpVectors(fly.t0, fly.t1, e);
+    if (k === 1) fly = null;
+  }
+  if (current && !reduceMotion) current.ticks.forEach((t) => t((now - clockStart) / 1000));
+  runHover();
+  controls.update();
+  renderer.render(scene, camera); labelR.render(scene, camera);
+});
+
+// ================= boot =================
+(async () => {
+  resize(); renderTabs(); renderLive(); $('#q').placeholder = CHAINS[state.chain].search;
+  camera.position.set(0, 8, 20);
+  try {
+    const r = await fetch('data/block-explorer.json'); if (!r.ok) throw new Error(r.status);
+    state.snapshot = await r.json();
+  } catch {
+    $('#panel').innerHTML = '<p class="text-sm">Couldn’t load the snapshot data.</p>';
+    return;
+  }
+  // reopen on whatever was synced into this browser last time
+  await restoreStore();
+  if (hasSynced()) state.mode = 'synced';
+  renderLive();
+  show({ instant: true });
+})();
+</script>
+</body>
+</html>

@@ -71,12 +71,35 @@
   .switch[aria-checked="true"] { background: #1fefd7; }
   .switch[aria-checked="true"]::after { transform: translateX(14px); background: #0c1614; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, ::before, ::after { transition: none !important; } }
+  #drawer { --pg-drawer-w: 280px; }   /* section nav: a column from 900px, a drawer below */
+
+  /* <pg-layout v1> Playground layout standard (scripts/mocks/template/playground.html).
+     Side panel: a floating card on the left from 900px wide (.pg-float); below 900px it is a
+     drawer that slides in from the left over a scrim, with the stage legend folded into it.
+     Keep this block identical across mocks; check.mjs compares it with the template. */
+  .pg-drawer { display: flex; flex-direction: column; min-height: 0; }
+  .pg-drawer-head, .pg-drawer-legend, .pg-drawer-btn, .pg-scrim { display: none; }
+  @media (min-width: 900px) {
+    .pg-float { position: absolute; z-index: 10; left: 1.5rem; top: 4.5rem; width: var(--pg-panel-w, 360px); max-height: calc(100% - 6rem); }
+  }
+  @media (max-width: 899px) {
+    .pg-drawer { position: fixed; inset: 0 auto 0 0; z-index: 45; width: min(var(--pg-drawer-w, 360px), 88vw); height: auto; max-height: none; border: 0; border-right: 1px solid #2b2f37; border-radius: 0 0.75rem 0.75rem 0; background: #1d2026; box-shadow: 0 10px 40px rgb(0 0 0 / 0.5); transform: translateX(-104%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
+    body[data-drawer="open"] .pg-drawer { transform: none; visibility: visible; transition: transform 0.22s ease; }
+    body[data-drawer="open"] .pg-scrim { display: block; position: fixed; inset: 0; z-index: 44; background: rgb(0 0 0 / 0.5); }
+    .pg-drawer-head { display: flex; align-items: center; gap: 0.625rem; flex-shrink: 0; height: 3.5rem; padding: 0 0.75rem 0 1rem; border-bottom: 1px solid #2b2f37; }
+    .pg-drawer-legend:not(:empty) { display: block; flex-shrink: 0; padding: 0.75rem 1rem; border-top: 1px solid #2b2f37; font-size: 0.75rem; color: #8b9099; }
+    .pg-drawer-btn { display: inline-flex; }
+    .pg-hide-mobile, .pg-legend { display: none !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { .pg-drawer { transition: none !important; } }
+  /* </pg-layout> */
 </style>
 </head>
 <body class="bg-background font-sans text-foreground antialiased">
 
 <header class="sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
   <div class="mx-auto flex h-14 max-w-[1240px] items-center gap-3 px-4 sm:px-6">
+    <button id="drawer-btn" type="button" class="pg-drawer-btn -ml-1 size-8 shrink-0 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-controls="drawer" aria-expanded="false" aria-label="Open the sections"><i class="fi fi-rr-menu-burger"></i></button>
     <a href="/playground" class="rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
     <span class="text-sm text-muted-foreground">Brand kit</span>
     <span class="ml-1 hidden rounded-md border px-2 py-0.5 font-mono text-[11px] text-muted-foreground sm:inline">v1.0 · Nov 2026</span>
@@ -88,9 +111,15 @@
 </header>
 
 <div class="mx-auto flex max-w-[1240px] gap-10 px-4 sm:px-6">
-  <nav class="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-48 shrink-0 overflow-y-auto py-8 lg:block" aria-label="Sections">
-    <ol id="toc" class="space-y-0.5 text-sm"></ol>
+  <nav id="drawer" class="pg-drawer sticky top-14 h-[calc(100dvh-3.5rem)] w-48 shrink-0 overflow-y-auto py-8 max-[899px]:py-0" aria-label="Sections">
+    <div class="pg-drawer-head">
+      <a href="/playground" class="font-brand text-[24px] leading-none hover:text-primary" title="Back to the Playground">inoTives</a>
+      <span class="min-w-0 flex-1 truncate text-sm text-muted-foreground">Sections</span>
+      <button id="drawer-close" type="button" class="inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Close the sections"><i class="fi fi-rr-cross-small"></i></button>
+    </div>
+    <ol id="toc" class="space-y-0.5 text-sm max-[899px]:overflow-y-auto max-[899px]:px-3 max-[899px]:py-4"></ol>
   </nav>
+  <div id="scrim" class="pg-scrim"></div>
 
   <main class="min-w-0 flex-1 pb-24">
     <!-- 01 concept -->
@@ -217,6 +246,32 @@
 
 <div id="tip" hidden class="pointer-events-none fixed z-50 rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
 <div id="toast" hidden role="status" class="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-md border bg-card px-3 py-2 text-sm shadow-lg"></div>
+
+<script>
+/* <pg-layout-js v1> Playground layout standard: the mobile drawer (scripts/mocks/template/playground.html).
+   Opens from #drawer-btn; closes from #drawer-close, the scrim, Escape, links to #anchors or
+   [data-drawer-close] inside it, and when the window grows past 900px. Mirrors #legend into
+   #drawer-legend. Mocks can call window.pgDrawer.open() / .close(). Keep identical across mocks. */
+(() => {
+  const body = document.body, btn = document.getElementById('drawer-btn');
+  const set = (open) => { body.dataset.drawer = open ? 'open' : ''; btn?.setAttribute('aria-expanded', String(open)); };
+  const close = (refocus) => { if (body.dataset.drawer !== 'open') return; set(false); if (refocus) btn?.focus(); };
+  btn?.addEventListener('click', () => set(body.dataset.drawer !== 'open'));
+  document.getElementById('drawer-close')?.addEventListener('click', () => close(true));
+  document.getElementById('scrim')?.addEventListener('click', () => close(false));
+  document.getElementById('drawer')?.addEventListener('click', (e) => { if (e.target.closest('a[href^="#"], [data-drawer-close]')) close(false); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && body.dataset.drawer === 'open') { e.stopImmediatePropagation(); close(true); } }, true);
+  matchMedia('(min-width: 900px)').addEventListener('change', (m) => { if (m.matches) set(false); });
+  const legend = document.getElementById('legend'), copy = document.getElementById('drawer-legend');
+  if (legend && copy) {
+    const sync = () => { copy.innerHTML = legend.hidden ? '' : legend.innerHTML.trim(); };
+    new MutationObserver(sync).observe(legend, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+    sync();
+  }
+  window.pgDrawer = { open: () => set(true), close: () => close(false) };
+})();
+/* </pg-layout-js> */
+</script>
 
 <script type="module">
 import * as THREE from 'three';
