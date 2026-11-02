@@ -31,11 +31,26 @@ Vite dev server rewrites HTML outside `public/` and cannot resolve the CDN impor
 
 Load everything from CDNs with pinned versions, as the template does. No build step.
 
+Included in the template:
+
 - Tailwind CSS v4 browser build `@tailwindcss/browser@4.3.3`, with the brand tokens in `@theme`
-- Three.js `0.180.0` through an import map (`three`, `three/addons/`)
+- shadcn/ui, recreated in plain HTML with Tailwind classes (no React): the token names in
+  `@theme` and helpers like `kpi()` and `section()`
+- Three.js `0.180.0` through an import map (`three`, `three/addons/`), with `OrbitControls` and
+  `CSS2DRenderer` for HTML labels pinned in 3D (`label(parent, html, x, y, z)`, styled by `.lbl`)
 - D3 `7.9.0` for scales, colour ramps and number formats
-- Flaticon UIcons `3.0.0`: `uicons-regular-rounded` for the UI; add `uicons-brands` only for logos
-- shadcn/ui is recreated in plain HTML with Tailwind classes (no React)
+- Flaticon UIcons `3.0.0`, `uicons-regular-rounded` set for the UI
+
+Optional, commented out in the template's `<head>`; uncomment what the mock needs:
+
+| Library | Version | For | Used in |
+| --- | --- | --- | --- |
+| Flaticon UIcons brands | `3.0.0` | Brand and chain logos (`fi-brands-bitcoin`) | block-explorer |
+| Leaflet | `1.9.4` | Street maps beside the 3D view | sg-hdb-3d, sg-pulse |
+| Chart.js | `4.4.7` | Chart.js charts, e.g. as textures in 3D | chartjs-3d |
+
+One-offs stay out of the template: OpenUI (chart-agent) and daisyUI (agent-core, which predates
+the shadcn/ui look). Prefer the shadcn/ui look for new mocks.
 
 Fonts are IBM Plex Sans Condensed (UI), Source Code Pro (numbers, ids, labels) and VT323 (the
 `inoTives` wordmark). Colour, type and formatting rules are in the Brand kit mock

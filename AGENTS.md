@@ -76,6 +76,21 @@ For social post like linkedin, include hashtags at the end of the post.
 
 ---
 
+## Playground Mocks
+
+Playground mocks are single, self-contained HTML files in `public/mocks/`, listed on `/playground` from `PLAYGROUND_MOCKS` in `src/data/playground.js`.
+
+**Before starting or changing a mock, read `scripts/mocks/template/README.md`.** It is the design guide: stack and pinned CDN versions, brand tokens, layout, panel and stage conventions, data rules, preview image and a pre-commit checklist.
+
+- Start a new mock by copying `scripts/mocks/template/playground.html` to `public/mocks/<id>.html`, then follow "Start a new mock" in the README.
+- Layout standard: from 900px the side panel floats on the left; below 900px it is a drawer that slides in from the left (closed by default) with the stage legend folded into it. Keep the marked `<pg-layout v1>` CSS and `<pg-layout-js v1>` script blocks identical to the template; never edit them in a single mock.
+- To change the standard, edit the template, then run `node scripts/mocks/template/check.mjs --write`. Before committing any mock, `node scripts/mocks/template/check.mjs` must report `ok` for it.
+- Data: bundle captured data in `public/mocks/data/<id>.json` with its capture script in `scripts/mocks/<id>/`. Anything a mock stores goes in IndexedDB, and live data syncs into it; the bundled file is only the fallback.
+- Every new mock needs a `playground.js` entry (with `sources` for real data) and a 1200 × 601 JPEG preview in `public/mocks/previews/<id>.jpg`.
+- Test at desktop width and at 390px phone width. Mocks in `public/` open from the dev server at `/mocks/<id>.html`; preview the template itself with `python3 -m http.server -d scripts/mocks/template`, because Vite rewrites HTML outside `public/`.
+
+---
+
 ## Coding Guidelines
 
 Behavioral guidelines to reduce common LLM coding mistakes and LLM coding pitfalls.
