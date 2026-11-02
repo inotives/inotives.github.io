@@ -87,6 +87,15 @@ Playground mocks are single, self-contained HTML files in `public/mocks/`, liste
 - To change the standard, edit the template, then run `node scripts/mocks/template/check.mjs --write`. Before committing any mock, `node scripts/mocks/template/check.mjs` must report `ok` for it.
 - Data: bundle captured data in `public/mocks/data/<id>.json` with its capture script in `scripts/mocks/<id>/`. Anything a mock stores goes in IndexedDB, and live data syncs into it; the bundled file is only the fallback.
 - Every new mock needs a `playground.js` entry (with `sources` for real data) and a 1200 × 601 JPEG preview in `public/mocks/previews/<id>.jpg`.
+
+### Refreshing mock data
+
+| Mock | Command | Updates |
+|---|---|---|
+| ToTo stats (`sg-toto.html`) | `npm run toto -- path/to/ToTo.csv` (no path: `~/Downloads/ToTo.csv`) | `public/mocks/data/sg-toto.json` |
+| Block explorer 3D (`block-explorer.html`) | `node scripts/mocks/block-explorer/capture.mjs` | `public/mocks/data/block-explorer.json` |
+
+- **ToTo:** when a human gives a newer Singapore Pools ToTo results CSV, or asks to update the ToTo data, run `npm run toto` with it. Don't edit the JSON by hand. The script reports new draws, prize figures filled in for earlier draws, and any `CHANGED` or `MISSING` draws. Show the human `CHANGED` or `MISSING` lines before committing: they usually mean a wrong or older CSV. The CSV parser lives in the mock between the `// <toto-csv>` markers and is shared with the page's "Update data" import, so change the CSV format handling there, not in the script.
 - Test at desktop width and at 390px phone width. Mocks in `public/` open from the dev server at `/mocks/<id>.html`; preview the template itself with `python3 -m http.server -d scripts/mocks/template`, because Vite rewrites HTML outside `public/`.
 
 ---

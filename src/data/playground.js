@@ -87,6 +87,14 @@ export const PLAYGROUND_LIBRARIES = [
     site: 'https://tailwindcss.com',
     repo: 'tailwindlabs/tailwindcss',
   },
+  {
+    id: 'iztro',
+    name: 'iztro',
+    kind: 'Astrology',
+    description: 'Casts 紫微斗数 (Zi Wei Dou Shu) charts in JavaScript: lunar dates, the 12 palaces, stars, brightness and the 四化 transformations.',
+    site: 'https://iztro.com',
+    repo: 'SylarLong/iztro',
+  },
 ]
 
 export const PLAYGROUND_MOCKS = [
@@ -306,6 +314,20 @@ export const PLAYGROUND_MOCKS = [
       { name: 'mempool.space API', href: 'https://mempool.space/docs/api/rest' },
       { name: 'publicnode Ethereum RPC', href: 'https://ethereum-rpc.publicnode.com' },
       { name: 'publicnode Solana RPC', href: 'https://solana-rpc.publicnode.com' },
+    ],
+  },
+  {
+    id: 'sg-toto',
+    project: 'Data in 3D',
+    name: 'ToTo stats',
+    date: '2026-11-02',
+    href: '/mocks/sg-toto.html',
+    preview: '/mocks/previews/sg-toto.jpg',
+    description:
+      'Every Singapore ToTo draw since 2008 in 3D: the 49 numbers as columns against chance, a wall of past draws with Group 1 jackpots, draw shapes, Monday against Thursday and the numbers players favour (read from winner counts), a Picks tab with ten ways to build a ticket, each backtested on hit rate and return per $1, and a 紫微 tab that casts a Purple Star chart for a draw or your birth and animates its stars into six numbers. Spoiler: none of them beat chance.',
+    libraries: ['threejs', 'd3', 'iztro', 'shadcn', 'tailwind', 'flaticon'],
+    sources: [
+      { name: 'Singapore Pools ToTo results', href: 'https://www.singaporepools.com.sg/en/product/pages/toto_results.aspx' },
     ],
   },
 ]

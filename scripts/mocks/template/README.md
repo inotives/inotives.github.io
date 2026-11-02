@@ -49,8 +49,8 @@ Optional, commented out in the template's `<head>`; uncomment what the mock need
 | Leaflet | `1.9.4` | Street maps beside the 3D view | sg-hdb-3d, sg-pulse |
 | Chart.js | `4.4.7` | Chart.js charts, e.g. as textures in 3D | chartjs-3d |
 
-One-offs stay out of the template: OpenUI (chart-agent) and daisyUI (agent-core, which predates
-the shadcn/ui look). Prefer the shadcn/ui look for new mocks.
+One-offs stay out of the template: OpenUI (chart-agent), daisyUI (agent-core, which predates
+the shadcn/ui look) and iztro `2.6.3` (sg-toto, 紫微斗数 charts, loaded only when its tab opens). Prefer the shadcn/ui look for new mocks.
 
 Fonts are IBM Plex Sans Condensed (UI), Source Code Pro (numbers, ids, labels) and VT323 (the
 `inoTives` wordmark). Colour, type and formatting rules are in the Brand kit mock

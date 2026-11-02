@@ -1,0 +1,1681 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>ToTo stats</title>
+<!--
+  Playground mock: Singapore ToTo results since July 2008, in 3D.
+  Views: Board (the 49 numbers as columns, height against chance, colour by draws since last seen),
+  History (every draw as a wall of balls running back in time, with Group 1 jackpots), Patterns
+  (sums, odd/even, low/high, ranges, back-to-back numbers, repeats and pairs against exact chance)
+  and Picks (number-stats methods that pick a ticket, with a walk-forward backtest against chance).
+  The game moved from 6/45 to 6/49 at draw 2995 (9 October 2014); Patterns and Picks use the 6/49
+  draws. Data: Singapore Pools' historical results CSV, bundled as public/mocks/data/sg-toto.json
+  by scripts/mocks/sg-toto/build.mjs (which reuses the parser between the toto-csv markers below).
+  "Update data" reads a newer CSV in the browser and keeps it in IndexedDB, with saved tickets.
+  Three.js draws the stage; D3 provides scales, colour and formatting.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-pink: #e58fb0;
+    --color-danger: #ff7a7a;
+    --color-ink-2: #b8b5ac;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base { *, ::before, ::after { border-color: var(--color-border); } }
+</style>
+<style>
+  body { margin: 0; background: #15171b; }
+  .fi { display: inline-flex; line-height: 1; }
+  #stage { isolation: isolate; background: radial-gradient(ellipse 80% 70% at 60% 48%, #1b1e24 0%, #15171b 72%); touch-action: none; }
+  #stage canvas { display: block; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+  .lbl { font: 400 10.5px "Source Code Pro", monospace; color: #8b9099; white-space: nowrap; }
+  .lbl.num { font: 500 11px "Source Code Pro", monospace; color: #e4e1d8; text-shadow: 0 1px 3px #000; transform: translateY(-14px); }
+  .lbl.num.sel { color: #f6c453; }
+  .lbl.num.dim { opacity: 0.35; }
+  .lbl.tag { font: 500 11.5px "IBM Plex Sans Condensed", sans-serif; color: #b8b5ac; background: rgb(21 23 27 / 0.75); padding: 2px 6px; border-radius: 4px; }
+  .lbl.tag b { font: 500 11px "Source Code Pro", monospace; color: #e4e1d8; }
+  .lbl.big { font: 600 13px "Source Code Pro", monospace; color: #15171b; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
+  .ball { display: inline-flex; align-items: center; justify-content: center; width: 1.9rem; height: 1.9rem; border-radius: 999px; font: 500 12.5px "Source Code Pro", monospace; background: #23262d; color: #e4e1d8; border: 1px solid #343943; }
+  button.ball:hover { border-color: #1fefd7; }
+  .ball.hit { background: #1fefd7; color: #0c1614; border-color: #1fefd7; }
+  .ball.add { background: transparent; color: #e58fb0; border-color: #e58fb0; }
+  .ball.pick { background: #f6c453; color: #15171b; border-color: #f6c453; }
+  .ball.sm { width: 1.6rem; height: 1.6rem; font-size: 11.5px; }
+  .lbl.zwp { font: 500 11px "IBM Plex Sans Condensed", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif; color: #b8b5ac; background: rgb(23 21 31 / 0.82); border: 1px solid #3a3550; border-radius: 6px; padding: 3px 7px; text-align: center; line-height: 1.35; max-width: 9.5rem; white-space: normal; }
+  .lbl.zwp b { color: #e4e1d8; font-weight: 600; }
+  .lbl.zwp .gz, .lbl.zwp .muted, .lbl.zwp i { color: #8b9099; font-style: normal; font-size: 9.5px; }
+  .lbl.zwp .mn { font-size: 10px; opacity: 0.85; }
+  .lbl.zwp em { font-style: normal; font-size: 9.5px; color: #15171b; border-radius: 3px; padding: 0 2px; margin-left: 1px; }
+  .lbl.zwp.hot { border-color: #f6c453; box-shadow: 0 0 0 1px rgb(246 196 83 / 0.3); }
+  .lbl.zwb { font: 500 13px "PingFang SC", "Noto Sans SC", sans-serif; color: #6f6a8a; }
+  .lbl.zwball { font: 600 12.5px "Source Code Pro", monospace; color: #15171b; }
+  #drawer { --pg-panel-w: 360px; }   /* desktop panel width for this mock */
+
+  /* <pg-layout v1> Playground layout standard (scripts/mocks/template/playground.html).
+     Side panel: a floating card on the left from 900px wide (.pg-float); below 900px it is a
+     drawer that slides in from the left over a scrim, with the stage legend folded into it.
+     Keep this block identical across mocks; check.mjs compares it with the template. */
+  .pg-drawer { display: flex; flex-direction: column; min-height: 0; }
+  .pg-drawer-head, .pg-drawer-legend, .pg-drawer-btn, .pg-scrim { display: none; }
+  @media (min-width: 900px) {
+    .pg-float { position: absolute; z-index: 10; left: 1.5rem; top: 4.5rem; width: var(--pg-panel-w, 360px); max-height: calc(100% - 6rem); }
+  }
+  @media (max-width: 899px) {
+    .pg-drawer { position: fixed; inset: 0 auto 0 0; z-index: 45; width: min(var(--pg-drawer-w, 360px), 88vw); height: auto; max-height: none; border: 0; border-right: 1px solid #2b2f37; border-radius: 0 0.75rem 0.75rem 0; background: #1d2026; box-shadow: 0 10px 40px rgb(0 0 0 / 0.5); transform: translateX(-104%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
+    body[data-drawer="open"] .pg-drawer { transform: none; visibility: visible; transition: transform 0.22s ease; }
+    body[data-drawer="open"] .pg-scrim { display: block; position: fixed; inset: 0; z-index: 44; background: rgb(0 0 0 / 0.5); }
+    .pg-drawer-head { display: flex; align-items: center; gap: 0.625rem; flex-shrink: 0; height: 3.5rem; padding: 0 0.75rem 0 1rem; border-bottom: 1px solid #2b2f37; }
+    .pg-drawer-legend:not(:empty) { display: block; flex-shrink: 0; padding: 0.75rem 1rem; border-top: 1px solid #2b2f37; font-size: 0.75rem; color: #8b9099; }
+    .pg-drawer-btn { display: inline-flex; }
+    .pg-hide-mobile, .pg-legend { display: none !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { .pg-drawer { transition: none !important; } }
+  /* </pg-layout> */
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+<div class="fixed inset-0 overflow-hidden">
+  <div id="stage" class="absolute inset-0"></div>
+  <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
+    <button id="drawer-btn" type="button" class="pg-drawer-btn pointer-events-auto size-9 shrink-0 items-center justify-center rounded-md border bg-background/80 text-base backdrop-blur hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-controls="drawer" aria-expanded="false" aria-label="Open the panel"><i class="fi fi-rr-menu-burger"></i></button>
+    <a href="/playground" class="pg-hide-mobile pointer-events-auto rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <span class="hidden text-sm text-muted-foreground xl:inline">Playground · ToTo stats</span>
+    <div role="tablist" aria-label="Views" id="tabs" class="pointer-events-auto mx-auto inline-flex h-9 max-w-full items-center overflow-x-auto rounded-lg bg-muted p-1 text-muted-foreground"></div>
+    <label id="action" class="pointer-events-auto inline-flex h-9 cursor-pointer items-center gap-2 whitespace-nowrap rounded-md border bg-background/80 px-3 text-sm font-medium transition-colors hover:bg-accent focus-within:ring-1 focus-within:ring-ring" title="Load a newer results CSV into this browser"><i class="fi fi-rr-file-upload text-primary"></i><span class="hidden sm:inline">Update data</span><input id="csv" type="file" accept=".csv,text/csv" class="sr-only" /></label>
+  </header>
+  <aside id="drawer" class="pg-drawer pg-float overflow-hidden rounded-xl border bg-card/90 shadow backdrop-blur" aria-label="Panel">
+    <div class="pg-drawer-head">
+      <a href="/playground" class="font-brand text-[24px] leading-none hover:text-primary" title="Back to the Playground">inoTives</a>
+      <span class="min-w-0 flex-1 truncate text-sm text-muted-foreground">ToTo stats</span>
+      <button id="drawer-close" type="button" class="inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Close the panel"><i class="fi fi-rr-cross-small"></i></button>
+    </div>
+    <div id="panel" class="scroll-thin min-h-0 flex-1 overflow-auto p-4"></div>
+    <div id="drawer-legend" class="pg-drawer-legend"></div>
+  </aside>
+  <div id="scrim" class="pg-scrim"></div>
+  <div id="legend" class="pg-legend pointer-events-none absolute bottom-3 right-4 z-10 rounded-lg border bg-card/80 px-3 py-2 text-xs text-muted-foreground backdrop-blur"></div>
+  <div id="toast" hidden role="status" class="absolute bottom-4 left-1/2 z-40 max-w-[90vw] -translate-x-1/2 rounded-md border bg-background/95 px-3 py-2 text-xs shadow-lg"></div>
+</div>
+<div id="tip" hidden class="pointer-events-none fixed z-40 max-w-[280px] rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
+
+<script>
+/* <pg-layout-js v1> Playground layout standard: the mobile drawer (scripts/mocks/template/playground.html).
+   Opens from #drawer-btn; closes from #drawer-close, the scrim, Escape, links to #anchors or
+   [data-drawer-close] inside it, and when the window grows past 900px. Mirrors #legend into
+   #drawer-legend. Mocks can call window.pgDrawer.open() / .close(). Keep identical across mocks. */
+(() => {
+  const body = document.body, btn = document.getElementById('drawer-btn');
+  const set = (open) => { body.dataset.drawer = open ? 'open' : ''; btn?.setAttribute('aria-expanded', String(open)); };
+  const close = (refocus) => { if (body.dataset.drawer !== 'open') return; set(false); if (refocus) btn?.focus(); };
+  btn?.addEventListener('click', () => set(body.dataset.drawer !== 'open'));
+  document.getElementById('drawer-close')?.addEventListener('click', () => close(true));
+  document.getElementById('scrim')?.addEventListener('click', () => close(false));
+  document.getElementById('drawer')?.addEventListener('click', (e) => { if (e.target.closest('a[href^="#"], [data-drawer-close]')) close(false); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && body.dataset.drawer === 'open') { e.stopImmediatePropagation(); close(true); } }, true);
+  matchMedia('(min-width: 900px)').addEventListener('change', (m) => { if (m.matches) set(false); });
+  const legend = document.getElementById('legend'), copy = document.getElementById('drawer-legend');
+  if (legend && copy) {
+    const sync = () => { copy.innerHTML = legend.hidden ? '' : legend.innerHTML.trim(); };
+    new MutationObserver(sync).observe(legend, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+    sync();
+  }
+  window.pgDrawer = { open: () => set(true), close: () => close(false) };
+})();
+/* </pg-layout-js> */
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// ================= results CSV =================
+// Shared with scripts/mocks/sg-toto/build.mjs, which imports this block: keep it self-contained.
+// <toto-csv>
+const TOTO_GROUPS = 7;
+function parseToto(text) {
+  const rows = [];
+  for (const line of String(text).replace(/^﻿/, '').split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const cells = [];
+    let cur = '', quoted = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (quoted) {
+        if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; } else if (ch === '"') quoted = false; else cur += ch;
+      } else if (ch === '"') quoted = true;
+      else if (ch === ',') { cells.push(cur); cur = ''; } else cur += ch;
+    }
+    cells.push(cur);
+    rows.push(cells.map((c) => c.trim()));
+  }
+  const head = rows.shift() || [];
+  const col = (name) => head.findIndex((h) => h.toLowerCase() === name.toLowerCase());
+  const iDraw = col('Draw'), iDate = col('Date'), iN1 = col('Winning Number 1'), iAdd = col('Additional Number');
+  if (iDraw < 0 || iDate < 0 || iN1 < 0 || iAdd < 0) throw new Error('Not a ToTo results CSV: expected Draw, Date, Winning Number 1 and Additional Number columns');
+  const iWin = d3range(TOTO_GROUPS).map((g) => [col(`Division ${g + 1} Winners`), col(`Division ${g + 1} Prize`)]);
+  const seen = new Map();
+  for (const r of rows) {
+    const draw = Number(r[iDraw]);
+    if (!Number.isInteger(draw)) continue;
+    const date = r[iDate];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`Draw ${draw}: date "${date}" is not YYYY-MM-DD`);
+    const n = d3range(6).map((i) => Number(r[iN1 + i])).sort((a, b) => a - b);
+    const add = Number(r[iAdd]);
+    const pool = draw >= 2995 ? 49 : 45;
+    const all = [...n, add];
+    if (all.some((x) => !Number.isInteger(x) || x < 1 || x > pool) || new Set(all).size !== 7) throw new Error(`Draw ${draw}: numbers ${all.join(' ')} are not seven different numbers from 1 to ${pool}`);
+    let prizes = null;
+    if (iWin.every(([w, p]) => w >= 0 && p >= 0) && r[iWin[0][0]] !== '' && r[iWin[0][0]] != null) {
+      prizes = iWin.map(([w, p]) => [Number(r[w]) || 0, Number(String(r[p]).replace(/,/g, '')) || 0]);
+    }
+    seen.set(draw, { draw, date, n, add, prizes });
+  }
+  const draws = [...seen.values()].sort((a, b) => a.draw - b.draw);
+  if (!draws.length) throw new Error('No draws found in the CSV');
+  return draws;
+}
+function d3range(n) { return Array.from({ length: n }, (_, i) => i); }
+const toCompact = (d) => [d.draw, d.date, ...d.n, d.add, d.prizes ? d.prizes.flat() : 0];
+const fromCompact = (a) => ({ draw: a[0], date: a[1], n: a.slice(2, 8), add: a[8], prizes: a[9] ? d3range(TOTO_GROUPS).map((g) => [a[9][g * 2], a[9][g * 2 + 1]]) : null });
+// </toto-csv>
+
+// ================= helpers =================
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const B = { paper: '#15171b', raise: '#1d2026', muted: '#23262d', line: '#2b2f37', ink: '#e4e1d8', ink2: '#b8b5ac', fog: '#8b9099', signal: '#1fefd7', amber: '#f6c453', pink: '#e58fb0', sky: '#7cc4dc' };
+// draws since a number was last seen: fresh (cyan) to overdue (amber, then pink)
+const RAMP_STOPS = ['#174d49', '#1fefd7', '#f6c453', '#e58fb0'];
+const RAMP = d3.interpolateRgbBasis(RAMP_STOPS);
+const GAP_MAX = 30;
+const gapColor = (g) => RAMP(Math.min(1, g / GAP_MAX));
+let toastTimer;
+const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3600); };
+const f = { int: d3.format(','), pct: d3.format('.1%'), pct2: d3.format('.2%'), d2: d3.format('.2f'), d3: d3.format('.3f'), money: (v) => `$${d3.format(',.0f')(v)}`, big: (v) => (v >= 1e6 ? `$${d3.format('.2f')(v / 1e6)}M` : `$${d3.format(',.0f')(v)}`) };
+const fmtDate = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+const fmtShort = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const choose = (n, k) => { if (k < 0 || k > n) return 0; let r = 1; for (let i = 1; i <= k; i++) r = (r * (n - k + i)) / i; return r; };
+const mulberry32 = (a) => () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+
+// shadcn/ui-style building blocks for the panel
+const btnCls = 'inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border bg-background px-3 text-xs font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50';
+const primaryCls = 'inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50';
+const kpi = (label, value, sub = '') => `<div class="min-w-0 rounded-lg border bg-background/40 px-2.5 py-2"><div class="truncate text-[11px] text-muted-foreground">${esc(label)}</div><div class="truncate text-sm font-semibold">${value}</div>${sub ? `<div class="truncate text-[11px] text-muted-foreground">${sub}</div>` : ''}</div>`;
+const section = (title, body, icon = '') => `<div class="mt-4"><div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">${icon ? `<i class="fi ${icon}"></i>` : ''}${esc(title)}</div>${body}</div>`;
+const toggle = (opts, value, act) => `<div class="inline-flex h-8 max-w-full items-center overflow-x-auto rounded-md bg-muted p-0.5 text-xs text-muted-foreground">${opts.map(([v, l]) => `<button type="button" data-act="${act}" data-v="${v}" data-state="${String(v) === String(value) ? 'active' : ''}" class="whitespace-nowrap rounded px-2.5 py-1 font-medium transition-colors hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow">${esc(l)}</button>`).join('')}</div>`;
+const row = (k, v) => `<div class="flex items-baseline justify-between gap-3 py-0.5 text-xs"><span class="shrink-0 text-muted-foreground">${k}</span><span class="min-w-0 truncate text-right font-mono text-[12px]">${v}</span></div>`;
+const ball = (k, cls = '', act = 'num') => `<button type="button" data-act="${act}" data-v="${k}" class="ball ${cls}" aria-label="Number ${k}">${k}</button>`;
+const sw = (on, act, text) => `<button type="button" role="switch" aria-checked="${on}" data-act="${act}" class="flex w-full items-center justify-between gap-3 rounded-md py-1 text-xs"><span>${esc(text)}</span><span class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${on ? 'bg-primary' : 'bg-input'}"><span class="inline-block size-4 rounded-full bg-background shadow transition-transform ${on ? 'translate-x-4' : 'translate-x-0.5'}"></span></span></button>`;
+const note = (html) => `<p class="mt-3 text-[11px] leading-relaxed text-muted-foreground">${html}</p>`;
+
+// ================= browser datastore (IndexedDB) =================
+// The bundled CSV export is the fallback; a newer CSV loaded with "Update data" and saved
+// tickets are kept here. Wrap every call: storage can be blocked.
+const IDB = { name: 'inotives-sg-toto', store: 'kv' };
+function idbOpen() {
+  return new Promise((ok, no) => { const r = indexedDB.open(IDB.name, 1); r.onupgradeneeded = () => r.result.createObjectStore(IDB.store); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+}
+async function idb(mode, fn) {
+  const db = await idbOpen();
+  try { return await new Promise((ok, no) => { const tx = db.transaction(IDB.store, mode), req = fn(tx.objectStore(IDB.store)); tx.oncomplete = () => ok(req?.result); tx.onerror = () => no(tx.error); }); }
+  finally { db.close(); }
+}
+const store = {
+  get: async (key) => { try { return await idb('readonly', (s) => s.get(key)); } catch { return null; } },
+  put: async (key, value) => { try { await idb('readwrite', (s) => s.put(value, key)); return true; } catch { return false; } },
+  del: async (key) => { try { await idb('readwrite', (s) => s.delete(key)); } catch { /* blocked */ } },
+};
+
+// ================= data and stats =================
+const ERA_DRAW = 2995;        // first 6/49 draw, 9 October 2014
+const NUMS = d3.range(1, 50);
+const pool = (d) => (d.draw >= ERA_DRAW ? 49 : 45);
+const lowCut = (d) => (d.draw >= ERA_DRAW ? 24 : 22);   // the results file's Low/High split
+const GROUPS = [
+  { g: 1, m: 6, add: false, text: '6 numbers' }, { g: 2, m: 5, add: true, text: '5 + additional' }, { g: 3, m: 5, add: false, text: '5 numbers' },
+  { g: 4, m: 4, add: true, text: '4 + additional' }, { g: 5, m: 4, add: false, text: '4 numbers' }, { g: 6, m: 3, add: true, text: '3 + additional' }, { g: 7, m: 3, add: false, text: '3 numbers' },
+];
+const groupOf = (m, addHit) => (m === 6 ? 1 : m === 5 ? (addHit ? 2 : 3) : m === 4 ? (addHit ? 4 : 5) : m === 3 ? (addHit ? 6 : 7) : 0);
+// exact odds for one ticket of six numbers in 6/49 with an additional number
+const P_MATCH = d3.range(7).map((m) => (choose(6, m) * choose(43, 6 - m)) / choose(49, 6));
+const P_GROUP = { 1: P_MATCH[6], 2: P_MATCH[5] / 43, 3: (P_MATCH[5] * 42) / 43, 4: (P_MATCH[4] * 2) / 43, 5: (P_MATCH[4] * 41) / 43, 6: (P_MATCH[3] * 3) / 43, 7: (P_MATCH[3] * 40) / 43 };
+const P_PRIZE = P_MATCH[3] + P_MATCH[4] + P_MATCH[5] + P_MATCH[6];
+const E_MATCH = 36 / 49;
+
+// Draw days: regular draws are on Mondays and Thursdays; other days are special draws (Hongbao and others)
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_NAMES = { 1: 'Monday', 4: 'Thursday' };
+const weekday = (d) => new Date(`${d.date}T00:00:00Z`).getUTCDay();
+// the next regular draw after the latest one in the data
+function nextDrawDay() {
+  const t = new Date(`${D[D.length - 1].date}T00:00:00Z`);
+  do t.setUTCDate(t.getUTCDate() + 1); while (![1, 4].includes(t.getUTCDay()));
+  return { w: t.getUTCDay(), date: t.toISOString().slice(0, 10) };
+}
+const dayOfTarget = (t) => (t < D.length ? weekday(D[t]) : nextDrawDay().w);
+
+// derived from the loaded draws; cleared when the data changes
+let CACHE = {};
+// What a $1 ticket in group g would have been paid in draw d. Groups 1 to 4 share a pool, so you
+// join that draw's winners; with no winner the pool is unknown and the typical pool stands in.
+// Groups 5 to 7 pay a fixed prize.
+function medianPool(g) {
+  CACHE.pools ??= {};
+  if (CACHE.pools[g] == null) {
+    const v = D.filter((d) => d.prizes && d.prizes[g - 1][0] > 0).map((d) => d.prizes[g - 1][0] * d.prizes[g - 1][1]);
+    CACHE.pools[g] = Math.max(g === 1 ? 1e6 : 0, d3.median(v) || 0);
+  }
+  return CACHE.pools[g];
+}
+function payout(d, g) {
+  if (!g || !d.prizes) return 0;
+  const [w, p] = d.prizes[g - 1];
+  if (g >= 5) return p || { 5: 50, 6: 25, 7: 10 }[g];
+  return (w > 0 ? w * p : medianPool(g)) / (w + 1);
+}
+// expected return of a random ticket in draw d: all groups, and the everyday Groups 5 to 7 only
+const chanceReturn = (d, minG = 1) => d3.sum(GROUPS.filter((x) => x.g >= minG), (x) => P_GROUP[x.g] * payout(d, x.g));
+
+// How much players favour each number. Group 7 winners in a draw rise with ticket sales and with
+// how popular the six drawn numbers are. Take out sales with the median of the 31 draws around
+// each draw (in logs), then fit the rest to the six numbers drawn (ridge regression).
+function popularity() {
+  if (CACHE.pop) return CACHE.pop;
+  const rows = [];
+  for (let i = ERA; i < D.length; i++) {
+    const d = D[i];
+    if (d.prizes && d.prizes[6][0] > 0 && [1, 4].includes(weekday(d))) rows.push({ n: d.n, y: Math.log(d.prizes[6][0]) });
+  }
+  rows.forEach((r, i) => { r.r = r.y - d3.median(rows.slice(Math.max(0, i - 15), i + 16), (x) => x.y); });
+  const K = 49, A = d3.range(K).map(() => new Array(K).fill(0)), b = new Array(K).fill(0);
+  for (const r of rows) for (const x of r.n) { b[x - 1] += r.r; for (const z of r.n) A[x - 1][z - 1]++; }
+  for (let i = 0; i < K; i++) A[i][i] += 5;
+  for (let i = 0; i < K; i++) {
+    let piv = i;
+    for (let r = i + 1; r < K; r++) if (Math.abs(A[r][i]) > Math.abs(A[piv][i])) piv = r;
+    [A[i], A[piv]] = [A[piv], A[i]]; [b[i], b[piv]] = [b[piv], b[i]];
+    for (let r = i + 1; r < K; r++) { const m = A[r][i] / A[i][i]; for (let c = i; c < K; c++) A[r][c] -= m * A[i][c]; b[r] -= m * b[i]; }
+  }
+  const beta = new Array(K + 1).fill(0);
+  for (let i = K - 1; i >= 0; i--) { let v = b[i]; for (let c = i + 1; c < K; c++) v -= A[i][c] * beta[c + 1]; beta[i + 1] = v / A[i][i]; }
+  // as a share: +0.25 means about 25% more Group 7 winners when the number is drawn
+  const share = beta.map((v) => Math.exp(v) - 1);
+  const ranked = NUMS.slice().sort((x, y) => share[y] - share[x]);
+  CACHE.pop = { share, ranked, draws: rows.length };
+  return CACHE.pop;
+}
+
+let D = [];          // draws, oldest first
+let ERA = 0;         // index of the first 6/49 draw
+const WINDOWS = { 52: { label: 'Last 52', long: 'the last 52 draws' }, 200: { label: 'Last 200', long: 'the last 200 draws' }, era: { label: '6/49 era', long: 'every 6/49 draw since Oct 2014' }, all: { label: 'All', long: 'every draw since July 2008' } };
+// [start, end] indices of a window that ends at draw index `end`
+function range(win, end = D.length - 1) {
+  if (win === 'all') return [0, end];
+  if (win === 'era') return [Math.min(ERA, end), end];
+  return [Math.max(0, end - Number(win) + 1), end];
+}
+// counts, chance and recency for each number over draws [a, b]
+function freq(a, b) {
+  const count = new Array(50).fill(0), addCount = new Array(50).fill(0), expect = new Array(50).fill(0), last = new Array(50).fill(-1);
+  for (let i = a; i <= b; i++) {
+    const d = D[i], p = pool(d);
+    for (const x of d.n) { count[x]++; last[x] = i; }
+    addCount[d.add]++;
+    for (let k = 1; k <= p; k++) expect[k] += 6 / p;
+  }
+  return { a, b, draws: b - a + 1, count, addCount, expect, last };
+}
+// draws since each number last came up, as of draw index `end`
+function sinceSeen(end = D.length - 1) {
+  const since = new Array(50).fill(null);
+  for (let i = end, left = 49; i >= 0 && left; i--) for (const x of D[i].n) if (since[x] == null) { since[x] = end - i; left--; }
+  for (const k of NUMS) if (since[k] == null) since[k] = end + 1;
+  return since;
+}
+// chi-square on number counts. Six balls a draw without replacement: scale by (N-1)/(N-k).
+const normCdf = (z) => { const t = 1 / (1 + 0.2316419 * Math.abs(z)), dd = 0.3989423 * Math.exp((-z * z) / 2), p = dd * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))); return z > 0 ? 1 - p : p; };
+const chiP = (x, k) => { if (k <= 0) return 1; const z = (Math.cbrt(x / k) - (1 - 2 / (9 * k))) / Math.sqrt(2 / (9 * k)); return 1 - normCdf(z); };
+function spreadTest(F) {
+  let x = 0;
+  for (const k of NUMS) if (F.expect[k] > 0) x += (F.count[k] - F.expect[k]) ** 2 / F.expect[k];
+  x *= 48 / 43;
+  return { x, p: chiP(x, 48) };
+}
+const pReading = (p) => (p < 0.01 ? 'unusual: worth a second look' : p < 0.05 ? 'a little uneven, as about one test in twenty will be by chance' : 'in line with chance');
+
+// ================= stage =================
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.appendChild(renderer.domElement);
+const labelR = new CSS2DRenderer(); labelR.domElement.className = 'labels'; stage.appendChild(labelR.domElement);
+const label = (parent, html, x, y, z, cls = '') => {
+  const el = document.createElement('div'); el.className = `lbl ${cls}`; el.innerHTML = html;
+  const o = new CSS2DObject(el); o.position.set(x, y, z); parent.add(o); return o;
+};
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight('#cfe9ff', B.paper, 1.25));
+const keyLight = new THREE.DirectionalLight('#ffffff', 1.5); keyLight.position.set(-8, 16, 12); scene.add(keyLight);
+const camera = new THREE.PerspectiveCamera(36, 1, 0.05, 400);
+camera.position.set(0, 11, 14);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.49; controls.target.set(0, 1, 0);
+
+const panelOffset = () => (innerWidth >= 900 ? ($('#drawer').offsetWidth + 24) / 2 : 0);
+const resize = () => {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h); labelR.setSize(w, h); camera.aspect = w / h;
+  const off = panelOffset();
+  if (off) camera.setViewOffset(w, h, -off, 0, w, h); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+};
+addEventListener('resize', resize);
+
+// camera flights: ease the camera and its target to a new framing
+let flight = null;
+function fly(pos, target, instant = false) {
+  const to = { pos: new THREE.Vector3(...pos), target: new THREE.Vector3(...target) };
+  if (instant || reduceMotion) { camera.position.copy(to.pos); controls.target.copy(to.target); flight = null; return; }
+  flight = { from: { pos: camera.position.clone(), target: controls.target.clone() }, to, t: 0 };
+}
+// a smaller screen needs the camera further back
+const fit = (dist) => dist * (innerWidth < 600 ? 1.45 : innerWidth < 900 ? 1.2 : 1);
+
+// view lifecycle: each view builds into its own group; `current` holds what it needs per frame
+let group = new THREE.Group(); scene.add(group);
+let current = null;
+function clearStage() {
+  scene.remove(group);
+  group.traverse((o) => { if (o.element instanceof Element) o.element.remove(); o.geometry?.dispose(); if (Array.isArray(o.material)) o.material.forEach((m) => m.dispose()); else o.material?.dispose(); });
+  group = new THREE.Group(); scene.add(group);
+  scene.fog = null;
+  current = null;
+}
+const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.05, ...extra });
+
+// ================= state =================
+const VIEWS = {
+  board: { name: 'Board', icon: 'fi-rr-apps' },
+  history: { name: 'History', icon: 'fi-rr-time-past' },
+  patterns: { name: 'Patterns', icon: 'fi-rr-chart-histogram' },
+  picks: { name: 'Picks', icon: 'fi-rr-magic-wand' },
+  ziwei: { name: '紫微', icon: 'fi-rr-sparkles' },
+};
+const state = {
+  view: 'board', win: '200', sel: null,
+  hist: { i: 0, jackpot: true, playing: false },
+  metric: 'sum',
+  picks: { method: 'balanced', win: '200', ticket: null, bt: null, btN: 500, metric: 'prize' },
+  zw: { src: 'draw', target: 'next', past: null, birth: { date: '1990-01-01', time: 6, gender: '男' }, chart: null, error: null },
+  tickets: [], source: 'bundled',
+};
+
+// ================= board (shared by Board and Picks) =================
+const S = 1.25, H0 = 0.12, HS = 2.2;
+const cellXZ = (k) => [((k - 1) % 7 - 3) * S, (Math.floor((k - 1) / 7) - 3) * S];
+function buildBoard(F, since, opts = {}) {
+  const cols = {}, picks = [];
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(7 * S + 0.5, 0.08, 7 * S + 0.5), mat(B.raise, { roughness: 0.9 }));
+  plate.position.y = -0.04; group.add(plate);
+  const colGeo = new THREE.CylinderGeometry(0.36, 0.36, 1, 28); colGeo.translate(0, 0.5, 0);
+  const ballGeo = new THREE.SphereGeometry(0.33, 28, 18);
+  for (const k of NUMS) {
+    const [x, z] = cellXZ(k);
+    const ok = F.expect[k] > 0;
+    const ratio = ok ? F.count[k] / F.expect[k] : 0;
+    const color = new THREE.Color(gapColor(since[k]));
+    const col = new THREE.Mesh(colGeo, mat(color, { transparent: true, opacity: 0.88 }));
+    col.position.set(x, 0, z);
+    const ballM = new THREE.Mesh(ballGeo, mat(color, { emissive: color, emissiveIntensity: 0.15 }));
+    ballM.position.set(x, H0, z);
+    const lb = label(ballM, String(k), 0, 0, 0, 'num');
+    group.add(col, ballM);
+    const h = H0 + HS * Math.min(ratio, 2.6);
+    const c = { k, col, ball: ballM, lb, color, h, cur: opts.from?.[k] ?? H0, lift: 0, liftCur: 0, ratio };
+    col.scale.y = c.cur; ballM.position.y = c.cur + 0.33;
+    const pick = () => ({
+      tip: `<div class="font-medium">Number ${k}</div><div class="mt-0.5 text-muted-foreground">Drawn ${F.count[k]} times in ${f.int(F.draws)} draws · chance ${F.expect[k].toFixed(1)}</div><div class="text-muted-foreground">Last seen ${since[k] === 0 ? 'in the latest draw' : `${since[k]} draws ago`}</div>`,
+      click: () => opts.onPick?.(k),
+    });
+    col.userData.pick = pick; ballM.userData.pick = pick;
+    picks.push(col, ballM);
+    cols[k] = c;
+  }
+  // chance: where every column would stand if each number came up equally often
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(7 * S + 0.5, 7 * S + 0.5), new THREE.MeshBasicMaterial({ color: B.signal, transparent: true, opacity: 0.07, side: THREE.DoubleSide, depthWrite: false }));
+  plane.rotation.x = -Math.PI / 2; plane.position.y = H0 + HS; group.add(plane);
+  const edge = new THREE.LineSegments(new THREE.EdgesGeometry(plane.geometry), new THREE.LineBasicMaterial({ color: B.signal, transparent: true, opacity: 0.45 }));
+  edge.rotation.x = -Math.PI / 2; edge.position.y = H0 + HS; group.add(edge);
+  label(group, 'chance', 3.5 * S + 0.3, H0 + HS, 3.5 * S + 0.3, 'tag');
+  return { cols, picks };
+}
+function animateBoard(board, dt) {
+  const k = reduceMotion ? 1 : 1 - Math.exp(-dt * 7);
+  for (const c of Object.values(board.cols)) {
+    c.cur += (c.h - c.cur) * k;
+    c.liftCur += (c.lift - c.liftCur) * k;
+    c.col.scale.y = Math.max(0.001, c.cur);
+    c.ball.position.y = c.cur + 0.33 + c.liftCur;
+  }
+}
+function paintBoard(board, { sel = null, picks = null } = {}) {
+  for (const c of Object.values(board.cols)) {
+    const isSel = c.k === sel, isPick = picks?.includes(c.k);
+    const dim = (sel != null && !isSel) || (picks && !isPick);
+    const color = isSel || isPick ? new THREE.Color(B.amber) : c.color;
+    c.ball.material.color.copy(color); c.ball.material.emissive.copy(color);
+    c.ball.material.emissiveIntensity = isSel || isPick ? 0.55 : 0.15;
+    c.col.material.color.copy(color);
+    c.col.material.opacity = dim ? 0.28 : 0.88;
+    c.lift = isPick ? 1.1 : 0;
+    c.lb.element.className = `lbl num${isSel || isPick ? ' sel' : ''}${dim ? ' dim' : ''}`;
+  }
+}
+const boardHeights = () => (current?.board ? Object.fromEntries(Object.values(current.board.cols).map((c) => [c.k, c.cur])) : null);
+
+function legendBoard(extra = '') {
+  $('#legend').innerHTML = `<div class="mb-1 font-medium text-foreground">Draws since last seen</div><div class="h-2 w-44 rounded-full" style="background:linear-gradient(90deg,${RAMP_STOPS.join(',')})"></div><div class="mt-0.5 flex w-44 justify-between font-mono text-[10px]"><span>0</span><span>15</span><span>${GAP_MAX}+</span></div><div class="mt-1.5">Height: times drawn against chance</div>${extra}<div class="mt-1.5 border-t pt-1.5">Drag to orbit · scroll to zoom</div>`;
+}
+
+// ================= view: board =================
+function showBoard() {
+  const from = boardHeights();
+  clearStage();
+  const end = D.length - 1, [a] = range(state.win, end);
+  const F = freq(a, end), since = sinceSeen(end);
+  const board = buildBoard(F, since, { from, onPick: (k) => { state.sel = state.sel === k ? null : k; paintBoard(board, { sel: state.sel }); renderPanel(); } });
+  paintBoard(board, { sel: state.sel });
+  current = { board, picks: board.picks, F, since, tick: (dt) => animateBoard(board, dt) };
+  legendBoard();
+}
+function companions(k, F) {
+  const pair = new Array(50).fill(0), exp = new Array(50).fill(0);
+  for (let i = F.a; i <= F.b; i++) {
+    const d = D[i], p = pool(d);
+    if (k <= p) for (let j = 1; j <= p; j++) if (j !== k) exp[j] += 30 / (p * (p - 1));
+    if (!d.n.includes(k)) continue;
+    for (const x of d.n) if (x !== k) pair[x]++;
+  }
+  return NUMS.filter((j) => j !== k).map((j) => ({ j, c: pair[j], e: exp[j] })).sort((x, y) => y.c - x.c || x.j - y.j).slice(0, 6);
+}
+function gapsOf(k) {
+  const gaps = []; let last = null;
+  for (let i = ERA; i < D.length; i++) if (D[i].n.includes(k)) { if (last != null) gaps.push(i - last); last = i; }
+  return { gaps, open: last == null ? D.length - ERA : D.length - 1 - last };
+}
+function gapChart(gaps, open) {
+  const all = [...gaps, open], max = Math.max(...all, 1), w = 312, h = 46, bw = w / all.length;
+  const bars = all.map((g, i) => `<rect x="${(i * bw).toFixed(2)}" y="${(h - (g / max) * h).toFixed(1)}" width="${Math.max(0.6, bw - 0.6).toFixed(2)}" height="${((g / max) * h).toFixed(1)}" fill="${i === all.length - 1 ? B.amber : gapColor(g)}" opacity="${i === all.length - 1 ? 1 : 0.8}"/>`).join('');
+  const mean = (49 / 6), y = h - (mean / max) * h;
+  return `<svg viewBox="0 0 ${w} ${h + 2}" class="block h-12 w-full" preserveAspectRatio="none">${bars}<line x1="0" x2="${w}" y1="${y}" y2="${y}" stroke="${B.signal}" stroke-dasharray="3 3" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function panelBoard() {
+  const { F, since } = current;
+  const winToggle = toggle(Object.entries(WINDOWS).map(([k, v]) => [k, v.label]), state.win, 'win');
+  const ranked = NUMS.filter((k) => F.expect[k] > 0).map((k) => ({ k, r: F.count[k] / F.expect[k] }));
+  const hot = [...ranked].sort((x, y) => y.r - x.r || since[x.k] - since[y.k]).slice(0, 6).map((x) => x.k);
+  const cold = [...ranked].sort((x, y) => x.r - y.r || since[y.k] - since[x.k]).slice(0, 6).map((x) => x.k);
+  const overdue = [...NUMS].sort((x, y) => since[y] - since[x]).slice(0, 6);
+  const first = D[F.a], last = D[F.b];
+  let html = `<h1 class="text-lg font-semibold leading-tight">ToTo number board</h1>
+    <p class="mt-1 text-xs text-muted-foreground">Each column is a number. Its height is how often it was drawn in ${esc(WINDOWS[state.win].long)}, against the chance plane where every number would stand if all came up equally.</p>
+    <div class="mt-3">${winToggle}</div>
+    <div class="mt-3 grid grid-cols-2 gap-2">${kpi('Draws', f.int(F.draws), `${fmtShort(first.date)} to ${fmtShort(last.date)}`)}${kpi('Latest draw', `#${last.draw}`, fmtShort(last.date))}</div>`;
+  if (state.sel != null) {
+    const k = state.sel, c = companions(k, F), g = gapsOf(k);
+    const mean = g.gaps.length ? d3.mean(g.gaps) : null;
+    html += section(`Number ${k}`, `<div class="grid grid-cols-2 gap-2">${kpi('Drawn', `${F.count[k]}×`, `chance ${F.expect[k].toFixed(1)}`)}${kpi('Last seen', since[k] === 0 ? 'Latest draw' : `${since[k]} draws ago`, D[D.length - 1 - since[k]] ? fmtShort(D[D.length - 1 - since[k]].date) : '')}${kpi('Longest gap', g.gaps.length ? `${Math.max(...g.gaps)} draws` : '–', 'in the 6/49 era')}${kpi('As additional', `${F.addCount[k]}×`, `chance ${(F.draws / 49).toFixed(1)}`)}</div>
+      <div class="mt-3 text-[11px] text-muted-foreground">Gaps between appearances since Oct 2014 (amber: the current wait; dashed: the average gap by chance, ${(49 / 6).toFixed(1)} draws${mean ? `; its own average ${mean.toFixed(1)}` : ''})</div>
+      <div class="mt-1 rounded-md border bg-background/40 p-1.5">${gapChart(g.gaps, g.open)}</div>
+      <div class="mt-3 text-[11px] text-muted-foreground">Drawn with it most often in this window (chance ${c[0] ? c[0].e.toFixed(1) : '–'} each)</div>
+      <div class="mt-1.5 flex flex-wrap gap-1.5">${c.map((x) => `<span class="inline-flex items-center gap-1">${ball(x.j, 'sm')}<span class="font-mono text-[11px] text-muted-foreground">${x.c}</span></span>`).join('')}</div>
+      <button type="button" data-act="num" data-v="${k}" class="${btnCls} mt-3 w-full"><i class="fi fi-rr-cross-small"></i>Clear selection</button>`, 'fi-rr-bullseye');
+  }
+  const t = spreadTest(F);
+  html += section('Hot in this window', `<div class="flex flex-wrap gap-1.5">${hot.map((k) => ball(k, k === state.sel ? 'pick' : '')).join('')}</div>`, 'fi-rr-flame');
+  html += section('Cold in this window', `<div class="flex flex-wrap gap-1.5">${cold.map((k) => ball(k, k === state.sel ? 'pick' : '')).join('')}</div>`, 'fi-rr-snowflake');
+  html += section('Longest wait', `<div class="flex flex-wrap gap-1.5">${overdue.map((k) => ball(k, k === state.sel ? 'pick' : '')).join('')}</div><p class="mt-1.5 text-[11px] text-muted-foreground">${overdue.map((k) => `${k}: ${since[k]}`).join(' · ')} draws</p>`, 'fi-rr-hourglass-end');
+  html += section('Is the spread uneven?', state.win === 'all'
+    ? '<p class="text-xs text-muted-foreground">Pick a window inside the 6/49 era to test the spread: the two games had different numbers of balls.</p>'
+    : `<div class="rounded-lg border bg-background/40 p-3 text-xs">${row('Chi-square, 48 df', f.d2(t.x))}${row('p-value', f.d3(t.p))}<p class="mt-1.5 leading-relaxed text-ink-2">The spread of counts is ${pReading(t.p)}. Hot and cold numbers are what a fair draw looks like over a short window.</p></div>`, 'fi-rr-scale');
+  html += note('Tap a column or a number to see its gaps and the numbers drawn with it. Data: Singapore Pools results; the game had 45 balls until draw 2994, so counts are set against each draw\'s own chance.');
+  return html;
+}
+
+// ================= view: history =================
+const HX = 0.3, HZ = 0.16;
+const hx = (k) => (k - 25) * HX;
+const hz = (i) => (D.length - 1 - i) * HZ;
+function pool1(d) { return d.prizes ? d.prizes[0][0] * d.prizes[0][1] : null; }
+function showHistory() {
+  clearStage();
+  scene.fog = new THREE.Fog(B.paper, 14, 46);
+  const N = D.length;
+  const sph = new THREE.SphereGeometry(0.075, 10, 8);
+  const main = new THREE.InstancedMesh(sph, mat(B.signal, { emissive: B.signal, emissiveIntensity: 0.2 }), N * 6);
+  const adds = new THREE.InstancedMesh(sph, mat(B.pink, { emissive: B.pink, emissiveIntensity: 0.25 }), N);
+  const m4 = new THREE.Matrix4();
+  D.forEach((d, i) => {
+    d.n.forEach((x, j) => { m4.makeTranslation(hx(x), 0.08, -hz(i)); main.setMatrixAt(i * 6 + j, m4); });
+    m4.makeTranslation(hx(d.add), 0.08, -hz(i)); adds.setMatrixAt(i, m4);
+  });
+  main.userData.pick = (id) => drawPick(Math.floor(id / 6));
+  adds.userData.pick = (id) => drawPick(id);
+  group.add(main, adds);
+  // floor and number lanes
+  const len = hz(0) + 2;
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(49 * HX + 1.2, len), mat(B.raise, { roughness: 0.95 }));
+  floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0, -len / 2 + 1); group.add(floor);
+  const lanePts = [];
+  for (let k = 0; k <= 50; k += 5) { const x = hx(Math.max(1, Math.min(49, k))) ; lanePts.push(x, 0.005, 1, x, 0.005, -len + 1); }
+  const lanes = new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(lanePts, 3)), new THREE.LineBasicMaterial({ color: B.line }));
+  group.add(lanes);
+  // the switch from 45 to 49 balls
+  const eraZ = -(hz(ERA) + HZ / 2);
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(49 * HX + 1.2, 1.2), new THREE.MeshBasicMaterial({ color: B.amber, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false }));
+  wall.position.set(0, 0.6, eraZ); group.add(wall);
+  label(group, '<b>6/45 → 6/49</b> · Oct 2014', hx(49) + 0.2, 1.25, eraZ, 'tag');
+  // Group 1 pools: a bar per draw with prize figures, a stub when nobody won and it rolled over
+  const jx = hx(1) - 0.9;
+  const withP = D.map((d, i) => ({ d, i, pool: pool1(d) })).filter((x) => x.pool != null);
+  const maxPool = d3.max(withP, (x) => x.pool) || 1;
+  const box = new THREE.BoxGeometry(0.42, 1, HZ * 0.8); box.translate(0, 0.5, 0);
+  const jack = new THREE.InstancedMesh(box, mat('#ffffff', { roughness: 0.6 }), withP.length);
+  withP.forEach((x, j) => {
+    const h = x.pool > 0 ? 0.12 + (x.pool / maxPool) * 3.2 : 0.06;
+    m4.compose(new THREE.Vector3(jx, 0, -hz(x.i)), new THREE.Quaternion(), new THREE.Vector3(1, h, 1)); jack.setMatrixAt(j, m4);
+    jack.setColorAt(j, new THREE.Color(x.pool > 0 ? B.signal : B.amber));
+  });
+  jack.userData.pick = (j) => drawPick(withP[j].i);
+  jack.visible = state.hist.jackpot;
+  group.add(jack);
+  // the selected draw: a highlight slab, seven big balls and number ticks that travel with it
+  const sel = new THREE.Group(); group.add(sel);
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(49 * HX + 1.2, 0.02, HZ * 1.1), new THREE.MeshBasicMaterial({ color: B.amber, transparent: true, opacity: 0.18, depthWrite: false }));
+  sel.add(slab);
+  const big = new THREE.SphereGeometry(0.17, 24, 16);
+  const balls = d3.range(7).map((j) => {
+    const color = j < 6 ? B.amber : B.pink;
+    const m = new THREE.Mesh(big, mat(color, { emissive: color, emissiveIntensity: 0.45 }));
+    m.userData.lb = label(m, '', 0, 0.36, 0, 'tag'); sel.add(m); return m;
+  });
+  for (const k of [1, 10, 20, 30, 40, 49]) label(sel, String(k), hx(k), 0.02, 0.5, '');
+  const jackTag = label(sel, '', jx, 0, 0.1, 'tag');
+  current = {
+    picks: state.hist.jackpot ? [main, adds, jack] : [main, adds], jack, main, adds, sel, balls, jackTag, maxPool, drop: 1, stepT: 0,
+    tick: (dt) => {
+      const c = current;
+      if (state.hist.playing) {
+        c.stepT += dt;
+        if (c.stepT > 0.16) { c.stepT = 0; if (state.hist.i < D.length - 1) selectDraw(state.hist.i + 1, { follow: true }); else { state.hist.playing = false; renderPanel(); } }
+      }
+      c.drop = reduceMotion ? 1 : Math.min(1, c.drop + dt * 3.2);
+      const e = 1 - (1 - c.drop) ** 3;
+      c.balls.forEach((b, j) => { b.position.y = 0.17 + (1 - e) * (1.6 + j * 0.15); });
+    },
+  };
+  placeSelection(true);
+  legendHistory();
+}
+function drawPick(i) {
+  const d = D[i], p = pool1(d);
+  return {
+    tip: `<div class="font-medium">Draw ${d.draw} · ${fmtShort(d.date)}</div><div class="mt-0.5 font-mono">${d.n.join(' ')} <span class="text-pink">+${d.add}</span></div>${p != null ? `<div class="text-muted-foreground">${p > 0 ? `Group 1: ${f.big(p)} to ${d.prizes[0][0]} winner${d.prizes[0][0] > 1 ? 's' : ''}` : 'Group 1 not won: rolled over'}</div>` : ''}`,
+    click: () => selectDraw(i),
+  };
+}
+function placeSelection(instant = false, move = true) {
+  const c = current, i = state.hist.i, d = D[i], z = -hz(i);
+  c.sel.position.z = z;
+  [...d.n, d.add].forEach((x, j) => { c.balls[j].position.x = hx(x); c.balls[j].userData.lb.element.innerHTML = `<b>${x}</b>`; });
+  const p = pool1(d);
+  c.jackTag.element.innerHTML = p == null ? '' : p > 0 ? `<b>${f.big(p)}</b>` : 'rolled over';
+  c.jackTag.position.y = p > 0 ? 0.25 + (p / c.maxPool) * 3.2 : 0.35;
+  c.jackTag.visible = state.hist.jackpot && p != null;
+  c.drop = 0;
+  if (!move) return;
+  const dist = fit(1);
+  fly([0.8 * dist, 6.4 * dist, z + 12.5 * dist], [0, 0, z - 3], instant);
+}
+function selectDraw(i, { follow = false } = {}) {
+  state.hist.i = Math.max(0, Math.min(D.length - 1, i));
+  if (current?.sel) placeSelection(false, !follow);
+  renderPanel();
+}
+function legendHistory() {
+  $('#legend').innerHTML = `<div class="mb-1 font-medium text-foreground">Each row is a draw</div>
+    <div class="flex items-center gap-2"><span class="inline-block size-2.5 rounded-full" style="background:${B.signal}"></span>Winning number</div>
+    <div class="flex items-center gap-2"><span class="inline-block size-2.5 rounded-full" style="background:${B.pink}"></span>Additional number</div>
+    ${state.hist.jackpot ? `<div class="mt-1 flex items-center gap-2"><span class="inline-block h-3 w-1.5 rounded-sm" style="background:${B.signal}"></span>Group 1 pool, when won</div><div class="flex items-center gap-2"><span class="inline-block h-1.5 w-1.5 rounded-sm" style="background:${B.amber}"></span>Not won, rolled over</div>` : ''}
+    <div class="mt-1.5 border-t pt-1.5">Drag to orbit · scroll to zoom</div>`;
+}
+function rollRuns() {
+  const runs = []; let start = null;
+  D.forEach((d, i) => {
+    if (!d.prizes) return;
+    if (d.prizes[0][0] === 0) { if (start == null) start = i; } else if (start != null) { runs.push({ start, end: i, len: i - start, pool: pool1(d) }); start = null; }
+  });
+  if (start != null) runs.push({ start, end: null, len: D.length - start, pool: null });
+  return runs.sort((a, b) => b.len - a.len).slice(0, 4);
+}
+function panelHistory() {
+  const i = state.hist.i, d = D[i], prev = D[i - 1];
+  const repeats = prev ? d.n.filter((x) => prev.n.includes(x)) : [];
+  const odd = d.n.filter((x) => x % 2).length, low = d.n.filter((x) => x <= lowCut(d)).length;
+  const prizes = d.prizes ? `<table class="w-full text-xs"><thead><tr class="text-[11px] text-muted-foreground"><th class="py-1 text-left font-medium">Group</th><th class="py-1 text-left font-medium">To win</th><th class="py-1 text-right font-medium">Winners</th><th class="py-1 text-right font-medium">Prize each</th></tr></thead><tbody>${GROUPS.map((g, j) => `<tr class="border-t"><td class="py-1">${g.g}</td><td class="py-1 text-muted-foreground">${g.text}</td><td class="py-1 text-right font-mono">${f.int(d.prizes[j][0])}</td><td class="py-1 text-right font-mono">${d.prizes[j][0] ? f.money(d.prizes[j][1]) : '–'}</td></tr>`).join('')}</tbody></table>`
+    : '<p class="text-xs text-muted-foreground">The results file has no prize figures for this draw (they start in June 2011, and the newest draw may not have them yet).</p>';
+  const withP = D.map((x, j) => ({ j, p: pool1(x), w: x.prizes?.[0][0] })).filter((x) => x.p > 0).sort((a, b) => b.p - a.p).slice(0, 5);
+  const runs = rollRuns();
+  return `<h1 class="text-lg font-semibold leading-tight">Draw ${d.draw}</h1>
+    <p class="mt-1 text-xs text-muted-foreground">${fmtDate(d.date)}${d.draw < ERA_DRAW ? ' · 6/45 game' : ''}</p>
+    <div class="mt-3 flex flex-wrap items-center gap-1.5">${d.n.map((x) => `<span class="ball hit">${x}</span>`).join('')}<span class="text-muted-foreground">+</span><span class="ball add">${d.add}</span></div>
+    <div class="mt-3 flex items-center gap-1.5">
+      <button type="button" data-act="hstep" data-v="-1" class="${btnCls}" aria-label="Previous draw" ${i === 0 ? 'disabled' : ''}><i class="fi fi-rr-angle-small-left"></i></button>
+      <button type="button" data-act="hplay" class="${primaryCls} flex-1"><i class="fi ${state.hist.playing ? 'fi-rr-pause' : 'fi-rr-play'}"></i>${state.hist.playing ? 'Pause' : i === D.length - 1 ? 'Replay from the start' : 'Replay from here'}</button>
+      <button type="button" data-act="hstep" data-v="1" class="${btnCls}" aria-label="Next draw" ${i === D.length - 1 ? 'disabled' : ''}><i class="fi fi-rr-angle-small-right"></i></button>
+    </div>
+    <form data-form="jump" class="mt-2 flex gap-1.5"><input name="q" placeholder="Draw number or date (2019-03-21)" class="h-8 min-w-0 flex-1 rounded-md border border-input bg-background px-2.5 text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" /><button class="${btnCls}">Go</button></form>
+    <div class="mt-3 grid grid-cols-2 gap-2">${kpi('Sum', d3.sum(d.n), 'of the six numbers')}${kpi('Odd / even', `${odd} / ${6 - odd}`)}${kpi('Low / high', `${low} / ${6 - low}`, `low is 1–${lowCut(d)}`)}${kpi('Repeats', repeats.length ? repeats.join(', ') : 'None', 'from the draw before')}</div>
+    ${section('Prizes', prizes, 'fi-rr-trophy')}
+    ${section('Jackpots', `${sw(state.hist.jackpot, 'jackpot', 'Show Group 1 pools along the wall')}
+      <div class="mt-2 text-[11px] text-muted-foreground">Biggest Group 1 pools (winners × prize)</div>
+      <div class="mt-1 space-y-0.5">${withP.map((x) => `<button type="button" data-act="hgo" data-v="${x.j}" class="flex w-full items-baseline justify-between gap-3 rounded-md px-2 py-1 text-left text-xs hover:bg-accent"><span>Draw ${D[x.j].draw} · ${fmtShort(D[x.j].date)}</span><span class="font-mono">${f.big(x.p)}${x.w > 1 ? ` <span class="text-muted-foreground">÷${x.w}</span>` : ''}</span></button>`).join('')}</div>
+      <div class="mt-2 text-[11px] text-muted-foreground">Longest runs without a Group 1 winner</div>
+      <div class="mt-1 space-y-0.5">${runs.map((r) => `<button type="button" data-act="hgo" data-v="${r.end ?? D.length - 1}" class="flex w-full items-baseline justify-between gap-3 rounded-md px-2 py-1 text-left text-xs hover:bg-accent"><span>${r.len} draws to ${r.end == null ? 'now' : fmtShort(D[r.end].date)}</span><span class="font-mono">${r.pool ? f.big(r.pool) : 'still rolling'}</span></button>`).join('')}</div>`, 'fi-rr-sack-dollar')}
+    ${note('Tap a ball or a jackpot bar to open that draw. The fog hides older draws until you fly back to them.')}`;
+}
+
+// ================= view: patterns =================
+// exact chance for each measure in 6/49, against the 6/49 draws
+const METRICS = {
+  sum: { name: 'Sum of the six', icon: 'fi-rr-calculator', about: 'Add up the six winning numbers. Sums bunch in the middle because there are far more ways to make 150 than 30.' },
+  odd: { name: 'Odd and even', icon: 'fi-rr-shuffle', about: 'How many of the six are odd. 25 of the 49 numbers are odd.' },
+  low: { name: 'Low and high', icon: 'fi-rr-sort-amount-up', about: 'How many of the six are 1 to 24, the results file\'s low half.' },
+  ranges: { name: 'Ranges covered', icon: 'fi-rr-layers', about: 'How many of the five ranges (1–10, 11–20, 21–30, 31–40, 41–49) the six numbers touch.' },
+  consec: { name: 'Back-to-back', icon: 'fi-rr-link-alt', about: 'Pairs of neighbours in a draw, like 23 and 24.' },
+  repeat: { name: 'Repeats', icon: 'fi-rr-rotate-right', about: 'How many of the six were also winning numbers in the draw before.' },
+  pairs: { name: 'Pairs', icon: 'fi-rr-grid', about: 'How often each pair of numbers came up together, for all 1,176 pairs.' },
+  day: { name: 'Draw day', icon: 'fi-rr-calendar', about: 'Each number on Monday draws against Thursday draws. Special draws on other days are left out.' },
+  popular: { name: 'Player favourites', icon: 'fi-rr-users', about: 'Which numbers players pick more or less, read from how many people won Group 7 in each draw once the trend in ticket sales is taken out. The balls come up equally often; the players do not pick them equally.' },
+};
+const sumDist = (() => {
+  // ways to pick six of 1..49 with each sum
+  const W = d3.range(7).map(() => new Array(300).fill(0)); W[0][0] = 1;
+  for (let x = 1; x <= 49; x++) for (let k = 6; k >= 1; k--) for (let s = 299; s >= x; s--) W[k][s] += W[k - 1][s - x];
+  const total = choose(49, 6);
+  return W[6].map((w) => w / total);
+})();
+function metricData(key) {
+  const E = D.slice(ERA), n = E.length, total = choose(49, 6);
+  const hist = (vals, probs, labels) => labels.map((lab, j) => ({ label: lab, obs: vals.filter((v) => v === j).length, exp: probs[j] * n }));
+  if (key === 'sum') {
+    const bins = d3.range(2, 28).map((b) => b * 10);
+    return bins.map((lo) => ({ label: `${lo}–${lo + 9}`, short: String(lo), obs: E.filter((d) => { const s = d3.sum(d.n); return s >= lo && s < lo + 10; }).length, exp: d3.sum(d3.range(lo, lo + 10), (s) => sumDist[s] || 0) * n }))
+      .filter((b, j, arr) => b.obs || b.exp >= 0.5 || (j > 0 && j < arr.length - 1 && arr[j - 1].exp >= 0.5 && arr[j + 1].exp >= 0.5));
+  }
+  if (key === 'odd') return hist(E.map((d) => d.n.filter((x) => x % 2).length), d3.range(7).map((k) => (choose(25, k) * choose(24, 6 - k)) / total), d3.range(7).map((k) => `${k} odd`));
+  if (key === 'low') return hist(E.map((d) => d.n.filter((x) => x <= 24).length), d3.range(7).map((k) => (choose(24, k) * choose(25, 6 - k)) / total), d3.range(7).map((k) => `${k} low`));
+  if (key === 'ranges') {
+    const sizes = [10, 10, 10, 10, 9], probs = new Array(6).fill(0);
+    const walk = (i, left, ways, used) => { if (i === 5) { if (!left) probs[used] += ways; return; } for (let c = 0; c <= Math.min(left, sizes[i]); c++) walk(i + 1, left - c, ways * choose(sizes[i], c), used + (c > 0)); };
+    walk(0, 6, 1, 0);
+    return hist(E.map((d) => new Set(d.n.map((x) => Math.min(4, Math.floor((x - 1) / 10)))).size), probs.map((p) => p / total), d3.range(6).map((k) => `${k} range${k === 1 ? '' : 's'}`)).slice(1);
+  }
+  if (key === 'consec') return hist(E.map((d) => d.n.filter((x, j) => j && x - d.n[j - 1] === 1).length), d3.range(6).map((j) => (choose(5, j) * choose(44, 6 - j)) / total), d3.range(6).map((j) => `${j} pair${j === 1 ? '' : 's'}`));
+  if (key === 'repeat') {
+    const vals = E.map((d, j) => { const p = j ? E[j - 1] : D[ERA - 1]; return d.n.filter((x) => p.n.includes(x)).length; });
+    return hist(vals, P_MATCH, d3.range(7).map((k) => `${k} repeat${k === 1 ? '' : 's'}`));
+  }
+  return null;
+}
+function binsTest(bins) {
+  // merge thin bins from the edges so every bin expects at least 5 draws
+  const merged = []; let acc = null;
+  for (const b of bins) { acc = acc ? { obs: acc.obs + b.obs, exp: acc.exp + b.exp } : { obs: b.obs, exp: b.exp }; if (acc.exp >= 5) { merged.push(acc); acc = null; } }
+  if (acc) { if (merged.length) { merged.at(-1).obs += acc.obs; merged.at(-1).exp += acc.exp; } else merged.push(acc); }
+  const x = d3.sum(merged, (b) => (b.obs - b.exp) ** 2 / b.exp);
+  return { x, df: merged.length - 1, p: chiP(x, merged.length - 1) };
+}
+function pairCounts() {
+  const c = d3.range(50).map(() => new Array(50).fill(0));
+  for (let i = ERA; i < D.length; i++) { const n = D[i].n; for (let a = 0; a < 6; a++) for (let b = a + 1; b < 6; b++) { c[n[a]][n[b]]++; c[n[b]][n[a]]++; } }
+  return { c, exp: ((D.length - ERA) * 30) / (49 * 48) };
+}
+function showPatterns() {
+  clearStage();
+  if (state.metric === 'pairs') return showPairs();
+  if (state.metric === 'day') return showDay();
+  if (state.metric === 'popular') return showPopular();
+  const bins = metricData(state.metric);
+  const n = bins.length, width = Math.min(15, Math.max(6, n * 0.62)), step = width / n, bw = step * 0.66;
+  const max = d3.max(bins, (b) => Math.max(b.obs, b.exp)) || 1, HMAX = 4.2, hy = (v) => (v / max) * HMAX;
+  const geo = new THREE.BoxGeometry(bw, 1, bw); geo.translate(0, 0.5, 0);
+  const picks = [], bars = [];
+  bins.forEach((b, j) => {
+    const x = -width / 2 + step * (j + 0.5);
+    const z = b.exp > 0 ? (b.obs - b.exp) / Math.sqrt(b.exp) : 0;
+    const color = Math.abs(z) > 2 ? B.amber : B.signal;
+    const m = new THREE.Mesh(geo, mat(color, { transparent: true, opacity: 0.85, emissive: color, emissiveIntensity: 0.12 }));
+    m.position.set(x, 0, 0); m.scale.y = 0.001; m.userData.h = Math.max(0.01, hy(b.obs));
+    m.userData.pick = () => ({ tip: `<div class="font-medium">${esc(b.label)}</div><div class="mt-0.5 text-muted-foreground">${f.int(b.obs)} draws · chance ${b.exp.toFixed(1)}</div>` });
+    group.add(m); picks.push(m); bars.push(m);
+    if (n <= 8 || j % 2 === 0) label(group, esc(b.short ?? b.label), x, -0.05, bw / 2 + 0.35, '');
+  });
+  // what chance predicts, as a line over the bars
+  const pts = bins.map((b, j) => new THREE.Vector3(-width / 2 + step * (j + 0.5), hy(b.exp), 0));
+  const curve = new THREE.CatmullRomCurve3(pts.length > 1 ? pts : [pts[0], pts[0].clone().add(new THREE.Vector3(0.01, 0, 0))]);
+  const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(16, n * 8), 0.045, 8, false), new THREE.MeshBasicMaterial({ color: B.ink }));
+  group.add(tube);
+  for (const p of pts) { const dot = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 8), new THREE.MeshBasicMaterial({ color: B.ink })); dot.position.copy(p); group.add(dot); }
+  const base = new THREE.Mesh(new THREE.BoxGeometry(width + 0.8, 0.06, bw + 1.2), mat(B.raise, { roughness: 0.9 })); base.position.y = -0.03; group.add(base);
+  label(group, 'chance', pts.at(-1).x + 0.5, pts.at(-1).y + 0.3, 0, 'tag');
+  current = { picks, bars, bins, tick: (dt) => { const k = reduceMotion ? 1 : 1 - Math.exp(-dt * 6); for (const b of bars) b.scale.y += (b.userData.h - b.scale.y) * k; } };
+  const d = fit(Math.max(11, width * 1.05));
+  fly([0, d * 0.42, d * 0.9], [0, 1.7, 0]);
+  $('#legend').innerHTML = `<div class="mb-1 font-medium text-foreground">${esc(METRICS[state.metric].name)}, 6/49 draws</div><div class="flex items-center gap-2"><span class="inline-block size-2.5 rounded-sm" style="background:${B.signal}"></span>Draws seen</div><div class="flex items-center gap-2"><span class="inline-block size-2.5 rounded-sm" style="background:${B.amber}"></span>More than 2 standard errors off chance</div><div class="flex items-center gap-2"><span class="inline-block h-0.5 w-3" style="background:${B.ink}"></span>Chance</div><div class="mt-1.5 border-t pt-1.5">Drag to orbit · scroll to zoom</div>`;
+}
+function showPairs() {
+  const { c, exp } = pairCounts(), G = 0.26;
+  const cells = [];
+  for (let a = 1; a <= 49; a++) for (let b = a + 1; b <= 49; b++) cells.push({ a, b, v: c[a][b] });
+  const max = d3.max(cells, (x) => x.v) || 1;
+  const geo = new THREE.BoxGeometry(G * 0.86, 1, G * 0.86); geo.translate(0, 0.5, 0);
+  const inst = new THREE.InstancedMesh(geo, mat('#ffffff', { roughness: 0.55 }), cells.length);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
+  const ratioColor = (r) => RAMP(Math.max(0, Math.min(1, (r - 0.4) / 1.4)));
+  cells.forEach((x, j) => {
+    m4.compose(new THREE.Vector3((x.b - 25) * G, 0, (x.a - 25) * G), q, new THREE.Vector3(1, 0.03 + (x.v / max) * 3.2, 1));
+    inst.setMatrixAt(j, m4); inst.setColorAt(j, new THREE.Color(ratioColor(x.v / exp)));
+  });
+  inst.userData.pick = (j) => { const x = cells[j]; return { tip: `<div class="font-medium">${x.a} and ${x.b}</div><div class="mt-0.5 text-muted-foreground">Together in ${x.v} draws · chance ${exp.toFixed(1)}</div>` }; };
+  group.add(inst);
+  for (const k of [1, 10, 20, 30, 40, 49]) { label(group, String(k), (k - 25) * G, 0, (0 - 25) * G - 0.1, ''); label(group, String(k), (50 - 25) * G + 0.1, 0, (k - 25) * G, ''); }
+  const sorted = [...cells].sort((x, y) => y.v - x.v);
+  current = { picks: [inst], pairs: { top: sorted.slice(0, 8), bottom: sorted.slice(-5).reverse(), exp, max } };
+  const d = fit(15);
+  fly([d * 0.15, d * 0.75, d * 0.75], [0, 0.6, 0]);
+  $('#legend').innerHTML = `<div class="mb-1 font-medium text-foreground">Pairs: together against chance</div><div class="h-2 w-44 rounded-full" style="background:linear-gradient(90deg,${RAMP_STOPS.join(',')})"></div><div class="mt-0.5 flex w-44 justify-between font-mono text-[10px]"><span>0.4×</span><span>1×</span><span>1.8×</span></div><div class="mt-1.5">Height: draws together</div><div class="mt-1.5 border-t pt-1.5">Drag to orbit · scroll to zoom</div>`;
+}
+// one bar per number along x, for the day and popularity views
+const RX = 0.3, rx = (k) => (k - 25) * RX;
+function numberTicks(z) { for (const k of [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 49]) label(group, String(k), rx(k), -0.05, z, ''); }
+function growBars(bars) {
+  return (dt) => {
+    const k = reduceMotion ? 1 : 1 - Math.exp(-dt * 6);
+    for (const b of bars) { b.scale.y += (b.userData.h - b.scale.y) * k; if (b.userData.down) b.position.y = -b.scale.y; }
+  };
+}
+// counts of each number on Monday and Thursday draws, and a 2 × 49 test of whether they differ
+function dayStats() {
+  if (CACHE.day) return CACHE.day;
+  const cnt = { 1: new Array(50).fill(0), 4: new Array(50).fill(0) }, n = { 1: 0, 4: 0 };
+  let special = 0;
+  for (let i = ERA; i < D.length; i++) { const w = weekday(D[i]); if (!cnt[w]) { special++; continue; } n[w]++; for (const x of D[i].n) cnt[w][x]++; }
+  let x2 = 0;
+  const z = new Array(50).fill(0);
+  for (const k of NUMS) {
+    const tot = cnt[1][k] + cnt[4][k], e1 = (tot * n[1]) / (n[1] + n[4]), e4 = tot - e1;
+    if (tot) { x2 += (cnt[1][k] - e1) ** 2 / e1 + (cnt[4][k] - e4) ** 2 / e4; z[k] = (cnt[1][k] - e1) / Math.sqrt((e1 * e4) / tot); }
+  }
+  x2 *= 48 / 43;
+  CACHE.day = { cnt, n, special, z, x2, p: chiP(x2, 48) };
+  return CACHE.day;
+}
+function showDay() {
+  const st = dayStats(), H = 2.4, bw = RX * 0.8;
+  const geo = new THREE.BoxGeometry(bw, 1, 0.5); geo.translate(0, 0.5, 0);
+  const bars = [], picks = [];
+  for (const [w, zc, color] of [[1, -0.4, B.signal], [4, 0.4, B.pink]]) {
+    const exp = (st.n[w] * 6) / 49;
+    for (const k of NUMS) {
+      const m = new THREE.Mesh(geo, mat(color, { transparent: true, opacity: 0.85, emissive: color, emissiveIntensity: 0.12 }));
+      m.position.set(rx(k), 0, zc); m.scale.y = 0.001; m.userData.h = Math.max(0.01, (st.cnt[w][k] / exp) * H);
+      m.userData.pick = () => ({ tip: `<div class="font-medium">Number ${k}</div><div class="mt-0.5 text-muted-foreground">Mondays ${st.cnt[1][k]} (chance ${((st.n[1] * 6) / 49).toFixed(1)}) · Thursdays ${st.cnt[4][k]} (chance ${((st.n[4] * 6) / 49).toFixed(1)})</div>` });
+      group.add(m); bars.push(m); picks.push(m);
+    }
+  }
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(49 * RX + 0.6, 1.6), new THREE.MeshBasicMaterial({ color: B.ink, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false }));
+  plane.rotation.x = -Math.PI / 2; plane.position.y = H; group.add(plane);
+  label(group, 'chance', rx(49) + 0.7, H, 0, 'tag');
+  label(group, 'Monday', rx(1) - 0.9, 0.2, -0.4, 'tag'); label(group, 'Thursday', rx(1) - 0.9, 0.2, 0.4, 'tag');
+  const base = new THREE.Mesh(new THREE.BoxGeometry(49 * RX + 0.6, 0.06, 1.8), mat(B.raise, { roughness: 0.9 })); base.position.y = -0.03; group.add(base);
+  numberTicks(1.2);
+  current = { picks, tick: growBars(bars), day: st };
+  const d = fit(18);
+  fly([0, d * 0.62, d * 0.72], [0, 1.1, 0]);
+  $('#legend').innerHTML = `<div class="mb-1 font-medium text-foreground">Draw day, 6/49 draws</div><div class="flex items-center gap-2"><span class="inline-block size-2.5 rounded-sm" style="background:${B.signal}"></span>Monday draws</div><div class="flex items-center gap-2"><span class="inline-block size-2.5 rounded-sm" style="background:${B.pink}"></span>Thursday draws</div><div class="mt-1">Height: times drawn against chance for that day</div><div class="mt-1.5 border-t pt-1.5">Drag to orbit · scroll to zoom</div>`;
+}
+function showPopular() {
+  const pop = popularity(), S2 = 9, bw = RX * 0.8;
+  const geo = new THREE.BoxGeometry(bw, 1, 0.8); geo.translate(0, 0.5, 0);
+  const bars = [], picks = [];
+  for (const k of NUMS) {
+    const v = pop.share[k], color = v >= 0 ? B.amber : B.signal;
+    const m = new THREE.Mesh(geo, mat(color, { transparent: true, opacity: 0.88, emissive: color, emissiveIntensity: 0.15 }));
+    m.position.set(rx(k), 0, 0); m.scale.y = 0.001; m.userData.h = Math.max(0.01, Math.abs(v) * S2); m.userData.down = v < 0;
+    m.userData.pick = () => ({ tip: `<div class="font-medium">Number ${k}</div><div class="mt-0.5 text-muted-foreground">${d3.format('+.1%')(v)} Group 7 winners when it is drawn: ${v >= 0.03 ? 'a favourite' : v <= -0.03 ? 'picked less than most' : 'about average'}</div>` });
+    group.add(m); bars.push(m); picks.push(m);
+  }
+  for (const k of [...pop.ranked.slice(0, 4), ...pop.ranked.slice(-3)]) { const v = pop.share[k]; label(group, `<b>${k}</b> ${d3.format('+.0%')(v)}`, rx(k), v >= 0 ? v * S2 + 0.3 : v * S2 - 0.3, 0, 'tag'); }
+  const zero = new THREE.Mesh(new THREE.PlaneGeometry(49 * RX + 0.6, 1.4), new THREE.MeshBasicMaterial({ color: B.ink, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false }));
+  zero.rotation.x = -Math.PI / 2; group.add(zero);
+  const birthday = new THREE.Mesh(new THREE.PlaneGeometry((31 - 0.5) * RX + 0.3, 0.06), new THREE.MeshBasicMaterial({ color: B.amber, transparent: true, opacity: 0.6 }));
+  birthday.rotation.x = -Math.PI / 2; birthday.position.set((rx(1) + rx(31)) / 2, 0.01, 0.75); group.add(birthday);
+  label(group, '1–31: dates people play', (rx(1) + rx(31)) / 2, 0, 1.05, 'tag');
+  numberTicks(-0.9);
+  current = { picks, tick: growBars(bars), pop };
+  const d = fit(18);
+  fly([0, d * 0.34, d * 0.88], [0, 0.4, 0]);
+  $('#legend').innerHTML = `<div class="mb-1 font-medium text-foreground">Player favourites, 6/49 draws</div><div class="flex items-center gap-2"><span class="inline-block size-2.5 rounded-sm" style="background:${B.amber}"></span>More winners when drawn: picked more</div><div class="flex items-center gap-2"><span class="inline-block size-2.5 rounded-sm" style="background:${B.signal}"></span>Fewer winners: picked less</div><div class="mt-1.5 border-t pt-1.5">Drag to orbit · scroll to zoom</div>`;
+}
+function panelPatterns() {
+  const m = METRICS[state.metric], era = D.length - ERA;
+  const list = `<div class="grid grid-cols-2 gap-1">${Object.entries(METRICS).map(([k, v]) => `<button type="button" data-act="metric" data-v="${k}" data-state="${k === state.metric ? 'active' : ''}" class="flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-accent data-[state=active]:border-primary/60 data-[state=active]:bg-primary/10 data-[state=active]:text-foreground"><i class="fi ${v.icon} text-muted-foreground"></i>${esc(v.name)}</button>`).join('')}</div>`;
+  let body;
+  if (state.metric === 'day') {
+    const st = current.day, sd = (k) => st.z[k];
+    const mon = NUMS.slice().sort((x, y) => sd(y) - sd(x)).slice(0, 5), thu = NUMS.slice().sort((x, y) => sd(x) - sd(y)).slice(0, 5);
+    const line = (k) => row(`${k}`, `Mon ${st.cnt[1][k]} · Thu ${st.cnt[4][k]} <span class="text-muted-foreground">(${Math.abs(sd(k)).toFixed(1)} sd)</span>`);
+    body = `<div class="grid grid-cols-3 gap-2">${kpi('Monday draws', f.int(st.n[1]))}${kpi('Thursday draws', f.int(st.n[4]))}${kpi('p-value', f.d3(st.p), `chi-square ${f.d2(st.x2)}`)}</div>
+      <p class="mt-3 rounded-lg border bg-background/40 p-3 text-xs leading-relaxed text-ink-2">Which numbers come up on Mondays and on Thursdays is ${pReading(st.p)}. The same machine and balls are used on both days, so the Draw day method in Picks is the Hot method on half the draws.</p>
+      ${section('Leaning to Monday', `<div class="space-y-0.5">${mon.map(line).join('')}</div>`, 'fi-rr-calendar')}
+      ${section('Leaning to Thursday', `<div class="space-y-0.5">${thu.map(line).join('')}</div>`, 'fi-rr-calendar')}
+      ${note(`${st.special} special draws on other days are left out. With 49 numbers, two or three leaning 2 sd one way is what chance gives.`)}`;
+  } else if (state.metric === 'popular') {
+    const pop = current.pop, avg = (fn) => d3.mean(NUMS.filter(fn), (k) => pop.share[k]);
+    const line = (k) => row(String(k), d3.format('+.1%')(pop.share[k]));
+    body = `<div class="grid grid-cols-2 gap-2">${kpi('1–31', d3.format('+.1%')(avg((k) => k <= 31)), 'average change in winners')}${kpi('32–49', d3.format('+.1%')(avg((k) => k > 31)), 'average change in winners')}</div>
+      <p class="mt-3 rounded-lg border bg-background/40 p-3 text-xs leading-relaxed text-ink-2">Players crowd onto dates (1 to 31) and lucky numbers like 8. When those come up, prizes in the shared groups are split more ways. Picking numbers others avoid doesn't change your odds; it changes how much you keep when you win.</p>
+      ${section('Picked most', `<div class="space-y-0.5">${pop.ranked.slice(0, 8).map(line).join('')}</div>`, 'fi-rr-arrow-trend-up')}
+      ${section('Picked least', `<div class="space-y-0.5">${pop.ranked.slice(-8).reverse().map(line).join('')}</div>`, 'fi-rr-arrow-trend-down')}
+      ${note(`Fitted on ${f.int(pop.draws)} Monday and Thursday 6/49 draws with prize figures: log Group 7 winners, less the median of the 31 draws around each one, against the six numbers drawn (ridge regression).`)}`;
+  } else if (state.metric === 'pairs') {
+    const p = current.pairs;
+    const sd = Math.sqrt(p.exp);
+    body = `<div class="grid grid-cols-2 gap-2">${kpi('Draws', f.int(era), 'since Oct 2014')}${kpi('Chance per pair', p.exp.toFixed(1), 'draws together')}</div>
+      ${section('Most often together', `<div class="space-y-0.5">${p.top.map((x) => row(`${x.a} & ${x.b}`, `${x.v} <span class="text-muted-foreground">(${((x.v - p.exp) / sd).toFixed(1)} sd)</span>`)).join('')}</div>`, 'fi-rr-arrow-trend-up')}
+      ${section('Least often together', `<div class="space-y-0.5">${p.bottom.map((x) => row(`${x.a} & ${x.b}`, String(x.v))).join('')}</div>`, 'fi-rr-arrow-trend-down')}
+      <p class="mt-3 rounded-lg border bg-background/40 p-3 text-xs leading-relaxed text-ink-2">With 1,176 pairs, a few will sit 3 or more standard deviations above chance by luck alone: the top pairs here are about as far out as the largest of that many fair counts usually is.</p>`;
+  } else {
+    const bins = current.bins, t = binsTest(bins);
+    body = `<div class="grid grid-cols-2 gap-2">${kpi('Draws', f.int(era), 'since Oct 2014')}${kpi('p-value', f.d3(t.p), `chi-square ${f.d2(t.x)}, ${t.df} df`)}</div>
+      <p class="mt-3 rounded-lg border bg-background/40 p-3 text-xs leading-relaxed text-ink-2">Against exact chance, this is ${pReading(t.p)}.</p>
+      ${section('Seen and chance', `<table class="w-full text-xs"><thead><tr class="text-[11px] text-muted-foreground"><th class="py-1 text-left font-medium"></th><th class="py-1 text-right font-medium">Seen</th><th class="py-1 text-right font-medium">Chance</th><th class="py-1 text-right font-medium">Share</th></tr></thead><tbody>${bins.filter((b) => b.obs || b.exp >= 0.5).map((b) => `<tr class="border-t"><td class="py-1">${esc(b.label)}</td><td class="py-1 text-right font-mono">${f.int(b.obs)}</td><td class="py-1 text-right font-mono text-muted-foreground">${b.exp.toFixed(1)}</td><td class="py-1 text-right font-mono">${f.pct(b.obs / era)}</td></tr>`).join('')}</tbody></table>`, 'fi-rr-table-list')}`;
+  }
+  return `<h1 class="text-lg font-semibold leading-tight">Patterns</h1>
+    <p class="mt-1 text-xs text-muted-foreground">Shapes of the 6/49 draws next to what a fair draw predicts, worked out exactly.</p>
+    <div class="mt-3">${list}</div>
+    <p class="mt-3 text-xs leading-relaxed text-muted-foreground">${esc(m.about)}</p>
+    <div class="mt-3">${body}</div>
+    ${state.metric === 'popular' ? '' : note('Several tests on the same draws: expect one of them to look a little uneven now and then by chance alone.')}`;
+}
+
+// ================= view: picks =================
+const METHODS = {
+  hot: { name: 'Hot', icon: 'fi-rr-flame', about: 'The six numbers drawn most often in the window.' },
+  overdue: { name: 'Overdue', icon: 'fi-rr-hourglass-end', about: 'The six numbers with the longest wait since they were last drawn.' },
+  balanced: { name: 'Balanced', icon: 'fi-rr-scale', about: 'A random ticket shaped like a typical draw: a sum near the window\'s average, 2 to 4 odd, 2 to 4 low, at least three ranges and at most one back-to-back pair.' },
+  weighted: { name: 'Weighted', icon: 'fi-rr-dice-alt', about: 'A random ticket where numbers drawn more often in the window are more likely to be picked.' },
+  followon: { name: 'Follow-on', icon: 'fi-rr-arrow-right', about: 'Numbers that most often came up in the draw right after a draw holding any of the last draw\'s numbers.' },
+  delta: { name: 'Delta', icon: 'fi-rr-ruler-horizontal', about: 'A favourite system with players: build the ticket from the gaps between neighbouring numbers, choosing each gap as often as that size turns up in the window\'s draws.' },
+  day: { name: 'Draw day', icon: 'fi-rr-calendar', about: 'The six numbers drawn most often on the same weekday as the draw being picked for, Monday or Thursday, within the window.' },
+  unpopular: { name: 'Unpopular', icon: 'fi-rr-user-slash', about: 'Six of the 15 numbers players pick least, from how many people won Group 7 in each draw. It can\'t change the odds of winning, only how many winners you would share a prize with.' },
+  ziwei: { name: '紫微', icon: 'fi-rr-sparkles', about: 'The 紫微斗数 chart of the draw itself (its date at 酉时, the 6:30 pm slot), turned into six numbers by the rule on the 紫微 tab.' },
+  random: { name: 'Random', icon: 'fi-rr-dice', about: 'Six numbers at random, as a quick pick would. The baseline every method is measured against.' },
+};
+// pick six numbers for the draw at index t, using only draws before it
+function pickFor(method, t, win, rng) {
+  const [a, b] = range(win, t - 1);
+  const lo = Math.max(a, ERA);
+  const F = freq(lo, b);
+  if (method === 'hot') return NUMS.slice().sort((x, y) => F.count[y] - F.count[x] || F.last[y] - F.last[x] || x - y).slice(0, 6).sort((x, y) => x - y);
+  if (method === 'overdue') return NUMS.slice().sort((x, y) => F.last[x] - F.last[y] || x - y).slice(0, 6).sort((x, y) => x - y);
+  if (method === 'weighted') {
+    const left = NUMS.slice(), out = [];
+    while (out.length < 6) { const w = left.map((k) => F.count[k] + 1), tot = d3.sum(w); let r = rng() * tot, j = 0; while (r > w[j]) { r -= w[j]; j++; } out.push(left.splice(Math.min(j, left.length - 1), 1)[0]); }
+    return out.sort((x, y) => x - y);
+  }
+  if (method === 'ziwei') return castChart({ kind: 'draw' }, t < D.length ? D[t].date : nextDrawDay().date).picks.map((x) => x.n).sort((x, y) => x - y);
+  const top6 = (score) => NUMS.slice().sort((x, y) => score[y] - score[x] || F.count[y] - F.count[x] || x - y).slice(0, 6).sort((x, y) => x - y);
+  if (method === 'followon') {
+    const prev = D[t - 1].n, score = new Array(50).fill(0);
+    for (let i = Math.max(lo, 1); i <= b; i++) if (D[i - 1].n.some((x) => prev.includes(x))) for (const y of D[i].n) score[y]++;
+    return top6(score);
+  }
+  if (method === 'day') {
+    const w = dayOfTarget(t), score = new Array(50).fill(0);
+    for (let i = lo; i <= b; i++) if (weekday(D[i]) === w) for (const x of D[i].n) score[x]++;
+    return top6(score);
+  }
+  const quick = () => { const left = NUMS.slice(), out = []; while (out.length < 6) out.push(left.splice(Math.floor(rng() * left.length), 1)[0]); return out.sort((x, y) => x - y); };
+  if (method === 'random') return quick();
+  if (method === 'unpopular') {
+    const left = popularity().ranked.slice(-15), out = [];
+    while (out.length < 6) out.push(left.splice(Math.floor(rng() * left.length), 1)[0]);
+    return out.sort((x, y) => x - y);
+  }
+  if (method === 'delta') {
+    const seen = new Map();
+    for (let i = lo; i <= b; i++) D[i].n.forEach((x, j, n) => { const v = j ? x - n[j - 1] : x; seen.set(v, (seen.get(v) || 0) + 1); });
+    const vals = [...seen.keys()], ws = vals.map((v) => seen.get(v)), tot = d3.sum(ws);
+    const one = () => { let r = rng() * tot, j = 0; while (r > ws[j] && j < ws.length - 1) { r -= ws[j]; j++; } return vals[j]; };
+    for (let tries = 0; tries < 300; tries++) { let sum = 0; const tk = []; for (let j = 0; j < 6; j++) { sum += one(); tk.push(sum); } if (sum <= 49) return tk; }
+    return quick();
+  }
+  // balanced: a quick pick that looks like the window's draws
+  const sums = d3.range(lo, b + 1).map((i) => d3.sum(D[i].n));
+  const mean = d3.mean(sums) ?? 150, sd = d3.deviation(sums) ?? 32;
+  let tk = quick();
+  for (let tries = 0; tries < 500; tries++) {
+    const s = d3.sum(tk), odd = tk.filter((x) => x % 2).length, low = tk.filter((x) => x <= 24).length;
+    const ranges = new Set(tk.map((x) => Math.min(4, Math.floor((x - 1) / 10)))).size, pairs = tk.filter((x, j) => j && x - tk[j - 1] === 1).length;
+    if (Math.abs(s - mean) <= sd * 0.5 && odd >= 2 && odd <= 4 && low >= 2 && low <= 4 && ranges >= 3 && pairs <= 1) break;
+    tk = quick();
+  }
+  return tk;
+}
+const scoreTicket = (tk, d) => { const m = tk.filter((x) => d.n.includes(x)).length; return { m, g: groupOf(m, tk.includes(d.add)) }; };
+function profile(tk) {
+  const odd = tk.filter((x) => x % 2).length, low = tk.filter((x) => x <= 24).length;
+  const ranges = new Set(tk.map((x) => Math.min(4, Math.floor((x - 1) / 10)))).size, pairs = tk.filter((x, j) => j && x - tk[j - 1] === 1).length;
+  return { sum: d3.sum(tk), odd, low, ranges, pairs };
+}
+async function generate() {
+  const p = state.picks;
+  if (p.method === 'ziwei') await loadIztro();
+  p.ticket = { nums: pickFor(p.method, D.length, p.win, mulberry32((Math.random() * 2 ** 32) >>> 0)), method: p.method, win: p.win };
+}
+function showPicks() {
+  const from = boardHeights();
+  clearStage();
+  const p = state.picks, end = D.length - 1, [a] = range(p.win, end);
+  const F = freq(Math.max(a, ERA), end), since = sinceSeen(end);
+  const board = buildBoard(F, since, { from, onPick: (k) => toggleNumber(k) });
+  paintBoard(board, { picks: p.ticket?.nums ?? null });
+  // backtest pillars behind the board: each method's prize rate or return, against chance
+  const pillars = new THREE.Group(); pillars.position.z = -7.6; group.add(pillars);
+  const keys = Object.keys(METHODS), CH = 5.5, SP = 1.45;   // chance stands CH high
+  const pgeo = new THREE.CylinderGeometry(0.42, 0.42, 1, 24); pgeo.translate(0, 0.5, 0);
+  const cols = keys.map((k, j) => {
+    const x = (j - (keys.length - 1) / 2) * SP;
+    const color = k === 'random' ? B.ink2 : k === p.method ? B.amber : B.signal;
+    const m = new THREE.Mesh(pgeo, mat(color, { transparent: true, opacity: 0.85, emissive: color, emissiveIntensity: 0.15 }));
+    m.position.x = x; m.scale.y = 0.001; pillars.add(m);
+    const lb = label(pillars, '', x, 0, 0, 'tag');
+    m.userData.pick = () => { const r = p.bt?.res[k]; return { tip: `<div class="font-medium">${METHODS[k].name}</div>${r?.n ? `<div class="mt-0.5 text-muted-foreground">Prize in ${f.pct(r.prize / r.n)} of ${f.int(r.n)} draws · avg ${f.d2(r.match / r.n)} numbers</div><div class="text-muted-foreground">Paid back ${money2(r.priced ? r.ret / r.priced : 0)} per $1${r.best ? ` · best Group ${r.best}` : ''}</div>` : '<div class="mt-0.5 text-muted-foreground">Run the backtest to fill this in</div>'}` }; };
+    return { k, m, lb, h: 0.001 };
+  });
+  const chance = new THREE.Mesh(new THREE.PlaneGeometry(keys.length * SP + 0.6, 1.4), new THREE.MeshBasicMaterial({ color: B.signal, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false }));
+  chance.rotation.x = -Math.PI / 2; chance.position.y = CH; pillars.add(chance);
+  const cEdge = new THREE.LineSegments(new THREE.EdgesGeometry(chance.geometry), new THREE.LineBasicMaterial({ color: B.signal, transparent: true, opacity: 0.5 }));
+  cEdge.rotation.x = -Math.PI / 2; cEdge.position.y = chance.position.y; pillars.add(cEdge);
+  const chanceTag = label(pillars, '', (keys.length * SP) / 2 + 1, CH, 0, 'tag');
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(keys.length * SP + 0.6, 0.06, 1.4), mat(B.raise, { roughness: 0.9 })); plinth.position.y = -0.03; pillars.add(plinth);
+  pillars.visible = !!p.bt;
+  current = {
+    board, picks: [...board.picks, ...cols.map((c) => c.m)], pillars, cols,
+    tick: (dt) => {
+      animateBoard(board, dt);
+      stepBacktest();
+      const k = reduceMotion ? 1 : 1 - Math.exp(-dt * 6);
+      const bt = p.bt, byReturn = p.metric === 'return';
+      const base = byReturn ? (bt?.priced ? bt.expSmall / bt.priced : 0) : P_PRIZE;
+      chanceTag.element.innerHTML = `chance <b>${byReturn ? (base ? money2(base) : '–') : f.pct2(P_PRIZE)}</b>`;
+      for (const c of cols) {
+        const r = bt?.res[c.k];
+        const v = !r?.n ? null : byReturn ? (r.priced ? r.ret / r.priced : null) : r.prize / r.n;
+        c.h = v != null && base ? Math.min(CH * 2.6, Math.max(0.02, (v / base) * CH)) : 0.001;
+        c.m.scale.y += (c.h - c.m.scale.y) * k;
+        c.lb.position.y = c.m.scale.y + 0.45;
+        c.lb.element.innerHTML = v != null ? `${METHODS[c.k].name} <b>${byReturn ? money2(v) : f.pct(v)}</b>` : METHODS[c.k].name;
+      }
+    },
+  };
+  const d = fit(1);
+  fly(p.bt ? [0, 9.5 * d, 19 * d] : [0, 11 * d, 15 * d], p.bt ? [0, 3, -3] : [0, 1, 0]);
+  legendPicks();
+}
+function toggleNumber(k) {
+  const p = state.picks;
+  const nums = p.ticket ? [...p.ticket.nums] : [];
+  const i = nums.indexOf(k);
+  if (i >= 0) nums.splice(i, 1); else if (nums.length < 6) nums.push(k); else { toast('A ticket has six numbers: tap one of yours to swap it out'); return; }
+  p.ticket = { nums: nums.sort((a, b) => a - b), method: 'own', win: p.win };
+  paintBoard(current.board, { picks: p.ticket.nums });
+  renderPanel();
+}
+// walk forward through past draws: each method picks from earlier draws only, then is scored
+async function startBacktest() {
+  const skip = new Set();
+  try { await loadIztro(); } catch { skip.add('ziwei'); toast('Couldn’t load the 紫微斗数 library: testing the other methods'); }
+  const p = state.picks, N = Math.min(p.btN, D.length - ERA - 52);
+  const res = Object.fromEntries(Object.keys(METHODS).map((k) => [k, { n: 0, match: 0, prize: 0, groups: {}, best: 0, ret: 0, priced: 0 }]));
+  p.bt = { from: D.length - N, t: D.length - N, end: D.length, win: p.win, res, done: false, expRet: 0, expSmall: 0, priced: 0, skip };
+  current.pillars.visible = true;
+  const d = fit(1); fly([0, 9.5 * d, 19 * d], [0, 3, -3]);
+  legendPicks();
+  renderPanel();
+}
+function legendPicks() {
+  const p = state.picks;
+  legendBoard(`<div class="mt-1 flex items-center gap-2"><span class="inline-block size-2.5 rounded-full" style="background:${B.amber}"></span>Your ticket</div>${p.bt ? `<div class="flex items-center gap-2"><span class="inline-block h-3 w-1.5 rounded-sm" style="background:${B.signal}"></span>Backtest: ${p.metric === 'return' ? 'paid back per $1' : 'draws with a prize'}</div>` : ''}`);
+}
+let lastBtPanel = 0;
+function stepBacktest() {
+  const bt = state.picks.bt;
+  if (!bt || bt.done) return;
+  const stop = Math.min(bt.end, bt.t + (reduceMotion ? bt.end : 8));
+  for (; bt.t < stop; bt.t++) {
+    const d = D[bt.t];
+    if (d.prizes) { bt.priced++; bt.expRet += chanceReturn(d); bt.expSmall += chanceReturn(d, 5); }
+    for (const k of Object.keys(METHODS)) {
+      if (bt.skip?.has(k)) continue;
+      const tk = pickFor(k, bt.t, bt.win, mulberry32(d.draw * 7919 + k.length * 104729));
+      const s = scoreTicket(tk, d), r = bt.res[k];
+      r.n++; r.match += s.m;
+      if (d.prizes) { r.priced++; r.ret += payout(d, s.g); }
+      if (s.g) { r.prize++; r.groups[s.g] = (r.groups[s.g] || 0) + 1; r.best = r.best ? Math.min(r.best, s.g) : s.g; }
+    }
+  }
+  if (bt.t >= bt.end) bt.done = true;
+  const now = performance.now();
+  if (bt.done || now - lastBtPanel > 250) { lastBtPanel = now; if (state.view === 'picks') renderPanel(); }
+}
+const money2 = (v) => `$${d3.format('.2f')(v)}`;
+function methodExtra() {
+  const m = state.picks.method;
+  if (m === 'unpopular') {
+    const pop = popularity(), chip = (k) => `<span class="inline-flex items-center gap-1">${ball(k, 'sm')}<span class="font-mono text-[10.5px] text-muted-foreground">${d3.format('+.0%')(pop.share[k])}</span></span>`;
+    return `<div class="mt-2 rounded-lg border bg-background/40 p-2.5"><div class="text-[11px] text-muted-foreground">Players' favourites</div><div class="mt-1 flex flex-wrap gap-1.5">${pop.ranked.slice(0, 6).map(chip).join('')}</div><div class="mt-2 text-[11px] text-muted-foreground">Picked least</div><div class="mt-1 flex flex-wrap gap-1.5">${pop.ranked.slice(-6).reverse().map(chip).join('')}</div><p class="mt-2 text-[11px] text-muted-foreground">Change in Group 7 winners when the number is drawn. See Patterns › Player favourites.</p></div>`;
+  }
+  if (m === 'day') {
+    const n = nextDrawDay();
+    return `<p class="mt-2 text-xs text-muted-foreground">The next draw in the data's calendar is ${DAY_NAMES[n.w]}, ${fmtShort(n.date)}. See Patterns › Draw day for how Monday and Thursday compare.</p>`;
+  }
+  return '';
+}
+function panelPicks() {
+  const p = state.picks, tk = p.ticket, latest = D[D.length - 1];
+  const methods = `<div class="grid grid-cols-3 gap-1">${Object.entries(METHODS).map(([k, v]) => `<button type="button" data-act="method" data-v="${k}" data-state="${k === p.method ? 'active' : ''}" class="flex items-center justify-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-colors hover:bg-accent data-[state=active]:border-amber/60 data-[state=active]:bg-amber/10 data-[state=active]:text-foreground"><i class="fi ${v.icon} text-muted-foreground"></i>${esc(v.name)}</button>`).join('')}</div>`;
+  const winToggle = toggle(Object.entries(WINDOWS).filter(([k]) => k !== 'all').map(([k, v]) => [k, v.label]), p.win, 'pwin');
+  let ticket = '<p class="text-xs text-muted-foreground">Pick a method and generate a ticket, or tap numbers on the board to choose your own.</p>';
+  if (tk?.nums.length) {
+    const pr = profile(tk.nums), full = tk.nums.length === 6;
+    let past = '';
+    if (full) {
+      const hits = []; let prizes = 0;
+      for (let i = ERA; i < D.length; i++) { const s = scoreTicket(tk.nums, D[i]); if (s.g) { prizes++; if (s.g <= 5) hits.push({ i, ...s }); } }
+      past = `<p class="mt-2 text-[11px] leading-relaxed text-muted-foreground">Played in every 6/49 draw, this ticket would have won something ${prizes} times in ${f.int(D.length - ERA)} draws (${f.pct(prizes / (D.length - ERA))}; chance ${f.pct(P_PRIZE)})${hits.length ? `, best: Group ${d3.min(hits, (h) => h.g)}` : ''}.</p>`;
+    }
+    ticket = `<div class="flex flex-wrap gap-1.5">${tk.nums.map((k) => ball(k, 'pick')).join('')}${d3.range(6 - tk.nums.length).map(() => '<span class="ball opacity-40">·</span>').join('')}</div>
+      <p class="mt-1.5 text-[11px] text-muted-foreground">${tk.method === 'own' ? 'Your own numbers' : `${METHODS[tk.method].name}, from ${esc(WINDOWS[tk.win].long)}`}</p>
+      ${full ? `<div class="mt-2 grid grid-cols-3 gap-2">${kpi('Sum', pr.sum)}${kpi('Odd / even', `${pr.odd} / ${6 - pr.odd}`)}${kpi('Low / high', `${pr.low} / ${6 - pr.low}`)}</div>` : ''}
+      ${past}
+      <div class="mt-2 flex gap-1.5"><button type="button" data-act="save" class="${btnCls} flex-1" ${full ? '' : 'disabled'}><i class="fi fi-rr-bookmark"></i>Save ticket</button><button type="button" data-act="clear" class="${btnCls}"><i class="fi fi-rr-cross-small"></i>Clear</button></div>`;
+  }
+  // backtest
+  const bt = p.bt;
+  let btHtml = `<div class="flex items-center gap-2">${toggle([[100, '100'], [500, '500'], [1000, '1,000']], p.btN, 'btn')}<span class="text-[11px] text-muted-foreground">past draws</span></div>
+    <button type="button" data-act="backtest" class="${btnCls} mt-2 w-full" ${bt && !bt.done ? 'disabled' : ''}><i class="fi fi-rr-chart-line-up"></i>${bt && !bt.done ? `Testing… ${f.int(bt.t - bt.from)} of ${f.int(bt.end - bt.from)}` : bt ? 'Run again' : 'Run the backtest'}</button>`;
+  if (bt) {
+    const rows = Object.entries(METHODS).map(([k, v]) => {
+      const r = bt.res[k];
+      return `<tr class="border-t ${k === p.method ? 'text-amber' : ''}"><td class="py-1">${esc(v.name)}</td><td class="py-1 text-right font-mono">${r.n ? f.d3(r.match / r.n) : '–'}</td><td class="py-1 text-right font-mono">${r.n ? f.pct(r.prize / r.n) : '–'}</td><td class="py-1 text-right font-mono">${r.priced ? money2(r.ret / r.priced) : '–'}</td><td class="py-1 text-right font-mono text-muted-foreground">${r.best ? `G${r.best}` : '–'}</td></tr>`;
+    }).join('');
+    btHtml += `<table class="mt-3 w-full text-xs"><thead><tr class="text-[11px] text-muted-foreground"><th class="py-1 text-left font-medium">Method</th><th class="py-1 text-right font-medium">Avg match</th><th class="py-1 text-right font-medium">Any prize</th><th class="py-1 text-right font-medium">Per $1</th><th class="py-1 text-right font-medium">Best</th></tr></thead><tbody>${rows}<tr class="border-t text-muted-foreground"><td class="py-1">Chance</td><td class="py-1 text-right font-mono">${f.d3(E_MATCH)}</td><td class="py-1 text-right font-mono">${f.pct(P_PRIZE)}</td><td class="py-1 text-right font-mono">${bt.priced ? money2(bt.expSmall / bt.priced) : '–'}*</td><td class="py-1 text-right font-mono">–</td></tr></tbody></table>
+      <div class="mt-2 flex items-center gap-2"><span class="text-[11px] text-muted-foreground">Pillars show</span>${toggle([['prize', 'Prize rate'], ['return', 'Per $1']], p.metric, 'pmetric')}</div>`;
+    if (bt.done) {
+      const n = bt.res.random.n, se = Math.sqrt((P_PRIZE * (1 - P_PRIZE)) / n) * 100;
+      btHtml += `<p class="mt-2 rounded-lg border bg-background/40 p-3 text-xs leading-relaxed text-ink-2">Over ${f.int(n)} draws, luck alone moves a method's prize rate by about ±${(se * 2).toFixed(1)} points either side of ${f.pct(P_PRIZE)}. Every method lands inside that band: past numbers don't change the next draw.</p>
+        <p class="mt-2 rounded-lg border bg-background/40 p-3 text-xs leading-relaxed text-ink-2">Per $1 pays each win the prize of that draw, sharing Groups 1 to 4 with that draw's winners. * Chance here is what a random ticket expects from Groups 5 to 7, ${money2(bt.expSmall / Math.max(1, bt.priced))}. Counting the rare Group 1 to 4 prizes it is ${money2(bt.expRet / Math.max(1, bt.priced))}, but those come about once in 1,000 tickets, so a run this size usually shows the lower figure, and one lucky Group 4 lifts a method well above it. Unpopular can only gain in those shared groups: it keeps more of a big win, it doesn't win more often, and nothing here turns a loss into a profit.</p>`;
+    }
+  }
+  // saved tickets, checked against draws after they were saved
+  const saved = state.tickets.length ? state.tickets.map((t, j) => {
+    const after = D.filter((d) => d.draw > t.after);
+    const checks = after.slice(-3).reverse().map((d) => { const s = scoreTicket(t.nums, d); return `<span class="${s.g ? 'text-amber' : ''}">#${d.draw}: ${s.m}${t.nums.includes(d.add) ? '+' : ''}${s.g ? ` · G${s.g}` : ''}</span>`; });
+    return `<div class="rounded-md border bg-background/40 px-2.5 py-2"><div class="flex items-center gap-1">${t.nums.map((k) => `<span class="ball sm">${k}</span>`).join('')}<button type="button" data-act="unsave" data-v="${j}" class="ml-auto inline-flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Delete this ticket"><i class="fi fi-rr-trash text-xs"></i></button></div><div class="mt-1 text-[11px] text-muted-foreground">${esc(t.label)} · saved after draw ${t.after}</div><div class="mt-0.5 font-mono text-[11px]">${checks.length ? checks.join(' · ') : 'Waiting for the next draw in the data'}</div></div>`;
+  }).join('') : '<p class="text-xs text-muted-foreground">Saved tickets stay in this browser and are checked against each newer draw you load.</p>';
+  return `<h1 class="text-lg font-semibold leading-tight">Picks</h1>
+    <p class="mt-1 text-xs text-muted-foreground">Ways people use number stats to choose a ticket, and a backtest of how each would have done.</p>
+    <div class="mt-3">${methods}</div>
+    <p class="mt-2 text-xs leading-relaxed text-muted-foreground">${esc(METHODS[p.method].about)}</p>
+    ${methodExtra()}
+    <div class="mt-3 flex flex-wrap items-center gap-2">${winToggle}</div>
+    <button type="button" data-act="generate" class="${primaryCls} mt-3 w-full"><i class="fi fi-rr-magic-wand"></i>Generate a ticket for draw ${latest.draw + 1}, ${DAY_NAMES[nextDrawDay().w]}</button>
+    ${section('Ticket', ticket, 'fi-rr-ticket')}
+    ${section('Backtest', `<p class="mb-2 text-xs leading-relaxed text-muted-foreground">Each method picks for every past draw using only the draws before it, with the window above. Prize means 3 or more numbers (Group 7 and up).</p>${btHtml}`, 'fi-rr-flask')}
+    ${section('Saved tickets', `<div class="space-y-1.5">${saved}</div>`, 'fi-rr-bookmark')}
+    <p class="mt-4 rounded-lg border border-amber/30 bg-amber/5 p-3 text-[11px] leading-relaxed text-ink-2">The odds of Group 1 are 1 in ${f.int(choose(49, 6))} for any six numbers. These stats describe past draws; they can't predict the next one. This is analysis for fun, not betting advice.</p>`;
+}
+
+// ================= view: 紫微斗数 =================
+// A 紫微斗数 (Zi Wei Dou Shu) chart from iztro, for a draw (its date at 酉时, the 6:30 pm slot) or
+// for a birth date and time with that draw day's 四化. Its stars become six numbers by a rule of our
+// own, shown in the panel: 紫微斗数 has no traditional rule for lottery numbers.
+const IZTRO_URL = 'https://cdn.jsdelivr.net/npm/iztro@2.6.3/dist/iztro.min.js';
+let iztroP = null;
+const loadIztro = () => (iztroP ??= new Promise((ok, no) => {
+  if (window.iztro) return ok(window.iztro);
+  const s = document.createElement('script');
+  s.src = IZTRO_URL;
+  s.onload = () => (window.iztro ? ok(window.iztro) : no(new Error('iztro did not load')));
+  s.onerror = () => { iztroP = null; no(new Error('Couldn’t load the 紫微斗数 library')); };
+  document.head.appendChild(s);
+}));
+const BRANCHES = '子丑寅卯辰巳午未申酉戌亥';
+// the five elements of the main and the common minor stars, and their 河图 numbers (生数, 成数)
+const ELEMENT = {
+  紫微: '土', 天机: '木', 太阳: '火', 武曲: '金', 天同: '水', 廉贞: '火', 天府: '土', 太阴: '水', 贪狼: '木', 巨门: '水', 天相: '水', 天梁: '土', 七杀: '金', 破军: '水',
+  左辅: '土', 右弼: '水', 文昌: '金', 文曲: '水', 天魁: '火', 天钺: '火', 禄存: '土', 天马: '火', 擎羊: '金', 陀罗: '金', 火星: '火', 铃星: '火', 地空: '火', 地劫: '火',
+};
+const ELEMENT_DIGITS = { 水: [1, 6], 火: [2, 7], 木: [3, 8], 金: [4, 9], 土: [5, 10] };
+const ELEMENT_COLOR = { 金: '#e4e1d8', 木: '#7fd18b', 水: '#7cc4dc', 火: '#f2706b', 土: '#f6c453' };
+const MUTAGEN_COLOR = { 禄: '#7fd18b', 权: '#c9a4f5', 科: '#7cc4dc', 忌: '#f2706b' };
+const BRIGHT = new Set(['庙', '旺', '得']);
+const SHICHEN = [['早子', '00–01'], ['丑', '01–03'], ['寅', '03–05'], ['卯', '05–07'], ['辰', '07–09'], ['巳', '09–11'], ['午', '11–13'], ['未', '13–15'], ['申', '15–17'], ['酉', '17–19'], ['戌', '19–21'], ['亥', '21–23'], ['晚子', '23–24']];
+const DRAW_TIME = 9;   // 酉时, 17:00 to 19:00: draws are at 6:30 pm
+const solarArg = (iso) => iso.split('-').map(Number).join('-');
+const palaceShort = (name) => name.replace(/宫$/, '');
+
+// one star → one number: its element's 生数 when bright (庙 旺 得), 成数 otherwise, in the decade
+// set by the palace's earthly branch (子 and 巳 0s, 丑 and 午 10s, … 辰 and 酉 40s)
+function starNumber(star, palace) {
+  const el = ELEMENT[star.name];
+  if (!el) return null;
+  const bright = BRIGHT.has(star.b), digit = ELEMENT_DIGITS[el][bright ? 0 : 1];
+  let n = digit + 10 * (palace.branch % 5);
+  if (n > 49) n -= 10;
+  return { n, el, digit, bright };
+}
+function ziweiPicks(chart) {
+  const P = chart.palaces, byName = (nm) => P.find((p) => palaceShort(p.name) === nm);
+  const where = (name) => { for (const p of P) { const s = [...p.major, ...p.minor].find((x) => x.name === name); if (s) return [s, p]; } return null; };
+  // a palace with no main star borrows the main stars of the palace opposite (借对宫)
+  const starsOf = (p) => {
+    const opp = P.find((q) => q.branch === (p.branch + 6) % 12);
+    const major = p.major.length ? p.major.map((s) => [s, null]) : opp.major.map((s) => [s, opp]);
+    return [...major, ...p.minor.map((s) => [s, null])];
+  };
+  const order = [];
+  const take = (s, p, why, from = null) => order.push({ s, p, why, from });
+  const lu = where(chart.mut['禄']); if (lu) take(lu[0], lu[1], '化禄');
+  for (const nm of ['财帛', '命']) for (const [s, from] of starsOf(byName(nm))) take(s, byName(nm), `${nm}宫${from ? ' · 借对宫' : ''}`, from);
+  for (const m of ['权', '科']) { const w = where(chart.mut[m]); if (w) take(w[0], w[1], `化${m}`); }
+  for (const nm of ['田宅', '福德', '官禄', '迁移', '夫妻', '子女', '兄弟', '父母', '仆役', '疾厄']) for (const [s, from] of starsOf(byName(nm))) take(s, byName(nm), `${nm}宫${from ? ' · 借对宫' : ''}`, from);
+  const out = [], used = new Set();
+  for (const o of order) {
+    if (out.length === 6) break;
+    if (o.s.name === chart.mut['忌']) continue;   // the 化忌 star is passed over
+    const r = starNumber(o.s, o.p);
+    if (!r || used.has(r.n)) continue;
+    used.add(r.n); out.push({ ...o, ...r });
+  }
+  for (let k = 1; out.length < 6 && k <= 49; k++) if (!used.has(k)) { used.add(k); out.push({ n: k, s: { name: '—', b: '' }, p: P[0], why: 'fill', el: null }); }
+  return out;
+}
+// src: { kind: 'draw' } or { kind: 'birth', date, time, gender }; dateIso is the draw's date
+function castChart(src, dateIso) {
+  const key = src.kind === 'draw' ? `d:${dateIso}` : `b:${src.date}:${src.time}:${src.gender}:${dateIso}`;
+  CACHE.charts ??= new Map();
+  if (CACHE.charts.has(key)) return CACHE.charts.get(key);
+  const birth = src.kind === 'birth';
+  const A = window.iztro.astro.bySolar(solarArg(birth ? src.date : dateIso), birth ? Number(src.time) : DRAW_TIME, birth ? src.gender : '男', true, 'zh-CN');
+  const mut = {};
+  if (birth) { const h = A.horoscope(solarArg(dateIso), DRAW_TIME).daily.mutagen; ['禄', '权', '科', '忌'].forEach((m, i) => { mut[m] = h[i]; }); }
+  else for (const p of A.palaces) for (const s of [...p.majorStars, ...p.minorStars]) if (s.mutagen) mut[s.mutagen] = s.name;
+  const star = (s) => ({ name: s.name, b: s.brightness || '' });
+  const chart = {
+    palaces: A.palaces.map((p) => ({ name: p.name, gz: p.heavenlyStem + p.earthlyBranch, branch: BRANCHES.indexOf(p.earthlyBranch), major: p.majorStars.map(star), minor: p.minorStars.map(star) })),
+    mut, lunar: A.lunarDate, ganzhi: A.chineseDate, five: A.fiveElementsClass, soul: A.soul, body: A.body, dateIso, birth,
+  };
+  chart.picks = ziweiPicks(chart);
+  CACHE.charts.set(key, chart);
+  return chart;
+}
+const mutOf = (chart, name) => Object.keys(chart.mut).find((m) => chart.mut[m] === name);
+// the draw a chart is cast for: the next one, or a past draw by index
+function zwTarget() {
+  const z = state.zw;
+  if (z.target === 'past' && z.past != null && D[z.past]) return { date: D[z.past].date, draw: D[z.past].draw, d: D[z.past] };
+  const n = nextDrawDay();
+  return { date: n.date, draw: D[D.length - 1].draw + 1, d: null };
+}
+function zwSource() { const z = state.zw; return z.src === 'birth' ? { kind: 'birth', ...z.birth } : { kind: 'draw' }; }
+
+const ZR = 6.2;   // palace ring radius
+const branchAngle = (b) => Math.PI / 2 - (b * Math.PI * 2) / 12;   // 子 nearest the camera
+const ringPos = (b, r = ZR) => [Math.cos(branchAngle(b)) * r, Math.sin(branchAngle(b)) * r];
+const TILE = 0.42, tilePos = (k) => [((k - 1) % 7 - 3) * TILE, (Math.floor((k - 1) / 7) - 3) * TILE];
+const slotPos = (i) => [(i - 2.5) * 0.95, 5.4, 0];
+const PLAY = { fly: 2.2, mut: 2.8, step: 0.9 };
+const playEnd = () => PLAY.mut + 6 * PLAY.step + 0.6;
+
+function showZiwei() {
+  clearStage();
+  // night sky
+  const sky = new Float32Array(1600 * 3);
+  for (let i = 0; i < 1600; i++) {
+    const u = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, r = 45 + Math.random() * 30, s = Math.sqrt(1 - u * u);
+    sky.set([r * s * Math.cos(th), Math.abs(r * u) * 0.9 - 6, r * s * Math.sin(th)], i * 3);
+  }
+  const stars = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(sky, 3)), new THREE.PointsMaterial({ color: '#cfd6e6', size: 0.16, transparent: true, opacity: 0.75, depthWrite: false }));
+  group.add(stars);
+  // the chart floor: two rings and twelve spokes
+  const pts = [];
+  const circle = (r) => { for (let i = 0; i < 96; i++) { const a = (i / 96) * Math.PI * 2, b = ((i + 1) / 96) * Math.PI * 2; pts.push(Math.cos(a) * r, 0, Math.sin(a) * r, Math.cos(b) * r, 0, Math.sin(b) * r); } };
+  circle(ZR - 1.15); circle(ZR + 1.15); circle(2.2);
+  for (let b = 0; b < 12; b++) { const a = branchAngle(b) + Math.PI / 12; pts.push(Math.cos(a) * 2.2, 0, Math.sin(a) * 2.2, Math.cos(a) * (ZR + 1.15), 0, Math.sin(a) * (ZR + 1.15)); }
+  group.add(new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)), new THREE.LineBasicMaterial({ color: '#3a3550', transparent: true, opacity: 0.9 })));
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(ZR + 1.15, 96), new THREE.MeshBasicMaterial({ color: '#17151f', transparent: true, opacity: 0.85 }));
+  disc.rotation.x = -Math.PI / 2; disc.position.y = -0.01; group.add(disc);
+  for (let b = 0; b < 12; b++) { const [x, z] = ringPos(b, ZR + 1.55); label(group, BRANCHES[b], x, 0, z, 'zwb'); }
+  // 紫微, the pole star, over the centre
+  const pole = new THREE.Mesh(new THREE.SphereGeometry(0.32, 32, 20), new THREE.MeshStandardMaterial({ color: '#c9a4f5', emissive: '#c9a4f5', emissiveIntensity: 0.9 }));
+  pole.position.set(0, 3.6, 0); group.add(pole);
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.022, 8, 64), new THREE.MeshBasicMaterial({ color: '#c9a4f5', transparent: true, opacity: 0.6 }));
+  halo.position.copy(pole.position); group.add(halo);
+  const halo2 = halo.clone(); halo2.scale.setScalar(1.35); halo2.material = halo.material.clone(); halo2.material.opacity = 0.3; group.add(halo2);
+  // the 49 numbers in the middle
+  const tileGeo = new THREE.BoxGeometry(TILE * 0.82, 0.05, TILE * 0.82);
+  const tiles = {};
+  for (const k of NUMS) {
+    const [x, z] = tilePos(k);
+    const m = new THREE.Mesh(tileGeo, mat('#2a2740', { emissive: '#000000' }));
+    m.position.set(x, 0.03, z); group.add(m); tiles[k] = m;
+  }
+  const chartG = new THREE.Group(); group.add(chartG);
+  current = {
+    zw: true, picks: [], chartG, tiles, pole, halo, halo2, stars, play: null, built: null,
+    tick: (dt) => {
+      const c = current;
+      if (!reduceMotion) { c.stars.rotation.y += dt * 0.008; c.halo.rotation.x += dt * 0.6; c.halo.rotation.y += dt * 0.4; c.halo2.rotation.y -= dt * 0.25; c.halo2.rotation.z += dt * 0.3; }
+      if (c.built) zwAnimate(dt);
+    },
+  };
+  const d = fit(1);
+  fly([0, 15.5 * d, 16 * d], [0, 1.2, 0.4]);
+  zwLegend();
+  if (window.iztro) castAndPlay();
+  else loadIztro().then(() => { if (state.view === 'ziwei' && current?.zw) castAndPlay(); }).catch((e) => { state.zw.error = e.message; renderPanel(); });
+}
+function zwLegend() {
+  $('#legend').innerHTML = `<div class="mb-1 font-medium text-foreground">Stars by element</div><div class="grid grid-cols-5 gap-x-2">${Object.entries(ELEMENT_COLOR).map(([e, c]) => `<span class="flex items-center gap-1"><span class="inline-block size-2.5 rounded-full" style="background:${c}"></span>${e}</span>`).join('')}</div><div class="mt-1.5 mb-1 font-medium text-foreground">四化</div><div class="grid grid-cols-4 gap-x-2">${Object.entries(MUTAGEN_COLOR).map(([m, c]) => `<span class="flex items-center gap-1"><span class="inline-block size-2.5 rounded-full border-2" style="border-color:${c}"></span>化${m}</span>`).join('')}</div><div class="mt-1.5 border-t pt-1.5">Drag to orbit · scroll to zoom</div>`;
+}
+function castAndPlay() {
+  const z = state.zw;
+  z.error = null;
+  let chart;
+  try { chart = castChart(zwSource(), zwTarget().date); } catch (e) { z.error = `Couldn’t cast the chart: ${e.message}`; renderPanel(); return; }
+  z.chart = chart;
+  if (!current?.zw) return renderPanel();
+  buildChart(chart);
+  current.play = { t: reduceMotion ? playEnd() : 0, done: reduceMotion };
+  renderPanel();
+}
+function buildChart(chart) {
+  const c = current, g = c.chartG;
+  g.traverse((o) => { if (o.element instanceof Element) o.element.remove(); o.geometry?.dispose(); o.material?.dispose?.(); });
+  g.clear();
+  for (const t of Object.values(c.tiles)) { t.position.y = 0.03; t.material.color.set('#2a2740'); t.material.emissive.set('#000000'); }
+  const picked = new Map(chart.picks.map((p, i) => [`${p.p.branch}:${p.s.name}`, i]));
+  const plaques = [], starObjs = [], picks = [];
+  const plaqueGeo = new THREE.BoxGeometry(1.9, 0.05, 1.3);
+  const starGeo = new THREE.SphereGeometry(1, 20, 14);
+  for (const p of chart.palaces) {
+    const [x, z] = ringPos(p.branch);
+    const plaque = new THREE.Mesh(plaqueGeo, new THREE.MeshStandardMaterial({ color: '#221f30', roughness: 0.7, transparent: true, opacity: 0.95 }));
+    plaque.position.set(x, 0.03, z); plaque.rotation.y = -branchAngle(p.branch) + Math.PI / 2; g.add(plaque);
+    const hot = chart.picks.some((k) => k.p === p);
+    const starLine = (list) => list.map((s) => { const m = mutOf(chart, s.name); return `<span style="color:${ELEMENT_COLOR[ELEMENT[s.name]] || '#b8b5ac'}">${s.name}</span>${s.b ? `<i>${s.b}</i>` : ''}${m ? `<em style="background:${MUTAGEN_COLOR[m]}">${m}</em>` : ''}`; }).join(' ');
+    const lb = label(g, `<b>${palaceShort(p.name)}</b> <span class="gz">${p.gz}</span><div>${starLine(p.major) || '<span class="muted">空宫</span>'}</div>${p.minor.length ? `<div class="mn">${starLine(p.minor.slice(0, 3))}</div>` : ''}`, x, 0.06, z, `zwp${hot ? ' hot' : ''}`);
+    plaque.userData.pick = () => ({ tip: `<div class="font-medium">${p.name} · ${p.gz}</div><div class="mt-0.5">${[...p.major, ...p.minor].map((s) => `${s.name}${s.b ? `(${s.b})` : ''}${mutOf(chart, s.name) ? ` 化${mutOf(chart, s.name)}` : ''}`).join('、') || '空宫'}</div>` });
+    picks.push(plaque);
+    plaques.push({ p, plaque, lb });
+    // the stars hover over their palace in a small arc
+    const list = [...p.major.map((s) => ({ s, major: true })), ...p.minor.slice(0, 3).map((s) => ({ s, major: false }))];
+    list.forEach((o, i) => {
+      const el = ELEMENT[o.s.name], color = new THREE.Color(ELEMENT_COLOR[el] || '#b8b5ac');
+      const m = new THREE.Mesh(starGeo, new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: o.major ? 0.85 : 0.5 }));
+      const r = o.major ? 0.17 : 0.1;
+      m.scale.setScalar(r);
+      const spread = (i - (list.length - 1) / 2) * 0.42;
+      const a = branchAngle(p.branch), tx = x + Math.cos(a + Math.PI / 2) * spread, tz = z + Math.sin(a + Math.PI / 2) * spread;
+      const target = new THREE.Vector3(tx, o.major ? 1.25 : 0.85, tz);
+      m.position.copy(c.pole.position); g.add(m);
+      const mut = mutOf(chart, o.s.name);
+      let ring = null;
+      if (mut) {
+        ring = new THREE.Mesh(new THREE.TorusGeometry(r * 1.9, 0.022, 8, 40), new THREE.MeshBasicMaterial({ color: MUTAGEN_COLOR[mut], transparent: true, opacity: 0.95 }));
+        ring.position.copy(target); ring.scale.setScalar(0.001); g.add(ring);
+      }
+      const so = { s: o.s, p, m, target, ring, delay: p.branch * 0.07 + i * 0.05, phase: Math.random() * 6, glow: o.major ? 0.85 : 0.5 };
+      m.userData.pick = () => ({ tip: `<div class="font-medium">${o.s.name}${o.s.b ? ` · ${o.s.b}` : ''}${mut ? ` · 化${mut}` : ''}</div><div class="mt-0.5 text-muted-foreground">${p.name} · ${el ? `${el} element` : 'no element in the rule'}</div>` });
+      picks.push(m);
+      starObjs.push(so);
+    });
+  }
+  // the six picks: a beam from the star to its number, then a ball up to the ticket
+  const seq = chart.picks.map((pk, i) => {
+    const so = starObjs.find((o) => o.p === pk.p && o.s.name === pk.s.name) || starObjs.find((o) => o.s.name === pk.s.name);
+    const from = so ? so.target.clone() : new THREE.Vector3(...[ringPos(pk.p.branch)[0], 0.4, ringPos(pk.p.branch)[1]]);
+    const [tx, tz] = tilePos(pk.n), to = new THREE.Vector3(tx, 0.08, tz);
+    const mid = from.clone().lerp(to, 0.5); mid.y += 2.2;
+    const curve = new THREE.QuadraticBezierCurve3(from, mid, to);
+    const color = ELEMENT_COLOR[pk.el] || B.amber;
+    const beam = new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(48)), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.9 }));
+    beam.geometry.setDrawRange(0, 0); g.add(beam);
+    const ballM = new THREE.Mesh(new THREE.SphereGeometry(0.3, 28, 18), new THREE.MeshStandardMaterial({ color: B.amber, emissive: B.amber, emissiveIntensity: 0.5 }));
+    ballM.position.copy(to); ballM.visible = false; g.add(ballM);
+    const lb = label(ballM, String(pk.n), 0, 0, 0, 'zwball'); lb.visible = false;
+    return { pk, so, beam, ballM, lb, to, slot: new THREE.Vector3(...slotPos(i)), start: PLAY.mut + i * PLAY.step };
+  });
+  c.picks = picks;
+  c.built = { plaques, starObjs, seq, chart };
+}
+function zwAnimate(dt) {
+  const c = current, pl = c.play, b = c.built;
+  if (!pl) return;
+  if (!pl.done) pl.t += dt;
+  const t = pl.t, ease = (x) => 1 - (1 - Math.max(0, Math.min(1, x))) ** 3;
+  // stars leave 紫微 for their palaces
+  for (const o of b.starObjs) {
+    const k = ease((t - o.delay) / (PLAY.fly - 0.6));
+    const bob = reduceMotion ? 0 : Math.sin(performance.now() / 900 + o.phase) * 0.05 * k;
+    o.m.position.lerpVectors(c.pole.position, o.target, k).y += Math.sin(k * Math.PI) * 1.2 + bob;
+    if (o.ring) { o.ring.position.copy(o.m.position); o.ring.scale.setScalar(Math.max(0.001, ease((t - PLAY.fly - o.delay * 0.3) / 0.5))); o.ring.quaternion.copy(camera.quaternion); }
+  }
+  // each pick: beam, tile, ball
+  for (const s of b.seq) {
+    const u = (t - s.start) / PLAY.step;
+    const beamK = ease(u / 0.45);
+    s.beam.geometry.setDrawRange(0, Math.ceil(49 * beamK));
+    s.beam.material.opacity = u > 1.2 ? Math.max(0.25, 0.9 - (u - 1.2) * 0.5) : 0.9;
+    const tile = c.tiles[s.pk.n];
+    if (u >= 0.45) { tile.material.color.set(B.amber); tile.material.emissive.set('#5a4210'); tile.position.y = 0.03 + 0.12 * ease((u - 0.45) / 0.3); }
+    const up = ease((u - 0.5) / 0.5);
+    s.ballM.visible = u >= 0.5;
+    if (s.ballM.visible) { s.ballM.position.lerpVectors(s.to, s.slot, up); s.ballM.position.y += Math.sin(up * Math.PI) * 0.8; }
+    s.lb.visible = up >= 1;
+    if (s.so) s.so.m.material.emissiveIntensity = u >= 0 && u < 1.2 ? 1.8 : s.so.glow;
+  }
+  if (!pl.done && t >= playEnd()) { pl.done = true; renderPanel(); }
+}
+function panelZiwei() {
+  const z = state.zw, chart = z.chart, tg = zwTarget(), playing = current?.play && !current.play.done;
+  const srcToggle = toggle([['draw', 'Draw chart'], ['birth', 'Your birth chart']], z.src, 'zwsrc');
+  const next = nextDrawDay();
+  const targetToggle = toggle([['next', `Next draw · ${DAY_NAMES[next.w]}`], ['past', 'A past draw']], z.target, 'zwtarget');
+  let form = '';
+  if (z.target === 'past') form += `<form data-form="zwpast" class="mt-2 flex gap-1.5"><input name="q" value="${z.past != null ? D[z.past].draw : ''}" placeholder="Draw number, e.g. ${D[D.length - 1].draw}" class="h-8 min-w-0 flex-1 rounded-md border border-input bg-background px-2.5 text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" /><button class="${btnCls}">Use</button></form>`;
+  if (z.src === 'birth') {
+    const inp = 'h-8 w-full rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring';
+    form += `<form data-form="birth" class="mt-3 grid grid-cols-2 gap-2 rounded-lg border bg-background/40 p-2.5 text-xs">
+      <label class="col-span-2 grid gap-1"><span class="text-muted-foreground">Birth date (solar calendar)</span><input type="date" name="date" value="${esc(z.birth.date)}" min="1900-01-01" max="2100-12-31" class="${inp}" /></label>
+      <label class="grid gap-1"><span class="text-muted-foreground">Birth time (时辰)</span><select name="time" class="${inp}">${SHICHEN.map(([n, h], i) => `<option value="${i}" ${Number(z.birth.time) === i ? 'selected' : ''}>${n}时 ${h}</option>`).join('')}</select></label>
+      <label class="grid gap-1"><span class="text-muted-foreground">Gender</span><select name="gender" class="${inp}">${['男', '女'].map((g) => `<option ${z.birth.gender === g ? 'selected' : ''}>${g}</option>`).join('')}</select></label>
+      <p class="col-span-2 text-[11px] text-muted-foreground">Kept only in this browser. The chart is yours; each draw day's 四化 (流日四化) moves the picks.</p>
+    </form>`;
+  }
+  let body = '';
+  if (z.error) body = `<p class="mt-3 rounded-lg border border-danger/40 bg-danger/10 p-3 text-xs">${esc(z.error)}</p>`;
+  else if (!chart) body = '<p class="mt-3 text-xs text-muted-foreground">Loading the chart library…</p>';
+  else {
+    const drawn = tg.d;
+    const rows = chart.picks.map((pk) => {
+      const hit = drawn ? drawn.n.includes(pk.n) : false, add = drawn ? drawn.add === pk.n : false;
+      return `<tr class="border-t"><td class="py-1.5 pr-2">${ball(pk.n, hit ? 'hit' : add ? 'add' : 'pick', 'noop')}</td><td class="py-1.5"><span style="color:${ELEMENT_COLOR[pk.el] || '#b8b5ac'}">${esc(pk.s.name)}</span> <span class="text-muted-foreground">${pk.el ? `${pk.el} ${pk.digit}${pk.s.b ? ` · ${pk.s.b}` : ''}` : ''}</span><div class="text-[11px] text-muted-foreground">${esc(pk.why)} · ${esc(pk.p.gz)}</div></td></tr>`;
+    }).join('');
+    const result = drawn ? (() => { const s = scoreTicket(chart.picks.map((p) => p.n), drawn); return `<div class="mt-2 rounded-lg border bg-background/40 p-2.5 text-xs"><div class="flex flex-wrap items-center gap-1">${drawn.n.map((x) => `<span class="ball sm hit">${x}</span>`).join('')}<span class="text-muted-foreground">+</span><span class="ball sm add">${drawn.add}</span></div><p class="mt-1.5">Draw ${drawn.draw} matched <b>${s.m}</b> number${s.m === 1 ? '' : 's'}${s.g ? `: Group ${s.g}` : ''}.</p></div>`; })() : '';
+    body = `<div class="mt-3 grid grid-cols-2 gap-2">${kpi('Chart for', chart.birth ? 'Your birth' : `Draw ${tg.draw}`, chart.birth ? `四化 of ${fmtShort(tg.date)}` : `${fmtShort(tg.date)} · 酉时`)}${kpi('Lunar date', esc(chart.lunar))}${kpi('五行局', esc(chart.five))}${kpi('命主 · 身主', `${esc(chart.soul)} · ${esc(chart.body)}`)}</div>
+      <div class="mt-2 flex flex-wrap gap-1 text-[11px]">${['禄', '权', '科', '忌'].map((m) => `<span class="rounded border px-1.5 py-0.5"><span style="color:${MUTAGEN_COLOR[m]}">化${m}</span> ${esc(chart.mut[m] || '–')}</span>`).join('')}</div>
+      ${section(playing ? 'Casting…' : 'The six numbers', `<table class="w-full text-xs"><tbody>${rows}</tbody></table>${result}
+        <div class="mt-2 flex gap-1.5"><button type="button" data-act="zwsave" class="${btnCls} flex-1"><i class="fi fi-rr-bookmark"></i>Save ticket</button><button type="button" data-act="zwreplay" class="${btnCls}"><i class="fi fi-rr-rotate-right"></i>Replay</button></div>`, 'fi-rr-sparkles')}`;
+  }
+  return `<h1 class="text-lg font-semibold leading-tight">紫微斗数 picks</h1>
+    <p class="mt-1 text-xs leading-relaxed text-muted-foreground">紫微斗数 (Zi Wei Dou Shu, Purple Star astrology) casts 12 palaces and the stars in them from a date and a two-hour time slot. Here a chart is cast for a draw, or for you, and its stars are turned into six numbers.</p>
+    <div class="mt-3">${srcToggle}</div>
+    <div class="mt-2">${targetToggle}</div>
+    ${form}
+    <button type="button" data-act="zwcast" class="${primaryCls} mt-3 w-full"><i class="fi fi-rr-sparkles"></i>${playing ? '排盘 · Cast again' : '排盘 · Cast the chart'}</button>
+    ${body}
+    ${section('How a star becomes a number', `<ol class="list-decimal space-y-1 pl-4 text-xs leading-relaxed text-muted-foreground">
+      <li>Stars are taken in order: the 化禄 star, the stars in 财帛宫 then 命宫, the 化权 and 化科 stars, then 田宅, 福德, 官禄 and the other palaces. The 化忌 star is skipped. An empty palace borrows the main stars opposite (借对宫).</li>
+      <li>A star's element gives a digit from the 河图: 水 1/6, 火 2/7, 木 3/8, 金 4/9, 土 5/10. Bright stars (庙 旺 得) take the first, the others the second.</li>
+      <li>The palace's earthly branch sets the tens: 子 巳 +0, 丑 午 +10, 寅 未 +20, 卯 申 +30, 辰 酉 +40 (over 49 drops 10).</li>
+      <li>Repeats are skipped until there are six numbers.</li></ol>
+      <p class="mt-2 text-[11px] text-muted-foreground">This rule is ours: 紫微斗数 has no traditional way to pick lottery numbers. Charts by <a class="text-primary hover:underline" href="https://github.com/SylarLong/iztro" target="_blank" rel="noopener">iztro</a>; draw charts use 男 for the direction of the decades, which doesn't move the stars.</p>`, 'fi-rr-list')}
+    <button type="button" data-act="zwcompare" class="${btnCls} mt-3 w-full"><i class="fi fi-rr-chart-line-up"></i>Backtest 紫微 against the other methods</button>
+    <p class="mt-4 rounded-lg border border-amber/30 bg-amber/5 p-3 text-[11px] leading-relaxed text-ink-2">A chart can't move the balls: the odds of Group 1 stay 1 in ${f.int(choose(49, 6))}. Treat this as a cultural game. If many players pick from charts, those numbers get shared more ways when they come up.</p>`;
+}
+
+// ================= panel and tabs =================
+function renderPanel() {
+  const panel = $('#panel'), top = panel.scrollTop;
+  const footer = `<div class="mt-4 border-t pt-3 text-[11px] text-muted-foreground">${f.int(D.length)} draws to ${fmtShort(D[D.length - 1].date)} · ${state.source === 'stored' ? 'loaded in this browser' : 'bundled data'}${state.source === 'stored' ? ` · <button type="button" data-act="reset-data" class="text-primary hover:underline">Back to the bundled data</button>` : ''}</div>`;
+  const body = state.view === 'board' ? panelBoard() : state.view === 'history' ? panelHistory() : state.view === 'patterns' ? panelPatterns() : state.view === 'ziwei' ? panelZiwei() : panelPicks();
+  panel.innerHTML = body + footer;
+  panel.scrollTop = top;
+}
+const SHOW = { board: showBoard, history: showHistory, patterns: showPatterns, picks: showPicks, ziwei: showZiwei };
+function show({ instant = false } = {}) {
+  hideTip();
+  if (state.view !== 'history') state.hist.playing = false;
+  SHOW[state.view]();
+  if (state.view === 'board' || (state.view === 'picks' && !state.picks.bt)) { const d = fit(1); fly([0, 11 * d, 15 * d], [0, 1, 0], instant); }
+  renderPanel();
+  const u = new URL(location.href); u.searchParams.set('view', state.view); history.replaceState(null, '', u);
+}
+const renderTabs = () => {
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([k, v]) => `<button role="tab" data-tab="${k}" aria-label="${v.name}" aria-selected="${k === state.view}" data-state="${k === state.view ? 'active' : ''}" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi ${v.icon}"></i><span class="hidden sm:inline">${v.name}</span></button>`).join('');
+};
+$('#tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b && b.dataset.tab !== state.view) { state.view = b.dataset.tab; renderTabs(); show(); } });
+
+$('#panel').addEventListener('click', async (e) => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act, v = el.dataset.v;
+  if (act === 'win') { state.win = v; show(); }
+  else if (act === 'num') {
+    const k = Number(v);
+    if (state.view === 'picks') return toggleNumber(k);
+    if (state.view !== 'board') { state.view = 'board'; renderTabs(); state.sel = k; return show(); }
+    state.sel = state.sel === k ? null : k; paintBoard(current.board, { sel: state.sel }); renderPanel();
+  }
+  else if (act === 'hstep') { state.hist.playing = false; selectDraw(state.hist.i + Number(v)); }
+  else if (act === 'hplay') {
+    state.hist.playing = !state.hist.playing;
+    if (state.hist.playing && state.hist.i === D.length - 1) selectDraw(0);
+    renderPanel();
+  }
+  else if (act === 'hgo') { state.hist.playing = false; selectDraw(Number(v)); }
+  else if (act === 'jackpot') { state.hist.jackpot = !state.hist.jackpot; current.jack.visible = state.hist.jackpot; current.picks = state.hist.jackpot ? [current.main, current.adds, current.jack] : [current.main, current.adds]; placeSelection(true); legendHistory(); renderPanel(); }
+  else if (act === 'metric') { state.metric = v; show(); }
+  else if (act === 'method') { state.picks.method = v; renderPanel(); }
+  else if (act === 'pwin') { state.picks.win = v; state.picks.bt = null; show(); }
+  else if (act === 'generate') { try { await generate(); } catch (err) { return toast(err.message); } paintBoard(current.board, { picks: state.picks.ticket.nums }); renderPanel(); if (innerWidth < 900) window.pgDrawer.close(); }
+  else if (act === 'clear') { state.picks.ticket = null; paintBoard(current.board, { picks: null }); renderPanel(); }
+  else if (act === 'btn') { state.picks.btN = Number(v); renderPanel(); }
+  else if (act === 'pmetric') { state.picks.metric = v; legendPicks(); renderPanel(); }
+  else if (act === 'backtest') startBacktest();
+  else if (act === 'zwsrc') { state.zw.src = v; castAndPlay(); }
+  else if (act === 'zwtarget') { state.zw.target = v; if (v === 'past' && state.zw.past == null) state.zw.past = D.length - 1; castAndPlay(); }
+  else if (act === 'zwcast' || act === 'zwreplay') { if (state.zw.src === 'birth') readBirth(); castAndPlay(); if (innerWidth < 900) window.pgDrawer.close(); }
+  else if (act === 'zwsave' && state.zw.chart) {
+    const nums = state.zw.chart.picks.map((x) => x.n).sort((a, b) => a - b);
+    state.tickets.unshift({ nums, label: `紫微斗数, ${state.zw.src === 'birth' ? 'birth chart' : 'draw chart'}`, after: D[D.length - 1].draw, at: new Date().toISOString() });
+    state.tickets = state.tickets.slice(0, 12);
+    toast((await store.put('tickets', state.tickets)) ? 'Ticket saved: see Picks › Saved tickets' : 'Couldn’t save: storage is blocked in this browser');
+  }
+  else if (act === 'zwcompare') { state.view = 'picks'; state.picks.method = 'ziwei'; renderTabs(); show(); startBacktest(); }
+  else if (act === 'save') {
+    const t = state.picks.ticket;
+    state.tickets.unshift({ nums: t.nums, label: t.method === 'own' ? 'Own numbers' : `${METHODS[t.method].name}, ${WINDOWS[t.win].label.toLowerCase()}`, after: D[D.length - 1].draw, at: new Date().toISOString() });
+    state.tickets = state.tickets.slice(0, 12);
+    toast((await store.put('tickets', state.tickets)) ? 'Ticket saved in this browser' : 'Couldn’t save: storage is blocked in this browser');
+    renderPanel();
+  }
+  else if (act === 'unsave') { state.tickets.splice(Number(v), 1); await store.put('tickets', state.tickets); renderPanel(); }
+  else if (act === 'reset-data') { await store.del('data'); await loadData(); toast('Back to the bundled data'); }
+});
+function readBirth() {
+  const form = $('#panel [data-form="birth"]');
+  if (!form) return;
+  const b = { date: form.date.value || state.zw.birth.date, time: Number(form.time.value), gender: form.gender.value };
+  state.zw.birth = b;
+  store.put('birth', b);
+}
+$('#panel').addEventListener('change', (e) => { if (e.target.closest('[data-form="birth"]')) readBirth(); });
+$('#panel').addEventListener('submit', (e) => {
+  if (e.target.closest('[data-form="birth"]')) { e.preventDefault(); readBirth(); return castAndPlay(); }
+  if (e.target.closest('[data-form="zwpast"]')) {
+    e.preventDefault();
+    const q = e.target.q.value.trim(), i = D.findIndex((d) => d.draw === Number(q));
+    if (i < 0) return toast(`No draw ${q} in the data`);
+    state.zw.past = i; return castAndPlay();
+  }
+  const form = e.target.closest('[data-form="jump"]');
+  if (!form) return;
+  e.preventDefault();
+  const q = form.q.value.trim();
+  let i = -1;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(q)) { i = D.findIndex((d) => d.date >= q); if (i < 0) i = D.length - 1; }
+  else if (/^\d+$/.test(q)) i = D.findIndex((d) => d.draw === Number(q));
+  if (i < 0) return toast(`No draw matches “${q}”`);
+  state.hist.playing = false; selectDraw(i);
+});
+
+// "Update data": read a newer results CSV in the browser and keep it in IndexedDB
+$('#csv').addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  e.target.value = '';
+  if (!file) return;
+  try {
+    const draws = parseToto(await file.text());
+    const saved = await store.put('data', { draws: draws.map(toCompact), at: new Date().toISOString(), name: file.name });
+    setData(draws, saved ? 'stored' : 'bundled');
+    show();
+    toast(`${f.int(draws.length)} draws to ${fmtShort(draws.at(-1).date)}${saved ? ', kept in this browser' : ' (storage is blocked, so only for this visit)'}`);
+  } catch (err) { toast(err.message || 'Couldn’t read that file'); }
+});
+
+// ================= picking =================
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+const hit = (e) => {
+  if (!current?.picks) return null;
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const h = ray.intersectObjects(current.picks.filter((o) => o.visible && (!o.parent || o.parent.visible)), false)[0];
+  return h ? h.object.userData.pick(h.instanceId) : null;
+};
+const tip = $('#tip');
+function hideTip() { tip.hidden = true; renderer.domElement.style.cursor = ''; }
+let hoverQueued = null;
+renderer.domElement.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') hoverQueued = e; });
+renderer.domElement.addEventListener('pointerleave', () => { hoverQueued = null; hideTip(); });
+const runHover = () => {
+  if (!hoverQueued) return;
+  const e = hoverQueued; hoverQueued = null;
+  const p = hit(e);
+  if (!p) return hideTip();
+  tip.innerHTML = p.tip; tip.hidden = false;
+  renderer.domElement.style.cursor = p.click ? 'pointer' : '';
+  tip.style.left = `${Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8)}px`;
+  tip.style.top = `${Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8)}px`;
+};
+let down = null;
+renderer.domElement.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  const p = hit(e);
+  if (p?.click) { hideTip(); p.click(); }
+});
+addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state.view === 'board' && state.sel != null) { state.sel = null; paintBoard(current.board, { sel: null }); renderPanel(); }
+});
+
+// ================= loop =================
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if (flight) {
+    flight.t = Math.min(1, flight.t + dt * 1.6);
+    const e = 1 - (1 - flight.t) ** 3;
+    camera.position.lerpVectors(flight.from.pos, flight.to.pos, e);
+    controls.target.lerpVectors(flight.from.target, flight.to.target, e);
+    if (flight.t >= 1) flight = null;
+  }
+  current?.tick?.(dt);
+  // History replay: keep the camera on the moving row
+  if (state.view === 'history' && state.hist.playing && current?.sel && !flight) {
+    const z = -hz(state.hist.i), dz = z - 3 - controls.target.z;
+    controls.target.z += dz * Math.min(1, dt * 5); camera.position.z += dz * Math.min(1, dt * 5);
+  }
+  runHover();
+  controls.update(); renderer.render(scene, camera); labelR.render(scene, camera);
+});
+
+// ================= boot =================
+function setData(draws, source) {
+  CACHE = {};
+  D = draws; ERA = Math.max(0, D.findIndex((d) => d.draw >= ERA_DRAW));
+  state.source = source;
+  state.hist.i = D.length - 1;
+  state.sel = null; state.picks.bt = null; state.zw.chart = null; state.zw.past = null;
+}
+async function loadData() {
+  let bundled = null;
+  try { const r = await fetch('data/sg-toto.json'); if (!r.ok) throw new Error(r.status); bundled = (await r.json()).draws.map(fromCompact); } catch { /* fall back to stored */ }
+  const kept = await store.get('data');
+  const stored = kept?.draws?.length ? kept.draws.map(fromCompact) : null;
+  // a stored CSV wins only while it is newer than the bundle
+  if (stored && (!bundled || stored.at(-1).draw > bundled.at(-1).draw)) setData(stored, 'stored');
+  else if (bundled) setData(bundled, 'bundled');
+  else throw new Error('no data');
+  show({ instant: true });
+}
+(async () => {
+  resize();
+  const v = new URL(location.href).searchParams.get('view');
+  if (VIEWS[v]) state.view = v;
+  renderTabs();
+  state.tickets = (await store.get('tickets')) || [];
+  const birth = await store.get('birth'); if (birth?.date) state.zw.birth = birth;
+  try { await loadData(); } catch { $('#panel').innerHTML = '<p class="text-sm">Couldn’t load the results data.</p>'; }
+})();
+</script>
+</body>
+</html>
