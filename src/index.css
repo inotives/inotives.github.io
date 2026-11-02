@@ -796,6 +796,10 @@ button.heat-cell[aria-pressed="true"] {
   line-height: 1;
 }
 
+.ledger-numbered-desc .ledger-row::before {
+  counter-increment: entry -1;
+}
+
 .rail {
   position: sticky;
   top: 84px;
