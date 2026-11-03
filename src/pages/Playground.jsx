@@ -3,6 +3,9 @@ import { formatShort } from '../utils/dates'
 
 const libraryName = Object.fromEntries(PLAYGROUND_LIBRARIES.map((lib) => [lib.id, lib.name]))
 
+// newest first; mocks from the same day keep the newest-added on top
+const MOCKS_BY_DATE = [...PLAYGROUND_MOCKS].reverse().sort((a, b) => b.date.localeCompare(a.date))
+
 function MockCard({ mock }) {
   const title = `${mock.project}: ${mock.name}`
   return (
@@ -83,7 +86,7 @@ export default function Playground() {
           <span className="notes-count">{PLAYGROUND_MOCKS.length} mocks</span>
         </div>
         <div className="mock-grid">
-          {PLAYGROUND_MOCKS.map((mock) => (
+          {MOCKS_BY_DATE.map((mock) => (
             <MockCard key={mock.id} mock={mock} />
           ))}
         </div>
