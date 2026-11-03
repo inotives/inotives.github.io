@@ -10,7 +10,10 @@
   Views: Board (the 49 numbers as columns, height against chance, colour by draws since last seen),
   History (every draw as a wall of balls running back in time, with Group 1 jackpots), Patterns
   (sums, odd/even, low/high, ranges, back-to-back numbers, repeats and pairs against exact chance)
-  and Picks (number-stats methods that pick a ticket, with a walk-forward backtest against chance).
+  Picks (number-stats methods that pick a ticket, with a walk-forward backtest against chance), 紫微
+  (a 紫微斗数 chart turned into six numbers) and Tarot (a seven-card horseshoe reading for a question,
+  read by position, orientation, elemental dignity and theme, and turned into numbers through Golden
+  Dawn correspondences and numerology; the engine sits between the tarot markers below).
   Earlier draws were a 6/45 game with different odds, so the parser drops them and every view uses
   6/49 draws only. Data: Singapore Pools' historical results CSV, bundled as public/mocks/data/sg-toto.json
   by scripts/mocks/sg-toto/build.mjs (which reuses the parser between the toto-csv markers below).
@@ -19,7 +22,7 @@
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&family=Noto+Serif+SC:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
@@ -94,6 +97,18 @@
   @keyframes zw-stamp { from { transform: rotate(var(--tilt, 0deg)) scale(1.9); opacity: 0; } 60% { opacity: 1; } to { transform: rotate(var(--tilt, 0deg)) scale(1); opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .lbl.zwseal .seal.stamp { animation: none; } }
   button.ball.seal { border: 0; }
+  /* Tarot tab: a candlelit table (oxblood velvet, antique gold, ivory cards), only while body.tr-night */
+  body.tr-night #stage { background: radial-gradient(ellipse 70% 60% at 55% 45%, #2b1320 0%, #180a12 60%, #0b0509 100%); }
+  .tr-serif { font-family: "Cormorant Garamond", Georgia, serif; }
+  .lbl.trpos { font: 500 13px "Cormorant Garamond", Georgia, serif; letter-spacing: 0.04em; color: rgb(212 176 106 / 0.8); }
+  .lbl.trpos .n { font-weight: 700; color: #d4b06a; }
+  .coin { display: inline-flex; align-items: center; justify-content: center; width: 2.3rem; height: 2.3rem; border-radius: 999px; font: 700 16px "Cormorant Garamond", Georgia, serif; color: #3a2418;
+    background: radial-gradient(circle at 35% 30%, #fbe7b0 0%, #d4b06a 45%, #9c7a3c 100%); box-shadow: inset 0 0 0 2px rgb(255 240 200 / 0.55), inset 0 0 0 3.5px rgb(120 90 40 / 0.6), 0 2px 8px rgb(0 0 0 / 0.4); }
+  .coin.add { background: radial-gradient(circle at 35% 30%, #f1e2e8 0%, #c9a0b2 50%, #8a5d70 100%); }
+  .coin.sm { width: 1.9rem; height: 1.9rem; font-size: 14px; }
+  .coin.hit { box-shadow: inset 0 0 0 2px rgb(255 240 200 / 0.55), 0 0 0 2px #1fefd7; }
+  .coin.was-add { box-shadow: inset 0 0 0 2px rgb(255 240 200 / 0.55), 0 0 0 2px #e58fb0; }
+  .lbl.trcoin .coin { width: 2.6rem; height: 2.6rem; font-size: 19px; }
   /* stars as their names, lit in their element's colour (vertical, as on a traditional chart) */
   .lbl.zwstar { font: 700 15px "Noto Serif SC", "Songti SC", serif; writing-mode: vertical-rl; letter-spacing: 0.05em; color: var(--c); text-shadow: 0 0 4px var(--c), 0 0 12px var(--c); transition: color 0.3s, text-shadow 0.3s; }
   .lbl.zwstar.minor { font-size: 11px; font-weight: 500; opacity: 0.8; text-shadow: 0 0 3px var(--c), 0 0 8px var(--c); }
@@ -441,7 +456,7 @@ function clearStage() {
   group = new THREE.Group(); scene.add(group);
   scene.fog = null;
   current = null;
-  document.body.classList.remove('zw-night');
+  document.body.classList.remove('zw-night', 'tr-night');
 }
 const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.05, ...extra });
 
@@ -452,6 +467,7 @@ const VIEWS = {
   patterns: { name: 'Patterns', icon: 'fi-rr-chart-histogram' },
   picks: { name: 'Picks', icon: 'fi-rr-magic-wand' },
   ziwei: { name: '紫微', icon: 'fi-rr-sparkles' },
+  tarot: { name: 'Tarot', icon: 'fi-rr-star' },
 };
 const state = {
   view: 'board', win: '200', sel: null,
@@ -459,6 +475,7 @@ const state = {
   metric: 'sum',
   picks: { method: 'balanced', win: '200', ticket: null, bt: null, btN: 500, metric: 'prize' },
   zw: { src: 'draw', target: 'next', past: null, birth: { date: '1990-01-01', time: 6, gender: '男' }, chart: null, error: null },
+  tr: { q: '', theme: 'auto', target: 'next', past: null, reading: null, readingFor: null },
   tickets: [], source: 'bundled',
 };
 
@@ -966,6 +983,7 @@ const METHODS = {
   day: { name: 'Draw day', icon: 'fi-rr-calendar', about: 'The six numbers drawn most often on the same weekday as the draw being picked for, Monday or Thursday, within the window.' },
   unpopular: { name: 'Unpopular', icon: 'fi-rr-user-slash', about: 'Six of the 15 numbers players pick least, from how many people won Group 7 in each draw. It can\'t change the odds of winning, only how many winners you would share a prize with.' },
   ziwei: { name: '紫微', icon: 'fi-rr-sparkles', about: 'The 紫微斗数 chart of the draw itself (its date at 酉时, the 6:30 pm slot), turned into six numbers by the rule on the 紫微 tab.' },
+  tarot: { name: 'Tarot', icon: 'fi-rr-star', about: 'A seven-card tarot reading for the draw, asked “What numbers will be drawn?”, read and turned into numbers as on the Tarot tab.' },
   random: { name: 'Random', icon: 'fi-rr-dice', about: 'Six numbers at random, as a quick pick would. The baseline every method is measured against.' },
 };
 // pick six numbers for the draw at index t, using only draws before it
@@ -980,6 +998,7 @@ function pickFor(method, t, win, rng) {
     while (out.length < 6) { const w = left.map((k) => F.count[k] + 1), tot = d3.sum(w); let r = rng() * tot, j = 0; while (r > w[j]) { r -= w[j]; j++; } out.push(left.splice(Math.min(j, left.length - 1), 1)[0]); }
     return out.sort((x, y) => x - y);
   }
+  if (method === 'tarot') return TAROT.read({ question: TR_BACKTEST_Q, theme: 'wealth', date: t < D.length ? D[t].date : nextDrawDay().date }).numbers.map((x) => x.n);
   if (method === 'ziwei') return castChart({ kind: 'draw' }, t < D.length ? D[t].date : nextDrawDay().date).picks.map((x) => x.n).sort((x, y) => x - y);
   const top6 = (score) => NUMS.slice().sort((x, y) => score[y] - score[x] || F.count[y] - F.count[x] || x - y).slice(0, 6).sort((x, y) => x - y);
   if (method === 'followon') {
@@ -1547,14 +1566,490 @@ function panelZiwei() {
 }
 
 // ================= panel and tabs =================
+// ================= tarot =================
+// A seven-card reading for a question and a draw, read the way a reader would (positions, upright or
+// reversed, neighbouring cards strengthening or weakening each other, what the question is about),
+// then turned into numbers through the cards' traditional correspondences. Self-contained: no DOM.
+// <tarot>
+const TAROT = (() => {
+  const SIGNS = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
+  const SIGN_EL = ['fire', 'earth', 'air', 'water'];                       // Aries fire, Taurus earth, … repeating
+  const signEl = (s) => SIGN_EL[s % 4];
+  const PLANET_SIGNS = { Sun: [4], Moon: [3], Mercury: [2, 5], Venus: [1, 6], Mars: [0, 7], Jupiter: [8, 11], Saturn: [9, 10] };
+  const PLANET_EL = { Sun: 'fire', Moon: 'water', Mercury: 'air', Venus: 'earth', Mars: 'fire', Jupiter: 'air', Saturn: 'earth' };
+  const CHALDEAN = ['Mars', 'Sun', 'Venus', 'Mercury', 'Moon', 'Saturn', 'Jupiter'];   // decan rulers from Aries' first decan
+  const EL_SIGNS = { fire: [0, 4, 8], earth: [9, 1, 5], air: [6, 10, 2], water: [3, 7, 11] };   // cardinal, fixed, mutable
+  const SUITS = ['Wands', 'Cups', 'Swords', 'Pentacles'];
+  const SUIT_EL = ['fire', 'water', 'air', 'earth'];
+  const RANKS = ['Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Page', 'Knight', 'Queen', 'King'];
+  const ROMAN = ['0', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI'];
+  const THEMES = ['wealth', 'love', 'career', 'health', 'general'];
+
+  // Major Arcana: number, name, Golden Dawn attribution, upright, reversed, valence, reversed valence, theme leanings
+  const MAJOR = [
+    [0, 'The Fool', 'Air', 'new beginnings, a leap of faith, spontaneity', 'recklessness, hesitation, a false start', 0.3, -0.3, {}],
+    [1, 'The Magician', 'Mercury', 'skill, willpower, making it happen', 'manipulation, untapped talent', 0.6, -0.3, { career: 0.3, wealth: 0.1 }],
+    [2, 'The High Priestess', 'Moon', 'intuition, hidden knowledge, patience', 'secrets, disconnection from instinct', 0.2, -0.2, {}],
+    [3, 'The Empress', 'Venus', 'abundance, fertility, comfort', 'dependence, creative block', 0.7, -0.3, { wealth: 0.3, love: 0.3 }],
+    [4, 'The Emperor', 'Aries', 'authority, structure, control', 'rigidity, domination', 0.4, -0.3, { career: 0.3 }],
+    [5, 'The Hierophant', 'Taurus', 'tradition, guidance, institutions', 'rebellion, broken convention', 0.3, -0.1, {}],
+    [6, 'The Lovers', 'Gemini', 'union, a choice of the heart, harmony', 'imbalance, misaligned values', 0.6, -0.4, { love: 0.5 }],
+    [7, 'The Chariot', 'Cancer', 'drive, victory, determination', 'loss of direction, aggression', 0.6, -0.3, { career: 0.2 }],
+    [8, 'Strength', 'Leo', 'courage, patience, inner strength', 'self-doubt, weakness', 0.6, -0.3, { health: 0.4 }],
+    [9, 'The Hermit', 'Virgo', 'solitude, reflection, inner guidance', 'isolation, withdrawal', 0, -0.2, {}],
+    [10, 'Wheel of Fortune', 'Jupiter', 'luck, cycles, a turning point', 'bad luck, resisting change', 0.7, -0.4, { wealth: 0.5 }],
+    [11, 'Justice', 'Libra', 'fairness, truth, cause and effect', 'injustice, dishonesty', 0.2, -0.3, {}],
+    [12, 'The Hanged Man', 'Water', 'surrender, a pause, a new view', 'delay, stalling', -0.1, -0.3, {}],
+    [13, 'Death', 'Scorpio', 'endings, transformation, release', 'resisting change, stagnation', -0.2, -0.3, {}],
+    [14, 'Temperance', 'Sagittarius', 'balance, moderation, patience', 'excess, imbalance', 0.4, -0.2, { health: 0.4 }],
+    [15, 'The Devil', 'Capricorn', 'attachment, temptation, materialism', 'release, breaking free', -0.6, 0.4, {}],
+    [16, 'The Tower', 'Mars', 'sudden upheaval, revelation, collapse', 'a disaster narrowly averted', -0.9, -0.3, {}],
+    [17, 'The Star', 'Aquarius', 'hope, renewal, inspiration', 'despair, lost faith', 0.8, -0.3, {}],
+    [18, 'The Moon', 'Pisces', 'illusion, uncertainty, the unconscious', 'confusion lifting, clarity returning', -0.4, 0.3, {}],
+    [19, 'The Sun', 'Sun', 'success, joy, vitality', 'a passing setback, dimmed joy', 0.95, -0.2, { health: 0.2 }],
+    [20, 'Judgement', 'Fire', 'awakening, reckoning, a calling', 'self-doubt, refusing the call', 0.3, -0.3, {}],
+    [21, 'The World', 'Saturn', 'completion, fulfilment, wholeness', 'unfinished business, delays', 0.85, -0.3, {}],
+  ];
+  // Minor Arcana by suit, Ace to King: upright, reversed, valence (reversed valence is half the opposite)
+  const MINOR = [
+    [ // Wands
+      ['inspiration, a spark, a new venture', 'delays, lack of motivation', 0.8], ['planning, future vision, a decision', 'fear of the unknown, poor planning', 0.3],
+      ['expansion, foresight, progress', 'obstacles, delays', 0.5], ['celebration, homecoming, stability', 'conflict at home, transition', 0.7],
+      ['competition, conflict, rivalry', 'tension released, avoiding a fight', -0.3], ['victory, recognition, success', 'a fall from grace, ego', 0.8],
+      ['standing your ground, defence', 'overwhelm, giving up', 0.1], ['speed, swift action, news', 'delays, frustration', 0.5],
+      ['resilience, persistence, a last stand', 'exhaustion, paranoia', 0], ['burden, overwork, responsibility', 'letting go, delegating', -0.4],
+      ['enthusiasm, discovery, a message', 'setbacks, no direction', 0.4], ['energy, adventure, impulsiveness', 'haste, scattered energy', 0.3],
+      ['confidence, warmth, determination', 'jealousy, insecurity', 0.6], ['leadership, vision, boldness', 'impulsiveness, overbearing', 0.6],
+    ],
+    [ // Cups
+      ['new love, emotional fulfilment, intuition', 'emotional loss, blocked feelings', 0.8], ['partnership, attraction, connection', 'imbalance, a broken bond', 0.7],
+      ['friendship, celebration, community', 'overindulgence, gossip', 0.7], ['apathy, contemplation, a missed offer', 'renewed interest, acceptance', -0.2],
+      ['loss, regret, disappointment', 'acceptance, moving on', -0.6], ['nostalgia, kindness, old ties', 'living in the past', 0.4],
+      ['choices, illusions, wishful thinking', 'clarity, a decision made', -0.1], ['walking away, seeking more', 'fear of change, drifting', -0.1],
+      ['the wish card: contentment, satisfaction', 'smugness, wishes unmet', 0.9], ['harmony, a happy family, fulfilment', 'a broken home, misalignment', 0.9],
+      ['creativity, a dreamy message, intuition', 'emotional immaturity', 0.4], ['romance, charm, an offer', 'moodiness, unrealistic plans', 0.5],
+      ['compassion, calm, emotional security', 'insecurity, dependence', 0.6], ['emotional balance, diplomacy', 'manipulation, volatility', 0.5],
+    ],
+    [ // Swords
+      ['clarity, breakthrough, truth', 'confusion, chaos', 0.5], ['stalemate, a hard choice', 'indecision, information overload', -0.2],
+      ['heartbreak, sorrow, grief', 'recovery, forgiveness', -0.85], ['rest, recovery, contemplation', 'restlessness, burnout', 0.1],
+      ['conflict, defeat, winning at a cost', 'reconciliation, regret', -0.6], ['transition, moving on, calmer waters', 'baggage, resistance', 0.2],
+      ['deception, strategy, getting away with it', 'confession, conscience', -0.4], ['restriction, feeling trapped', 'release, a new perspective', -0.6],
+      ['anxiety, worry, sleepless nights', 'hope, reaching out', -0.8], ['a painful ending, rock bottom', 'recovery, regeneration', -1],
+      ['curiosity, new ideas, vigilance', 'gossip, haste', 0.1], ['ambition, action, fast thinking', 'recklessness, burnout', 0.2],
+      ['independence, clear thinking, honesty', 'coldness, bitterness', 0.3], ['intellect, authority, truth', 'manipulation, cruelty', 0.3],
+    ],
+    [ // Pentacles
+      ['a new opportunity, prosperity, manifestation', 'a lost opportunity, poor planning', 0.9], ['balance, adaptability, juggling', 'overcommitment, disorder', 0.2],
+      ['teamwork, skill, building', 'poor teamwork, mediocrity', 0.5], ['saving, security, holding on', 'greed, overspending', 0.1],
+      ['hardship, loss, poverty', 'recovery, help arriving', -0.85], ['generosity, giving and receiving', 'debt, strings attached', 0.6],
+      ['patience, the long view, investment', 'impatience, poor returns', 0.3], ['craft, diligence, mastery', 'perfectionism, lack of focus', 0.5],
+      ['abundance, luxury, self-sufficiency', 'overwork, financial setbacks', 0.85], ['wealth, legacy, family prosperity', 'financial failure, loss', 0.95],
+      ['ambition, a new financial opening, study', 'procrastination, missed chances', 0.5], ['hard work, routine, reliability', 'stagnation, laziness', 0.4],
+      ['nurturing, practical, abundance at home', 'financial dependence, smothering', 0.7], ['wealth, security, success in business', 'greed, materialism', 0.8],
+    ],
+  ];
+  // how much each suit speaks to each kind of question
+  const SUIT_THEME = {
+    wealth: [0.2, 0, -0.2, 0.5], love: [0.1, 0.5, -0.3, 0], career: [0.4, 0, 0, 0.3], health: [0.2, 0, -0.3, 0.2], general: [0, 0, 0, 0],
+  };
+
+  // the 49 numbers laid round the zodiac: 0° Aries is 1, each number about 7.3°
+  // a band of the zodiac becomes weights on the numbers it covers, by how many degrees of each it holds
+  const SPAN = 360 / 49;
+  const band = (...ranges) => {
+    const w = new Map(); let total = 0;
+    for (const [from, to] of ranges) for (let n = 1; n <= 49; n++) {
+      const o = Math.max(0, Math.min(to, n * SPAN) - Math.max(from, (n - 1) * SPAN));
+      if (o > 1e-9) { w.set(n, (w.get(n) || 0) + o); total += o; }
+    }
+    return [...w].map(([n, o]) => [n, o / total]);
+  };
+  const signRange = (s) => [s * 30, s * 30 + 30];
+  const rootOf = (n) => (n === 0 ? 0 : 1 + ((n - 1) % 9));
+  const rootNums = (r) => { const out = []; for (let n = r; n <= 49; n += 9) out.push(n); return out; };
+
+  const DECK = [];
+  for (const [num, name, attr, up, rev, v, revV, lean] of MAJOR) {
+    const sign = SIGNS.indexOf(attr), planet = PLANET_SIGNS[attr] ? attr : null;
+    const el = sign >= 0 ? signEl(sign) : planet ? PLANET_EL[planet] : attr.toLowerCase();
+    let astro;
+    if (sign >= 0) astro = { w: band(signRange(sign)), note: SIGNS[sign] };
+    else if (num === 21) astro = { w: band(...[...PLANET_SIGNS.Saturn, ...EL_SIGNS.earth].map(signRange)), note: 'Saturn and Earth' };   // the Golden Dawn gives The World both
+    else if (planet) astro = { w: band(...PLANET_SIGNS[planet].map(signRange)), note: `${planet}, ruler of ${PLANET_SIGNS[planet].map((s) => SIGNS[s]).join(' and ')}` };
+    else astro = { w: band(...EL_SIGNS[el].map(signRange)), note: `the element of ${attr}` };
+    const cardNum = num === 0 ? 22 : num;                                  // The Fool counts as 22
+    DECK.push({ id: DECK.length, major: true, num, label: ROMAN[num], name, attr, el, up, rev, v, revV, lean, astro, cardNum });
+  }
+  SUITS.forEach((suit, si) => MINOR[si].forEach(([up, rev, v], ri) => {
+    const rank = ri + 1, el = SUIT_EL[si], [card, fixed, mutable] = EL_SIGNS[el];
+    let astro, attr;
+    if (rank >= 2 && rank <= 10) {                                         // pips rule a decan (10°) of their sign
+      const sign = [card, fixed, mutable][Math.floor((rank - 2) / 3)], d = (rank - 2) % 3, ruler = CHALDEAN[(sign * 3 + d) % 7];
+      astro = { w: band([sign * 30 + d * 10, sign * 30 + d * 10 + 10]), note: `${ruler} in ${SIGNS[sign]}` }; attr = astro.note;
+    } else if (rank >= 12) {                                               // Knight mutable, Queen cardinal, King fixed
+      const sign = rank === 12 ? mutable : rank === 13 ? card : fixed;
+      astro = { w: band(signRange(sign)), note: SIGNS[sign] }; attr = SIGNS[sign];
+    } else {                                                              // Aces and Pages hold the whole element
+      astro = { w: band(...EL_SIGNS[el].map(signRange)), note: `the element of ${el[0].toUpperCase() + el.slice(1)}` }; attr = `root of ${el}`;
+    }
+    DECK.push({ id: DECK.length, major: false, suit: si, rank, label: rank === 1 ? 'ACE' : rank <= 10 ? ROMAN[rank] : RANKS[ri].toUpperCase(), name: `${RANKS[ri]} of ${suit}`, attr, el, up, rev, v, revV: -v / 2, lean: {}, astro, cardNum: rank });
+  }));
+
+  // the seven-card horseshoe; theme weights say which positions speak loudest for each kind of question
+  const POSITIONS = [
+    { name: 'The past', about: 'what led here' },
+    { name: 'The present', about: 'where things stand' },
+    { name: 'Hidden influences', about: 'what works unseen' },
+    { name: 'Obstacles', about: 'what stands in the way' },
+    { name: 'Outside forces', about: 'other people and luck' },
+    { name: 'Advice', about: 'what to do' },
+    { name: 'Outcome', about: 'where this leads' },
+  ];
+  const POS_W = {
+    wealth: [0.5, 0.9, 0.9, 0.8, 1.0, 1.1, 1.6], love: [0.6, 1.1, 0.9, 0.8, 1.0, 1.0, 1.4], career: [0.6, 1.0, 0.8, 1.0, 0.8, 1.3, 1.4],
+    health: [0.6, 1.2, 1.0, 0.9, 0.6, 1.2, 1.3], general: [0.7, 1.0, 0.9, 0.8, 0.8, 1.1, 1.3],
+  };
+  const ADD_POS = 2;                                                       // hidden influences give the additional number
+
+  const KEYWORDS = {
+    wealth: /money|rich|win|winn|lotter|toto|jackpot|prize|luck|lucky|fortune|wealth|financ|invest|cash|gambl|bet|财|钱|中奖|运气|发财|彩票/i,
+    love: /love|relationship|partner|marri|romance|heart|crush|dating|wife|husband|girlfriend|boyfriend|soulmate|爱|感情|婚|恋/i,
+    career: /job|work|career|boss|business|promot|interview|company|startup|salary|工作|事业|老板|生意/i,
+    health: /health|sick|ill|recover|heal|body|surgery|疾|病|健康|身体/i,
+  };
+  const detectTheme = (q) => { for (const t of ['wealth', 'love', 'career', 'health']) if (KEYWORDS[t].test(q)) return t; return q.trim() ? 'general' : 'wealth'; };
+  const querentNums = (q) => [...new Set((q.match(/\d+/g) || []).map(Number).filter((n) => n >= 1 && n <= 49))];
+
+  const hash = (str) => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; };
+  const rng32 = (a) => () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+
+  // elemental dignities: same element strengthens, friendly supports, contrary weakens
+  const FRIEND = { fire: 'air', air: 'fire', water: 'earth', earth: 'water' }, CONTRARY = { fire: 'water', water: 'fire', air: 'earth', earth: 'air' };
+  const dignity = (a, b) => (a === b ? ['same', 1.2] : FRIEND[a] === b ? ['friendly', 1.1] : CONTRARY[a] === b ? ['contrary', 0.75] : ['neutral', 1]);
+
+  function read({ question = '', theme = 'auto', date }) {
+    const q = String(question).trim().replace(/\s+/g, ' ');
+    const th = THEMES.includes(theme) ? theme : detectTheme(q);
+    const rng = rng32(hash(`${th}|${q.toLowerCase()}|${date}`));
+    const order = DECK.map((c) => c.id);
+    for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    const cards = order.slice(0, 7).map((id, i) => ({ card: DECK[id], pos: i, reversed: rng() < 0.4 }));
+    // weigh each card: its position for this question, orientation, how it speaks to the question, its neighbours
+    for (const x of cards) {
+      const c = x.card, lean = c.major ? (c.lean[th] || 0) : SUIT_THEME[th][c.suit];
+      x.val = Math.max(-1, Math.min(1, (x.reversed ? c.revV : c.v) + lean));
+      x.dig = [];
+      let f = 1;
+      for (const nb of [cards[x.pos - 1], cards[x.pos + 1]]) if (nb) { const [kind, m] = dignity(c.el, nb.card.el); f *= m; if (kind !== 'neutral') x.dig.push({ kind, with: nb }); }
+      x.digF = f;
+      x.strength = Math.max(0.15, POS_W[th][x.pos] * f * (x.reversed ? 0.75 : 1) * (1 + 0.35 * x.val));
+    }
+    const sumS = cards.reduce((s, x) => s + x.strength, 0);
+    const favour = cards.reduce((s, x) => s + x.strength * x.val, 0) / sumS;
+    // every card points at numbers through its astrology, its numerology and (Major Arcana) its own number;
+    // a number gathers score from every card that points at it, by that card's strength
+    const score = new Array(50).fill(0), why = Array.from({ length: 50 }, () => []);
+    // weights: [number, share] pairs that sum to 1 for the card
+    const give = (x, weights, w, kind, note) => { for (const [n, share] of weights) { const a = x.strength * w * share; score[n] += a; why[n].push({ x, kind, note, a }); } };
+    for (const x of cards) {
+      const c = x.card, r = rootOf(c.cardNum + x.pos + 1);               // the card's number plus its place in the spread
+      give(x, c.astro.w, 1.2, 'astro', c.astro.note);
+      give(x, rootNums(r).map((n) => [n, 1 / 5.44]), 1.0, 'root', `${c.cardNum} + place ${x.pos + 1}, root ${r}`);
+      if (c.major) give(x, [[c.cardNum, 1]], 0.3, 'number', `card ${c.label === '0' ? '0 (22)' : c.label}`);
+    }
+    const mine = querentNums(q), meanS = sumS / 7;
+    for (const n of mine) { const a = 0.5 * meanS * (0.5 + Math.max(0, favour)); score[n] += a; why[n].push({ x: null, kind: 'yours', note: 'a number in your question', a }); }
+    const tie = Array.from({ length: 50 }, () => rng());
+    const ranked = Array.from({ length: 49 }, (_, i) => i + 1).sort((a, b) => score[b] - score[a] || tie[b] - tie[a]);
+    const six = ranked.slice(0, 6);
+    const hidden = cards[ADD_POS];
+    const add = ranked.find((n) => !six.includes(n) && why[n].some((w) => w.x === hidden)) ?? ranked[6];
+    const trace = (n) => why[n].slice().sort((a, b) => b.a - a.a);
+    const numbers = six.map((n) => ({ n, score: score[n], why: trace(n) })).sort((a, b) => a.n - b.n);
+    return { question: q, theme: th, detected: detectTheme(q), date, cards, favour, numbers, add: { n: add, why: trace(add) }, mine, sumS };
+  }
+  return { DECK, POSITIONS, SUITS, SIGNS, THEMES, read, detectTheme };
+})();
+// </tarot>
+
+// ---- the Tarot tab: a table, a deck, seven cards dealt into a horseshoe and turned one by one ----
+const TR_BACKTEST_Q = 'What numbers will be drawn?';
+const TR_GOLD = '#d4b06a', TR_INK = '#3a2418';
+const SUIT_COLOR = ['#9c3b26', '#2f5d8a', '#5b6573', '#5f6e2c'];          // wands, cups, swords, pentacles
+const EL_NAME = { fire: 'Fire', water: 'Water', air: 'Air', earth: 'Earth' };
+const TR_THEME_NAME = { wealth: 'Wealth and luck', love: 'Love', career: 'Career', health: 'Health', general: 'General' };
+const trTarget = () => {
+  const z = state.tr;
+  if (z.target === 'past' && z.past != null && D[z.past]) return { date: D[z.past].date, draw: D[z.past].draw, d: D[z.past] };
+  const n = nextDrawDay();
+  return { date: n.date, draw: D[D.length - 1].draw + 1, d: null };
+};
+// card faces are painted in code: an ivory card with a gilt frame, the number, a sigil and the name
+const SIGN_GLYPH = { Aries: '♈', Taurus: '♉', Gemini: '♊', Cancer: '♋', Leo: '♌', Virgo: '♍', Libra: '♎', Scorpio: '♏', Sagittarius: '♐', Capricorn: '♑', Aquarius: '♒', Pisces: '♓' };
+const PLANET_GLYPH = { Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄' };
+const CW = 300, CH = 500;
+function suitSigil(g, suit, cx, cy, s) {
+  g.save(); g.translate(cx, cy); g.strokeStyle = SUIT_COLOR[suit]; g.fillStyle = SUIT_COLOR[suit]; g.lineWidth = 4; g.lineCap = 'round'; g.lineJoin = 'round';
+  if (suit === 0) {            // wand: a budding staff
+    g.beginPath(); g.moveTo(-s * 0.15, s); g.lineTo(s * 0.15, -s); g.stroke();
+    for (const [y, d] of [[-0.5, 1], [0, -1], [0.45, 1]]) { g.beginPath(); g.ellipse(s * 0.05 * -y + d * s * 0.16, y * s, s * 0.13, s * 0.06, d * 0.6, 0, Math.PI * 2); g.fill(); }
+  } else if (suit === 1) {     // cup: a chalice
+    g.beginPath(); g.moveTo(-s * 0.55, -s * 0.7); g.quadraticCurveTo(-s * 0.5, s * 0.05, 0, s * 0.1); g.quadraticCurveTo(s * 0.5, s * 0.05, s * 0.55, -s * 0.7); g.closePath(); g.fill();
+    g.fillRect(-s * 0.06, s * 0.1, s * 0.12, s * 0.55); g.beginPath(); g.ellipse(0, s * 0.72, s * 0.35, s * 0.09, 0, 0, Math.PI * 2); g.fill();
+  } else if (suit === 2) {     // sword: blade, guard and pommel
+    g.beginPath(); g.moveTo(0, -s); g.lineTo(s * 0.09, -s * 0.8); g.lineTo(s * 0.09, s * 0.45); g.lineTo(-s * 0.09, s * 0.45); g.lineTo(-s * 0.09, -s * 0.8); g.closePath(); g.fill();
+    g.fillRect(-s * 0.42, s * 0.45, s * 0.84, s * 0.1); g.fillRect(-s * 0.05, s * 0.55, s * 0.1, s * 0.3); g.beginPath(); g.arc(0, s * 0.92, s * 0.09, 0, Math.PI * 2); g.fill();
+  } else {                     // pentacle: a coin holding a five-pointed star
+    g.beginPath(); g.arc(0, 0, s * 0.8, 0, Math.PI * 2); g.stroke(); g.beginPath(); g.arc(0, 0, s * 0.68, 0, Math.PI * 2); g.stroke();
+    g.beginPath(); for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + (i * 4 * Math.PI) / 5; g[i ? 'lineTo' : 'moveTo'](Math.cos(a) * s * 0.62, Math.sin(a) * s * 0.62); } g.closePath(); g.lineWidth = 3; g.stroke();
+  }
+  g.restore();
+}
+function elementSigil(g, el, cx, cy, s) {     // alchemical triangles: fire and air point up, water and earth down; air and earth are barred
+  g.save(); g.translate(cx, cy); g.strokeStyle = TR_INK; g.lineWidth = 4; g.lineJoin = 'round';
+  const up = el === 'fire' || el === 'air', k = up ? 1 : -1;
+  g.beginPath(); g.moveTo(0, -s * 0.75 * k); g.lineTo(s * 0.7, s * 0.55 * k); g.lineTo(-s * 0.7, s * 0.55 * k); g.closePath(); g.stroke();
+  if (el === 'air' || el === 'earth') { g.beginPath(); g.moveTo(-s * 0.55, s * 0.15 * k); g.lineTo(s * 0.55, s * 0.15 * k); g.stroke(); }
+  g.restore();
+}
+const faceCache = new Map();
+function cardFace(card) {
+  if (faceCache.has(card.id)) return faceCache.get(card.id);
+  const cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
+  const g = cv.getContext('2d');
+  const bg = g.createLinearGradient(0, 0, 0, CH); bg.addColorStop(0, '#f3ead6'); bg.addColorStop(1, '#e4d6b8');
+  g.fillStyle = bg; g.fillRect(0, 0, CW, CH);
+  g.strokeStyle = '#b08d48'; g.lineWidth = 6; g.strokeRect(12, 12, CW - 24, CH - 24);
+  g.lineWidth = 1.5; g.strokeRect(24, 24, CW - 48, CH - 48);
+  g.fillStyle = TR_INK; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = '600 34px "Cormorant Garamond", Georgia, serif'; g.fillText(card.label, CW / 2, 66);
+  // the sigil: suit for the Minor Arcana; sign, planet or element for the Major Arcana
+  if (!card.major) {
+    suitSigil(g, card.suit, CW / 2, 230, 92);
+  } else {
+    const [a, b] = card.attr.split(' '), glyph = SIGN_GLYPH[a] || PLANET_GLYPH[a];
+    if (glyph) { g.font = '120px "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols", serif'; g.fillStyle = '#6b3a5a'; g.fillText(`${glyph}︎`, CW / 2, 232); }
+    else elementSigil(g, a.toLowerCase(), CW / 2, 230, 92);
+  }
+  g.strokeStyle = 'rgba(176,141,72,0.5)'; g.lineWidth = 1; g.beginPath(); g.arc(CW / 2, 230, 118, 0, Math.PI * 2); g.stroke();
+  g.fillStyle = 'rgba(58,36,24,0.7)'; g.font = 'italic 500 21px "Cormorant Garamond", Georgia, serif'; g.fillText(card.attr, CW / 2, 378);
+  // the name, letter-spaced, on one or two lines
+  g.fillStyle = TR_INK; g.font = '700 25px "Cormorant Garamond", Georgia, serif';
+  const words = card.name.toUpperCase().split(' '), lines = [];
+  for (const w of words) { const l = lines.at(-1); if (l && g.measureText(`${l} ${w}`).width < CW - 70) lines[lines.length - 1] = `${l} ${w}`; else lines.push(w); }
+  lines.forEach((l, i) => g.fillText(l.split('').join(' '), CW / 2, 432 + (i - (lines.length - 1) / 2) * 30));
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+  faceCache.set(card.id, tex);
+  return tex;
+}
+let backTex = null;
+function cardBack() {
+  if (backTex) return backTex;
+  const cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
+  const g = cv.getContext('2d');
+  const bg = g.createRadialGradient(CW / 2, CH / 2, 20, CW / 2, CH / 2, CH * 0.6); bg.addColorStop(0, '#26306a'); bg.addColorStop(1, '#10143a');
+  g.fillStyle = bg; g.fillRect(0, 0, CW, CH);
+  g.strokeStyle = TR_GOLD; g.lineWidth = 5; g.strokeRect(12, 12, CW - 24, CH - 24); g.lineWidth = 1.2; g.strokeRect(24, 24, CW - 48, CH - 48);
+  const rng = mulberry32(7);
+  g.fillStyle = 'rgba(212,176,106,0.7)';
+  for (let i = 0; i < 70; i++) { g.beginPath(); g.arc(30 + rng() * (CW - 60), 30 + rng() * (CH - 60), rng() * 1.6 + 0.4, 0, Math.PI * 2); g.fill(); }
+  g.translate(CW / 2, CH / 2); g.strokeStyle = TR_GOLD;
+  for (const r of [92, 70]) { g.lineWidth = 1.5; g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.stroke(); }
+  g.lineWidth = 1.2; g.beginPath();
+  for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; g.moveTo(Math.cos(a) * 26, Math.sin(a) * 26); g.lineTo(Math.cos(a) * (i % 2 ? 62 : 86), Math.sin(a) * (i % 2 ? 62 : 86)); }
+  g.stroke(); g.beginPath(); g.arc(0, 0, 20, 0, Math.PI * 2); g.fillStyle = TR_GOLD; g.fill();
+  backTex = new THREE.CanvasTexture(cv); backTex.colorSpace = THREE.SRGBColorSpace; backTex.anisotropy = 8;
+  return backTex;
+}
+// the horseshoe, opening towards the viewer: past on the left, outcome on the right
+const TR_SLOTS = [[-4.6, 1.3], [-3.7, -0.9], [-2.0, -2.35], [0, -2.85], [2.0, -2.35], [3.7, -0.9], [4.6, 1.3]];
+const TR_DECK = new THREE.Vector3(0, 0.12, 2.1);
+const TR_PLAY = { shuffle: 0.9, deal: 0.26, dealDur: 0.6, flip0: 3.0, flip: 0.55, flipDur: 0.5 };
+const trPlayEnd = () => TR_PLAY.flip0 + 7 * TR_PLAY.flip + 0.9;
+const READY_TO_FLIP = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2));
+function showTarot() {
+  clearStage();
+  document.body.classList.add('tr-night');
+  // the table: a dark velvet cloth with a gilt ring and a scatter of stars
+  const cloth = new THREE.Mesh(new THREE.CircleGeometry(8.4, 96), new THREE.MeshStandardMaterial({ color: '#3a1424', roughness: 1 }));
+  cloth.rotation.x = -Math.PI / 2; group.add(cloth);
+  const ring = [];
+  for (const r of [7.9, 7.75]) for (let i = 0; i < 128; i++) { const a = (i / 128) * Math.PI * 2, b = ((i + 1) / 128) * Math.PI * 2; ring.push(Math.cos(a) * r, 0.005, Math.sin(a) * r, Math.cos(b) * r, 0.005, Math.sin(b) * r); }
+  group.add(new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(ring, 3)), new THREE.LineBasicMaterial({ color: TR_GOLD, transparent: true, opacity: 0.55 })));
+  const rng = mulberry32(11), dust = [];
+  for (let i = 0; i < 260; i++) { const a = rng() * Math.PI * 2, r = Math.sqrt(rng()) * 7.5; dust.push(Math.cos(a) * r, 0.006, Math.sin(a) * r); }
+  group.add(new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(dust, 3)), new THREE.PointsMaterial({ color: TR_GOLD, size: 0.05, transparent: true, opacity: 0.6 })));
+  // candles of light: two warm points over the table
+  const warm = new THREE.PointLight('#ffb36b', 14, 18, 1.6); warm.position.set(-5, 4, -2); group.add(warm);
+  const warm2 = new THREE.PointLight('#ffcf8a', 8, 16, 1.6); warm2.position.set(5, 3.5, 1); group.add(warm2);
+  // the position names on the cloth
+  TR_SLOTS.forEach(([x, z], i) => label(group, `<span class="n">${i + 1}</span> ${TAROT.POSITIONS[i].name}`, x, 0.01, z + 1.35, 'trpos'));
+  // the deck
+  const deckG = new THREE.Group(); group.add(deckG);
+  const cardGeo = new THREE.PlaneGeometry(1.2, 2.0), edgeMat = new THREE.MeshStandardMaterial({ color: '#e9dcc0', roughness: 0.8 });
+  for (let i = 0; i < 14; i++) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.012, 2.0), [edgeMat, edgeMat, new THREE.MeshStandardMaterial({ map: cardBack(), roughness: 0.6 }), edgeMat, edgeMat, edgeMat]);
+    m.position.set(TR_DECK.x, 0.006 + i * 0.013, TR_DECK.z); m.rotation.y = (rng() - 0.5) * 0.06; deckG.add(m);
+  }
+  const reading = new THREE.Group(); group.add(reading);
+  current = {
+    tr: true, picks: [], deckG, reading, cardGeo, play: null, built: null,
+    tick: (dt) => { if (current.built) trAnimate(dt); },
+  };
+  const d = fit(1);
+  fly([0, 10.5 * d, 9.5 * d], [0, 0, -0.5]);
+  trLegend();
+  if (state.tr.reading) trBuild(state.tr.reading);
+}
+function trLegend() {
+  $('#legend').innerHTML = `<div class="mb-1 font-medium text-foreground">Suits</div><div class="grid grid-cols-2 gap-x-3">${TAROT.SUITS.map((s, i) => `<span class="flex items-center gap-1"><span class="inline-block size-2.5 rounded-sm" style="background:${SUIT_COLOR[i]}"></span>${s} · ${EL_NAME[['fire', 'water', 'air', 'earth'][i]]}</span>`).join('')}</div><div class="mt-1.5 flex items-center gap-1.5"><span class="inline-block h-0.5 w-3" style="background:${TR_GOLD}"></span>Gold line: the card that weighs most on a number</div><div class="mt-1.5 border-t pt-1.5">Hover a card for its reading · drag to orbit</div>`;
+}
+async function dealTarot() {
+  const z = state.tr, tg = trTarget();
+  z.reading = TAROT.read({ question: z.q, theme: z.theme, date: tg.date });
+  z.readingFor = tg;
+  if (!current?.tr) return renderPanel();
+  try { await document.fonts.load('600 34px "Cormorant Garamond"'); await document.fonts.load('italic 500 21px "Cormorant Garamond"'); } catch { /* fall back to Georgia */ }
+  trBuild(z.reading);
+  current.play = { t: reduceMotion ? trPlayEnd() : 0, done: reduceMotion };
+  renderPanel();
+}
+function trBuild(r) {
+  const c = current, g = c.reading;
+  // card faces and the back are cached textures: disposing a material leaves its texture alone
+  g.traverse((o) => { if (o.element instanceof Element) o.element.remove(); if (o.geometry !== c.cardGeo) o.geometry?.dispose(); o.material?.dispose?.(); });
+  g.clear();
+  const picks = [], cards = [];
+  r.cards.forEach((x, i) => {
+    const [sx, sz] = TR_SLOTS[i];
+    const slot = new THREE.Group();                          // position, a slight turn along the arc, and a half turn if reversed
+    slot.userData.target = new THREE.Vector3(sx, 0.02 + i * 0.002, sz);
+    slot.userData.yaw = -sx * 0.06 + (x.reversed ? Math.PI : 0);
+    slot.position.copy(TR_DECK); g.add(slot);
+    const flip = new THREE.Group(); slot.add(flip);           // turns the card face up about its long side
+    const back = new THREE.Mesh(c.cardGeo, new THREE.MeshStandardMaterial({ map: cardBack(), roughness: 0.6 }));
+    back.rotation.x = -Math.PI / 2; back.position.y = 0.004; flip.add(back);
+    const front = new THREE.Mesh(c.cardGeo, new THREE.MeshStandardMaterial({ map: cardFace(x.card), roughness: 0.55, emissive: '#fff4d8', emissiveIntensity: 0 }));
+    front.quaternion.copy(READY_TO_FLIP); front.position.y = -0.004; front.userData.cardId = x.card.id; flip.add(front);
+    const pos = TAROT.POSITIONS[i];
+    const tip = () => ({ tip: `<div class="font-medium">${esc(x.card.name)}${x.reversed ? ' · reversed' : ''}</div><div class="mt-0.5 text-muted-foreground">${i + 1}. ${pos.name}: ${pos.about}</div><div class="mt-1">${esc(x.reversed ? x.card.rev : x.card.up)}</div><div class="mt-1 text-[11px] text-muted-foreground">${esc(x.card.attr)} · ${EL_NAME[x.card.el]} · weight ${x.strength.toFixed(2)}${x.dig.length ? ` · ${x.dig.map((d) => `${d.kind} with ${esc(d.with.card.name)}`).join(', ')}` : ''}</div>` });
+    back.userData.pick = tip; front.userData.pick = tip;
+    picks.push(back, front);
+    cards.push({ x, slot, flip, front, start: TR_PLAY.shuffle + i * TR_PLAY.deal, flipAt: TR_PLAY.flip0 + i * TR_PLAY.flip });
+  });
+  // the numbers: gilt coins floating inside the horseshoe, each tied by a gold thread to the card that weighs most on it
+  const coins = [...r.numbers.map((n, i) => ({ ...n, add: false, i })), { ...r.add, add: true, i: 6 }].map((n) => {
+    const top = n.why.find((w) => w.x) || null;
+    const at = new THREE.Vector3((n.i - 3) * 0.95 + (n.add ? 0.3 : 0), 0.75, 0.45);   // in the open middle of the horseshoe
+    const anchor = new THREE.Object3D(); anchor.position.copy(at); anchor.visible = false; g.add(anchor);
+    const lb = label(anchor, `<span class="coin${n.add ? ' add' : ''}">${n.n}</span>`, 0, 0, 0, 'trcoin');
+    let thread = null;
+    if (top) {
+      const [sx, sz] = TR_SLOTS[top.x.pos], from = new THREE.Vector3(sx, 0.05, sz), mid = from.clone().lerp(at, 0.5); mid.y += 1.2;
+      thread = new THREE.Line(new THREE.BufferGeometry().setFromPoints(new THREE.QuadraticBezierCurve3(from, mid, at).getPoints(40)), new THREE.LineBasicMaterial({ color: TR_GOLD, transparent: true, opacity: 0 }));
+      g.add(thread);
+    }
+    return { n, anchor, lb, thread, at: TR_PLAY.flip0 + 7 * TR_PLAY.flip + 0.1 + n.i * 0.12 };
+  });
+  c.picks = picks;
+  c.built = { cards, coins };
+}
+function trAnimate(dt) {
+  const c = current, pl = c.play, b = c.built;
+  if (!pl) { for (const k of b.cards) { k.slot.position.copy(k.slot.userData.target); k.slot.rotation.y = k.slot.userData.yaw; k.flip.rotation.z = Math.PI; } for (const k of b.coins) { k.anchor.visible = true; if (k.thread) k.thread.material.opacity = 0.5; } return; }
+  if (!pl.done) pl.t += dt;
+  const t = pl.t, ease = (x) => 1 - (1 - Math.max(0, Math.min(1, x))) ** 3, inOut = (x) => { x = Math.max(0, Math.min(1, x)); return x < 0.5 ? 4 * x ** 3 : 1 - (-2 * x + 2) ** 3 / 2; };
+  // shuffle: the deck shivers
+  c.deckG.children.forEach((m, i) => { m.position.x = TR_DECK.x + (t < TR_PLAY.shuffle && !reduceMotion ? Math.sin(t * 40 + i) * 0.05 : 0); });
+  for (const k of b.cards) {
+    const u = inOut((t - k.start) / TR_PLAY.dealDur), tg = k.slot.userData.target;
+    k.slot.position.lerpVectors(TR_DECK, tg, u); k.slot.position.y += Math.sin(u * Math.PI) * 0.9;
+    k.slot.rotation.y = k.slot.userData.yaw * u;
+    k.slot.visible = t >= k.start;
+    const f = inOut((t - k.flipAt) / TR_PLAY.flipDur);
+    k.flip.rotation.z = Math.PI * f; k.flip.position.y = Math.sin(f * Math.PI) * 0.6;
+    k.front.material.emissiveIntensity = f >= 1 ? Math.max(0, 0.35 - (t - k.flipAt - TR_PLAY.flipDur) * 0.4) : 0;
+  }
+  for (const k of b.coins) {
+    const u = ease((t - k.at) / 0.5);
+    k.anchor.visible = t >= k.at;
+    k.lb.element.firstChild.style.opacity = String(u);
+    if (k.thread) k.thread.material.opacity = 0.55 * u;
+  }
+  if (!pl.done && t >= trPlayEnd()) { pl.done = true; renderPanel(); }
+}
+function trSummary(r) {
+  const tone = r.favour > 0.3 ? 'The cards lean in your favour.' : r.favour > 0.05 ? 'A mixed reading that leans well.' : r.favour > -0.2 ? 'A mixed reading: some doors open, some close.' : 'The cards counsel caution.';
+  const majors = r.cards.filter((x) => x.card.major).length, rev = r.cards.filter((x) => x.reversed).length;
+  const suits = [0, 0, 0, 0]; for (const x of r.cards) if (!x.card.major) suits[x.card.suit]++;
+  const top = suits.indexOf(Math.max(...suits));
+  const SUIT_TALK = ['drive, ambition and action', 'feelings and relationships', 'conflict, thought and decisions', 'money, work and material things'];
+  const out = [tone];
+  if (suits[top] >= 3) out.push(`${TAROT.SUITS[top]} lead with ${suits[top]} cards: this is about ${SUIT_TALK[top]}.`);
+  out.push(majors >= 3 ? `${majors} Major Arcana: fate has a strong hand in this.` : majors ? `${majors} Major Arcana${majors > 1 ? '' : ''}: larger forces are at work.` : 'No Major Arcana: this is in your own hands.');
+  if (rev >= 4) out.push(`${rev} cards reversed: energy is blocked or delayed.`);
+  const o = r.cards[6], a = r.cards[5];
+  out.push(`The outcome, ${o.card.name}${o.reversed ? ' reversed' : ''}, speaks of ${o.reversed ? o.card.rev : o.card.up}. The advice: ${a.reversed ? a.card.rev : a.card.up}.`);
+  return out;
+}
+function panelTarot() {
+  const z = state.tr, r = z.reading, tg = trTarget(), playing = current?.play && !current.play.done;
+  const detected = TAROT.detectTheme(z.q);
+  const themeToggle = toggle([['auto', `Auto · ${TR_THEME_NAME[detected].split(' ')[0]}`], ['wealth', 'Wealth'], ['love', 'Love'], ['career', 'Career'], ['health', 'Health'], ['general', 'General']], z.theme, 'trtheme');
+  const next = nextDrawDay();
+  const targetToggle = toggle([['next', `Next draw · ${DAY_NAMES[next.w]}`], ['past', 'A past draw']], z.target, 'trtarget');
+  let past = '';
+  if (z.target === 'past') past = `<form data-form="trpast" class="mt-2 flex gap-1.5"><input name="q" value="${z.past != null ? D[z.past].draw : ''}" placeholder="Draw number, e.g. ${D[D.length - 1].draw}" class="h-8 min-w-0 flex-1 rounded-md border border-input bg-background px-2.5 text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" /><button class="${btnCls}">Use</button></form>`;
+  let body = '';
+  if (r) {
+    const rf = z.readingFor || tg, drawn = rf.d;
+    const spread = r.cards.map((x, i) => {
+      const pos = TAROT.POSITIONS[i];
+      return `<li class="border-t py-2 first:border-t-0"><div class="flex items-baseline justify-between gap-2"><span class="text-[11px] text-muted-foreground">${i + 1}. ${pos.name}</span><span class="h-1 w-14 shrink-0 overflow-hidden rounded-full bg-muted"><span class="block h-full rounded-full" style="width:${Math.min(100, (x.strength / 1.9) * 100)}%;background:${TR_GOLD}"></span></span></div>
+        <div class="tr-serif mt-0.5 text-[15px] font-semibold text-foreground">${esc(x.card.name)}${x.reversed ? ' <span class="text-xs font-normal text-[#e0a97a]">reversed</span>' : ''}</div>
+        <div class="text-xs leading-relaxed text-ink-2">${esc(x.reversed ? x.card.rev : x.card.up)}</div>
+        ${x.dig.length ? `<div class="mt-0.5 text-[11px] text-muted-foreground">${x.dig.map((d) => `${d.kind === 'contrary' ? 'Weakened' : 'Strengthened'} by ${esc(d.with.card.name)} (${d.kind === 'same' ? 'same element' : d.kind === 'friendly' ? 'friendly element' : 'opposed element'})`).join('; ')}</div>` : ''}</li>`;
+    }).join('');
+    const why = (n) => n.why.slice(0, 2).map((w) => (w.x ? `${esc(w.x.card.name)} in ${TAROT.POSITIONS[w.x.pos].name.toLowerCase()}: ${esc(w.note)}` : 'a number in your question')).join(' · ');
+    const nums = r.numbers.map((n) => {
+      const hit = drawn?.n.includes(n.n), add = drawn?.add === n.n;
+      return `<tr class="border-t"><td class="py-1.5 pr-2 align-top"><span class="coin sm${hit ? ' hit' : add ? ' was-add' : ''}">${n.n}</span></td><td class="py-1.5 text-[11px] leading-relaxed text-muted-foreground">${why(n)}</td></tr>`;
+    }).join('') + `<tr class="border-t"><td class="py-1.5 pr-2 align-top"><span class="coin sm add">${r.add.n}</span></td><td class="py-1.5 text-[11px] leading-relaxed text-muted-foreground">Additional, from the hidden influences: ${why(r.add)}</td></tr>`;
+    const result = drawn ? (() => { const s = scoreTicket(r.numbers.map((n) => n.n), drawn); return `<div class="mt-2 rounded-lg border bg-background/40 p-2.5 text-xs"><div class="flex flex-wrap items-center gap-1">${drawn.n.map((x) => `<span class="ball sm hit">${x}</span>`).join('')}<span class="text-muted-foreground">+</span><span class="ball sm add">${drawn.add}</span></div><p class="mt-1.5">Draw ${drawn.draw} matched <b>${s.m}</b> number${s.m === 1 ? '' : 's'}${s.g ? `: Group ${s.g}` : ''}.</p></div>`; })() : '';
+    body = `<div class="mt-3 grid grid-cols-2 gap-2">${kpi('Reading for', `Draw ${rf.draw}`, fmtShort(rf.date))}${kpi('Question about', TR_THEME_NAME[r.theme], z.theme === 'auto' ? 'read from your question' : 'chosen')}</div>
+      ${section('The reading', `<div class="tr-serif space-y-1.5 rounded-lg border bg-background/40 p-3 text-[14px] leading-snug text-ink-2">${trSummary(r).map((t) => `<p>${esc(t)}</p>`).join('')}</div>`, 'fi-rr-book-open-cover')}
+      ${section('The spread', `<ol class="rounded-lg border bg-background/40 px-3">${spread}</ol>`, 'fi-rr-layers')}
+      ${section(playing ? 'Turning the cards…' : 'The numbers', `<table class="w-full"><tbody>${nums}</tbody></table>${result}
+        <div class="mt-2 flex gap-1.5"><button type="button" data-act="trsave" class="${btnCls} flex-1"><i class="fi fi-rr-bookmark"></i>Save ticket</button><button type="button" data-act="trdeal" class="${btnCls}"><i class="fi fi-rr-rotate-right"></i>Deal again</button></div>`, 'fi-rr-coins')}`;
+  }
+  return `<h1 class="tr-serif text-[22px] font-semibold leading-tight">A tarot reading</h1>
+    <p class="mt-1 text-xs leading-relaxed text-muted-foreground">Ask a question and seven cards are laid in a horseshoe for the draw. They are read by position, upright or reversed, by how neighbours strengthen or weaken each other, and by what you asked. The six numbers come out of that reading.</p>
+    <form data-form="tarot" class="mt-3"><label class="grid gap-1 text-xs"><span class="text-muted-foreground">Your question</span>
+      <textarea name="q" rows="2" maxlength="200" placeholder="Will my luck turn this week?" class="tr-serif w-full resize-none rounded-md border border-input bg-background px-2.5 py-1.5 text-[15px] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">${esc(z.q)}</textarea></label></form>
+    <div class="mt-2">${themeToggle}</div>
+    <div class="mt-2">${targetToggle}</div>
+    ${past}
+    <button type="button" data-act="trdeal" class="${primaryCls} mt-3 w-full"><i class="fi fi-rr-star"></i>${r ? 'Shuffle and deal again' : 'Shuffle and deal'}</button>
+    ${body}
+    ${section('How a reading becomes numbers', `<ol class="list-decimal space-y-1 pl-4 text-xs leading-relaxed text-muted-foreground">
+      <li>Your question and the draw date shuffle the deck, so the same question for the same draw always gets the same cards. Numbers in your question become your numbers.</li>
+      <li>Each card is weighed: by its position (for a question about luck the outcome and outside forces count most), upright or reversed, whether it speaks well of what you asked, and its elemental dignity with its neighbours: the same element strengthens, a friendly one supports (fire and air, water and earth), an opposed one weakens (fire and water, air and earth).</li>
+      <li>Every card points at numbers through its correspondences: its sign, planet or decan in the Golden Dawn system, with the 49 numbers laid round the zodiac (1 at 0° Aries); its number plus its place in the spread, reduced to a root (root 5 points at 5, 14, 23, 32, 41); and for the Major Arcana, its own number.</li>
+      <li>A number gathers weight from every card pointing at it. The six heaviest are the ticket; the hidden influences card gives the additional number. Your own numbers gain weight when the reading is favourable.</li></ol>
+      <p class="mt-2 text-[11px] text-muted-foreground">Meanings follow A. E. Waite's <i>Pictorial Key to the Tarot</i> (1911); correspondences follow the Golden Dawn. The way they become numbers is ours: tarot has no traditional rule for lottery numbers. Favourable cards weigh more, so numbers tied to them come up a little more often across readings.</p>`, 'fi-rr-list')}
+    <button type="button" data-act="trcompare" class="${btnCls} mt-3 w-full"><i class="fi fi-rr-chart-line-up"></i>Backtest tarot against the other methods</button>
+    <p class="mt-4 rounded-lg border border-amber/30 bg-amber/5 p-3 text-[11px] leading-relaxed text-ink-2">The cards can't move the balls: the odds of Group 1 stay 1 in ${f.int(choose(49, 6))}. The backtest shows the reading doing no better than chance, like every other method here.</p>`;
+}
+
 function renderPanel() {
   const panel = $('#panel'), top = panel.scrollTop;
   const footer = `<div class="mt-4 border-t pt-3 text-[11px] text-muted-foreground">${f.int(D.length)} draws to ${fmtShort(D[D.length - 1].date)} · ${state.source === 'stored' ? 'loaded in this browser' : 'bundled data'}${state.source === 'stored' ? ` · <button type="button" data-act="reset-data" class="text-primary hover:underline">Back to the bundled data</button>` : ''}</div>`;
-  const body = state.view === 'board' ? panelBoard() : state.view === 'history' ? panelHistory() : state.view === 'patterns' ? panelPatterns() : state.view === 'ziwei' ? panelZiwei() : panelPicks();
+  const body = state.view === 'board' ? panelBoard() : state.view === 'history' ? panelHistory() : state.view === 'patterns' ? panelPatterns() : state.view === 'ziwei' ? panelZiwei() : state.view === 'tarot' ? panelTarot() : panelPicks();
   panel.innerHTML = body + footer;
   panel.scrollTop = top;
 }
-const SHOW = { board: showBoard, history: showHistory, patterns: showPatterns, picks: showPicks, ziwei: showZiwei };
+const SHOW = { board: showBoard, history: showHistory, patterns: showPatterns, picks: showPicks, ziwei: showZiwei, tarot: showTarot };
 function show({ instant = false } = {}) {
   hideTip();
   if (state.view !== 'history') state.hist.playing = false;
@@ -1604,6 +2099,16 @@ $('#panel').addEventListener('click', async (e) => {
     state.tickets = state.tickets.slice(0, 12);
     toast((await store.put('tickets', state.tickets)) ? 'Ticket saved: see Picks › Saved tickets' : 'Couldn’t save: storage is blocked in this browser');
   }
+  else if (act === 'trtheme') { state.tr.theme = v; renderPanel(); }
+  else if (act === 'trtarget') { state.tr.target = v; if (v === 'past' && state.tr.past == null) state.tr.past = D.length - 1; renderPanel(); }
+  else if (act === 'trdeal') { readQuestion(); await dealTarot(); if (innerWidth < 900) window.pgDrawer.close(); }
+  else if (act === 'trsave' && state.tr.reading) {
+    const r = state.tr.reading;
+    state.tickets.unshift({ nums: r.numbers.map((x) => x.n), label: `Tarot, ${r.question ? `“${r.question.slice(0, 40)}”` : TR_THEME_NAME[r.theme].toLowerCase()}`, after: D[D.length - 1].draw, at: new Date().toISOString() });
+    state.tickets = state.tickets.slice(0, 12);
+    toast((await store.put('tickets', state.tickets)) ? 'Ticket saved: see Picks › Saved tickets' : 'Couldn’t save: storage is blocked in this browser');
+  }
+  else if (act === 'trcompare') { state.view = 'picks'; state.picks.method = 'tarot'; renderTabs(); show(); startBacktest(); }
   else if (act === 'zwcompare') { state.view = 'picks'; state.picks.method = 'ziwei'; renderTabs(); show(); startBacktest(); }
   else if (act === 'save') {
     const t = state.picks.ticket;
@@ -1623,8 +2128,26 @@ function readBirth() {
   store.put('birth', b);
 }
 $('#panel').addEventListener('change', (e) => { if (e.target.closest('[data-form="birth"]')) readBirth(); });
+// the tarot question: kept as typed; the Auto button names the theme it reads from it; Enter deals
+function readQuestion() { const t = $('#panel [data-form="tarot"] textarea'); if (t) state.tr.q = t.value; }
+$('#panel').addEventListener('input', (e) => {
+  if (!e.target.closest('[data-form="tarot"]')) return;
+  readQuestion();
+  const auto = $('#panel [data-act="trtheme"][data-v="auto"]');
+  if (auto) auto.textContent = `Auto · ${TR_THEME_NAME[TAROT.detectTheme(state.tr.q)].split(' ')[0]}`;
+});
+$('#panel').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey && e.target.closest('[data-form="tarot"]')) { e.preventDefault(); readQuestion(); dealTarot(); }
+});
 $('#panel').addEventListener('submit', (e) => {
   if (e.target.closest('[data-form="birth"]')) { e.preventDefault(); readBirth(); return castAndPlay(); }
+  if (e.target.closest('[data-form="tarot"]')) { e.preventDefault(); readQuestion(); return dealTarot(); }
+  if (e.target.closest('[data-form="trpast"]')) {
+    e.preventDefault();
+    const q = e.target.q.value.trim(), i = D.findIndex((d) => d.draw === Number(q));
+    if (i < 0) return toast(`No draw ${q} in the data`);
+    state.tr.past = i; readQuestion(); return dealTarot();
+  }
   if (e.target.closest('[data-form="zwpast"]')) {
     e.preventDefault();
     const q = e.target.q.value.trim(), i = D.findIndex((d) => d.draw === Number(q));
