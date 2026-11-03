@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 790" role="img" aria-labelledby="title desc">
+  <title id="title">Auto Ontology and Knowledge Grid, layer by layer</title>
+  <desc id="desc">Both systems read sources, use an LLM to extract structure, store it in PostgreSQL with pgvector and serve it to agents over MCP. Auto Ontology turns warehouse metadata into a typed graph of tables, columns and business terms. Knowledge Grid turns documents into Markdown wiki pages connected by wikilinks.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+  </defs>
+  <rect width="1200" height="790" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="40" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Same skeleton, different shape of knowledge</text>
+    <text x="40" y="85" fill="#a9bdd0" font-size="16">Both read sources, let an LLM extract structure, keep it in Postgres and serve agents over MCP.</text>
+
+    <text x="250" y="138" fill="#a6e07f" font-size="20" font-weight="700">NVIDIA Auto Ontology</text>
+    <text x="498" y="138" fill="#a9bdd0" font-size="15">graph over a warehouse</text>
+    <text x="725" y="138" fill="#8cc0ec" font-size="20" font-weight="700">Knowledge Grid</text>
+    <text x="898" y="138" fill="#a9bdd0" font-size="15">wiki for a team and its agents</text>
+
+    <!-- row labels -->
+    <g fill="#d7e3ef" font-size="15" font-weight="700">
+      <text x="40" y="198">1 · Sources</text>
+      <text x="40" y="294">2 · Extraction</text>
+      <text x="40" y="390">3 · Storage</text>
+      <text x="40" y="486">4 · Shape</text>
+      <text x="40" y="582">5 · Agent surface</text>
+      <text x="40" y="678">6 · Change control</text>
+    </g>
+
+    <!-- row 1 -->
+    <rect x="230" y="160" width="455" height="84" rx="14" fill="#25391f" stroke="#8fd16a"/>
+    <text x="250" y="190" fill="#fff" font-size="16" font-weight="700">Databases and existing semantic models</text>
+    <text x="250" y="216" fill="#d3ecc2" font-size="14">Databricks, Snowflake, Postgres, DuckDB: schemas,</text>
+    <text x="250" y="234" fill="#d3ecc2" font-size="14">keys, sample values, stored SQL</text>
+    <rect x="705" y="160" width="455" height="84" rx="14" fill="#263e5b" stroke="#75a8d5"/>
+    <text x="725" y="190" fill="#fff" font-size="16" font-weight="700">Documents and agent sessions</text>
+    <text x="725" y="216" fill="#c8dbee" font-size="14">Google Drive, Calendar, local files, research</text>
+    <text x="725" y="234" fill="#c8dbee" font-size="14">and notes written by agents or people</text>
+
+    <!-- row 2 -->
+    <rect x="230" y="256" width="455" height="84" rx="14" fill="#25391f" stroke="#8fd16a"/>
+    <text x="250" y="286" fill="#fff" font-size="16" font-weight="700">Semantic compile (Nemotron via NIM)</text>
+    <text x="250" y="312" fill="#d3ecc2" font-size="14">Per table: sample rows, propose Terms and column</text>
+    <text x="250" y="330" fill="#d3ecc2" font-size="14">attributes, infer joins the schema never declared</text>
+    <rect x="705" y="256" width="455" height="84" rx="14" fill="#263e5b" stroke="#75a8d5"/>
+    <text x="725" y="286" fill="#fff" font-size="16" font-weight="700">Claude as the extractor</text>
+    <text x="725" y="312" fill="#c8dbee" font-size="14">Classify into a pillar, summarize, add [[links]],</text>
+    <text x="725" y="330" fill="#c8dbee" font-size="14">record the source and hash for deduplication</text>
+
+    <!-- row 3 shared -->
+    <rect x="230" y="352" width="930" height="84" rx="14" fill="#1d3d45" stroke="#53dfdc" stroke-width="2"/>
+    <text x="695" y="381" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">PostgreSQL + pgvector on both sides</text>
+    <text x="250" y="408" fill="#c1e5e5" font-size="14">Catalog rows modelled as a property graph, plus</text>
+    <text x="250" y="426" fill="#c1e5e5" font-size="14">embeddings of terms and column descriptions</text>
+    <text x="725" y="408" fill="#c1e5e5" font-size="14">Pages, chunks, revisions and page_links, plus</text>
+    <text x="725" y="426" fill="#c1e5e5" font-size="14">full-text and vector indexes for hybrid search</text>
+
+    <!-- row 4 -->
+    <rect x="230" y="448" width="455" height="84" rx="14" fill="#25391f" stroke="#8fd16a"/>
+    <text x="250" y="478" fill="#fff" font-size="16" font-weight="700">Typed graph</text>
+    <text x="250" y="504" fill="#d3ecc2" font-size="14">Table → Column → Term; FOREIGN_KEY, SEMANTIC_FK,</text>
+    <text x="250" y="522" fill="#d3ecc2" font-size="14">JOIN edges with direction and cardinality</text>
+    <rect x="705" y="448" width="455" height="84" rx="14" fill="#263e5b" stroke="#75a8d5"/>
+    <text x="725" y="478" fill="#fff" font-size="16" font-weight="700">Wiki of Markdown pages</text>
+    <text x="725" y="504" fill="#c8dbee" font-size="14">Six pillars (notes, researches, concepts, entities,</text>
+    <text x="725" y="522" fill="#c8dbee" font-size="14">skills, workflows); untyped [[links]] and backlinks</text>
+
+    <!-- row 5 -->
+    <rect x="230" y="544" width="455" height="84" rx="14" fill="#25391f" stroke="#8fd16a"/>
+    <text x="250" y="574" fill="#fff" font-size="16" font-weight="700">Read-only MCP, nine curated tools</text>
+    <text x="250" y="600" fill="#d3ecc2" font-size="14" font-family="ui-monospace,Menlo,monospace">search_terms · check_answerable</text>
+    <text x="250" y="618" fill="#d3ecc2" font-size="14" font-family="ui-monospace,Menlo,monospace">ask_question → answer + SQL + rows</text>
+    <rect x="705" y="544" width="455" height="84" rx="14" fill="#263e5b" stroke="#75a8d5"/>
+    <text x="725" y="574" fill="#fff" font-size="16" font-weight="700">Read and write MCP</text>
+    <text x="725" y="600" fill="#c8dbee" font-size="14" font-family="ui-monospace,Menlo,monospace">hybrid_search · wiki://page/{slug}</text>
+    <text x="725" y="618" fill="#c8dbee" font-size="14" font-family="ui-monospace,Menlo,monospace">create_page · update_page(expectedVersion)</text>
+
+    <!-- row 6 -->
+    <rect x="230" y="640" width="455" height="84" rx="14" fill="#25391f" stroke="#8fd16a"/>
+    <text x="250" y="670" fill="#fff" font-size="16" font-weight="700">Governed publication</text>
+    <text x="250" y="696" fill="#d3ecc2" font-size="14">Writes via REST: export YAML + SHA-256, staged</text>
+    <text x="250" y="714" fill="#d3ecc2" font-size="14">apply, exact readback, rollback</text>
+    <rect x="705" y="640" width="455" height="84" rx="14" fill="#263e5b" stroke="#75a8d5"/>
+    <text x="725" y="670" fill="#fff" font-size="16" font-weight="700">Versioned pages</text>
+    <text x="725" y="696" fill="#c8dbee" font-size="14">Every write is an immutable revision; a stale</text>
+    <text x="725" y="714" fill="#c8dbee" font-size="14">version returns VERSION_CONFLICT, no auto-merge</text>
+
+    <text x="40" y="762" fill="#8fa6ba" font-size="14">Rows 1, 2, 3 and 5 rhyme. Row 4 is the real fork: one describes data you compute from, the other holds text you read.</text>
+  </g>
+</svg>

@@ -1,6 +1,27 @@
 {
   "posts": [
     {
+      "slug": "2026-11-04-nvidia-auto-ontology-vs-agent-wiki",
+      "filename": "2026-11-04-nvidia-auto-ontology-vs-agent-wiki.md",
+      "category": "post",
+      "title": "NVIDIA Auto Ontology, and why our agent knowledge layer is a wiki instead",
+      "date": "2026-11-04",
+      "tags": [
+        "ai-agents",
+        "knowledge-graphs",
+        "ontology",
+        "semantic-layer",
+        "text-to-sql",
+        "mcp",
+        "agentic-memory",
+        "nvidia"
+      ],
+      "series": "building-ai-systems",
+      "summary": "NVIDIA's open-source Auto Ontology builds a semantic graph over warehouse metadata so agents can generate SQL they can trust. Under the hood it looks a lot like Knowledge Grid, the team knowledge layer we are building: LLM extraction, Postgres with pgvector, and an MCP surface for agents. The difference is the unit of knowledge: a typed graph node that points at columns, or a wiki page that holds what the team means and why.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-02-elephants-goldfish-and-trinary-agents",
       "filename": "2026-11-02-elephants-goldfish-and-trinary-agents.md",
       "category": "post",

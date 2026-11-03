@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" role="img" aria-labelledby="title desc">
+  <title id="title">A graph node and a wiki page</title>
+  <desc id="desc">On the left, Auto Ontology links a business term Order to its attributes, the physical columns behind them, and a Customer term through a semantic foreign key. On the right, a Knowledge Grid concept page holds a definition, the reason behind it and wikilinks to an entity, a meeting note and another concept.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="ag" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#8fd16a" stroke-width="1.6"/></marker>
+    <marker id="ab" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#75a8d5" stroke-width="1.6"/></marker>
+  </defs>
+  <rect width="1200" height="640" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="40" y="56" fill="#f6f9fc" font-size="28" font-weight="700">The unit of knowledge: a node or a page</text>
+    <text x="40" y="85" fill="#a9bdd0" font-size="16">A node tells an agent which column and which join. A page tells it what the team means and why.</text>
+
+    <text x="40" y="132" fill="#a6e07f" font-size="18" font-weight="700">Auto Ontology: typed edges down to columns</text>
+    <text x="640" y="132" fill="#8cc0ec" font-size="18" font-weight="700">Knowledge Grid: prose plus [[links]]</text>
+    <line x1="600" y1="115" x2="600" y2="610" stroke="#2c4560" stroke-dasharray="4 6"/>
+
+    <!-- terms -->
+    <rect x="70" y="160" width="170" height="52" rx="26" fill="#25391f" stroke="#8fd16a" stroke-width="2"/>
+    <text x="155" y="192" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">Term: Order</text>
+    <rect x="370" y="160" width="190" height="52" rx="26" fill="#25391f" stroke="#8fd16a" stroke-width="2"/>
+    <text x="465" y="192" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">Term: Customer</text>
+    <line x1="240" y1="186" x2="366" y2="186" stroke="#8fd16a" stroke-width="1.6" marker-end="url(#ag)"/>
+    <text x="303" y="176" fill="#d3ecc2" font-size="12" text-anchor="middle" font-family="ui-monospace,Menlo,monospace">SEMANTIC_FK</text>
+    <text x="303" y="204" fill="#9fb98f" font-size="12" text-anchor="middle">many → one</text>
+
+    <!-- attributes -->
+    <g font-size="14" text-anchor="middle">
+      <rect x="40" y="280" width="125" height="40" rx="10" fill="#1f2f1b" stroke="#6e9e52"/>
+      <text x="102" y="305" fill="#e6f3dc">Order Date</text>
+      <rect x="180" y="280" width="135" height="40" rx="10" fill="#1f2f1b" stroke="#6e9e52"/>
+      <text x="247" y="305" fill="#e6f3dc">Total Amount</text>
+      <rect x="395" y="280" width="145" height="40" rx="10" fill="#1f2f1b" stroke="#6e9e52"/>
+      <text x="467" y="305" fill="#e6f3dc">Customer Region</text>
+    </g>
+    <g stroke="#8fd16a" stroke-width="1.4" fill="none">
+      <path d="M135 212 L105 276" marker-end="url(#ag)"/>
+      <path d="M175 212 L240 276" marker-end="url(#ag)"/>
+      <path d="M465 212 L467 276" marker-end="url(#ag)"/>
+    </g>
+    <text x="300" y="252" fill="#9fb98f" font-size="12" font-family="ui-monospace,Menlo,monospace">HAS_ATTRIBUTE</text>
+
+    <!-- columns -->
+    <g font-size="12" text-anchor="middle" font-family="ui-monospace,Menlo,monospace">
+      <rect x="30" y="380" width="150" height="36" rx="8" fill="#16222f" stroke="#5a7389"/>
+      <text x="105" y="402" fill="#c9d6e2">orders.created_at</text>
+      <rect x="185" y="380" width="140" height="36" rx="8" fill="#16222f" stroke="#5a7389"/>
+      <text x="255" y="402" fill="#c9d6e2">orders.total_usd</text>
+      <rect x="395" y="380" width="145" height="36" rx="8" fill="#16222f" stroke="#5a7389"/>
+      <text x="467" y="402" fill="#c9d6e2">customers.region</text>
+    </g>
+    <g stroke="#5a7389" stroke-width="1.4" fill="none">
+      <path d="M102 320 L104 376" marker-end="url(#ab)"/>
+      <path d="M247 320 L254 376" marker-end="url(#ab)"/>
+      <path d="M467 320 L467 376" marker-end="url(#ab)"/>
+    </g>
+    <text x="290" y="352" fill="#8fa6ba" font-size="12">maps to a physical column</text>
+
+    <!-- tables -->
+    <rect x="70" y="480" width="200" height="48" rx="10" fill="#16222f" stroke="#7d93a8" stroke-width="1.6"/>
+    <text x="170" y="510" fill="#e3ebf3" font-size="15" text-anchor="middle" font-family="ui-monospace,Menlo,monospace">Table: orders</text>
+    <rect x="370" y="480" width="190" height="48" rx="10" fill="#16222f" stroke="#7d93a8" stroke-width="1.6"/>
+    <text x="465" y="510" fill="#e3ebf3" font-size="15" text-anchor="middle" font-family="ui-monospace,Menlo,monospace">Table: customers</text>
+    <line x1="270" y1="504" x2="366" y2="504" stroke="#7d93a8" stroke-width="1.4" marker-end="url(#ab)"/>
+    <text x="318" y="496" fill="#a9bdd0" font-size="11" text-anchor="middle" font-family="ui-monospace,Menlo,monospace">FOREIGN_KEY</text>
+    <g stroke="#3e5468" stroke-dasharray="3 4" fill="none">
+      <path d="M105 416 L150 478"/><path d="M255 416 L210 478"/><path d="M467 416 L465 478"/>
+    </g>
+    <text x="40" y="572" fill="#d3ecc2" font-size="14">Good at: “total amount by customer region” becomes one</text>
+    <text x="40" y="592" fill="#d3ecc2" font-size="14">join the agent did not have to guess.</text>
+
+    <!-- page card -->
+    <rect x="640" y="155" width="340" height="395" rx="14" fill="#1b2c42" stroke="#75a8d5" stroke-width="2"/>
+    <text x="660" y="184" fill="#8cc0ec" font-size="14" font-family="ui-monospace,Menlo,monospace">concepts/net-deposits</text>
+    <rect x="660" y="194" width="170" height="22" rx="11" fill="#2a3f5a"/>
+    <text x="745" y="210" fill="#c8dbee" font-size="12" text-anchor="middle">v3 · edited by an agent</text>
+    <g font-size="13" font-family="ui-monospace,Menlo,monospace" fill="#9fb3c7">
+      <text x="660" y="242">summary: deposits minus</text>
+      <text x="660" y="260">  withdrawals, per desk, USD</text>
+      <text x="660" y="278">tags: [treasury, stablecoins]</text>
+    </g>
+    <g font-size="14">
+      <text x="660" y="312" fill="#fff" font-weight="700">## Definition</text>
+      <text x="660" y="333" fill="#c8dbee">A deposit counts after 12 confirmations;</text>
+      <text x="660" y="351" fill="#c8dbee">internal transfers are excluded.</text>
+      <text x="660" y="383" fill="#fff" font-weight="700">## Why</text>
+      <text x="660" y="404" fill="#c8dbee">Agreed in the October treasury review</text>
+      <text x="660" y="422" fill="#c8dbee">after double counting on Tron.</text>
+      <text x="660" y="454" fill="#fff" font-weight="700">## Connections</text>
+    </g>
+    <g font-size="13" font-family="ui-monospace,Menlo,monospace" fill="#e3ad5a">
+      <text x="660" y="478">[[entities/treasury-desk]]</text>
+      <text x="660" y="500">[[notes/treasury-review]]</text>
+      <text x="660" y="522">[[concepts/confirmations]]</text>
+    </g>
+
+    <!-- linked pages -->
+    <g font-size="13" text-anchor="middle">
+      <rect x="1010" y="230" width="150" height="56" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="1085" y="254" fill="#fff" font-weight="700">entity</text>
+      <text x="1085" y="274" fill="#c8dbee">Treasury desk</text>
+      <rect x="1010" y="330" width="150" height="56" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="1085" y="354" fill="#fff" font-weight="700">note</text>
+      <text x="1085" y="374" fill="#c8dbee">Treasury review</text>
+      <rect x="1010" y="430" width="150" height="56" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="1085" y="454" fill="#fff" font-weight="700">concept</text>
+      <text x="1085" y="474" fill="#c8dbee">Confirmations</text>
+    </g>
+    <g stroke="#e3ad5a" stroke-width="1.4" fill="none">
+      <path d="M915 474 C 960 474, 960 258, 1006 258" marker-end="url(#ab)"/>
+      <path d="M905 496 C 960 496, 960 358, 1006 358" marker-end="url(#ab)"/>
+      <path d="M915 518 C 960 518, 960 458, 1006 458" marker-end="url(#ab)"/>
+    </g>
+    <text x="1085" y="520" fill="#8fa6ba" font-size="12" text-anchor="middle">each target sees a backlink</text>
+    <text x="640" y="580" fill="#c8dbee" font-size="14">Good at: the rule, the reason, the people involved and</text>
+    <text x="640" y="600" fill="#c8dbee" font-size="14">the history of edits, in words an agent can quote.</text>
+  </g>
+</svg>
