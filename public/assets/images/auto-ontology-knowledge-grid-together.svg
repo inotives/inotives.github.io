@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 470" role="img" aria-labelledby="title desc">
+  <title id="title">Using both layers from one agent</title>
+  <desc id="desc">One agent connects to two MCP servers. Knowledge Grid answers what a metric means, who owns it and why it was defined that way. Auto Ontology answers how much, by running governed SQL on the warehouse. A concept page can name the Auto Ontology term it relies on, and a validated answer can be written back to the wiki as a research page.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="470" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Meaning from the wiki, numbers from the ontology</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Not a merger. Two MCP servers behind one agent, each answering the question it is built for.</text>
+
+    <rect x="470" y="135" width="260" height="96" rx="16" fill="#2c2f4f" stroke="#a99bf0" stroke-width="2"/>
+    <text x="600" y="172" fill="#fff" font-size="19" font-weight="700" text-anchor="middle">Agent harness</text>
+    <text x="600" y="200" fill="#d6d0f7" font-size="14" text-anchor="middle">Claude Code, Cursor, a</text>
+    <text x="600" y="218" fill="#d6d0f7" font-size="14" text-anchor="middle">custom runtime</text>
+
+    <rect x="45" y="280" width="420" height="150" rx="16" fill="#263e5b" stroke="#75a8d5"/>
+    <text x="68" y="314" fill="#fff" font-size="19" font-weight="700">Knowledge Grid</text>
+    <text x="68" y="342" fill="#c8dbee" font-size="15">What does “net deposits” mean here?</text>
+    <text x="68" y="366" fill="#c8dbee" font-size="15">Who owns it, and what did we decide?</text>
+    <text x="68" y="400" fill="#e3ad5a" font-size="13" font-family="ui-monospace,Menlo,monospace">concepts/net-deposits · metadata:</text>
+    <text x="68" y="418" fill="#e3ad5a" font-size="13" font-family="ui-monospace,Menlo,monospace">  ontologyTerm: "Net Deposit"</text>
+
+    <rect x="735" y="280" width="420" height="150" rx="16" fill="#25391f" stroke="#8fd16a"/>
+    <text x="758" y="314" fill="#fff" font-size="19" font-weight="700">Auto Ontology</text>
+    <text x="758" y="342" fill="#d3ecc2" font-size="15">How much, by chain, last week?</text>
+    <text x="758" y="366" fill="#d3ecc2" font-size="15">Which tables, which joins, which SQL?</text>
+    <text x="758" y="400" fill="#a6e07f" font-size="13" font-family="ui-monospace,Menlo,monospace">ask_question → answer, SQL, rows</text>
+    <text x="758" y="418" fill="#a6e07f" font-size="13" font-family="ui-monospace,Menlo,monospace">over Snowflake / Databricks</text>
+
+    <g stroke="#90adc2" stroke-width="1.6" fill="none" marker-end="url(#a)">
+      <path d="M520 231 C 470 255, 330 250, 300 276"/>
+      <path d="M680 231 C 730 255, 870 250, 900 276"/>
+    </g>
+    <text x="560" y="268" fill="#a9bdd0" font-size="13" text-anchor="end">MCP: read the why</text>
+    <text x="640" y="268" fill="#a9bdd0" font-size="13" text-anchor="start">MCP: compute the how much</text>
+
+    <path d="M731 395 L 469 395" stroke="#53dfdc" stroke-width="1.6" stroke-dasharray="6 5" fill="none" marker-end="url(#a)"/>
+    <text x="600" y="385" fill="#c1e5e5" font-size="13" text-anchor="middle">validated result saved</text>
+    <text x="600" y="420" fill="#c1e5e5" font-size="13" text-anchor="middle">as a research page with its SQL</text>
+  </g>
+</svg>
