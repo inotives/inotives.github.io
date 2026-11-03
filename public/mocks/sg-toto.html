@@ -6,13 +6,13 @@
 <meta name="color-scheme" content="dark" />
 <title>ToTo stats</title>
 <!--
-  Playground mock: Singapore ToTo results since July 2008, in 3D.
+  Playground mock: Singapore ToTo results since the 6/49 game began (draw 2995, 9 October 2014), in 3D.
   Views: Board (the 49 numbers as columns, height against chance, colour by draws since last seen),
   History (every draw as a wall of balls running back in time, with Group 1 jackpots), Patterns
   (sums, odd/even, low/high, ranges, back-to-back numbers, repeats and pairs against exact chance)
   and Picks (number-stats methods that pick a ticket, with a walk-forward backtest against chance).
-  The game moved from 6/45 to 6/49 at draw 2995 (9 October 2014); Patterns and Picks use the 6/49
-  draws. Data: Singapore Pools' historical results CSV, bundled as public/mocks/data/sg-toto.json
+  Earlier draws were a 6/45 game with different odds, so the parser drops them and every view uses
+  6/49 draws only. Data: Singapore Pools' historical results CSV, bundled as public/mocks/data/sg-toto.json
   by scripts/mocks/sg-toto/build.mjs (which reuses the parser between the toto-csv markers below).
   "Update data" reads a newer CSV in the browser and keeps it in IndexedDB, with saved tickets.
   Three.js draws the stage; D3 provides scales, colour and formatting.
@@ -164,6 +164,9 @@ import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer
 // Shared with scripts/mocks/sg-toto/build.mjs, which imports this block: keep it self-contained.
 // <toto-csv>
 const TOTO_GROUPS = 7;
+// The game moved from 6/45 to 6/49 at this draw (9 October 2014). Earlier draws had different odds,
+// so they would skew every count and test: the parser skips them.
+const FIRST_649_DRAW = 2995;
 function parseToto(text) {
   const rows = [];
   for (const line of String(text).replace(/^﻿/, '').split(/\r?\n/)) {
@@ -188,14 +191,13 @@ function parseToto(text) {
   const seen = new Map();
   for (const r of rows) {
     const draw = Number(r[iDraw]);
-    if (!Number.isInteger(draw)) continue;
+    if (!Number.isInteger(draw) || draw < FIRST_649_DRAW) continue;
     const date = r[iDate];
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`Draw ${draw}: date "${date}" is not YYYY-MM-DD`);
     const n = d3range(6).map((i) => Number(r[iN1 + i])).sort((a, b) => a - b);
     const add = Number(r[iAdd]);
-    const pool = draw >= 2995 ? 49 : 45;
     const all = [...n, add];
-    if (all.some((x) => !Number.isInteger(x) || x < 1 || x > pool) || new Set(all).size !== 7) throw new Error(`Draw ${draw}: numbers ${all.join(' ')} are not seven different numbers from 1 to ${pool}`);
+    if (all.some((x) => !Number.isInteger(x) || x < 1 || x > 49) || new Set(all).size !== 7) throw new Error(`Draw ${draw}: numbers ${all.join(' ')} are not seven different numbers from 1 to 49`);
     let prizes = null;
     if (iWin.every(([w, p]) => w >= 0 && p >= 0) && r[iWin[0][0]] !== '' && r[iWin[0][0]] != null) {
       prizes = iWin.map(([w, p]) => [Number(r[w]) || 0, Number(String(r[p]).replace(/,/g, '')) || 0]);
@@ -203,7 +205,7 @@ function parseToto(text) {
     seen.set(draw, { draw, date, n, add, prizes });
   }
   const draws = [...seen.values()].sort((a, b) => a.draw - b.draw);
-  if (!draws.length) throw new Error('No draws found in the CSV');
+  if (!draws.length) throw new Error('No 6/49 draws (from draw 2995, October 2014) found in the CSV');
   return draws;
 }
 function d3range(n) { return Array.from({ length: n }, (_, i) => i); }
@@ -259,10 +261,9 @@ const store = {
 };
 
 // ================= data and stats =================
-const ERA_DRAW = 2995;        // first 6/49 draw, 9 October 2014
 const NUMS = d3.range(1, 50);
-const pool = (d) => (d.draw >= ERA_DRAW ? 49 : 45);
-const lowCut = (d) => (d.draw >= ERA_DRAW ? 24 : 22);   // the results file's Low/High split
+const pool = () => 49;          // every draw is 6/49: the parser drops the earlier 6/45 game
+const lowCut = () => 24;        // the results file's Low/High split
 const GROUPS = [
   { g: 1, m: 6, add: false, text: '6 numbers' }, { g: 2, m: 5, add: true, text: '5 + additional' }, { g: 3, m: 5, add: false, text: '5 numbers' },
   { g: 4, m: 4, add: true, text: '4 + additional' }, { g: 5, m: 4, add: false, text: '4 numbers' }, { g: 6, m: 3, add: true, text: '3 + additional' }, { g: 7, m: 3, add: false, text: '3 numbers' },
@@ -338,12 +339,11 @@ function popularity() {
 }
 
 let D = [];          // draws, oldest first
-let ERA = 0;         // index of the first 6/49 draw
-const WINDOWS = { 52: { label: 'Last 52', long: 'the last 52 draws' }, 200: { label: 'Last 200', long: 'the last 200 draws' }, era: { label: '6/49 era', long: 'every 6/49 draw since Oct 2014' }, all: { label: 'All', long: 'every draw since July 2008' } };
+const ERA = 0;       // index of the first 6/49 draw: every loaded draw is 6/49
+const WINDOWS = { 52: { label: 'Last 52', long: 'the last 52 draws' }, 200: { label: 'Last 200', long: 'the last 200 draws' }, era: { label: 'All', long: 'every 6/49 draw since Oct 2014' } };
 // [start, end] indices of a window that ends at draw index `end`
 function range(win, end = D.length - 1) {
-  if (win === 'all') return [0, end];
-  if (win === 'era') return [Math.min(ERA, end), end];
+  if (win === 'era' || win === 'all') return [0, end];
   return [Math.max(0, end - Number(win) + 1), end];
 }
 // counts, chance and recency for each number over draws [a, b]
@@ -567,10 +567,8 @@ function panelBoard() {
   html += section('Hot in this window', `<div class="flex flex-wrap gap-1.5">${hot.map((k) => ball(k, k === state.sel ? 'pick' : '')).join('')}</div>`, 'fi-rr-flame');
   html += section('Cold in this window', `<div class="flex flex-wrap gap-1.5">${cold.map((k) => ball(k, k === state.sel ? 'pick' : '')).join('')}</div>`, 'fi-rr-snowflake');
   html += section('Longest wait', `<div class="flex flex-wrap gap-1.5">${overdue.map((k) => ball(k, k === state.sel ? 'pick' : '')).join('')}</div><p class="mt-1.5 text-[11px] text-muted-foreground">${overdue.map((k) => `${k}: ${since[k]}`).join(' · ')} draws</p>`, 'fi-rr-hourglass-end');
-  html += section('Is the spread uneven?', state.win === 'all'
-    ? '<p class="text-xs text-muted-foreground">Pick a window inside the 6/49 era to test the spread: the two games had different numbers of balls.</p>'
-    : `<div class="rounded-lg border bg-background/40 p-3 text-xs">${row('Chi-square, 48 df', f.d2(t.x))}${row('p-value', f.d3(t.p))}<p class="mt-1.5 leading-relaxed text-ink-2">The spread of counts is ${pReading(t.p)}. Hot and cold numbers are what a fair draw looks like over a short window.</p></div>`, 'fi-rr-scale');
-  html += note('Tap a column or a number to see its gaps and the numbers drawn with it. Data: Singapore Pools results; the game had 45 balls until draw 2994, so counts are set against each draw\'s own chance.');
+  html += section('Is the spread uneven?', `<div class="rounded-lg border bg-background/40 p-3 text-xs">${row('Chi-square, 48 df', f.d2(t.x))}${row('p-value', f.d3(t.p))}<p class="mt-1.5 leading-relaxed text-ink-2">The spread of counts is ${pReading(t.p)}. Hot and cold numbers are what a fair draw looks like over a short window.</p></div>`, 'fi-rr-scale');
+  html += note('Tap a column or a number to see its gaps and the numbers drawn with it. Data: Singapore Pools results from draw 2995 (October 2014), when the game became 6/49; earlier 6/45 draws are left out because their odds differ.');
   return html;
 }
 
@@ -602,11 +600,6 @@ function showHistory() {
   for (let k = 0; k <= 50; k += 5) { const x = hx(Math.max(1, Math.min(49, k))) ; lanePts.push(x, 0.005, 1, x, 0.005, -len + 1); }
   const lanes = new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(lanePts, 3)), new THREE.LineBasicMaterial({ color: B.line }));
   group.add(lanes);
-  // the switch from 45 to 49 balls
-  const eraZ = -(hz(ERA) + HZ / 2);
-  const wall = new THREE.Mesh(new THREE.PlaneGeometry(49 * HX + 1.2, 1.2), new THREE.MeshBasicMaterial({ color: B.amber, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false }));
-  wall.position.set(0, 0.6, eraZ); group.add(wall);
-  label(group, '<b>6/45 → 6/49</b> · Oct 2014', hx(49) + 0.2, 1.25, eraZ, 'tag');
   // Group 1 pools: a bar per draw with prize figures, a stub when nobody won and it rolled over
   const jx = hx(1) - 0.9;
   const withP = D.map((d, i) => ({ d, i, pool: pool1(d) })).filter((x) => x.pool != null);
@@ -695,11 +688,11 @@ function panelHistory() {
   const repeats = prev ? d.n.filter((x) => prev.n.includes(x)) : [];
   const odd = d.n.filter((x) => x % 2).length, low = d.n.filter((x) => x <= lowCut(d)).length;
   const prizes = d.prizes ? `<table class="w-full text-xs"><thead><tr class="text-[11px] text-muted-foreground"><th class="py-1 text-left font-medium">Group</th><th class="py-1 text-left font-medium">To win</th><th class="py-1 text-right font-medium">Winners</th><th class="py-1 text-right font-medium">Prize each</th></tr></thead><tbody>${GROUPS.map((g, j) => `<tr class="border-t"><td class="py-1">${g.g}</td><td class="py-1 text-muted-foreground">${g.text}</td><td class="py-1 text-right font-mono">${f.int(d.prizes[j][0])}</td><td class="py-1 text-right font-mono">${d.prizes[j][0] ? f.money(d.prizes[j][1]) : '–'}</td></tr>`).join('')}</tbody></table>`
-    : '<p class="text-xs text-muted-foreground">The results file has no prize figures for this draw (they start in June 2011, and the newest draw may not have them yet).</p>';
+    : '<p class="text-xs text-muted-foreground">The results file has no prize figures for this draw yet; the newest draw usually gets them a few days later.</p>';
   const withP = D.map((x, j) => ({ j, p: pool1(x), w: x.prizes?.[0][0] })).filter((x) => x.p > 0).sort((a, b) => b.p - a.p).slice(0, 5);
   const runs = rollRuns();
   return `<h1 class="text-lg font-semibold leading-tight">Draw ${d.draw}</h1>
-    <p class="mt-1 text-xs text-muted-foreground">${fmtDate(d.date)}${d.draw < ERA_DRAW ? ' · 6/45 game' : ''}</p>
+    <p class="mt-1 text-xs text-muted-foreground">${fmtDate(d.date)}</p>
     <div class="mt-3 flex flex-wrap items-center gap-1.5">${d.n.map((x) => `<span class="ball hit">${x}</span>`).join('')}<span class="text-muted-foreground">+</span><span class="ball add">${d.add}</span></div>
     <div class="mt-3 flex items-center gap-1.5">
       <button type="button" data-act="hstep" data-v="-1" class="${btnCls}" aria-label="Previous draw" ${i === 0 ? 'disabled' : ''}><i class="fi fi-rr-angle-small-left"></i></button>
@@ -755,7 +748,7 @@ function metricData(key) {
   }
   if (key === 'consec') return hist(E.map((d) => d.n.filter((x, j) => j && x - d.n[j - 1] === 1).length), d3.range(6).map((j) => (choose(5, j) * choose(44, 6 - j)) / total), d3.range(6).map((j) => `${j} pair${j === 1 ? '' : 's'}`));
   if (key === 'repeat') {
-    const vals = E.map((d, j) => { const p = j ? E[j - 1] : D[ERA - 1]; return d.n.filter((x) => p.n.includes(x)).length; });
+    const vals = E.slice(1).map((d, j) => d.n.filter((x) => E[j].n.includes(x)).length);   // the first 6/49 draw has no 6/49 draw before it
     return hist(vals, P_MATCH, d3.range(7).map((k) => `${k} repeat${k === 1 ? '' : 's'}`));
   }
   return null;
@@ -1129,7 +1122,7 @@ function methodExtra() {
 function panelPicks() {
   const p = state.picks, tk = p.ticket, latest = D[D.length - 1];
   const methods = `<div class="grid grid-cols-3 gap-1">${Object.entries(METHODS).map(([k, v]) => `<button type="button" data-act="method" data-v="${k}" data-state="${k === p.method ? 'active' : ''}" class="flex items-center justify-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-colors hover:bg-accent data-[state=active]:border-amber/60 data-[state=active]:bg-amber/10 data-[state=active]:text-foreground"><i class="fi ${v.icon} text-muted-foreground"></i>${esc(v.name)}</button>`).join('')}</div>`;
-  const winToggle = toggle(Object.entries(WINDOWS).filter(([k]) => k !== 'all').map(([k, v]) => [k, v.label]), p.win, 'pwin');
+  const winToggle = toggle(Object.entries(WINDOWS).map(([k, v]) => [k, v.label]), p.win, 'pwin');
   let ticket = '<p class="text-xs text-muted-foreground">Pick a method and generate a ticket, or tap numbers on the board to choose your own.</p>';
   if (tk?.nums.length) {
     const pr = profile(tk.nums), full = tk.nums.length === 6;
@@ -1651,7 +1644,7 @@ renderer.setAnimationLoop(() => {
 // ================= boot =================
 function setData(draws, source) {
   CACHE = {};
-  D = draws; ERA = Math.max(0, D.findIndex((d) => d.draw >= ERA_DRAW));
+  D = draws.filter((d) => d.draw >= FIRST_649_DRAW);   // also trims data stored before the parser dropped 6/45 draws
   state.source = source;
   state.hist.i = D.length - 1;
   state.sel = null; state.picks.bt = null; state.zw.chart = null; state.zw.past = null;

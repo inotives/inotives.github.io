@@ -324,7 +324,7 @@ export const PLAYGROUND_MOCKS = [
     href: '/mocks/sg-toto.html',
     preview: '/mocks/previews/sg-toto.jpg',
     description:
-      'Every Singapore ToTo draw since 2008 in 3D: the 49 numbers as columns against chance, a wall of past draws with Group 1 jackpots, draw shapes, Monday against Thursday and the numbers players favour (read from winner counts), a Picks tab with ten ways to build a ticket, each backtested on hit rate and return per $1, and a 紫微 tab that casts a Purple Star chart for a draw or your birth and animates its stars into six numbers. Spoiler: none of them beat chance.',
+      'Every Singapore ToTo draw since the 6/49 game began in October 2014, in 3D: the 49 numbers as columns against chance, a wall of past draws with Group 1 jackpots, draw shapes, Monday against Thursday and the numbers players favour (read from winner counts), a Picks tab with ten ways to build a ticket, each backtested on hit rate and return per $1, and a 紫微 tab that casts a Purple Star chart for a draw or your birth and animates its stars into six numbers. Spoiler: none of them beat chance.',
     libraries: ['threejs', 'd3', 'iztro', 'shadcn', 'tailwind', 'flaticon'],
     sources: [
       { name: 'Singapore Pools ToTo results', href: 'https://www.singaporepools.com.sg/en/product/pages/toto_results.aspx' },
