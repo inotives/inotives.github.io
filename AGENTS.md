@@ -94,6 +94,7 @@ Playground mocks are single, self-contained HTML files in `public/mocks/`, liste
 |---|---|---|
 | ToTo stats (`sg-toto.html`) | `npm run toto -- path/to/ToTo.csv` (no path: `~/Downloads/ToTo.csv`) | `public/mocks/data/sg-toto.json` |
 | Block explorer 3D (`block-explorer.html`) | `node scripts/mocks/block-explorer/capture.mjs` | `public/mocks/data/block-explorer.json` |
+| Fertility extinction clock (`world-fertility.html`) | `node scripts/mocks/world-fertility/capture.mjs` | `public/mocks/data/world-fertility.json` |
 
 - **ToTo:** when a human gives a newer Singapore Pools ToTo results CSV, or asks to update the ToTo data, run `npm run toto` with it. Don't edit the JSON by hand. The script reports new draws, prize figures filled in for earlier draws, and any `CHANGED` or `MISSING` draws. Show the human `CHANGED` or `MISSING` lines before committing: they usually mean a wrong or older CSV. The CSV parser lives in the mock between the `// <toto-csv>` markers and is shared with the page's "Update data" import, so change the CSV format handling there, not in the script.
 - Test at desktop width and at 390px phone width. Mocks in `public/` open from the dev server at `/mocks/<id>.html`; preview the template itself with `python3 -m http.server -d scripts/mocks/template`, because Vite rewrites HTML outside `public/`.
