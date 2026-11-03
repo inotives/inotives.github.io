@@ -1,7 +1,27 @@
+import { useState } from 'react'
 import { PLAYGROUND_LIBRARIES, PLAYGROUND_MOCKS } from '../data/playground'
 import { formatShort } from '../utils/dates'
 
 const libraryName = Object.fromEntries(PLAYGROUND_LIBRARIES.map((lib) => [lib.id, lib.name]))
+
+// newest first; mocks from the same day keep the newest-added on top
+const MOCKS_BY_DATE = [...PLAYGROUND_MOCKS].reverse().sort((a, b) => b.date.localeCompare(a.date))
+
+// text each mock is searched by: name, project, description, libraries, sources and credits
+const searchText = (mock) =>
+  [
+    mock.project,
+    mock.name,
+    mock.description,
+    ...mock.libraries.map((id) => libraryName[id] ?? id),
+    ...(mock.sources ?? []).map((s) => s.name),
+    mock.credit?.name,
+    mock.usedIn?.text,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+const MOCK_TEXT = new Map(PLAYGROUND_MOCKS.map((mock) => [mock.id, searchText(mock)]))
 
 function MockCard({ mock }) {
   const title = `${mock.project}: ${mock.name}`
@@ -67,6 +87,11 @@ function MockCard({ mock }) {
 }
 
 export default function Playground() {
+  const [search, setSearch] = useState('')
+  // every word must appear somewhere in the mock's text
+  const words = search.trim().toLowerCase().split(/\s+/).filter(Boolean)
+  const shown = MOCKS_BY_DATE.filter((mock) => words.every((w) => MOCK_TEXT.get(mock.id).includes(w)))
+
   return (
     <div className="page-stack">
       <header>
@@ -80,13 +105,31 @@ export default function Playground() {
       <section>
         <div className="section-head">
           <h2 className="section-title">Mocks</h2>
-          <span className="notes-count">{PLAYGROUND_MOCKS.length} mocks</span>
+          <span className="notes-count">
+            {words.length
+              ? `${shown.length} of ${PLAYGROUND_MOCKS.length} mocks matching “${search.trim()}”`
+              : `${PLAYGROUND_MOCKS.length} mocks`}
+          </span>
         </div>
-        <div className="mock-grid">
-          {PLAYGROUND_MOCKS.map((mock) => (
-            <MockCard key={mock.id} mock={mock} />
-          ))}
+        <div className="notes-search playground-search">
+          <input
+            type="search"
+            aria-label="Search mocks"
+            placeholder="Search names, descriptions, libraries and sources"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="input"
+          />
         </div>
+        {shown.length === 0 ? (
+          <p className="empty-state">No mocks match. Try another word, or clear the search.</p>
+        ) : (
+          <div className="mock-grid">
+            {shown.map((mock) => (
+              <MockCard key={mock.id} mock={mock} />
+            ))}
+          </div>
+        )}
       </section>
 
       <section>

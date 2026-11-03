@@ -324,10 +324,27 @@ export const PLAYGROUND_MOCKS = [
     href: '/mocks/sg-toto.html',
     preview: '/mocks/previews/sg-toto.jpg',
     description:
-      'Every Singapore ToTo draw since 2008 in 3D: the 49 numbers as columns against chance, a wall of past draws with Group 1 jackpots, draw shapes, Monday against Thursday and the numbers players favour (read from winner counts), a Picks tab with ten ways to build a ticket, each backtested on hit rate and return per $1, and a 紫微 tab that casts a Purple Star chart for a draw or your birth and animates its stars into six numbers. Spoiler: none of them beat chance.',
+      'Every Singapore ToTo draw since the 6/49 game began in October 2014, in 3D: the 49 numbers as columns against chance, a wall of past draws with Group 1 jackpots, draw shapes, Monday against Thursday and the numbers players favour (read from winner counts), a Picks tab with ten ways to build a ticket, each backtested on hit rate and return per $1, and a 紫微 tab that casts a Purple Star chart for a draw or your birth and animates its stars into six numbers. Spoiler: none of them beat chance.',
     libraries: ['threejs', 'd3', 'iztro', 'shadcn', 'tailwind', 'flaticon'],
     sources: [
       { name: 'Singapore Pools ToTo results', href: 'https://www.singaporepools.com.sg/en/product/pages/toto_results.aspx' },
+    ],
+  },
+  {
+    id: 'world-fertility',
+    project: 'Data in 3D',
+    name: 'Fertility extinction clock',
+    date: '2026-11-03',
+    href: '/mocks/world-fertility.html',
+    preview: '/mocks/previews/world-fertility.jpg',
+    description:
+      'Hold every country at today’s fertility rate, with no migration, and a cohort model projects its population by age and sex until nobody is left. A globe coloured by fertility or by the year of the last person, one country’s age structure ageing and emptying row by row, and a ranking of who runs out first. A slider sets any country’s rate; Go live syncs the latest World Bank figures into your browser.',
+    libraries: ['threejs', 'd3', 'shadcn', 'tailwind', 'flaticon'],
+    sources: [
+      { name: 'World Bank fertility rate (SP.DYN.TFRT.IN)', href: 'https://data.worldbank.org/indicator/SP.DYN.TFRT.IN' },
+      { name: 'World Bank population by age and sex', href: 'https://data.worldbank.org/indicator/SP.POP.TOTL' },
+      { name: 'World Bank life expectancy and infant mortality', href: 'https://data.worldbank.org/indicator/SP.DYN.LE00.IN' },
+      { name: 'world-atlas (Natural Earth 1:110m)', href: 'https://github.com/topojson/world-atlas' },
     ],
   },
 ]

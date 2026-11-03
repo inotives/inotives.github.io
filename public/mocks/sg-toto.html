@@ -6,20 +6,20 @@
 <meta name="color-scheme" content="dark" />
 <title>ToTo stats</title>
 <!--
-  Playground mock: Singapore ToTo results since July 2008, in 3D.
+  Playground mock: Singapore ToTo results since the 6/49 game began (draw 2995, 9 October 2014), in 3D.
   Views: Board (the 49 numbers as columns, height against chance, colour by draws since last seen),
   History (every draw as a wall of balls running back in time, with Group 1 jackpots), Patterns
   (sums, odd/even, low/high, ranges, back-to-back numbers, repeats and pairs against exact chance)
   and Picks (number-stats methods that pick a ticket, with a walk-forward backtest against chance).
-  The game moved from 6/45 to 6/49 at draw 2995 (9 October 2014); Patterns and Picks use the 6/49
-  draws. Data: Singapore Pools' historical results CSV, bundled as public/mocks/data/sg-toto.json
+  Earlier draws were a 6/45 game with different odds, so the parser drops them and every view uses
+  6/49 draws only. Data: Singapore Pools' historical results CSV, bundled as public/mocks/data/sg-toto.json
   by scripts/mocks/sg-toto/build.mjs (which reuses the parser between the toto-csv markers below).
   "Update data" reads a newer CSV in the browser and keeps it in IndexedDB, with saved tickets.
   Three.js draws the stage; D3 provides scales, colour and formatting.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
@@ -72,14 +72,33 @@
   .ball.add { background: transparent; color: #e58fb0; border-color: #e58fb0; }
   .ball.pick { background: #f6c453; color: #15171b; border-color: #f6c453; }
   .ball.sm { width: 1.6rem; height: 1.6rem; font-size: 11.5px; }
-  .lbl.zwp { font: 500 11px "IBM Plex Sans Condensed", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif; color: #b8b5ac; background: rgb(23 21 31 / 0.82); border: 1px solid #3a3550; border-radius: 6px; padding: 3px 7px; text-align: center; line-height: 1.35; max-width: 9.5rem; white-space: normal; }
-  .lbl.zwp b { color: #e4e1d8; font-weight: 600; }
-  .lbl.zwp .gz, .lbl.zwp .muted, .lbl.zwp i { color: #8b9099; font-style: normal; font-size: 9.5px; }
+  /* 紫微 tab: a night palette of its own (玄夜 night, 鎏金 gilt, 朱砂 cinnabar, 宣纸 paper), only while body.zw-night */
+  body.zw-night #stage { background: radial-gradient(ellipse 75% 65% at 58% 30%, #241a3a 0%, #150f22 55%, #0d0a16 100%); }
+  .lbl.zwp { font: 500 11px "Noto Serif SC", "Songti SC", "STSong", serif; color: #b9ad94; background: rgb(17 13 27 / 0.86); border: 1px solid rgb(201 162 90 / 0.38); border-radius: 3px; padding: 3px 8px 4px; text-align: center; line-height: 1.4; max-width: 9.5rem; white-space: normal; box-shadow: inset 0 0 0 2px rgb(17 13 27 / 0.86), inset 0 0 0 3px rgb(201 162 90 / 0.14); }
+  .lbl.zwp b { color: #ece3cf; font-weight: 700; font-size: 13px; letter-spacing: 0.08em; }
+  .lbl.zwp .gz, .lbl.zwp .muted, .lbl.zwp i { color: #8a7f6a; font-style: normal; font-size: 9.5px; }
   .lbl.zwp .mn { font-size: 10px; opacity: 0.85; }
-  .lbl.zwp em { font-style: normal; font-size: 9.5px; color: #15171b; border-radius: 3px; padding: 0 2px; margin-left: 1px; }
-  .lbl.zwp.hot { border-color: #f6c453; box-shadow: 0 0 0 1px rgb(246 196 83 / 0.3); }
-  .lbl.zwb { font: 500 13px "PingFang SC", "Noto Sans SC", sans-serif; color: #6f6a8a; }
-  .lbl.zwball { font: 600 12.5px "Source Code Pro", monospace; color: #15171b; }
+  .lbl.zwp em { font-style: normal; font-size: 9.5px; color: #15171b; border-radius: 2px; padding: 0 2px; margin-left: 1px; }
+  .lbl.zwp.hot { border-color: rgb(201 162 90 / 0.95); box-shadow: inset 0 0 0 2px rgb(17 13 27 / 0.86), inset 0 0 0 3px rgb(201 162 90 / 0.5), 0 0 14px rgb(201 162 90 / 0.25); }
+  .lbl.zwb { font: 700 15px "Noto Serif SC", "Songti SC", serif; color: #c9a25a; opacity: 0.8; }
+  .lbl.zwg { font: 500 18px "Noto Serif SC", "Songti SC", serif; color: rgb(201 162 90 / 0.7); text-align: center; line-height: 1; }
+  .lbl.zwg small { display: block; margin-top: 2px; font-size: 10px; letter-spacing: 0.15em; color: rgb(201 162 90 / 0.55); }
+  .lbl.zwsky { font: 500 11px "Noto Serif SC", "Songti SC", serif; letter-spacing: 0.2em; color: rgb(201 162 90 / 0.5); }
+  /* 朱砂 seal: a cinnabar square with a paper-coloured inner frame, set slightly askew like a hand stamp */
+  .seal { display: inline-flex; align-items: center; justify-content: center; width: 2.1rem; height: 2.1rem; border-radius: 3px; font: 700 14px "Noto Serif SC", "Source Code Pro", serif; color: #f1e7d2;
+    background: radial-gradient(circle at 30% 25%, rgb(255 255 255 / 0.10), transparent 55%), radial-gradient(circle at 75% 80%, rgb(0 0 0 / 0.18), transparent 50%), #b8342a;
+    box-shadow: inset 0 0 0 2px #b8342a, inset 0 0 0 3.2px rgb(241 231 210 / 0.75), 0 2px 6px rgb(0 0 0 / 0.35); transform: rotate(var(--tilt, 0deg)); }
+  .lbl.zwseal { pointer-events: none; }
+  .lbl.zwseal .seal { width: 2.4rem; height: 2.4rem; font-size: 16px; }
+  .lbl.zwseal .seal.stamp { animation: zw-stamp 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+  @keyframes zw-stamp { from { transform: rotate(var(--tilt, 0deg)) scale(1.9); opacity: 0; } 60% { opacity: 1; } to { transform: rotate(var(--tilt, 0deg)) scale(1); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .lbl.zwseal .seal.stamp { animation: none; } }
+  button.ball.seal { border: 0; }
+  /* stars as their names, lit in their element's colour (vertical, as on a traditional chart) */
+  .lbl.zwstar { font: 700 15px "Noto Serif SC", "Songti SC", serif; writing-mode: vertical-rl; letter-spacing: 0.05em; color: var(--c); text-shadow: 0 0 4px var(--c), 0 0 12px var(--c); transition: color 0.3s, text-shadow 0.3s; }
+  .lbl.zwstar.minor { font-size: 11px; font-weight: 500; opacity: 0.8; text-shadow: 0 0 3px var(--c), 0 0 8px var(--c); }
+  .lbl.zwstar.lit { color: #fffaf0; text-shadow: 0 0 6px var(--c), 0 0 18px var(--c), 0 0 36px var(--c); }
+  .lbl.zwpole { font: 700 30px "Noto Serif SC", "Songti SC", serif; letter-spacing: 0.12em; color: #efe4ff; text-shadow: 0 0 8px #b48cf2, 0 0 24px #9b6fe8, 0 0 48px #7a4fd6; }
   #drawer { --pg-panel-w: 360px; }   /* desktop panel width for this mock */
 
   /* <pg-layout v1> Playground layout standard (scripts/mocks/template/playground.html).
@@ -164,6 +183,9 @@ import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer
 // Shared with scripts/mocks/sg-toto/build.mjs, which imports this block: keep it self-contained.
 // <toto-csv>
 const TOTO_GROUPS = 7;
+// The game moved from 6/45 to 6/49 at this draw (9 October 2014). Earlier draws had different odds,
+// so they would skew every count and test: the parser skips them.
+const FIRST_649_DRAW = 2995;
 function parseToto(text) {
   const rows = [];
   for (const line of String(text).replace(/^﻿/, '').split(/\r?\n/)) {
@@ -188,14 +210,13 @@ function parseToto(text) {
   const seen = new Map();
   for (const r of rows) {
     const draw = Number(r[iDraw]);
-    if (!Number.isInteger(draw)) continue;
+    if (!Number.isInteger(draw) || draw < FIRST_649_DRAW) continue;
     const date = r[iDate];
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`Draw ${draw}: date "${date}" is not YYYY-MM-DD`);
     const n = d3range(6).map((i) => Number(r[iN1 + i])).sort((a, b) => a - b);
     const add = Number(r[iAdd]);
-    const pool = draw >= 2995 ? 49 : 45;
     const all = [...n, add];
-    if (all.some((x) => !Number.isInteger(x) || x < 1 || x > pool) || new Set(all).size !== 7) throw new Error(`Draw ${draw}: numbers ${all.join(' ')} are not seven different numbers from 1 to ${pool}`);
+    if (all.some((x) => !Number.isInteger(x) || x < 1 || x > 49) || new Set(all).size !== 7) throw new Error(`Draw ${draw}: numbers ${all.join(' ')} are not seven different numbers from 1 to 49`);
     let prizes = null;
     if (iWin.every(([w, p]) => w >= 0 && p >= 0) && r[iWin[0][0]] !== '' && r[iWin[0][0]] != null) {
       prizes = iWin.map(([w, p]) => [Number(r[w]) || 0, Number(String(r[p]).replace(/,/g, '')) || 0]);
@@ -203,7 +224,7 @@ function parseToto(text) {
     seen.set(draw, { draw, date, n, add, prizes });
   }
   const draws = [...seen.values()].sort((a, b) => a.draw - b.draw);
-  if (!draws.length) throw new Error('No draws found in the CSV');
+  if (!draws.length) throw new Error('No 6/49 draws (from draw 2995, October 2014) found in the CSV');
   return draws;
 }
 function d3range(n) { return Array.from({ length: n }, (_, i) => i); }
@@ -259,10 +280,9 @@ const store = {
 };
 
 // ================= data and stats =================
-const ERA_DRAW = 2995;        // first 6/49 draw, 9 October 2014
 const NUMS = d3.range(1, 50);
-const pool = (d) => (d.draw >= ERA_DRAW ? 49 : 45);
-const lowCut = (d) => (d.draw >= ERA_DRAW ? 24 : 22);   // the results file's Low/High split
+const pool = () => 49;          // every draw is 6/49: the parser drops the earlier 6/45 game
+const lowCut = () => 24;        // the results file's Low/High split
 const GROUPS = [
   { g: 1, m: 6, add: false, text: '6 numbers' }, { g: 2, m: 5, add: true, text: '5 + additional' }, { g: 3, m: 5, add: false, text: '5 numbers' },
   { g: 4, m: 4, add: true, text: '4 + additional' }, { g: 5, m: 4, add: false, text: '4 numbers' }, { g: 6, m: 3, add: true, text: '3 + additional' }, { g: 7, m: 3, add: false, text: '3 numbers' },
@@ -338,12 +358,11 @@ function popularity() {
 }
 
 let D = [];          // draws, oldest first
-let ERA = 0;         // index of the first 6/49 draw
-const WINDOWS = { 52: { label: 'Last 52', long: 'the last 52 draws' }, 200: { label: 'Last 200', long: 'the last 200 draws' }, era: { label: '6/49 era', long: 'every 6/49 draw since Oct 2014' }, all: { label: 'All', long: 'every draw since July 2008' } };
+const ERA = 0;       // index of the first 6/49 draw: every loaded draw is 6/49
+const WINDOWS = { 52: { label: 'Last 52', long: 'the last 52 draws' }, 200: { label: 'Last 200', long: 'the last 200 draws' }, era: { label: 'All', long: 'every 6/49 draw since Oct 2014' } };
 // [start, end] indices of a window that ends at draw index `end`
 function range(win, end = D.length - 1) {
-  if (win === 'all') return [0, end];
-  if (win === 'era') return [Math.min(ERA, end), end];
+  if (win === 'era' || win === 'all') return [0, end];
   return [Math.max(0, end - Number(win) + 1), end];
 }
 // counts, chance and recency for each number over draws [a, b]
@@ -422,6 +441,7 @@ function clearStage() {
   group = new THREE.Group(); scene.add(group);
   scene.fog = null;
   current = null;
+  document.body.classList.remove('zw-night');
 }
 const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.05, ...extra });
 
@@ -567,10 +587,8 @@ function panelBoard() {
   html += section('Hot in this window', `<div class="flex flex-wrap gap-1.5">${hot.map((k) => ball(k, k === state.sel ? 'pick' : '')).join('')}</div>`, 'fi-rr-flame');
   html += section('Cold in this window', `<div class="flex flex-wrap gap-1.5">${cold.map((k) => ball(k, k === state.sel ? 'pick' : '')).join('')}</div>`, 'fi-rr-snowflake');
   html += section('Longest wait', `<div class="flex flex-wrap gap-1.5">${overdue.map((k) => ball(k, k === state.sel ? 'pick' : '')).join('')}</div><p class="mt-1.5 text-[11px] text-muted-foreground">${overdue.map((k) => `${k}: ${since[k]}`).join(' · ')} draws</p>`, 'fi-rr-hourglass-end');
-  html += section('Is the spread uneven?', state.win === 'all'
-    ? '<p class="text-xs text-muted-foreground">Pick a window inside the 6/49 era to test the spread: the two games had different numbers of balls.</p>'
-    : `<div class="rounded-lg border bg-background/40 p-3 text-xs">${row('Chi-square, 48 df', f.d2(t.x))}${row('p-value', f.d3(t.p))}<p class="mt-1.5 leading-relaxed text-ink-2">The spread of counts is ${pReading(t.p)}. Hot and cold numbers are what a fair draw looks like over a short window.</p></div>`, 'fi-rr-scale');
-  html += note('Tap a column or a number to see its gaps and the numbers drawn with it. Data: Singapore Pools results; the game had 45 balls until draw 2994, so counts are set against each draw\'s own chance.');
+  html += section('Is the spread uneven?', `<div class="rounded-lg border bg-background/40 p-3 text-xs">${row('Chi-square, 48 df', f.d2(t.x))}${row('p-value', f.d3(t.p))}<p class="mt-1.5 leading-relaxed text-ink-2">The spread of counts is ${pReading(t.p)}. Hot and cold numbers are what a fair draw looks like over a short window.</p></div>`, 'fi-rr-scale');
+  html += note('Tap a column or a number to see its gaps and the numbers drawn with it. Data: Singapore Pools results from draw 2995 (October 2014), when the game became 6/49; earlier 6/45 draws are left out because their odds differ.');
   return html;
 }
 
@@ -602,11 +620,6 @@ function showHistory() {
   for (let k = 0; k <= 50; k += 5) { const x = hx(Math.max(1, Math.min(49, k))) ; lanePts.push(x, 0.005, 1, x, 0.005, -len + 1); }
   const lanes = new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(lanePts, 3)), new THREE.LineBasicMaterial({ color: B.line }));
   group.add(lanes);
-  // the switch from 45 to 49 balls
-  const eraZ = -(hz(ERA) + HZ / 2);
-  const wall = new THREE.Mesh(new THREE.PlaneGeometry(49 * HX + 1.2, 1.2), new THREE.MeshBasicMaterial({ color: B.amber, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false }));
-  wall.position.set(0, 0.6, eraZ); group.add(wall);
-  label(group, '<b>6/45 → 6/49</b> · Oct 2014', hx(49) + 0.2, 1.25, eraZ, 'tag');
   // Group 1 pools: a bar per draw with prize figures, a stub when nobody won and it rolled over
   const jx = hx(1) - 0.9;
   const withP = D.map((d, i) => ({ d, i, pool: pool1(d) })).filter((x) => x.pool != null);
@@ -695,11 +708,11 @@ function panelHistory() {
   const repeats = prev ? d.n.filter((x) => prev.n.includes(x)) : [];
   const odd = d.n.filter((x) => x % 2).length, low = d.n.filter((x) => x <= lowCut(d)).length;
   const prizes = d.prizes ? `<table class="w-full text-xs"><thead><tr class="text-[11px] text-muted-foreground"><th class="py-1 text-left font-medium">Group</th><th class="py-1 text-left font-medium">To win</th><th class="py-1 text-right font-medium">Winners</th><th class="py-1 text-right font-medium">Prize each</th></tr></thead><tbody>${GROUPS.map((g, j) => `<tr class="border-t"><td class="py-1">${g.g}</td><td class="py-1 text-muted-foreground">${g.text}</td><td class="py-1 text-right font-mono">${f.int(d.prizes[j][0])}</td><td class="py-1 text-right font-mono">${d.prizes[j][0] ? f.money(d.prizes[j][1]) : '–'}</td></tr>`).join('')}</tbody></table>`
-    : '<p class="text-xs text-muted-foreground">The results file has no prize figures for this draw (they start in June 2011, and the newest draw may not have them yet).</p>';
+    : '<p class="text-xs text-muted-foreground">The results file has no prize figures for this draw yet; the newest draw usually gets them a few days later.</p>';
   const withP = D.map((x, j) => ({ j, p: pool1(x), w: x.prizes?.[0][0] })).filter((x) => x.p > 0).sort((a, b) => b.p - a.p).slice(0, 5);
   const runs = rollRuns();
   return `<h1 class="text-lg font-semibold leading-tight">Draw ${d.draw}</h1>
-    <p class="mt-1 text-xs text-muted-foreground">${fmtDate(d.date)}${d.draw < ERA_DRAW ? ' · 6/45 game' : ''}</p>
+    <p class="mt-1 text-xs text-muted-foreground">${fmtDate(d.date)}</p>
     <div class="mt-3 flex flex-wrap items-center gap-1.5">${d.n.map((x) => `<span class="ball hit">${x}</span>`).join('')}<span class="text-muted-foreground">+</span><span class="ball add">${d.add}</span></div>
     <div class="mt-3 flex items-center gap-1.5">
       <button type="button" data-act="hstep" data-v="-1" class="${btnCls}" aria-label="Previous draw" ${i === 0 ? 'disabled' : ''}><i class="fi fi-rr-angle-small-left"></i></button>
@@ -755,7 +768,7 @@ function metricData(key) {
   }
   if (key === 'consec') return hist(E.map((d) => d.n.filter((x, j) => j && x - d.n[j - 1] === 1).length), d3.range(6).map((j) => (choose(5, j) * choose(44, 6 - j)) / total), d3.range(6).map((j) => `${j} pair${j === 1 ? '' : 's'}`));
   if (key === 'repeat') {
-    const vals = E.map((d, j) => { const p = j ? E[j - 1] : D[ERA - 1]; return d.n.filter((x) => p.n.includes(x)).length; });
+    const vals = E.slice(1).map((d, j) => d.n.filter((x) => E[j].n.includes(x)).length);   // the first 6/49 draw has no 6/49 draw before it
     return hist(vals, P_MATCH, d3.range(7).map((k) => `${k} repeat${k === 1 ? '' : 's'}`));
   }
   return null;
@@ -1129,7 +1142,7 @@ function methodExtra() {
 function panelPicks() {
   const p = state.picks, tk = p.ticket, latest = D[D.length - 1];
   const methods = `<div class="grid grid-cols-3 gap-1">${Object.entries(METHODS).map(([k, v]) => `<button type="button" data-act="method" data-v="${k}" data-state="${k === p.method ? 'active' : ''}" class="flex items-center justify-center gap-1.5 rounded-md border px-2 py-1.5 text-xs transition-colors hover:bg-accent data-[state=active]:border-amber/60 data-[state=active]:bg-amber/10 data-[state=active]:text-foreground"><i class="fi ${v.icon} text-muted-foreground"></i>${esc(v.name)}</button>`).join('')}</div>`;
-  const winToggle = toggle(Object.entries(WINDOWS).filter(([k]) => k !== 'all').map(([k, v]) => [k, v.label]), p.win, 'pwin');
+  const winToggle = toggle(Object.entries(WINDOWS).map(([k, v]) => [k, v.label]), p.win, 'pwin');
   let ticket = '<p class="text-xs text-muted-foreground">Pick a method and generate a ticket, or tap numbers on the board to choose your own.</p>';
   if (tk?.nums.length) {
     const pr = profile(tk.nums), full = tk.nums.length === 6;
@@ -1285,26 +1298,68 @@ const playEnd = () => PLAY.mut + 6 * PLAY.step + 0.6;
 
 function showZiwei() {
   clearStage();
-  // night sky
-  const sky = new Float32Array(1600 * 3);
-  for (let i = 0; i < 1600; i++) {
-    const u = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, r = 45 + Math.random() * 30, s = Math.sqrt(1 - u * u);
+  document.body.classList.add('zw-night');
+  const GILT = '#c9a25a';
+  // background stars, dim and faintly violet
+  const sky = new Float32Array(1400 * 3);
+  for (let i = 0; i < 1400; i++) {
+    const u = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, r = 50 + Math.random() * 30, s = Math.sqrt(1 - u * u);
     sky.set([r * s * Math.cos(th), Math.abs(r * u) * 0.9 - 6, r * s * Math.sin(th)], i * 3);
   }
-  const stars = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(sky, 3)), new THREE.PointsMaterial({ color: '#cfd6e6', size: 0.16, transparent: true, opacity: 0.75, depthWrite: false }));
+  const stars = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(sky, 3)), new THREE.PointsMaterial({ color: '#b9b2d6', size: 0.13, transparent: true, opacity: 0.5, depthWrite: false }));
   group.add(stars);
-  // the chart floor: two rings and twelve spokes
-  const pts = [];
-  const circle = (r) => { for (let i = 0; i < 96; i++) { const a = (i / 96) * Math.PI * 2, b = ((i + 1) / 96) * Math.PI * 2; pts.push(Math.cos(a) * r, 0, Math.sin(a) * r, Math.cos(b) * r, 0, Math.sin(b) * r); } };
-  circle(ZR - 1.15); circle(ZR + 1.15); circle(2.2);
-  for (let b = 0; b < 12; b++) { const a = branchAngle(b) + Math.PI / 12; pts.push(Math.cos(a) * 2.2, 0, Math.sin(a) * 2.2, Math.cos(a) * (ZR + 1.15), 0, Math.sin(a) * (ZR + 1.15)); }
-  group.add(new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)), new THREE.LineBasicMaterial({ color: '#3a3550', transparent: true, opacity: 0.9 })));
-  const disc = new THREE.Mesh(new THREE.CircleGeometry(ZR + 1.15, 96), new THREE.MeshBasicMaterial({ color: '#17151f', transparent: true, opacity: 0.85 }));
+  // 紫微垣, the Purple Forbidden Enclosure: the real asterisms around the north celestial pole
+  // (approximate RA in hours, Dec in degrees), hung behind the plate and turning about the pole
+  const ENCLOSURE = {
+    北极: [[15.35, 71.8], [14.85, 74.2], [14.46, 75.7], [14.15, 77.5], [12.82, 83.4]],
+    勾陈: [[2.53, 89.3], [17.53, 86.6], [16.77, 82.0], [15.73, 77.8], [1.13, 86.3]],
+    左垣: [[15.42, 59.0], [16.03, 58.6], [16.4, 61.5], [17.15, 65.7], [18.91, 71.3], [20.52, 75.0], [23.13, 75.4], [0.78, 74.9]],
+    右垣: [[14.07, 64.4], [12.56, 69.8], [11.52, 69.3], [9.58, 69.8], [6.87, 68.9], [3.32, 65.6]],
+    北斗: [[11.06, 61.8], [11.03, 56.4], [11.9, 53.7], [12.26, 57.0], [12.9, 56.0], [13.4, 54.9], [13.79, 49.3]],
+  };
+  // positions on a sphere whose pole is the group's origin, so turning the group about Y turns the sky about the pole
+  const SKY_R = 26, skyG = new THREE.Group();
+  const toSky = ([ra, dec]) => {
+    const p = (90 - dec) * Math.PI / 180, az = ra * Math.PI / 12;
+    return new THREE.Vector3(Math.sin(p) * Math.cos(az), Math.cos(p) - 1, Math.sin(p) * Math.sin(az)).multiplyScalar(SKY_R);
+  };
+  const dots = [], links = [];
+  for (const [name, list] of Object.entries(ENCLOSURE)) {
+    const pts = list.map(toSky);
+    pts.forEach((v, i) => { dots.push(v.x, v.y, v.z); if (i && name !== '勾陈') links.push(pts[i - 1].x, pts[i - 1].y, pts[i - 1].z, v.x, v.y, v.z); });
+    if (name === '北斗') links.push(pts[0].x, pts[0].y, pts[0].z, pts[3].x, pts[3].y, pts[3].z);   // close the bowl
+    const mid = pts[Math.floor(pts.length / 2)].clone().multiplyScalar(1.02);
+    label(skyG, name, mid.x, mid.y + 1.6, mid.z, 'zwsky');
+  }
+  skyG.add(new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(dots, 3)), new THREE.PointsMaterial({ color: '#f1e7d2', size: 0.55, transparent: true, opacity: 0.9, depthWrite: false })));
+  skyG.add(new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(links, 3)), new THREE.LineBasicMaterial({ color: GILT, transparent: true, opacity: 0.28, depthWrite: false })));
+  // hang the pole far behind the plate, in the band of sky the camera sees above the plate's far rim,
+  // facing the camera like looking up at it; the sky turns about the pole
+  const dz = fit(1), cam = new THREE.Vector3(0, 15.5 * dz, 16 * dz), el = -29 * Math.PI / 180;
+  const look = new THREE.Vector3(0, Math.sin(el), -Math.cos(el));
+  const poleTilt = new THREE.Group(); poleTilt.position.copy(cam).addScaledVector(look, 72);
+  poleTilt.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), look.clone().negate());
+  poleTilt.add(skyG); group.add(poleTilt);
+  // the 罗盘 plate: gilt rings, a tick rim, the twelve branches and the eight trigrams
+  const RIM = ZR + 1.15, OUT = ZR + 2.05, pts = [], fine = [];
+  const circle = (r, arr = pts) => { for (let i = 0; i < 128; i++) { const a = (i / 128) * Math.PI * 2, b = ((i + 1) / 128) * Math.PI * 2; arr.push(Math.cos(a) * r, 0, Math.sin(a) * r, Math.cos(b) * r, 0, Math.sin(b) * r); } };
+  circle(2.2); circle(3.75); circle(ZR - 1.15); circle(RIM); circle(OUT); circle(OUT + 0.32, fine);
+  for (let b = 0; b < 12; b++) { const a = branchAngle(b) + Math.PI / 12; pts.push(Math.cos(a) * 3.75, 0, Math.sin(a) * 3.75, Math.cos(a) * OUT, 0, Math.sin(a) * OUT); }
+  for (let i = 0; i < 120; i++) { const a = (i / 120) * Math.PI * 2, l = i % 5 ? 0.12 : 0.28; fine.push(Math.cos(a) * OUT, 0, Math.sin(a) * OUT, Math.cos(a) * (OUT + l), 0, Math.sin(a) * (OUT + l)); }
+  group.add(new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)), new THREE.LineBasicMaterial({ color: GILT, transparent: true, opacity: 0.42 })));
+  group.add(new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(fine, 3)), new THREE.LineBasicMaterial({ color: GILT, transparent: true, opacity: 0.6 })));
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(OUT + 0.32, 128), new THREE.MeshBasicMaterial({ color: '#130f1d', transparent: true, opacity: 0.92 }));
   disc.rotation.x = -Math.PI / 2; disc.position.y = -0.01; group.add(disc);
-  for (let b = 0; b < 12; b++) { const [x, z] = ringPos(b, ZR + 1.55); label(group, BRANCHES[b], x, 0, z, 'zwb'); }
+  const band = new THREE.Mesh(new THREE.RingGeometry(RIM, OUT, 128), new THREE.MeshBasicMaterial({ color: GILT, transparent: true, opacity: 0.06, side: THREE.DoubleSide, depthWrite: false }));
+  band.rotation.x = -Math.PI / 2; band.position.y = 0.002; group.add(band);
+  for (let b = 0; b < 12; b++) { const [x, z] = ringPos(b, (RIM + OUT) / 2); label(group, BRANCHES[b], x, 0, z, 'zwb'); }
+  // 后天八卦: 坎 at 子 (north), then 艮 震 巽 离 坤 兑 乾 round the compass
+  const TRIGRAMS = [['☵', '坎', 0], ['☶', '艮', 1.5], ['☳', '震', 3], ['☴', '巽', 4.5], ['☲', '离', 6], ['☷', '坤', 7.5], ['☱', '兑', 9], ['☰', '乾', 10.5]];
+  for (const [sym, nm, b] of TRIGRAMS) { const [x, z] = ringPos(b, 2.98); label(group, `${sym}<small>${nm}</small>`, x, 0, z, 'zwg'); }
   // 紫微, the pole star, over the centre
-  const pole = new THREE.Mesh(new THREE.SphereGeometry(0.32, 32, 20), new THREE.MeshStandardMaterial({ color: '#c9a4f5', emissive: '#c9a4f5', emissiveIntensity: 0.9 }));
+  const pole = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 10), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
   pole.position.set(0, 3.6, 0); group.add(pole);
+  label(pole, '紫微', 0, 0, 0, 'zwpole');
   const halo = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.022, 8, 64), new THREE.MeshBasicMaterial({ color: '#c9a4f5', transparent: true, opacity: 0.6 }));
   halo.position.copy(pole.position); group.add(halo);
   const halo2 = halo.clone(); halo2.scale.setScalar(1.35); halo2.material = halo.material.clone(); halo2.material.opacity = 0.3; group.add(halo2);
@@ -1313,15 +1368,15 @@ function showZiwei() {
   const tiles = {};
   for (const k of NUMS) {
     const [x, z] = tilePos(k);
-    const m = new THREE.Mesh(tileGeo, mat('#2a2740', { emissive: '#000000' }));
+    const m = new THREE.Mesh(tileGeo, mat('#231c33', { emissive: '#000000' }));
     m.position.set(x, 0.03, z); group.add(m); tiles[k] = m;
   }
   const chartG = new THREE.Group(); group.add(chartG);
   current = {
-    zw: true, picks: [], chartG, tiles, pole, halo, halo2, stars, play: null, built: null,
+    zw: true, picks: [], chartG, tiles, pole, halo, halo2, stars, skyG, play: null, built: null,
     tick: (dt) => {
       const c = current;
-      if (!reduceMotion) { c.stars.rotation.y += dt * 0.008; c.halo.rotation.x += dt * 0.6; c.halo.rotation.y += dt * 0.4; c.halo2.rotation.y -= dt * 0.25; c.halo2.rotation.z += dt * 0.3; }
+      if (!reduceMotion) { c.stars.rotation.y += dt * 0.008; c.skyG.rotation.y += dt * 0.012; c.halo.rotation.x += dt * 0.6; c.halo.rotation.y += dt * 0.4; c.halo2.rotation.y -= dt * 0.25; c.halo2.rotation.z += dt * 0.3; }
       if (c.built) zwAnimate(dt);
     },
   };
@@ -1349,16 +1404,18 @@ function buildChart(chart) {
   const c = current, g = c.chartG;
   g.traverse((o) => { if (o.element instanceof Element) o.element.remove(); o.geometry?.dispose(); o.material?.dispose?.(); });
   g.clear();
-  for (const t of Object.values(c.tiles)) { t.position.y = 0.03; t.material.color.set('#2a2740'); t.material.emissive.set('#000000'); }
+  for (const t of Object.values(c.tiles)) { t.position.y = 0.03; t.material.color.set('#231c33'); t.material.emissive.set('#000000'); }
   const picked = new Map(chart.picks.map((p, i) => [`${p.p.branch}:${p.s.name}`, i]));
   const plaques = [], starObjs = [], picks = [];
   const plaqueGeo = new THREE.BoxGeometry(1.9, 0.05, 1.3);
   const starGeo = new THREE.SphereGeometry(1, 20, 14);
   for (const p of chart.palaces) {
     const [x, z] = ringPos(p.branch);
-    const plaque = new THREE.Mesh(plaqueGeo, new THREE.MeshStandardMaterial({ color: '#221f30', roughness: 0.7, transparent: true, opacity: 0.95 }));
+    const plaque = new THREE.Mesh(plaqueGeo, new THREE.MeshStandardMaterial({ color: '#1a1426', roughness: 0.7, transparent: true, opacity: 0.95 }));
     plaque.position.set(x, 0.03, z); plaque.rotation.y = -branchAngle(p.branch) + Math.PI / 2; g.add(plaque);
     const hot = chart.picks.some((k) => k.p === p);
+    const edge = new THREE.LineSegments(new THREE.EdgesGeometry(plaqueGeo), new THREE.LineBasicMaterial({ color: '#c9a25a', transparent: true, opacity: hot ? 0.85 : 0.35 }));
+    edge.position.copy(plaque.position); edge.rotation.copy(plaque.rotation); g.add(edge);
     const starLine = (list) => list.map((s) => { const m = mutOf(chart, s.name); return `<span style="color:${ELEMENT_COLOR[ELEMENT[s.name]] || '#b8b5ac'}">${s.name}</span>${s.b ? `<i>${s.b}</i>` : ''}${m ? `<em style="background:${MUTAGEN_COLOR[m]}">${m}</em>` : ''}`; }).join(' ');
     const lb = label(g, `<b>${palaceShort(p.name)}</b> <span class="gz">${p.gz}</span><div>${starLine(p.major) || '<span class="muted">空宫</span>'}</div>${p.minor.length ? `<div class="mn">${starLine(p.minor.slice(0, 3))}</div>` : ''}`, x, 0.06, z, `zwp${hot ? ' hot' : ''}`);
     plaque.userData.pick = () => ({ tip: `<div class="font-medium">${p.name} · ${p.gz}</div><div class="mt-0.5">${[...p.major, ...p.minor].map((s) => `${s.name}${s.b ? `(${s.b})` : ''}${mutOf(chart, s.name) ? ` 化${mutOf(chart, s.name)}` : ''}`).join('、') || '空宫'}</div>` });
@@ -1368,12 +1425,15 @@ function buildChart(chart) {
     const list = [...p.major.map((s) => ({ s, major: true })), ...p.minor.slice(0, 3).map((s) => ({ s, major: false }))];
     list.forEach((o, i) => {
       const el = ELEMENT[o.s.name], color = new THREE.Color(ELEMENT_COLOR[el] || '#b8b5ac');
-      const m = new THREE.Mesh(starGeo, new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: o.major ? 0.85 : 0.5 }));
-      const r = o.major ? 0.17 : 0.1;
+      // the star is its name, lit; the sphere under it is invisible and only there for hover and picking
+      const m = new THREE.Mesh(starGeo, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+      const r = o.major ? 0.2 : 0.13;
       m.scale.setScalar(r);
+      const nameLb = label(m, esc(o.s.name), 0, 0, 0, `zwstar${o.major ? '' : ' minor'}`);
+      nameLb.element.style.setProperty('--c', ELEMENT_COLOR[el] || '#b8b5ac');
       const spread = (i - (list.length - 1) / 2) * 0.42;
       const a = branchAngle(p.branch), tx = x + Math.cos(a + Math.PI / 2) * spread, tz = z + Math.sin(a + Math.PI / 2) * spread;
-      const target = new THREE.Vector3(tx, o.major ? 1.25 : 0.85, tz);
+      const target = new THREE.Vector3(tx, o.major ? 1.55 : 1.05, tz);
       m.position.copy(c.pole.position); g.add(m);
       const mut = mutOf(chart, o.s.name);
       let ring = null;
@@ -1381,7 +1441,7 @@ function buildChart(chart) {
         ring = new THREE.Mesh(new THREE.TorusGeometry(r * 1.9, 0.022, 8, 40), new THREE.MeshBasicMaterial({ color: MUTAGEN_COLOR[mut], transparent: true, opacity: 0.95 }));
         ring.position.copy(target); ring.scale.setScalar(0.001); g.add(ring);
       }
-      const so = { s: o.s, p, m, target, ring, delay: p.branch * 0.07 + i * 0.05, phase: Math.random() * 6, glow: o.major ? 0.85 : 0.5 };
+      const so = { s: o.s, p, m, target, ring, nameLb, delay: p.branch * 0.07 + i * 0.05, phase: Math.random() * 6 };
       m.userData.pick = () => ({ tip: `<div class="font-medium">${o.s.name}${o.s.b ? ` · ${o.s.b}` : ''}${mut ? ` · 化${mut}` : ''}</div><div class="mt-0.5 text-muted-foreground">${p.name} · ${el ? `${el} element` : 'no element in the rule'}</div>` });
       picks.push(m);
       starObjs.push(so);
@@ -1397,9 +1457,10 @@ function buildChart(chart) {
     const color = ELEMENT_COLOR[pk.el] || B.amber;
     const beam = new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(48)), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.9 }));
     beam.geometry.setDrawRange(0, 0); g.add(beam);
-    const ballM = new THREE.Mesh(new THREE.SphereGeometry(0.3, 28, 18), new THREE.MeshStandardMaterial({ color: B.amber, emissive: B.amber, emissiveIntensity: 0.5 }));
+    // a 朱砂 seal carries the number up to the ticket row and stamps down when it lands
+    const ballM = new THREE.Object3D();
     ballM.position.copy(to); ballM.visible = false; g.add(ballM);
-    const lb = label(ballM, String(pk.n), 0, 0, 0, 'zwball'); lb.visible = false;
+    const lb = label(ballM, `<span class="seal" style="--tilt:${((i * 37) % 7) - 3}deg">${pk.n}</span>`, 0, 0, 0, 'zwseal'); lb.visible = false;
     return { pk, so, beam, ballM, lb, to, slot: new THREE.Vector3(...slotPos(i)), start: PLAY.mut + i * PLAY.step };
   });
   c.picks = picks;
@@ -1424,12 +1485,16 @@ function zwAnimate(dt) {
     s.beam.geometry.setDrawRange(0, Math.ceil(49 * beamK));
     s.beam.material.opacity = u > 1.2 ? Math.max(0.25, 0.9 - (u - 1.2) * 0.5) : 0.9;
     const tile = c.tiles[s.pk.n];
-    if (u >= 0.45) { tile.material.color.set(B.amber); tile.material.emissive.set('#5a4210'); tile.position.y = 0.03 + 0.12 * ease((u - 0.45) / 0.3); }
+    if (u >= 0.45) { tile.material.color.set('#b8342a'); tile.material.emissive.set('#4a120d'); tile.position.y = 0.03 + 0.12 * ease((u - 0.45) / 0.3); }
     const up = ease((u - 0.5) / 0.5);
     s.ballM.visible = u >= 0.5;
     if (s.ballM.visible) { s.ballM.position.lerpVectors(s.to, s.slot, up); s.ballM.position.y += Math.sin(up * Math.PI) * 0.8; }
-    s.lb.visible = up >= 1;
-    if (s.so) s.so.m.material.emissiveIntensity = u >= 0 && u < 1.2 ? 1.8 : s.so.glow;
+    s.lb.visible = u >= 0.5;
+    const sealEl = s.lb.element.firstChild, landed = up >= 1;
+    sealEl.style.opacity = landed ? '1' : String(0.35 + 0.5 * up);
+    if (landed && !sealEl.classList.contains('stamp')) sealEl.classList.add('stamp');
+    else if (!landed && sealEl.classList.contains('stamp')) sealEl.classList.remove('stamp');
+    if (s.so) s.so.nameLb.element.classList.toggle('lit', u >= 0 && u < 1.2);
   }
   if (!pl.done && t >= playEnd()) { pl.done = true; renderPanel(); }
 }
@@ -1456,7 +1521,7 @@ function panelZiwei() {
     const drawn = tg.d;
     const rows = chart.picks.map((pk) => {
       const hit = drawn ? drawn.n.includes(pk.n) : false, add = drawn ? drawn.add === pk.n : false;
-      return `<tr class="border-t"><td class="py-1.5 pr-2">${ball(pk.n, hit ? 'hit' : add ? 'add' : 'pick', 'noop')}</td><td class="py-1.5"><span style="color:${ELEMENT_COLOR[pk.el] || '#b8b5ac'}">${esc(pk.s.name)}</span> <span class="text-muted-foreground">${pk.el ? `${pk.el} ${pk.digit}${pk.s.b ? ` · ${pk.s.b}` : ''}` : ''}</span><div class="text-[11px] text-muted-foreground">${esc(pk.why)} · ${esc(pk.p.gz)}</div></td></tr>`;
+      return `<tr class="border-t"><td class="py-1.5 pr-2">${hit || add ? ball(pk.n, hit ? 'hit' : 'add', 'noop') : `<span class="seal" style="--tilt:${((chart.picks.indexOf(pk) * 37) % 7) - 3}deg" aria-label="Number ${pk.n}">${pk.n}</span>`}</td><td class="py-1.5"><span style="color:${ELEMENT_COLOR[pk.el] || '#b8b5ac'}">${esc(pk.s.name)}</span> <span class="text-muted-foreground">${pk.el ? `${pk.el} ${pk.digit}${pk.s.b ? ` · ${pk.s.b}` : ''}` : ''}</span><div class="text-[11px] text-muted-foreground">${esc(pk.why)} · ${esc(pk.p.gz)}</div></td></tr>`;
     }).join('');
     const result = drawn ? (() => { const s = scoreTicket(chart.picks.map((p) => p.n), drawn); return `<div class="mt-2 rounded-lg border bg-background/40 p-2.5 text-xs"><div class="flex flex-wrap items-center gap-1">${drawn.n.map((x) => `<span class="ball sm hit">${x}</span>`).join('')}<span class="text-muted-foreground">+</span><span class="ball sm add">${drawn.add}</span></div><p class="mt-1.5">Draw ${drawn.draw} matched <b>${s.m}</b> number${s.m === 1 ? '' : 's'}${s.g ? `: Group ${s.g}` : ''}.</p></div>`; })() : '';
     body = `<div class="mt-3 grid grid-cols-2 gap-2">${kpi('Chart for', chart.birth ? 'Your birth' : `Draw ${tg.draw}`, chart.birth ? `四化 of ${fmtShort(tg.date)}` : `${fmtShort(tg.date)} · 酉时`)}${kpi('Lunar date', esc(chart.lunar))}${kpi('五行局', esc(chart.five))}${kpi('命主 · 身主', `${esc(chart.soul)} · ${esc(chart.body)}`)}</div>
@@ -1651,7 +1716,7 @@ renderer.setAnimationLoop(() => {
 // ================= boot =================
 function setData(draws, source) {
   CACHE = {};
-  D = draws; ERA = Math.max(0, D.findIndex((d) => d.draw >= ERA_DRAW));
+  D = draws.filter((d) => d.draw >= FIRST_649_DRAW);   // also trims data stored before the parser dropped 6/45 draws
   state.source = source;
   state.hist.i = D.length - 1;
   state.sel = null; state.picks.bt = null; state.zw.chart = null; state.zw.past = null;

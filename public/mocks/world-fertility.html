@@ -1,0 +1,1137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Fertility Extinction Clock</title>
+<!--
+  Playground mock: how long each country's population lasts if its fertility rate stays where it
+  is today. A cohort-component model (five-year age groups by sex, no migration, mortality held at
+  today's life expectancy) projects every country forward until the expected population is below
+  one person. Three.js draws three views: a globe coloured by fertility rate or by the year of the
+  last person, with a spike per capital for population; a trajectory of one country's age structure,
+  row by row, until it runs out; and a ranking of every country as a column, soonest end first.
+  A slider holds any country at another fertility rate. D3 draws the population chart, scales and
+  the globe texture. UI recreates shadcn/ui in Tailwind with the inoTives brand kit. Icons: Flaticon UIcons.
+  Data: World Bank World Development Indicators (population by age and sex, fertility rate, life
+  expectancy, infant mortality), bundled in data/world-fertility.json by
+  scripts/mocks/world-fertility/capture.mjs, which imports the loader between the wb-data markers
+  below. "Go live" runs the same loader in the browser and keeps the result in IndexedDB.
+  Country shapes: world-atlas (Natural Earth 1:50m), drawn as geometry on the sphere.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<!-- Optional, uncomment what the mock needs (same versions as the mocks that use them):
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-brands/css/uicons-brands.css" />   brand logos, e.g. fi-brands-bitcoin (block-explorer)
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />                  street maps (sg-hdb-3d, sg-pulse)
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>                   Chart.js charts (chartjs-3d)
+-->
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-pink: #e58fb0;
+    --color-danger: #ff7a7a;
+    --color-ink-2: #b8b5ac;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base { *, ::before, ::after { border-color: var(--color-border); } }
+</style>
+<style>
+  body { margin: 0; background: #15171b; }
+  .fi { display: inline-flex; line-height: 1; }
+  #stage { isolation: isolate; background: radial-gradient(ellipse 80% 70% at 60% 48%, #1b1e24 0%, #15171b 72%); touch-action: none; }
+  #stage canvas { display: block; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+  .lbl { font: 400 10.5px "Source Code Pro", monospace; color: #8b9099; white-space: nowrap; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
+  #drawer { --pg-panel-w: 360px; }   /* desktop panel width for this mock */
+
+  /* <pg-layout v1> Playground layout standard (scripts/mocks/template/playground.html).
+     Side panel: a floating card on the left from 900px wide (.pg-float); below 900px it is a
+     drawer that slides in from the left over a scrim, with the stage legend folded into it.
+     Keep this block identical across mocks; check.mjs compares it with the template. */
+  .pg-drawer { display: flex; flex-direction: column; min-height: 0; }
+  .pg-drawer-head, .pg-drawer-legend, .pg-drawer-btn, .pg-scrim { display: none; }
+  @media (min-width: 900px) {
+    .pg-float { position: absolute; z-index: 10; left: 1.5rem; top: 4.5rem; width: var(--pg-panel-w, 360px); max-height: calc(100% - 6rem); }
+  }
+  @media (max-width: 899px) {
+    .pg-drawer { position: fixed; inset: 0 auto 0 0; z-index: 45; width: min(var(--pg-drawer-w, 360px), 88vw); height: auto; max-height: none; border: 0; border-right: 1px solid #2b2f37; border-radius: 0 0.75rem 0.75rem 0; background: #1d2026; box-shadow: 0 10px 40px rgb(0 0 0 / 0.5); transform: translateX(-104%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
+    body[data-drawer="open"] .pg-drawer { transform: none; visibility: visible; transition: transform 0.22s ease; }
+    body[data-drawer="open"] .pg-scrim { display: block; position: fixed; inset: 0; z-index: 44; background: rgb(0 0 0 / 0.5); }
+    .pg-drawer-head { display: flex; align-items: center; gap: 0.625rem; flex-shrink: 0; height: 3.5rem; padding: 0 0.75rem 0 1rem; border-bottom: 1px solid #2b2f37; }
+    .pg-drawer-legend:not(:empty) { display: block; flex-shrink: 0; padding: 0.75rem 1rem; border-top: 1px solid #2b2f37; font-size: 0.75rem; color: #8b9099; }
+    .pg-drawer-btn { display: inline-flex; }
+    .pg-hide-mobile, .pg-legend { display: none !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { .pg-drawer { transition: none !important; } }
+  /* </pg-layout> */
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+<div class="fixed inset-0 overflow-hidden">
+  <div id="stage" class="absolute inset-0"></div>
+  <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
+    <button id="drawer-btn" type="button" class="pg-drawer-btn pointer-events-auto size-9 shrink-0 items-center justify-center rounded-md border bg-background/80 text-base backdrop-blur hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-controls="drawer" aria-expanded="false" aria-label="Open the panel"><i class="fi fi-rr-menu-burger"></i></button>
+    <a href="/playground" class="pg-hide-mobile pointer-events-auto rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <span class="hidden text-sm text-muted-foreground xl:inline">Playground · Fertility extinction clock</span>
+    <div role="tablist" aria-label="Views" id="tabs" class="pointer-events-auto mx-auto inline-flex h-9 max-w-full items-center overflow-x-auto rounded-lg bg-muted p-1 text-muted-foreground"></div>
+    <button id="action" type="button" class="pointer-events-auto inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-md border bg-background/80 px-3 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"><i class="fi fi-rr-signal-stream text-primary"></i><span class="hidden sm:inline">Go live</span></button>
+  </header>
+  <aside id="drawer" class="pg-drawer pg-float overflow-hidden rounded-xl border bg-card/90 shadow backdrop-blur" aria-label="Panel">
+    <div class="pg-drawer-head">
+      <a href="/playground" class="font-brand text-[24px] leading-none hover:text-primary" title="Back to the Playground">inoTives</a>
+      <span class="min-w-0 flex-1 truncate text-sm text-muted-foreground">Fertility extinction clock</span>
+      <button id="drawer-close" type="button" class="inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Close the panel"><i class="fi fi-rr-cross-small"></i></button>
+    </div>
+    <div id="panel" class="scroll-thin min-h-0 flex-1 overflow-auto p-4"></div>
+    <div id="drawer-legend" class="pg-drawer-legend"></div>
+  </aside>
+  <div id="scrim" class="pg-scrim"></div>
+  <div id="legend" class="pg-legend pointer-events-none absolute bottom-3 right-4 z-10 rounded-lg border bg-card/80 px-3 py-2 text-xs text-muted-foreground backdrop-blur"></div>
+  <div id="toast" hidden role="status" class="absolute bottom-4 left-1/2 z-40 max-w-[90vw] -translate-x-1/2 rounded-md border bg-background/95 px-3 py-2 text-xs shadow-lg"></div>
+</div>
+<div id="tip" hidden class="pointer-events-none fixed z-40 max-w-[280px] rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
+
+<script>
+/* <pg-layout-js v1> Playground layout standard: the mobile drawer (scripts/mocks/template/playground.html).
+   Opens from #drawer-btn; closes from #drawer-close, the scrim, Escape, links to #anchors or
+   [data-drawer-close] inside it, and when the window grows past 900px. Mirrors #legend into
+   #drawer-legend. Mocks can call window.pgDrawer.open() / .close(). Keep identical across mocks. */
+(() => {
+  const body = document.body, btn = document.getElementById('drawer-btn');
+  const set = (open) => { body.dataset.drawer = open ? 'open' : ''; btn?.setAttribute('aria-expanded', String(open)); };
+  const close = (refocus) => { if (body.dataset.drawer !== 'open') return; set(false); if (refocus) btn?.focus(); };
+  btn?.addEventListener('click', () => set(body.dataset.drawer !== 'open'));
+  document.getElementById('drawer-close')?.addEventListener('click', () => close(true));
+  document.getElementById('scrim')?.addEventListener('click', () => close(false));
+  document.getElementById('drawer')?.addEventListener('click', (e) => { if (e.target.closest('a[href^="#"], [data-drawer-close]')) close(false); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && body.dataset.drawer === 'open') { e.stopImmediatePropagation(); close(true); } }, true);
+  matchMedia('(min-width: 900px)').addEventListener('change', (m) => { if (m.matches) set(false); });
+  const legend = document.getElementById('legend'), copy = document.getElementById('drawer-legend');
+  if (legend && copy) {
+    const sync = () => { copy.innerHTML = legend.hidden ? '' : legend.innerHTML.trim(); };
+    new MutationObserver(sync).observe(legend, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+    sync();
+  }
+  window.pgDrawer = { open: () => set(true), close: () => close(false) };
+})();
+/* </pg-layout-js> */
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// ================= World Bank data =================
+// <wb-data>
+// Loads every country's age structure, fertility history, population history and mortality
+// from the World Bank API. "Go live" runs this in the browser, and
+// scripts/mocks/world-fertility/capture.mjs imports this block to build the bundled snapshot,
+// so both have the same shape. No DOM in here: it also runs in Node.
+const WB_DATA = (() => {
+  const API = {
+    worldBank: 'https://api.worldbank.org/v2',
+    isoCodes: 'https://cdn.jsdelivr.net/npm/i18n-iso-countries@7.14.0/codes.json',
+  };
+  const AGES = ['0004', '0509', '1014', '1519', '2024', '2529', '3034', '3539', '4044', '4549', '5054', '5559', '6064', '6569', '7074', '7579', '80UP'];
+  // one call, all pages (a page holds at most 20,000 rows)
+  const page = async (path, n) => {
+    const r = await fetch(`${API.worldBank}${path}${path.includes('?') ? '&' : '?'}format=json&per_page=20000&page=${n}`);
+    if (!r.ok) throw new Error(`World Bank API ${r.status}`);
+    const j = await r.json();
+    if (!Array.isArray(j) || !Array.isArray(j[1])) throw new Error('World Bank API returned no data');
+    return j;
+  };
+  const get = async (path) => {
+    const [meta, rows] = await page(path, 1);
+    const rest = await Promise.all(Array.from({ length: (meta.pages || 1) - 1 }, (_, i) => page(path, i + 2).then((j) => j[1])));
+    return rows.concat(...rest);
+  };
+  const iso = (r) => r.countryiso3code || r.country.id;
+  // newest non-empty value per country and indicator
+  const latest = (rows) => {
+    const m = new Map();
+    for (const r of rows) {
+      if (r.value == null) continue;
+      const k = `${iso(r)}|${r.indicator.id}`, had = m.get(k);
+      if (!had || +r.date > had.year) m.set(k, { year: +r.date, value: r.value });
+    }
+    return m;
+  };
+  // yearly series per country: { y0, v: [...] }, trailing gaps trimmed
+  const series = (rows, digits) => {
+    const by = new Map();
+    for (const r of rows) {
+      if (r.value == null) continue;
+      if (!by.has(iso(r))) by.set(iso(r), new Map());
+      by.get(iso(r)).set(+r.date, +r.value.toFixed(digits));
+    }
+    const out = new Map();
+    for (const [k, ys] of by) {
+      const yrs = [...ys.keys()], y0 = Math.min(...yrs), y1 = Math.max(...yrs);
+      out.set(k, { y0, v: Array.from({ length: y1 - y0 + 1 }, (_, i) => ys.get(y0 + i) ?? null) });
+    }
+    return out;
+  };
+  async function load() {
+    const year = new Date().getFullYear();
+    const ageInds = AGES.flatMap((a) => [`SP.POP.${a}.FE`, `SP.POP.${a}.MA`]);
+    const [countries, codes, ages, tfr, pop, vital] = await Promise.all([
+      get('/country'),
+      fetch(API.isoCodes).then((r) => { if (!r.ok) throw new Error(`ISO codes ${r.status}`); return r.json(); }),
+      get(`/country/all/indicator/${ageInds.join(';')}?source=16&date=${year - 3}:${year}`),
+      get(`/country/all/indicator/SP.DYN.TFRT.IN?date=1960:${year}`),
+      get(`/country/all/indicator/SP.POP.TOTL?date=1960:${year}`),
+      get(`/country/all/indicator/SP.DYN.LE00.FE.IN;SP.DYN.LE00.MA.IN;SP.DYN.IMRT.IN?source=2&date=${year - 10}:${year}`),
+    ]);
+    const num = new Map(codes.map(([, a3, n]) => [a3, n]));
+    const L = latest([...ages, ...vital]), T = series(tfr, 3), P = series(pop, 0);
+    const out = [];
+    for (const c of countries) {
+      const agg = c.region?.id === 'NA';
+      if (agg && c.id !== 'WLD') continue;
+      const v = (ind) => L.get(`${c.id}|${ind}`) || null;
+      const grab = (sex) => {
+        const vals = AGES.map((a) => v(`SP.POP.${a}.${sex}`));
+        return vals.every(Boolean) ? vals.map((x) => Math.round(x.value)) : null;
+      };
+      out.push({
+        iso3: c.id, num: num.get(c.id) ?? null, name: c.name, region: agg ? 'World' : c.region.value.trim(),
+        income: agg ? '' : c.incomeLevel.value, lat: c.latitude ? +c.latitude : null, lon: c.longitude ? +c.longitude : null,
+        ageYear: v('SP.POP.0004.FE')?.year ?? null, f: grab('FE'), m: grab('MA'),
+        e0f: v('SP.DYN.LE00.FE.IN')?.value ?? null, e0m: v('SP.DYN.LE00.MA.IN')?.value ?? null, imr: v('SP.DYN.IMRT.IN')?.value ?? null,
+        tfr: T.get(c.id) || null, pop: P.get(c.id) || null,
+      });
+    }
+    return { capturedAt: Date.now(), source: API.worldBank, countries: out };
+  }
+  return { API, AGES, load };
+})();
+// </wb-data>
+
+// ================= cohort model =================
+// <cohort-model>
+// Cohort-component projection in five-year steps for 17 age groups (0–4 … 80+) by sex, starting
+// from a country's latest age structure. Closed population: no migration. Fertility and
+// mortality are held at one level forever, so this shows where a rate leads, not a forecast.
+// Mortality: a Gompertz curve (plus a child term from infant mortality) whose level is solved to
+// match each sex's life expectancy. Fertility: a fixed age pattern over 15–49 scaled to the TFR.
+const COHORT = (() => {
+  const NG = 17, STEP = 5, SRB = 1.05, MAX_YEARS = 20000, GROW_YEARS = 300;
+  // share of lifetime births by mother's age group (15–19 … 45–49)
+  const FERT = [0, 0, 0, 0.045, 0.19, 0.3, 0.27, 0.145, 0.04, 0.01, 0, 0, 0, 0, 0, 0, 0];
+  function lifeTable(e0, q0) {
+    const X = 121, GB = 0.09, MAK = 0.0002;
+    const make = (a) => {
+      const l = new Float64Array(X + 1); l[0] = 1;
+      for (let x = 0; x < X; x++) {
+        const mu = MAK + a * Math.exp(GB * x) + (x >= 1 && x < 15 ? 0.1 * q0 * Math.exp(-0.45 * (x - 1)) : 0);
+        l[x + 1] = l[x] * (x === 0 ? 1 - q0 : Math.exp(-mu));
+      }
+      const L = new Float64Array(X);
+      let e = 0;
+      for (let x = 0; x < X; x++) { L[x] = x === 0 ? l[1] + 0.15 * (l[0] - l[1]) : (l[x] + l[x + 1]) / 2; e += L[x]; }
+      return { L, e };
+    };
+    let lo = Math.log(1e-9), hi = Math.log(0.05);
+    for (let i = 0; i < 60; i++) { const mid = (lo + hi) / 2; if (make(Math.exp(mid)).e > e0) lo = mid; else hi = mid; }
+    const { L, e } = make(Math.exp((lo + hi) / 2));
+    const L5 = new Float64Array(NG);
+    for (let x = 0; x < X; x++) L5[Math.min(16, Math.floor(x / 5))] += L[x];
+    const S = new Float64Array(16);
+    for (let g = 0; g < 15; g++) S[g] = L5[g + 1] / L5[g];
+    S[15] = L5[16] / (L5[15] + L5[16]);                 // 75–79 and 80+ both feed 80+
+    return { L5, S, sb: L5[0] / 5, e0: e };
+  }
+  const tables = new WeakMap();
+  const prep = (c) => {
+    if (!tables.has(c)) {
+      const q0 = Math.min(0.2, Math.max(0.001, (c.imr ?? 10) / 1000));
+      tables.set(c, { f: lifeTable(c.e0f, q0 * 0.9), m: lifeTable(c.e0m, q0 * 1.1) });
+    }
+    return tables.get(c);
+  };
+  const usable = (c) => !!(c.f && c.m && c.e0f && c.e0m && c.ageYear);
+  // net reproduction rate: daughters per woman at this TFR and today's mortality
+  const nrr = (c, tfr) => { const { f } = prep(c); let s = 0; for (let g = 0; g < NG; g++) s += (tfr * FERT[g] / 5) * f.L5[g]; return s / (1 + SRB); };
+  const age = (P, S) => {
+    const n = new Float64Array(NG);
+    for (let g = 0; g < 15; g++) n[g + 1] = P[g] * S[g];
+    n[16] = (P[15] + P[16]) * S[15];
+    return n;
+  };
+  // Runs until the expected population is below one person, MAX_YEARS pass, or (for a rate at or
+  // above replacement) GROW_YEARS pass. keepAges keeps every step's age structure.
+  function project(c, tfr, keepAges = false) {
+    const { f: lf, m: lm } = prep(c), r = nrr(c, tfr), grows = r >= 1;
+    const asfr = FERT.map((s) => tfr * s / 5), limit = (grows ? GROW_YEARS : MAX_YEARS) / STEP;
+    let F = Float64Array.from(c.f), M = Float64Array.from(c.m);
+    const sum = (a) => a.reduce((s, v) => s + v, 0);
+    const totals = [sum(F) + sum(M)], ages = keepAges ? [{ f: F, m: M }] : null;
+    for (let t = 1; t <= limit; t++) {
+      const nF = age(F, lf.S), nM = age(M, lm.S);
+      let births = 0;
+      for (let g = 3; g < 10; g++) births += STEP * asfr[g] * (F[g] + nF[g]) / 2;
+      nF[0] = births / (1 + SRB) * lf.sb; nM[0] = births * SRB / (1 + SRB) * lm.sb;
+      F = nF; M = nM;
+      const tot = sum(F) + sum(M);
+      totals.push(tot); if (ages) ages.push({ f: F, m: M });
+      if (tot < 1) break;
+    }
+    return { y0: c.ageYear, step: STEP, totals, ages, nrr: r, grows };
+  }
+  // first (fractional) year the projection falls to `level`, log-interpolated between steps
+  const crossing = (p, level) => {
+    const t = p.totals;
+    if (t[0] <= level) return null;
+    for (let i = 1; i < t.length; i++) {
+      if (t[i] <= level) {
+        const frac = Math.log(t[i - 1] / level) / Math.log(t[i - 1] / Math.max(t[i], 1e-9));
+        return p.y0 + p.step * (i - 1 + frac);
+      }
+    }
+    return null;
+  };
+  function summarize(c, tfr, keepAges = false) {
+    const p = project(c, tfr, keepAges), t = p.totals;
+    const pk = t.indexOf(Math.max(...t)), p0 = t[0];
+    return {
+      ...p, tfr, p0, replacement: tfr / p.nrr,
+      peak: { year: p.y0 + pk * p.step, pop: t[pk] },
+      half: crossing(p, p0 / 2), million: p0 > 2e6 ? crossing(p, 1e6) : null,
+      thousand: crossing(p, 1000), end: crossing(p, 1),
+    };
+  }
+  return { NG, STEP, MAX_YEARS, GROW_YEARS, usable, nrr, summarize };
+})();
+// </cohort-model>
+
+// ================= helpers =================
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const B = { paper: '#15171b', raise: '#1d2026', muted: '#23262d', line: '#2b2f37', ink: '#e4e1d8', ink2: '#b8b5ac', fog: '#8b9099', signal: '#1fefd7', amber: '#f6c453', pink: '#e58fb0', sky: '#7cc4dc' };
+let toastTimer;
+const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3200); };
+const kpi = (label, value, sub = '') => `<div class="min-w-0 rounded-lg border bg-background/40 px-2.5 py-2"><div class="truncate text-[11px] text-muted-foreground">${esc(label)}</div><div class="truncate font-mono text-sm font-semibold">${value}</div>${sub ? `<div class="truncate text-[11px] text-muted-foreground">${sub}</div>` : ''}</div>`;
+const section = (title, body, icon = '') => `<div class="mt-4"><div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">${icon ? `<i class="fi ${icon}"></i>` : ''}${esc(title)}</div>${body}</div>`;
+const toggle = (name, opts, cur) => `<div class="inline-flex h-8 items-center rounded-lg bg-muted p-0.5 text-xs text-muted-foreground">${opts.map(([k, v]) => `<button type="button" data-${name}="${k}" data-state="${k === cur ? 'active' : ''}" class="rounded-md px-2.5 py-1 font-medium transition-all hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow">${v}</button>`).join('')}</div>`;
+const btnCls = 'inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border px-3 text-xs font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring';
+
+const fmt = {
+  pop: (n) => (n == null ? '–' : n < 1 ? '<1' : n < 1000 ? d3.format(',.0f')(n) : d3.format('.3~s')(n).replace('G', 'B')),
+  int: d3.format(','), tfr: d3.format('.2f'), pct: d3.format('.0%'),
+  year: (y) => (y == null ? '–' : y > 9999 ? d3.format(',')(Math.round(y)) : String(Math.round(y))),
+  when: (t) => new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }),
+};
+const AGE_LABEL = WB_DATA.AGES.map((a) => (a === '80UP' ? '80+' : `${+a.slice(0, 2)}–${+a.slice(2)}`));
+const lastOf = (s) => { if (!s) return null; for (let i = s.v.length - 1; i >= 0; i--) if (s.v[i] != null) return { year: s.y0 + i, value: s.v[i] }; return null; };
+
+// "In 480 years · 2505", "Beyond 20,000 years", "Never at this rate"
+function endText(s, short = false) {
+  if (!s) return '–';
+  if (s.grows) return short ? 'Never' : 'Never at this rate';
+  if (s.end == null) return short ? `>${fmt.int(COHORT.MAX_YEARS)}y` : `Beyond ${fmt.int(COHORT.MAX_YEARS)} years`;
+  const n = Math.round(s.end - s.y0);
+  return short ? fmt.year(s.end) : `${fmt.year(s.end)} · in ${fmt.int(n)} years`;
+}
+
+// colour scales: below replacement runs pink → amber → light; above it turns sky
+const tfrColor = (v) => (v == null ? B.muted : v < 2.1
+  ? d3.scaleLinear().domain([0.7, 1.4, 2.1]).range([B.pink, B.amber, '#ddd8c8']).clamp(true)(v)
+  : d3.scaleLinear().domain([2.1, 3, 5.5]).range(['#a9dbe9', B.sky, '#2f6c84']).clamp(true)(v));
+const endColor = (s) => (!s ? B.muted : s.grows ? B.sky : s.end == null ? '#ddd8c8'
+  : d3.scaleLog().domain([400, 1200, 8000]).range([B.pink, B.amber, '#ddd8c8']).clamp(true)(s.end - s.y0));
+const ramp = (stops) => `linear-gradient(90deg,${stops.join(',')})`;
+const BAND = (g) => (g < 3 ? B.sky : g < 13 ? B.amber : B.pink);   // 0–14, 15–64, 65+
+
+// ================= browser datastore (IndexedDB) =================
+// "Go live" keeps the World Bank data in IndexedDB, so the page reopens on the last sync;
+// data/world-fertility.json is only the fallback. Wrap every call: storage can be blocked.
+const IDB = { name: 'inotives-world-fertility', store: 'kv' };
+function idbOpen() {
+  return new Promise((ok, no) => { const r = indexedDB.open(IDB.name, 1); r.onupgradeneeded = () => r.result.createObjectStore(IDB.store); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+}
+async function idb(mode, fn) {
+  const db = await idbOpen();
+  try { return await new Promise((ok, no) => { const tx = db.transaction(IDB.store, mode), req = fn(tx.objectStore(IDB.store)); tx.oncomplete = () => ok(req?.result); tx.onerror = () => no(tx.error); }); }
+  finally { db.close(); }
+}
+const store = {
+  get: async (key) => { try { return await idb('readonly', (s) => s.get(key)); } catch { return null; } },
+  put: async (key, value) => { try { await idb('readwrite', (s) => s.put(value, key)); return true; } catch { return false; } },
+  del: async (key) => { try { await idb('readwrite', (s) => s.delete(key)); } catch { /* blocked */ } },
+};
+
+// ================= stage =================
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.appendChild(renderer.domElement);
+const labelR = new CSS2DRenderer(); labelR.domElement.className = 'labels'; stage.appendChild(labelR.domElement);
+const label = (parent, html, x, y, z, cls = '') => {
+  const el = document.createElement('div'); el.className = `lbl ${cls}`; el.innerHTML = html;
+  const o = new CSS2DObject(el); o.position.set(x, y, z); parent.add(o); return o;
+};
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight('#cfe9ff', B.paper, 1.25));
+const keyLight = new THREE.DirectionalLight('#ffffff', 1.5); keyLight.position.set(-8, 16, 12); scene.add(keyLight);
+const camera = new THREE.PerspectiveCamera(36, 1, 0.05, 300);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.addEventListener('start', () => { controls.autoRotate = false; flight = null; });
+
+const panelOffset = () => (innerWidth >= 900 ? ($('#drawer').offsetWidth + 24) / 2 : 0);
+const resize = () => {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h); labelR.setSize(w, h); camera.aspect = w / h;
+  const off = panelOffset();
+  if (off) camera.setViewOffset(w, h, -off, 0, w, h); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+};
+addEventListener('resize', resize);
+
+// ================= state =================
+const VIEWS = {
+  globe: { name: 'Globe', icon: 'fi-rr-globe' },
+  trajectory: { name: 'Trajectory', icon: 'fi-rr-chart-line-up' },
+  ranking: { name: 'Ranking', icon: 'fi-rr-ranking-star' },
+};
+const state = {
+  view: 'globe', sel: 'KOR', metric: 'tfr', scale: 'log', sort: 'end', q: '', ringYear: null,
+  override: {},                       // iso3 → TFR set with the slider
+  snapshot: null, synced: null, mode: 'snapshot',
+  byIso: new Map(), list: [], sums: new Map(), world: null,
+};
+const data = () => (state.mode === 'synced' && state.synced ? state.synced : state.snapshot);
+const country = (iso3) => state.byIso.get(iso3);
+const realTfr = (c) => lastOf(c.tfr)?.value ?? null;
+const tfrOf = (c) => state.override[c.iso3] ?? realTfr(c);
+const sumOf = (iso3) => state.sums.get(iso3);
+
+function loadData() {
+  const d = data();
+  state.byIso = new Map(d.countries.map((c) => [c.iso3, c]));
+  state.list = d.countries.filter((c) => COHORT.usable(c) && realTfr(c) != null);
+  state.world = country('WLD');
+  if (!state.list.some((c) => c.iso3 === state.sel)) state.sel = 'KOR';
+  state.sums = new Map(state.list.map((c) => [c.iso3, COHORT.summarize(c, tfrOf(c))]));
+}
+const resum = (iso3) => { const c = country(iso3); state.sums.set(iso3, COHORT.summarize(c, tfrOf(c))); };
+
+// ================= view groups =================
+let group = new THREE.Group(); scene.add(group);
+let pickables = [], onPick = null, onHover = null, onHoverMove = null, frameTick = null;
+function clearGroup() {
+  scene.remove(group);
+  // country and line geometry is built once and kept (userData.keep); everything else is disposed
+  group.traverse((o) => { if (o.element instanceof Element) o.element.remove(); if (!o.userData.keep) o.geometry?.dispose(); o.material?.dispose?.(); });
+  group = new THREE.Group(); scene.add(group);
+  pickables = []; onPick = onHover = onHoverMove = frameTick = null;
+}
+
+// ---------- globe ----------
+// Countries are real geometry on the sphere (not a painted texture), so borders stay sharp at any
+// zoom: each polygon is triangulated in lon/lat, split until no edge is longer than 2°, then
+// wrapped onto the sphere just above an opaque ocean, with slight transparency.
+const R = 3, MAX_EDGE = 2;
+let world = null;                      // { topo, features, lines } from world-atlas
+const geoCache = new Map();            // feature id → BufferGeometry
+const isoByNum = () => new Map(data().countries.filter((c) => c.num).map((c) => [c.num, c.iso3]));
+const lonLatTo = (lon, lat, r = R) => {
+  const phi = (lon + 180) * Math.PI / 180, th = (90 - lat) * Math.PI / 180;
+  return new THREE.Vector3(-r * Math.cos(phi) * Math.sin(th), r * Math.cos(th), r * Math.sin(phi) * Math.sin(th));
+};
+const metricColor = (iso3) => { const c = country(iso3), s = sumOf(iso3); if (!s) return B.muted; return state.metric === 'tfr' ? tfrColor(tfrOf(c)) : endColor(s); };
+function countryGeometry(f) {
+  if (geoCache.has(f.id ?? f.properties.name)) return geoCache.get(f.id ?? f.properties.name);
+  const out = [], push = (p) => { const v = lonLatTo(p.x, p.y, R * 1.004); out.push(v.x, v.y, v.z); };
+  const split = (a, b, c, depth) => {            // bisect the longest edge until all are short
+    const ab = a.distanceTo(b), bc = b.distanceTo(c), ca = c.distanceTo(a), m = Math.max(ab, bc, ca);
+    if (m <= MAX_EDGE || depth > 10) { push(a); push(b); push(c); return; }
+    if (m === ab) { const d = a.clone().lerp(b, 0.5); split(a, d, c, depth + 1); split(d, b, c, depth + 1); }
+    else if (m === bc) { const d = b.clone().lerp(c, 0.5); split(a, b, d, depth + 1); split(a, d, c, depth + 1); }
+    else { const d = c.clone().lerp(a, 0.5); split(a, b, d, depth + 1); split(d, b, c, depth + 1); }
+  };
+  const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+  for (const rings of polys) {
+    // unwrap longitudes along the ring so a polygon crossing the date line stays in one piece
+    let ref = rings[0][0][0];
+    const ring = (r) => r.slice(0, -1).map(([x, y]) => { while (x - ref > 180) x -= 360; while (x - ref < -180) x += 360; ref = x; return new THREE.Vector2(x, y); });
+    const contour = ring(rings[0]), holes = rings.slice(1).map(ring), pts = contour.concat(...holes);
+    for (const [a, b, c] of THREE.ShapeUtils.triangulateShape(contour, holes)) split(pts[a], pts[b], pts[c], 0);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(out, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(out.map((v) => v / (R * 1.004)), 3));
+  geoCache.set(f.id ?? f.properties.name, g);
+  return g;
+}
+// lines on the sphere (borders, coasts, graticule), with long segments split so they follow the curve
+function sphereLines(multi, r) {
+  const out = [];
+  for (const line of multi.coordinates) {
+    for (let i = 1; i < line.length; i++) {
+      const [a, b] = [line[i - 1], line[i]];
+      if (Math.abs(b[0] - a[0]) > 180) continue;              // a jump across the date line, not an edge
+      const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / MAX_EDGE));
+      for (let k = 0; k < n; k++) {
+        const p = lonLatTo(a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n, r), q = lonLatTo(a[0] + (b[0] - a[0]) * (k + 1) / n, a[1] + (b[1] - a[1]) * (k + 1) / n, r);
+        out.push(p.x, p.y, p.z, q.x, q.y, q.z);
+      }
+    }
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(out, 3));
+  return g;
+}
+const lineCache = {};
+const keepLines = (key, make, r, color, opacity) => {
+  lineCache[key] ??= sphereLines(make(), r);
+  const l = new THREE.LineSegments(lineCache[key], new THREE.LineBasicMaterial({ color, transparent: opacity < 1, opacity, depthWrite: false }));
+  l.userData.keep = true; return l;
+};
+function buildGlobe() {
+  group.add(new THREE.Mesh(new THREE.SphereGeometry(R, 96, 64), new THREE.MeshStandardMaterial({ color: '#191c22', roughness: 0.95 })));
+  group.add(keepLines('grat', () => d3.geoGraticule10(), R * 1.001, B.fog, 0.22));
+  const countryMeshes = [];
+  if (world) {
+    const map = isoByNum();
+    for (const f of world.features) {
+      const iso3 = map.get(f.id), sel = iso3 && iso3 === state.sel, color = iso3 ? metricColor(iso3) : B.muted;
+      const mesh = new THREE.Mesh(countryGeometry(f), new THREE.MeshStandardMaterial({
+        color, emissive: color, emissiveIntensity: sel ? 0.55 : 0.32, roughness: 0.7, side: THREE.DoubleSide,
+        transparent: true, opacity: sel ? 0.95 : 0.84, depthWrite: false,
+      }));
+      mesh.userData = { keep: true, iso3 };
+      if (sel) mesh.scale.setScalar(1.004);
+      group.add(mesh); countryMeshes.push(mesh);
+    }
+    group.add(keepLines('lines', () => world.lines, R * 1.0052, '#0e1013', 0.55));
+    const selF = world.features.find((f) => map.get(f.id) === state.sel);
+    if (selF) {
+      // the selected country's outline: every arc on its edge, raised over its fill
+      const edge = topojson.mesh(world.topo, world.topo.objects.countries, (a, b) => a.id === selF.id || b.id === selF.id);
+      group.add(new THREE.LineSegments(sphereLines(edge, R * 1.0095), new THREE.LineBasicMaterial({ color: B.signal })));
+    }
+  }
+  // a spike at each capital: height by population, colour by the chosen measure
+  const items = state.list.filter((c) => c.lat != null && c.iso3 !== 'WLD');
+  const maxPop = d3.max(items, (c) => sumOf(c.iso3).p0);
+  const geo = new THREE.CylinderGeometry(0.016, 0.016, 1, 6); geo.translate(0, 0.5, 0);
+  const spikes = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.5 }), items.length);
+  const o = new THREE.Object3D(), up = new THREE.Vector3(0, 1, 0), col = new THREE.Color();
+  items.forEach((c, i) => {
+    const n = lonLatTo(c.lon, c.lat, 1).normalize();
+    o.position.copy(n).multiplyScalar(R * 0.998); o.quaternion.setFromUnitVectors(up, n);
+    const sel = c.iso3 === state.sel;
+    o.scale.set(sel ? 1.8 : 1, 0.05 + 1.1 * Math.sqrt(sumOf(c.iso3).p0 / maxPop), sel ? 1.8 : 1); o.updateMatrix();
+    spikes.setMatrixAt(i, o.matrix); spikes.setColorAt(i, col.set(sel ? B.signal : metricColor(c.iso3)));
+  });
+  group.add(spikes);
+  const sc = country(state.sel);
+  let ring = null, edge = null;
+  const fr = sc ? countryFrame(sc.iso3) : null;
+  if (fr) {
+    const sb = sunburst(sc);
+    ring = new CSS2DObject(sb.el); ring.userData.layout = sb.layout; ring.position.copy(lonLatTo(fr.ctr[0], fr.ctr[1], R * 1.01)); group.add(ring);
+    edge = lonLatTo(fr.ctr[0], Math.min(89.9, fr.ctr[1] + fr.rad * 180 / Math.PI), R * 1.01);
+  }
+  const pa = new THREE.Vector3(), pb = new THREE.Vector3();
+  frameTick = () => {       // hide the rings when the country turns away; size the hole to the country on screen
+    if (!ring) return;
+    ring.visible = ring.position.clone().normalize().dot(camera.position.clone().normalize()) > 0.3;
+    pa.copy(ring.position).project(camera); pb.copy(edge).project(camera);
+    const px = Math.hypot((pb.x - pa.x) * stage.clientWidth, (pb.y - pa.y) * stage.clientHeight) / 2;
+    ring.userData.layout(Math.round(Math.max(26, Math.min(230, px + 8))));
+  };
+  pickables = [spikes, ...countryMeshes];
+  const at = (hit) => (hit.object === spikes ? items[hit.instanceId]?.iso3 : hit.object.userData.iso3) || null;
+  onHover = (hit) => { const iso3 = at(hit); return iso3 && sumOf(iso3) ? countryTip(iso3) : null; };
+  onPick = (hit) => { const iso3 = at(hit); if (iso3 && sumOf(iso3)) select(iso3); };
+  const tfrStops = [0.7, 1.05, 1.4, 1.75, 2.09, 2.1, 3, 4.5].map(tfrColor);
+  $('#legend').innerHTML = state.metric === 'tfr'
+    ? `<div class="mb-1 font-medium text-foreground">Fertility rate (births per woman)</div><div class="h-2 w-48 rounded-full" style="background:${ramp(tfrStops)}"></div><div class="relative mt-0.5 h-3 w-48 font-mono text-[10px]"><span class="absolute left-0">0.7</span><span class="absolute left-[52%] -translate-x-1/2 text-foreground">2.1</span><span class="absolute right-0">4.5+</span></div>`
+      + '<div class="mt-1 text-[11px]">2.1 is roughly replacement</div>'
+    : `<div class="mb-1 font-medium text-foreground">Years until the last person</div><div class="h-2 w-48 rounded-full" style="background:${ramp([400, 600, 900, 1200, 3000, 8000].map((y) => endColor({ y0: 0, end: y })))}"></div><div class="mt-0.5 flex w-48 justify-between font-mono text-[10px]"><span>400</span><span>1,200</span><span>8,000+</span></div>`
+      + `<div class="mt-1 flex items-center gap-1.5 text-[11px]"><span class="inline-block size-2.5 rounded-sm" style="background:${B.sky}"></span>At or above replacement: never</div>`;
+  $('#legend').innerHTML += `<div class="mt-1.5 border-t pt-1.5">Rings: ${[['0–14', B.sky], ['15–64', B.amber], ['65+', B.pink]].map(([t, cl]) => `<span class="mr-1.5 inline-flex items-center gap-1"><span class="inline-block size-2 rounded-sm" style="background:${cl}"></span>${t}</span>`).join('')}</div><div class="mt-1">Spike height: population · click a country to zoom</div>`;
+}
+const countryTip = (iso3) => {
+  const c = country(iso3), s = sumOf(iso3);
+  return `<div class="font-medium">${esc(c.name)}</div><div class="mt-0.5 font-mono text-[11px] text-muted-foreground">TFR ${fmt.tfr(tfrOf(c))} · ${fmt.pop(s.p0)} people</div><div class="text-[11px]">Last person: <span class="font-mono">${esc(endText(s))}</span></div>`;
+};
+function faceCountry(iso3) {
+  const c = country(iso3);
+  if (state.view !== 'globe' || c?.lat == null) return;
+  const dist = camera.position.distanceTo(controls.target);
+  camera.position.copy(lonLatTo(c.lon, Math.max(-50, Math.min(55, c.lat)), 1).normalize().multiplyScalar(dist));
+  controls.target.set(0, 0, 0); controls.autoRotate = false; controls.update();
+}
+
+// Sunburst around the selected country: broad age bands, then five-year groups, then women and
+// men, for the chosen year of the projection at the country's current (or slider) fertility rate.
+const ringYears = (y0) => [y0, 2050, 2100, 2200];
+// ring widths in px: age bands, five-year groups, women/men; the hole is sized to the country on screen
+const RING_W = [[0, 18], [20, 42], [44, 55]];
+function sunburst(c) {
+  const s = COHORT.summarize(c, tfrOf(c), true), years = ringYears(s.y0);
+  const year = years.includes(state.ringYear) ? state.ringYear : s.y0, a = s.ages[Math.round((year - s.y0) / s.step)];
+  // a zero-size anchor: CSS2DRenderer centres it on the country, the rings are drawn around it
+  const el = document.createElement('div'); el.style.cssText = 'position:relative;width:0;height:0;pointer-events:none';
+  const tot = a ? d3.sum(a.f) + d3.sum(a.m) : 0;
+  const cap = document.createElement('div');
+  cap.className = 'absolute left-0 whitespace-nowrap rounded border border-primary/40 bg-background/85 px-2 py-0.5 font-sans text-xs text-foreground';
+  cap.innerHTML = `${esc(c.name)} · <span class="font-mono">${year}</span> · <span class="font-mono">${tot >= 1 ? fmt.pop(tot) : 'nobody left'}</span>`;
+  el.appendChild(cap);
+  const placeCap = (r) => { cap.style.transform = `translate(-50%, ${Math.round(r + 6)}px)`; };
+  if (!a || tot < 1) { placeCap(40); return { el, layout: placeCap }; }
+  const bands = [['Children 0–14', 0, 3], ['Working age 15–64', 3, 13], ['Older 65+', 13, 17]];
+  const root = d3.hierarchy({
+    name: c.name,
+    children: bands.map(([name, g0, g1]) => ({
+      name, band: g0,
+      children: d3.range(g0, g1).map((g) => ({ name: `Ages ${AGE_LABEL[g]}`, g, children: [{ name: `Women ${AGE_LABEL[g]}`, g, sex: 'f', value: a.f[g] }, { name: `Men ${AGE_LABEL[g]}`, g, sex: 'm', value: a.m[g] }] })),
+    })),
+  }).sum((d) => d.value ?? 0);
+  d3.partition().size([2 * Math.PI, 1])(root);
+  const fill = (d) => {
+    const base = d3.color(BAND(d.data.band ?? d.data.g));
+    if (d.depth === 1) return base.formatHex();
+    if (d.depth === 2) return base.darker(d.data.g % 2 ? 0.55 : 0.2).formatHex();
+    return (d.data.sex === 'f' ? base.brighter(0.5) : base.darker(0.8)).formatHex();
+  };
+  const op = (d) => (d.depth === 1 ? 0.42 : 0.32);   // tinted glass: the map shows through
+  const nodes = root.descendants().filter((d) => d.depth && d.x1 - d.x0 > 0.002);
+  const pctNodes = nodes.filter((d) => d.depth === 1 && d.x1 - d.x0 > 0.35);
+  const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
+  svg.style.cssText = 'position:absolute;overflow:visible;pointer-events:none';
+  svg.innerHTML = nodes.map((d, i) => `<path data-i="${i}" fill="${fill(d)}" fill-opacity="${op(d)}" stroke="${fill(d)}" stroke-opacity="0.85" stroke-width="0.8" style="pointer-events:auto"/>`).join('')
+    + pctNodes.map((d) => `<text text-anchor="middle" font-size="10.5" font-family="Source Code Pro" font-weight="500" fill="#e4e1d8" stroke="#15171b" stroke-width="3" stroke-linejoin="round" paint-order="stroke">${fmt.pct(d.value / tot)}</text>`).join('');
+  el.prepend(svg);
+  const paths = [...svg.querySelectorAll('path')], texts = [...svg.querySelectorAll('text')];
+  let lastR = -1;
+  const layout = (r0) => {                 // redraw only when the hole changes by a pixel or more
+    if (Math.abs(r0 - lastR) < 1) return;
+    lastR = r0;
+    const out = r0 + RING_W[2][1] + 4, arc = d3.arc().startAngle((d) => d.x0).endAngle((d) => d.x1).padAngle(0.006).padRadius(r0 + 30)
+      .innerRadius((d) => r0 + RING_W[d.depth - 1][0]).outerRadius((d) => r0 + RING_W[d.depth - 1][1]).cornerRadius(1.5);
+    svg.setAttribute('viewBox', `${-out} ${-out} ${2 * out} ${2 * out}`);
+    svg.setAttribute('width', 2 * out); svg.setAttribute('height', 2 * out);
+    svg.style.left = svg.style.top = `${-out}px`;
+    paths.forEach((pEl, i) => pEl.setAttribute('d', arc(nodes[i])));
+    texts.forEach((t, i) => { const [x, y] = arc.centroid(pctNodes[i]); t.setAttribute('x', x); t.setAttribute('y', y + 3.5); });
+    placeCap(out);
+  };
+  const tip = $('#tip');
+  paths.forEach((pEl) => {
+    const d = nodes[+pEl.dataset.i];
+    pEl.addEventListener('pointerenter', () => {
+      tip.innerHTML = `<div class="font-medium">${esc(d.data.name)}</div><div class="font-mono text-[11px]">${fmt.pop(d.value)} people · ${d3.format('.1%')(d.value / tot)}</div><div class="text-[11px] text-muted-foreground">${esc(c.name)}, ${year}${year > s.y0 ? ` at TFR ${fmt.tfr(tfrOf(c))}` : ''}</div>`;
+      tip.hidden = false; pEl.setAttribute('fill-opacity', '0.8');
+    });
+    pEl.addEventListener('pointermove', (e) => { tip.style.left = `${Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8)}px`; tip.style.top = `${Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8)}px`; });
+    pEl.addEventListener('pointerleave', () => { tip.hidden = true; pEl.setAttribute('fill-opacity', op(d)); });
+  });
+  layout(46);
+  return { el, layout };
+}
+
+// Centre and angular radius (radians) of a country's largest polygon, so rings and flights
+// ignore far-off territories (French Guiana, Alaska). Falls back to the capital.
+function countryFrame(iso3) {
+  const c = country(iso3), f = world?.features.find((ft) => isoByNum().get(ft.id) === iso3);
+  if (!f) return c?.lat != null ? { ctr: [c.lon, c.lat], rad: 0.006 } : null;
+  const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+  const main = d3.greatest(polys, (p) => d3.geoArea({ type: 'Polygon', coordinates: p }));
+  const ctr = d3.geoCentroid({ type: 'Polygon', coordinates: main });
+  return { ctr, rad: Math.max(0.004, d3.max(main[0], (pt) => d3.geoDistance(ctr, pt))) };
+}
+// Fly the camera to a country, closer for small ones. Reduced motion jumps straight there.
+let flight = null;
+function flyTo(iso3) {
+  const fr = state.view === 'globe' ? countryFrame(iso3) : null;
+  if (!fr) return;
+  flyToward(lonLatTo(fr.ctr[0], Math.max(-60, Math.min(70, fr.ctr[1])), 1).normalize(), Math.max(4.1, Math.min(12, R * (1.35 + 4.4 * fr.rad))));
+}
+function flyToward(dir, dist) {
+  controls.autoRotate = false; controls.target.set(0, 0, 0);
+  if (reduceMotion) { camera.position.copy(dir).multiplyScalar(dist); controls.update(); return; }
+  flight = { t0: performance.now(), from: camera.position.clone().normalize(), fromD: camera.position.length(), dir, dist };
+}
+function stepFlight() {
+  if (!flight) return;
+  const t = Math.min(1, (performance.now() - flight.t0) / 1100), e = d3.easeCubicInOut(t);
+  const dir = flight.from.clone().lerp(flight.dir, e).normalize();
+  camera.position.copy(dir).multiplyScalar(flight.fromD + (flight.dist - flight.fromD) * e);
+  if (t === 1) flight = null;
+}
+
+// ---------- trajectory: the age structure, step by step, until it runs out ----------
+const SLICES = 32;
+function sliceIdx(s) {
+  const n = s.totals.length - 1;
+  return [...new Set(d3.range(SLICES).map((k) => Math.round(k * n / (SLICES - 1))))];
+}
+function buildTrajectory() {
+  const c = country(state.sel), s = COHORT.summarize(c, tfrOf(c), true);
+  const idx = sliceIdx(s), K = idx.length, NG = COHORT.NG, GX = 0.46, GZ = 0.5;
+  const cell = (k, g) => s.ages[idx[k]].f[g] + s.ages[idx[k]].m[g];
+  const maxAll = d3.max(idx.flatMap((_, k) => d3.range(NG).map((g) => cell(k, g))));
+  const lMax = Math.log10(Math.max(maxAll, 10));
+  // People (log) keeps a few hundred people visible; People is linear; Age shape scales each row to its largest group
+  const height = (v, sliceMax) => (state.scale === 'log' ? 4 * Math.log10(Math.max(v, 1)) / lMax
+    : state.scale === 'actual' ? 4 * v / maxAll : 2.6 * v / sliceMax);
+  // 80+ is open-ended (everyone 80 and over), so it is drawn paler than the five-year groups
+  const OPEN = d3.interpolateRgb(B.pink, B.ink2)(0.55);
+  const baseColor = (g) => (g === NG - 1 ? OPEN : BAND(g));
+  const geo = new THREE.BoxGeometry(GX * 0.82, 1, GZ * 0.7); geo.translate(0, 0.5, 0);
+  // today's row is recorded data, drawn solid; projected rows are translucent. Instances run back
+  // (today) to front, so drawing order already suits the default camera.
+  const today = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.5 }), NG);
+  const rest = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.6, transparent: true, opacity: 0.5 }), (K - 1) * NG);
+  const at = (k, g) => (k === 0 ? [today, g] : [rest, (k - 1) * NG + g]);
+  const o = new THREE.Object3D(), col = new THREE.Color(), meta = [];
+  const x0 = -(NG - 1) * GX / 2, z0 = -(K - 1) * GZ / 2, xEnd = x0 + (NG - 1) * GX;
+  for (let k = 0; k < K; k++) {
+    const sliceMax = d3.max(d3.range(NG), (g) => cell(k, g)) || 1;
+    for (let g = 0; g < NG; g++) {
+      const v = cell(k, g), [mesh, i] = at(k, g);
+      o.position.set(x0 + g * GX, 0, z0 + k * GZ); o.scale.set(1, Math.max(height(v, sliceMax), 0.004), 1); o.updateMatrix();
+      mesh.setMatrixAt(i, o.matrix); mesh.setColorAt(i, col.set(baseColor(g)));
+      meta[k * NG + g] = { k, g, v, year: s.y0 + idx[k] * s.step, total: s.totals[idx[k]] };
+    }
+  }
+  group.add(today, rest);
+  const grid = new THREE.GridHelper(Math.max(NG * GX, K * GZ) + 2, 24, B.line, B.muted); grid.position.y = -0.01; group.add(grid);
+  // age labels along the front edge, where the low rows never cover them
+  const zF = z0 + (K - 1) * GZ;
+  for (let g = 0; g < NG; g += 2) label(group, AGE_LABEL[g], x0 + g * GX, 0, zF + 0.7);
+  label(group, '<span class="text-foreground">Age group</span>', x0 + (NG - 1) * GX / 2, 0, zF + 1.25);
+  for (let k = 0; k < K; k++) {
+    if (k % 4 && k !== K - 1) continue;
+    const m = meta[k * NG];
+    label(group, `<div style="transform:translateX(50%)">${k === 0 ? '<span class="text-primary">Today</span> · ' : ''}<span class="text-foreground">${fmt.year(m.year)}</span> · ${fmt.pop(m.total)}</div>`, xEnd + 0.45, 0, z0 + k * GZ);
+  }
+  // milestones from the panel, as bands across the rows at the year they happen
+  const zOfYear = (y) => {
+    const m = (y - s.y0) / s.step;
+    for (let k = 0; k < K - 1; k++) if (m <= idx[k + 1]) return z0 + (k + (m - idx[k]) / (idx[k + 1] - idx[k])) * GZ;
+    return null;
+  };
+  const markGeo = new THREE.PlaneGeometry(xEnd - x0 + 1.2, 0.05); markGeo.rotateX(-Math.PI / 2);
+  for (const [name, y] of [['Half of today', s.half], ['Below 1 million', s.million], ['Below 1,000', s.thousand]]) {
+    const z = y == null ? null : zOfYear(y);
+    if (z == null) continue;
+    const band = new THREE.Mesh(markGeo, new THREE.MeshBasicMaterial({ color: B.ink2, transparent: true, opacity: 0.55, depthWrite: false }));
+    band.position.set((x0 + xEnd) / 2, 0.012, z); group.add(band);
+    label(group, `<div style="transform:translateX(-50%)" class="whitespace-nowrap rounded border bg-background/85 px-1.5 py-0.5 text-ink-2">${name} · <span class="text-foreground">${fmt.year(y)}</span></div>`, x0 - 0.9, 0, z);
+  }
+  pickables = [today, rest];
+  // hovering a bar lights up its whole row and shows that year's age pyramid
+  let lit = -1;
+  const light = (k, on) => {
+    for (let g = 0; g < NG; g++) {
+      const [mesh, i] = at(k, g);
+      col.set(on ? B.signal : baseColor(g));
+      mesh.setColorAt(i, col); mesh.instanceColor.needsUpdate = true;
+    }
+  };
+  onHoverMove = (hit) => {
+    const k = hit && pickables.includes(hit.object) ? meta[hit.object === today ? hit.instanceId : NG + hit.instanceId]?.k ?? -1 : -1;
+    if (k === lit) return;
+    if (lit >= 0) light(lit, false);
+    if (k >= 0) light(k, true);
+    lit = k;
+  };
+  onHover = (hit) => {
+    const m = meta[hit.object === today ? hit.instanceId : NG + hit.instanceId]; if (!m) return null;
+    const a = s.ages[idx[m.k]], mx = d3.max([...a.f, ...a.m]) || 1, W = 84, RH = 6;
+    const bars = d3.range(NG).map((g) => {
+      const y = (NG - 1 - g) * RH, wf = W * a.f[g] / mx, wm = W * a.m[g] / mx, cl = baseColor(g), on = g === m.g;
+      return `<rect x="${W - wf}" y="${y}" width="${wf}" height="${RH - 1}" fill="${cl}" opacity="${on ? 1 : 0.75}"/><rect x="${W + 2}" y="${y}" width="${wm}" height="${RH - 1}" fill="${cl}" opacity="${on ? 0.85 : 0.5}"/>`;
+    }).join('');
+    return `<div class="font-medium">${m.k === 0 ? 'Today, ' : ''}${fmt.year(m.year)} · ${fmt.pop(m.total)} people</div>
+      <div class="font-mono text-[11px] text-muted-foreground">Ages ${AGE_LABEL[m.g]}: ${fmt.pop(m.v)} (${fmt.pct(m.v / m.total || 0)})</div>
+      <svg class="mt-1.5 block" width="${2 * W + 2}" height="${NG * RH}" role="img" aria-label="Age pyramid for ${fmt.year(m.year)}">${bars}</svg>
+      <div class="flex justify-between text-[10px] text-muted-foreground" style="width:${2 * W + 2}px"><span>Women</span><span>Men</span></div>`;
+  };
+  $('#legend').innerHTML = `<div class="mb-1 font-medium text-foreground">${esc(c.name)} at TFR ${fmt.tfr(tfrOf(c))}</div>`
+    + [['0–14', B.sky], ['15–64', B.amber], ['65–79', B.pink], ['80+', OPEN]].map(([t, cl]) => `<span class="mr-2 inline-flex items-center gap-1"><span class="inline-block size-2.5 rounded-sm" style="background:${cl}"></span>${t}</span>`).join('')
+    + '<div class="mt-1 text-[11px]">80+ is open-ended: everyone 80 and over</div>'
+    + `<div class="text-[11px]">Rows: ${fmt.year(s.y0)} (solid, recorded) to ${fmt.year(s.y0 + (s.totals.length - 1) * s.step)}, back to front</div>`
+    + `<div class="text-[11px]">Height: ${state.scale === 'log' ? 'people in the age group, log scale' : state.scale === 'actual' ? 'people in the age group' : 'share of that year’s largest group'}</div>`
+    + '<div class="mt-1.5 border-t pt-1.5">Hover a row for its age pyramid · drag to orbit</div>';
+}
+
+// ---------- ranking: countdown walls, soonest end first ----------
+function rankOrder() {
+  const end = (s) => (s.grows ? Infinity : s.end ?? 1e9);
+  return state.list.filter((c) => c.iso3 !== 'WLD').sort((a, b) => {
+    const sa = sumOf(a.iso3), sb = sumOf(b.iso3);
+    if (state.sort === 'tfr') return tfrOf(a) - tfrOf(b);
+    if (state.sort === 'pop') return sb.p0 - sa.p0;
+    return end(sa) - end(sb) || tfrOf(a) - tfrOf(b);
+  });
+}
+// the panel list after its filter; the walls show the first WALLS of it
+const WALLS = 24;
+const rankList = () => { const q = state.q.trim().toLowerCase(); return rankOrder().filter((c) => !q || c.name.toLowerCase().includes(q)); };
+const lastYear = (s) => s.y0 + (s.totals.length - 1) * s.step;
+// population at a (fractional) year, log-interpolated between five-year steps
+const popAt = (s, year) => {
+  const f = (year - s.y0) / s.step, i = Math.floor(f), t = s.totals;
+  if (i < 0) return t[0];
+  if (i >= t.length - 1) return t.at(-1);
+  return Math.exp(Math.log(Math.max(t[i], 1e-9)) * (1 - (f - i)) + Math.log(Math.max(t[i + 1], 1e-9)) * (f - i));
+};
+// One wall per country along a time axis: its top is the projected population (log scale), and it
+// runs from today to the year the last person is left. Soonest at the front.
+function buildRanking() {
+  const order = rankOrder(), rankOf = new Map(order.map((c, i) => [c.iso3, i + 1]));
+  let items = rankList().slice(0, WALLS);
+  const sc = country(state.sel);
+  if (!state.q.trim() && sc && rankOf.has(sc.iso3) && !items.includes(sc)) items = [...items, sc];
+  if (!items.length) { $('#legend').innerHTML = '<div>No countries match the filter</div>'; return; }
+  const sums = items.map((c) => sumOf(c.iso3)), y0 = sums[0].y0;
+  // the axis stops at the latest end that has a year; walls beyond 20,000 years run to its edge
+  const ends = sums.filter((s) => s.end != null || s.grows).map((s) => s.end ?? lastYear(s));
+  const yMax = ends.length ? d3.max(ends) : y0 + COHORT.MAX_YEARS;
+  const tail = (s) => s.end ?? (s.grows ? lastYear(s) : yMax);
+  const XW = 12, H = 1.5, DZ = 0.72, n = items.length;
+  // square-root time: the next few centuries get room, and 10,000 years still fits
+  const x = d3.scalePow().exponent(0.5).domain([y0, yMax]).range([-XW / 2, XW / 2]);
+  // scaled to the largest population today; growth above it is capped
+  const lpMax = Math.log10(d3.max(sums, (s) => (s.grows ? s.p0 : s.peak.pop)));
+  const h = (p) => Math.min(H * 1.12, Math.max(0, H * Math.log10(Math.max(p, 1)) / lpMax));
+  const zOf = (r) => (n - 1) / 2 * DZ - r * DZ;
+  const walls = [];
+  items.forEach((c, r) => {
+    const s = sums[r], z = zOf(r), sel = c.iso3 === state.sel, t = s.totals;
+    const shape = new THREE.Shape(); shape.moveTo(x(s.y0), 0);
+    const stride = Math.max(1, Math.ceil(t.length / 240));
+    const ye = tail(s), xe = x(ye);
+    for (let i = 0; i < t.length && s.y0 + i * s.step < ye; i += stride) shape.lineTo(x(s.y0 + i * s.step), h(t[i]));
+    if (s.end == null) shape.lineTo(xe, h(popAt(s, ye)));
+    shape.lineTo(xe, 0); shape.lineTo(x(s.y0), 0);
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.18, bevelEnabled: false }); geo.translate(0, 0, -0.09);
+    const color = sel ? B.signal : s.grows ? B.sky : tfrColor(tfrOf(c));
+    const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color, roughness: 0.6, emissive: color, emissiveIntensity: sel ? 0.3 : 0.06 }));
+    mesh.position.z = z; mesh.userData = { iso3: c.iso3, s };
+    group.add(mesh); walls.push(mesh);
+    label(group, `<div style="transform:translateX(-50%)" class="${sel ? 'text-primary' : 'text-foreground'}"><span class="text-muted-foreground">${rankOf.get(c.iso3)}</span> ${esc(c.name)} <span class="text-muted-foreground">${fmt.tfr(tfrOf(c))}</span></div>`, -XW / 2 - 0.45, 0.05, z);
+    label(group, `<div style="transform:translateX(50%)" class="${sel ? 'text-primary' : ''}">${s.grows ? 'never' : s.end == null ? `>${fmt.int(COHORT.MAX_YEARS)}` : fmt.year(s.end)}</div>`, xe + 0.12, 0.05, z);
+  });
+  // time axis: faint lines across the rows, years at the front
+  const zFront = zOf(0) + DZ * 0.8, zBack = zOf(n - 1) - DZ * 0.6, pts = [];
+  let lastX = x(y0);
+  for (const yr of [2050, 2100, 2150, 2200, 2300, 2400, 2500, 2750, 3000, 3500, 4000, 5000, 6000, 8000, 10000, 15000, 20000]) {
+    if (yr <= y0 || yr > yMax || x(yr) - lastX < 0.85) continue;
+    lastX = x(yr); pts.push(lastX, 0.002, zFront, lastX, 0.002, zBack);
+    label(group, fmt.year(yr), lastX, 0, zFront + 0.35);
+  }
+  pts.push(-XW / 2, 0.002, zFront, XW / 2, 0.002, zFront);
+  const axis = new THREE.BufferGeometry(); axis.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  group.add(new THREE.LineSegments(axis, new THREE.LineBasicMaterial({ color: B.line })));
+  label(group, `<span class="text-foreground">${fmt.year(y0)}</span>`, x(y0), 0, zFront + 0.35);
+  pickables = walls;
+  onHover = (hit) => {
+    const { iso3, s } = hit.object.userData, year = Math.max(s.y0, Math.min(tail(s), x.invert(hit.point.x)));
+    return `<div class="font-medium">${esc(country(iso3).name)}</div><div class="font-mono text-[11px]">${fmt.year(year)}: ${fmt.pop(popAt(s, year))} people</div><div class="text-[11px] text-muted-foreground">TFR ${fmt.tfr(tfrOf(country(iso3)))} · last person ${esc(endText(s))}</div>`;
+  };
+  onPick = (hit) => select(hit.object.userData.iso3);
+  $('#legend').innerHTML = '<div class="mb-1 font-medium text-foreground">Each wall is one country</div>'
+    + '<div class="text-[11px]">Height: projected population (log scale)</div><div class="text-[11px]">Length: from today to the last person</div>'
+    + `<div class="mt-1.5 mb-1 text-[11px]">Colour: fertility rate</div><div class="h-2 w-48 rounded-full" style="background:${ramp([0.7, 1.05, 1.4, 1.75, 2.09].map(tfrColor))}"></div><div class="mt-0.5 flex w-48 justify-between font-mono text-[10px]"><span>0.7</span><span>2.1</span></div>`
+    + `<div class="mt-1 flex items-center gap-1.5 text-[11px]"><span class="inline-block size-2.5 rounded-sm" style="background:${B.sky}"></span>At or above replacement: stops at ${fmt.year(y0 + COHORT.GROW_YEARS)}</div>`
+    + '<div class="mt-1.5 border-t pt-1.5">Time is stretched near today · hover a wall for the population</div>';
+}
+
+const CAMS = {
+  globe: { pos: [0, 3.5, 13.5], target: [0, 0, 0], min: 3.9, max: 22, polar: Math.PI },
+  trajectory: { pos: [12.5, 10, 15], target: [0, 0.6, 0], min: 4, max: 40, polar: Math.PI * 0.49 },
+  ranking: { pos: [0.3, 18, 21.5], target: [0.7, 0, 0.6], min: 4, max: 40, polar: Math.PI * 0.49 },
+};
+let lastView = null;
+function build() {
+  clearGroup();
+  ({ globe: buildGlobe, trajectory: buildTrajectory, ranking: buildRanking })[state.view]();
+  if (lastView !== state.view) {
+    const cam = CAMS[state.view];
+    // portrait screens: step back so the view fits the width
+    const k = camera.aspect < 1 ? Math.min(1.9, camera.aspect ** -0.85) : 1;
+    camera.position.set(...cam.pos).multiplyScalar(k); controls.target.set(...cam.target);
+    controls.minDistance = cam.min; controls.maxDistance = cam.max; controls.maxPolarAngle = cam.polar;
+    controls.autoRotate = state.view === 'globe' && !reduceMotion; controls.autoRotateSpeed = 0.35;
+    lastView = state.view;
+    if (state.view === 'globe') faceCountry(state.sel);
+  }
+}
+
+// ================= panel =================
+function select(iso3, { face = false } = {}) {
+  state.sel = iso3; build(); renderPanel();
+  if (face || state.view === 'globe') flyTo(iso3);
+}
+const countryOptions = () => {
+  const opts = [...state.list].sort((a, b) => (a.iso3 === 'WLD' ? -1 : b.iso3 === 'WLD' ? 1 : a.name.localeCompare(b.name)));
+  return opts.map((c) => `<option value="${c.iso3}" ${c.iso3 === state.sel ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+};
+function countryCard() {
+  const c = country(state.sel), real = realTfr(c), cur = tfrOf(c), ly = lastOf(c.tfr)?.year;
+  return `<label class="sr-only" for="pick">Country</label>
+    <select id="pick" class="mt-3 h-9 w-full rounded-md border border-input bg-background/60 px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">${countryOptions()}</select>
+    <div class="mt-3 rounded-lg border bg-background/40 p-3">
+      <div class="flex items-baseline justify-between gap-2"><span class="text-xs text-muted-foreground">Fertility rate held at</span><span class="font-mono text-sm font-semibold" id="tfr-val">${fmt.tfr(cur)}</span></div>
+      <input id="tfr" type="range" min="0.5" max="3.5" step="0.01" value="${cur}" class="mt-2 w-full accent-[#1fefd7]" aria-label="Fertility rate, births per woman" />
+      <div class="mt-1 flex items-center justify-between text-[11px] text-muted-foreground"><span>Actual ${fmt.tfr(real)} (${ly})</span><button type="button" data-act="reset-tfr" class="underline-offset-2 hover:text-foreground hover:underline ${state.override[c.iso3] == null ? 'invisible' : ''}" id="tfr-reset">Reset</button></div>
+    </div>
+    <div id="cc-stats"></div>`;
+}
+function statsHtml() {
+  const c = country(state.sel), s = sumOf(state.sel);
+  const ms = [
+    ['Peak', s.grows ? `Still growing in ${fmt.year(s.y0 + COHORT.GROW_YEARS)}` : s.peak.year > s.y0 ? `${fmt.year(s.peak.year)} · ${fmt.pop(s.peak.pop)}` : 'Already past'],
+    ['Half of today', s.half ? fmt.year(s.half) : '–'],
+    ['Below 1 million', s.million ? fmt.year(s.million) : '–'],
+    ['Below 1,000', s.thousand ? fmt.year(s.thousand) : '–'],
+    ['Last person', endText(s)],
+  ];
+  return `<div class="mt-3 grid grid-cols-2 gap-2">
+      ${kpi(`Population ${s.y0}`, fmt.pop(s.p0), c.region)}
+      ${kpi('Replacement rate', fmt.tfr(s.replacement), 'TFR that holds steady')}
+      ${kpi('Each generation', s.grows ? `+${fmt.pct(s.nrr - 1)}` : `−${fmt.pct(1 - s.nrr)}`, `${fmt.tfr(s.nrr)} daughters per woman`)}
+      ${kpi('Last person', s.grows ? 'Never' : s.end == null ? `>${fmt.int(COHORT.MAX_YEARS)}y` : fmt.year(s.end), s.grows ? 'at or above replacement' : s.end == null ? '' : `in ${fmt.int(Math.round(s.end - s.y0))} years`)}
+    </div>
+    ${section('Milestones at this rate', `<div class="divide-y rounded-lg border bg-background/40 text-xs">${ms.map(([k, v]) => `<div class="flex justify-between gap-3 px-2.5 py-1.5"><span class="text-muted-foreground">${k}</span><span class="text-right font-mono">${esc(v)}</span></div>`).join('')}</div>`, 'fi-rr-hourglass-end')}`;
+}
+// total population: history from the World Bank, then the projection (log scale)
+function chartHtml() {
+  const c = country(state.sel), s = sumOf(state.sel);
+  const hist = c.pop ? c.pop.v.map((v, i) => [c.pop.y0 + i, v]).filter((d) => d[1]) : [];
+  const proj = s.totals.map((v, i) => [s.y0 + i * s.step, Math.max(v, 1)]);
+  const base = state.override[c.iso3] != null ? COHORT.summarize(c, realTfr(c)) : null;
+  const baseLine = base ? base.totals.map((v, i) => [base.y0 + i * base.step, Math.max(v, 1)]) : [];
+  const W = 328, H = 170, m = { l: 34, r: 8, t: 8, b: 18 };
+  const xMax = Math.max(proj.at(-1)[0], baseLine.at(-1)?.[0] ?? 0);
+  const x = d3.scaleLinear().domain([hist[0]?.[0] ?? s.y0, xMax]).range([m.l, W - m.r]);
+  const yMax = d3.max([...hist, ...proj, ...baseLine], (d) => d[1]);
+  const y = d3.scaleLog().domain([1, yMax * 1.3]).range([H - m.b, m.t]);
+  const line = d3.line().x((d) => x(d[0])).y((d) => y(d[1]));
+  const yt = [1, 1e3, 1e6, 1e9].filter((v) => v < yMax * 1.3);
+  const xt = x.ticks(4);
+  const dot = (yr, lv, t) => (yr == null ? '' : `<circle cx="${x(yr)}" cy="${y(Math.max(lv, 1))}" r="3" fill="${B.amber}" stroke="${B.paper}"><title>${t} · ${fmt.year(yr)}</title></circle>`);
+  return `<svg viewBox="0 0 ${W} ${H}" class="w-full" role="img" aria-label="Population of ${esc(c.name)}: history and projection">
+    ${yt.map((v) => `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="${B.line}"/><text x="${m.l - 4}" y="${y(v) + 3}" text-anchor="end" fill="${B.fog}" font-size="9" font-family="Source Code Pro">${fmt.pop(v)}</text>`).join('')}
+    ${xt.map((v) => `<text x="${x(v)}" y="${H - 4}" text-anchor="middle" fill="${B.fog}" font-size="9" font-family="Source Code Pro">${fmt.year(v)}</text>`).join('')}
+    ${baseLine.length ? `<path d="${line(baseLine)}" fill="none" stroke="${B.fog}" stroke-width="1.2" stroke-dasharray="3 3"/>` : ''}
+    <path d="${line(proj)}" fill="none" stroke="${B.amber}" stroke-width="1.8"/>
+    ${hist.length ? `<path d="${line(hist)}" fill="none" stroke="${B.ink}" stroke-width="2"/>` : ''}
+    ${dot(s.half, s.p0 / 2, 'Half of today')}${dot(s.million, 1e6, 'Below 1 million')}${dot(s.thousand, 1e3, 'Below 1,000')}${dot(s.end, 1, 'Last person')}
+  </svg>
+  <div class="mt-1 flex flex-wrap gap-x-3 text-[11px] text-muted-foreground"><span><span class="mr-1 inline-block h-0.5 w-3 align-middle" style="background:${B.ink}"></span>Recorded</span><span><span class="mr-1 inline-block h-0.5 w-3 align-middle" style="background:${B.amber}"></span>Projected</span>${base ? '<span><span class="mr-1 inline-block w-3 border-t border-dashed align-middle" style="border-color:#8b9099"></span>At the actual rate</span>' : ''}</div>`;
+}
+function refreshCountry() {
+  const c = country(state.sel), s = sumOf(state.sel);
+  $('#tfr-val').textContent = fmt.tfr(tfrOf(c));
+  $('#tfr-reset').classList.toggle('invisible', state.override[c.iso3] == null);
+  $('#cc-stats').innerHTML = statsHtml();
+  const ch = $('#cc-chart'); if (ch) ch.innerHTML = chartHtml();
+  const rk = $('#rank-list'); if (rk) rk.innerHTML = rankRows();
+  return s;
+}
+function rankRows() {
+  const q = state.q.trim().toLowerCase();
+  return rankOrder().map((c, i) => ({ c, i })).filter(({ c }) => !q || c.name.toLowerCase().includes(q)).map(({ c, i }) => {
+    const s = sumOf(c.iso3), on = c.iso3 === state.sel;
+    return `<button type="button" data-iso="${c.iso3}" class="grid w-full grid-cols-[2rem_1fr_3rem_4.5rem] items-center gap-1 px-2 py-1 text-left text-xs hover:bg-accent ${on ? 'bg-accent text-primary' : ''}"><span class="font-mono text-muted-foreground">${i + 1}</span><span class="truncate">${esc(c.name)}</span><span class="text-right font-mono"><span class="mr-1 inline-block size-2 rounded-sm" style="background:${tfrColor(tfrOf(c))}"></span>${fmt.tfr(tfrOf(c))}</span><span class="text-right font-mono">${esc(endText(s, true))}</span></button>`;
+  }).join('');
+}
+function dataSection() {
+  const d = data(), synced = state.mode === 'synced' && state.synced;
+  const link = (act, t) => `<button type="button" data-act="${act}" class="underline underline-offset-2 hover:text-foreground">${t}</button>`;
+  const parts = [synced ? `Synced from the World Bank on ${esc(fmt.when(d.capturedAt))}, kept in this browser` : `Bundled snapshot from ${esc(fmt.when(d.capturedAt))}`];
+  if (synced) parts.push(link('use-snapshot', 'Use snapshot'));
+  else if (state.synced) parts.push(link('use-synced', 'Use synced data'));
+  if (state.synced) parts.push(link('clear', 'Clear stored data'));
+  return section('Data', `<p class="text-xs leading-relaxed text-muted-foreground">World Bank <a class="underline underline-offset-2 hover:text-foreground" href="https://data.worldbank.org/indicator/SP.DYN.TFRT.IN" target="_blank" rel="noopener">World Development Indicators</a>: population by five-year age group and sex, fertility rate, life expectancy by sex and infant mortality for ${state.list.length - 1} countries. ${parts.join(' · ')}.</p>`, 'fi-rr-database');
+}
+const modelSection = () => section('How the projection works', `<ul class="list-disc space-y-1 pl-4 text-xs leading-relaxed text-muted-foreground">
+  <li>Starts from each country's ${state.world?.ageYear ?? ''} population by age and sex and steps forward five years at a time.</li>
+  <li>The fertility rate stays where you set it, forever, with births spread over mothers aged 15–49.</li>
+  <li>Deaths follow today's life expectancy and infant mortality (a Gompertz curve fitted to each), held fixed.</li>
+  <li>No migration. It shows what births alone would do, which matters most for places like Singapore and the Gulf states.</li>
+  <li>"Last person" is when the expected population drops below one. It is arithmetic on today's rates, not a forecast: rates change, and the model ignores that.</li>
+</ul>`, 'fi-rr-info');
+
+function renderPanel() {
+  const c = country(state.sel);
+  let body = '';
+  if (state.view === 'globe') {
+    body = `<h1 class="text-lg font-semibold leading-tight">How long at today's birth rates?</h1>
+      <p class="mt-1 text-xs text-muted-foreground">Hold each country's fertility rate where it is today, with no migration, and project its population forward until nobody is left.</p>
+      <div class="mt-3 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Colour the map by</span>${toggle('metric', [['tfr', 'Fertility rate'], ['end', 'Last person']], state.metric)}</div>
+      ${countryCard()}
+      ${section(`Rings around ${c.name}`, `<p class="text-xs leading-relaxed text-muted-foreground">On the globe: age bands inside, five-year groups in the middle, women and men outside. Pick a year to see the projection at the rate above.</p>
+        <div class="mt-2 flex flex-wrap items-center justify-between gap-2">${toggle('ring', ringYears(sumOf(c.iso3).y0).map((y) => [String(y), String(y)]), String(ringYears(sumOf(c.iso3).y0).includes(state.ringYear) ? state.ringYear : sumOf(c.iso3).y0))}<button type="button" data-act="zoom-out" class="${btnCls}"><i class="fi fi-rr-globe"></i>Whole globe</button></div>`, 'fi-rr-chart-pie-alt')}
+      ${section('Population', '<div id="cc-chart"></div>', 'fi-rr-chart-line-up')}`;
+  } else if (state.view === 'trajectory') {
+    body = `<h1 class="text-lg font-semibold leading-tight">${esc(c.name)}, generation by generation</h1>
+      <p class="mt-1 text-xs text-muted-foreground">Each row is the population by age, five years apart, from today until the projection runs out. Low fertility first ages a country, then empties it.</p>
+      <div class="mt-3 flex items-center justify-between gap-2"><span class="text-xs text-muted-foreground">Bar height</span>${toggle('scale', [['log', 'People (log)'], ['actual', 'People'], ['shape', 'Age shape']], state.scale)}</div>
+      ${countryCard()}
+      ${section('Population', '<div id="cc-chart"></div>', 'fi-rr-chart-line-up')}`;
+  } else {
+    const s = sumOf(state.sel);
+    const shrinking = state.list.filter((x) => x.iso3 !== 'WLD' && !sumOf(x.iso3).grows).length;
+    body = `<h1 class="text-lg font-semibold leading-tight">Which countries run out first</h1>
+      <p class="mt-1 text-xs text-muted-foreground">${shrinking} of ${state.list.length - 1} countries have fertility below their replacement rate. Held there, each one ends. Each wall on the stage is a country's projected population, from today until the last person; they follow the first ${WALLS} rows of this list, so sort or filter it to compare others.</p>
+      <div class="mt-3 rounded-lg border bg-background/40 p-2.5 text-xs"><div class="flex items-center justify-between gap-2"><span class="font-medium">${esc(c.name)}</span><span class="font-mono">${esc(endText(s))}</span></div>
+        <div class="mt-2 flex gap-2"><button type="button" data-act="open-trajectory" class="${btnCls}"><i class="fi fi-rr-chart-line-up"></i>Trajectory</button><button type="button" data-act="open-globe" class="${btnCls}"><i class="fi fi-rr-globe"></i>On the globe</button></div></div>
+      <div class="mt-3 flex items-center justify-between gap-2">${toggle('sort', [['end', 'Soonest'], ['tfr', 'Fertility'], ['pop', 'Population']], state.sort)}</div>
+      <input id="rank-q" type="search" placeholder="Filter countries" value="${esc(state.q)}" class="mt-2 h-8 w-full rounded-md border border-input bg-background/60 px-2 text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+      <div class="mt-2 grid grid-cols-[2rem_1fr_3rem_4.5rem] gap-1 px-2 text-[11px] text-muted-foreground"><span>#</span><span>Country</span><span class="text-right">TFR</span><span class="text-right">Last person</span></div>
+      <div id="rank-list" class="mt-1 divide-y rounded-lg border bg-background/40"></div>`;
+  }
+  $('#panel').innerHTML = body + modelSection() + dataSection();
+  if (state.view !== 'ranking') refreshCountry(); else $('#rank-list').innerHTML = rankRows();
+}
+
+// slider: recompute the chosen country only, redraw at most once a frame
+let tfrRaf = 0;
+$('#panel').addEventListener('input', (e) => {
+  if (e.target.id === 'tfr') {
+    state.override[state.sel] = +e.target.value;
+    resum(state.sel); refreshCountry();
+    cancelAnimationFrame(tfrRaf); tfrRaf = requestAnimationFrame(build);
+  } else if (e.target.id === 'rank-q') { state.q = e.target.value; $('#rank-list').innerHTML = rankRows(); build(); }
+});
+$('#panel').addEventListener('change', (e) => { if (e.target.id === 'pick') select(e.target.value, { face: true }); });
+$('#panel').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.metric) { state.metric = b.dataset.metric; build(); renderPanel(); }
+  else if (b.dataset.scale) { state.scale = b.dataset.scale; build(); renderPanel(); }
+  else if (b.dataset.sort) { state.sort = b.dataset.sort; build(); renderPanel(); }
+  else if (b.dataset.iso) select(b.dataset.iso);
+  else if (b.dataset.act === 'reset-tfr') { delete state.override[state.sel]; resum(state.sel); build(); renderPanel(); }
+  else if (b.dataset.act === 'open-trajectory') setView('trajectory');
+  else if (b.dataset.act === 'open-globe') { setView('globe'); flyTo(state.sel); }
+  else if (b.dataset.ring) { state.ringYear = +b.dataset.ring; build(); renderPanel(); }
+  else if (b.dataset.act === 'zoom-out') flyToward(camera.position.clone().normalize(), 13.5);
+  else if (b.dataset.act === 'use-snapshot') { state.mode = 'snapshot'; reload(); toast('Showing the bundled snapshot'); }
+  else if (b.dataset.act === 'use-synced') { state.mode = 'synced'; reload(); toast('Showing the data synced to this browser'); }
+  else if (b.dataset.act === 'clear') { store.del('wb'); state.synced = null; state.mode = 'snapshot'; reload(); toast('Cleared the data stored in this browser'); }
+});
+const reload = () => { loadData(); build(); renderPanel(); };
+
+const renderTabs = () => {
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([k, v]) => `<button role="tab" data-tab="${k}" aria-label="${v.name}" aria-selected="${k === state.view}" data-state="${k === state.view ? 'active' : ''}" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi ${v.icon}"></i><span class="hidden sm:inline">${v.name}</span></button>`).join('');
+};
+const setView = (v) => { state.view = v; renderTabs(); build(); renderPanel(); };
+$('#tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) setView(b.dataset.tab); });
+
+// Go live: load the latest World Bank figures and keep them in this browser
+let syncing = false;
+$('#action').addEventListener('click', async () => {
+  if (syncing) return;
+  syncing = true; $('#action').disabled = true; $('#action span').textContent = 'Syncing…';
+  try {
+    const d = await WB_DATA.load();
+    if (d.countries.filter(COHORT.usable).length < 100) throw new Error('too few countries came back');
+    state.synced = d; state.mode = 'synced';
+    const kept = await store.put('wb', d);
+    reload();
+    toast(kept ? 'Synced the latest World Bank data and kept it in this browser' : 'Synced, but this browser would not store it');
+  } catch (err) {
+    toast(`Couldn’t reach the World Bank API (${err.message}). Still showing the ${state.mode === 'synced' ? 'synced data' : 'snapshot'}.`);
+  } finally { syncing = false; $('#action').disabled = false; $('#action span').textContent = 'Go live'; }
+});
+
+// ================= pointer: hover tips and click to select =================
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+let down = null, hoverRaf = 0;
+const hitAt = (e) => {
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  return pickables.length ? ray.intersectObjects(pickables, false)[0] : null;
+};
+renderer.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 5) { down = null; return; }
+  down = null; const hit = hitAt(e); if (hit && onPick) onPick(hit);
+});
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  cancelAnimationFrame(hoverRaf);
+  hoverRaf = requestAnimationFrame(() => {
+    const hit = e.buttons ? null : hitAt(e), tip = $('#tip');
+    onHoverMove?.(hit);
+    const html = hit && onHover ? onHover(hit) : null;
+    if (!html) { tip.hidden = true; renderer.domElement.style.cursor = ''; return; }
+    tip.innerHTML = html; tip.hidden = false;
+    tip.style.left = `${Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8)}px`;
+    tip.style.top = `${Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8)}px`;
+    renderer.domElement.style.cursor = onPick ? 'pointer' : '';
+  });
+});
+renderer.domElement.addEventListener('pointerleave', () => { $('#tip').hidden = true; onHoverMove?.(null); });
+
+renderer.setAnimationLoop(() => {
+  stepFlight(); controls.update(); frameTick?.();
+  renderer.render(scene, camera); labelR.render(scene, camera);
+});
+
+(async () => {
+  resize(); renderTabs();
+  $('#panel').innerHTML = '<p class="text-sm text-muted-foreground">Loading…</p>';
+  try {
+    const [snap, kept] = await Promise.all([
+      fetch('data/world-fertility.json').then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+      store.get('wb'),
+    ]);
+    state.snapshot = snap;
+    if (kept?.countries) { state.synced = kept; state.mode = 'synced'; }
+  } catch {
+    $('#panel').innerHTML = '<p class="text-sm">Couldn’t load the snapshot data. Try Go live.</p>';
+    return;
+  }
+  loadData(); build(); renderPanel();
+  // country shapes for the globe (world-atlas, Natural Earth 1:50m, which keeps small states like Singapore)
+  try {
+    const topo = await (await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json')).json();
+    world = { topo, features: topojson.feature(topo, topo.objects.countries).features, lines: topojson.mesh(topo, topo.objects.countries) };
+    if (state.view === 'globe') build();
+  } catch { toast('Couldn’t load country shapes; the globe shows capitals only'); }
+})();
+</script>
+</body>
+</html>
