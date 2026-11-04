@@ -1,6 +1,26 @@
 {
   "posts": [
     {
+      "slug": "2026-11-04-anthropic-amended-s1-what-changed",
+      "filename": "2026-11-04-anthropic-amended-s1-what-changed.md",
+      "category": "post",
+      "title": "Anthropic's amended S-1: what changed since the playground snapshot",
+      "date": "2026-11-04",
+      "tags": [
+        "anthropic",
+        "ipo",
+        "s-1",
+        "sec-filings",
+        "ai-economics",
+        "compute",
+        "valuation"
+      ],
+      "series": "building-ai-systems",
+      "summary": "On November 2, Anthropic filed Amendment No. 1 to its S-1. It adds the third quarter: $17.0B of revenue, but a small operating loss after a profitable Q2, mainly from $5.0B of expensive short-term compute. It also puts the first all-in number on compute commitments, $895.4B, and adds a sentence saying its models may soon meet its own threshold for AI that speeds up AI research. The price range is still blank. Here is how it compares with the data in our ANT IPO playground, what it means for a $1.5T to $2T valuation, and, judged against the first six months of SpaceX, Cerebras, CoreWeave, Circle and Figma, where a long-term entry has historically made more sense than day one. Not financial advice.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-04-nvidia-auto-ontology-vs-agent-wiki",
       "filename": "2026-11-04-nvidia-auto-ontology-vs-agent-wiki.md",
       "category": "post",
