@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" role="img" aria-labelledby="title desc">
+  <title id="title">Why always-on agents burn so many tokens</title>
+  <desc id="desc">Left: in one 40-step task the model re-reads its whole context at every step. A fixed prompt of about 20 thousand tokens stays the same while the history grows by about 3 thousand tokens per step, reaching 140 thousand tokens at step 40, about 3.2 million input tokens for the task. Right: an illustrative day for one user. A chat assistant with 20 messages uses about 60 thousand tokens. A personal agent with 8 heartbeat checks and 3 tasks uses about 9.8 million, roughly 160 times more.</desc>
+  <defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient></defs>
+  <rect width="1200" height="640" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="40" y="56" fill="#f6f9fc" font-size="28" font-weight="700">The bill is not the persona. It is the loop.</text>
+    <text x="40" y="85" fill="#a9bdd0" font-size="16">Illustrative numbers, not vendor figures. The shape matters more than the exact values.</text>
+
+    <text x="40" y="128" fill="#fff" font-size="17" font-weight="700">One task: input tokens read at each step</text>
+    <rect x="40" y="142" width="12" height="12" rx="2" fill="#4a90d9"/>
+    <text x="58" y="153" fill="#d7e3ef" font-size="13">Fixed prompt: persona, tools, memory (~20k)</text>
+    <rect x="400" y="142" width="12" height="12" rx="2" fill="#c97a1e"/>
+    <text x="418" y="153" fill="#d7e3ef" font-size="13">History: +3k per step</text>
+    <line x1="80" y1="430.0" x2="572" y2="430.0" stroke="#26394d"/><text x="72" y="434.0" fill="#8fa6ba" font-size="12" text-anchor="end">0k</text><line x1="80" y1="346.7" x2="572" y2="346.7" stroke="#26394d"/><text x="72" y="350.7" fill="#8fa6ba" font-size="12" text-anchor="end">50k</text><line x1="80" y1="263.3" x2="572" y2="263.3" stroke="#26394d"/><text x="72" y="267.3" fill="#8fa6ba" font-size="12" text-anchor="end">100k</text><line x1="80" y1="180.0" x2="572" y2="180.0" stroke="#26394d"/><text x="72" y="184.0" fill="#8fa6ba" font-size="12" text-anchor="end">150k</text>
+    <rect x="88" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="88" y="384.7" width="20" height="10.0" rx="3" fill="#c97a1e"/><rect x="112" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="112" y="374.7" width="20" height="20.0" rx="3" fill="#c97a1e"/><rect x="136" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="136" y="364.7" width="20" height="30.0" rx="3" fill="#c97a1e"/><rect x="160" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="160" y="354.7" width="20" height="40.0" rx="3" fill="#c97a1e"/><rect x="184" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="184" y="344.7" width="20" height="50.0" rx="3" fill="#c97a1e"/><rect x="208" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="208" y="334.7" width="20" height="60.0" rx="3" fill="#c97a1e"/><rect x="232" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="232" y="324.7" width="20" height="70.0" rx="3" fill="#c97a1e"/><rect x="256" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="256" y="314.7" width="20" height="80.0" rx="3" fill="#c97a1e"/><rect x="280" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="280" y="304.7" width="20" height="90.0" rx="3" fill="#c97a1e"/><rect x="304" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="304" y="294.7" width="20" height="100.0" rx="3" fill="#c97a1e"/><rect x="328" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="328" y="284.7" width="20" height="110.0" rx="3" fill="#c97a1e"/><rect x="352" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="352" y="274.7" width="20" height="120.0" rx="3" fill="#c97a1e"/><rect x="376" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="376" y="264.7" width="20" height="130.0" rx="3" fill="#c97a1e"/><rect x="400" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="400" y="254.7" width="20" height="140.0" rx="3" fill="#c97a1e"/><rect x="424" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="424" y="244.7" width="20" height="150.0" rx="3" fill="#c97a1e"/><rect x="448" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="448" y="234.7" width="20" height="160.0" rx="3" fill="#c97a1e"/><rect x="472" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="472" y="224.7" width="20" height="170.0" rx="3" fill="#c97a1e"/><rect x="496" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="496" y="214.7" width="20" height="180.0" rx="3" fill="#c97a1e"/><rect x="520" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="520" y="204.7" width="20" height="190.0" rx="3" fill="#c97a1e"/><rect x="544" y="396.7" width="20" height="33.3" fill="#4a90d9"/><rect x="544" y="194.7" width="20" height="200.0" rx="3" fill="#c97a1e"/>
+    <text x="98" y="448" fill="#8fa6ba" font-size="12" text-anchor="middle">2</text><text x="194" y="448" fill="#8fa6ba" font-size="12" text-anchor="middle">10</text><text x="314" y="448" fill="#8fa6ba" font-size="12" text-anchor="middle">20</text><text x="434" y="448" fill="#8fa6ba" font-size="12" text-anchor="middle">30</text><text x="554" y="448" fill="#8fa6ba" font-size="12" text-anchor="middle">40</text>
+    <text x="326" y="470" fill="#8fa6ba" font-size="12" text-anchor="middle">Agent step (tool call, screenshot, page read)</text>
+    <text x="560" y="186.7" fill="#f1d7aa" font-size="13" text-anchor="end">140k at step 40</text>
+    <rect x="40" y="492" width="540" height="64" rx="12" fill="#16222f" stroke="#3e5468"/>
+    <text x="58" y="518" fill="#fff" font-size="14" font-family="ui-monospace,Menlo,monospace">tokens ≈ n·base + Δ·n²/2</text>
+    <text x="58" y="542" fill="#c8dbee" font-size="14">40 steps → 0.8M + 2.4M ≈ 3.2M input tokens for one task</text>
+
+    <text x="640" y="128" fill="#fff" font-size="17" font-weight="700">One user, one day</text>
+    <text x="640" y="190" fill="#d7e3ef" font-size="15" font-weight="700">Chat assistant</text>
+    <text x="640" y="210" fill="#a9bdd0" font-size="13">20 messages × ~3k tokens</text>
+    <rect x="640" y="222" width="3.0" height="28" rx="3" fill="#9fb3c7"/>
+    <text x="653.0" y="242" fill="#fff" font-size="15" font-weight="700">≈ 60k</text>
+
+    <text x="640" y="300" fill="#d7e3ef" font-size="15" font-weight="700">Personal agent</text>
+    <text x="640" y="320" fill="#a9bdd0" font-size="13">8 heartbeats × 30k + 3 tasks × 3.2M</text>
+    <rect x="640" y="332" width="470.0" height="28" rx="3" fill="#9fb3c7"/>
+    <text x="1100.0" y="352" fill="#0b1522" font-size="15" font-weight="700" text-anchor="end">≈ 9.8M · ~160×</text>
+    <line x1="640" y1="372" x2="1110" y2="372" stroke="#26394d"/>
+    <text x="640" y="390" fill="#8fa6ba" font-size="12">0</text><text x="1110" y="390" fill="#8fa6ba" font-size="12" text-anchor="end">10M tokens</text>
+
+    <text x="640" y="430" fill="#fff" font-size="15" font-weight="700">Not in the token count, still on the bill</text>
+    <g fill="#c8dbee" font-size="14">
+      <text x="640" y="456">· A cloud VM and browser kept warm for every user</text>
+      <text x="640" y="478">· Screenshots: image tokens on every computer-use step</text>
+      <text x="640" y="500">· Safety classifiers and an egress guard on each action</text>
+      <text x="640" y="522">· Memory and reflection passes after work is done</text>
+      <text x="640" y="544">· A frontier model by default, 24/7, so no quiet hours</text>
+    </g>
+    <text x="40" y="600" fill="#8fa6ba" font-size="13">Prompt caching cuts the price of re-read tokens, but they still pass through a GPU. Assumptions: 20k fixed prompt, 3k history per step, 40 steps, 30k per heartbeat.</text>
+  </g>
+</svg>

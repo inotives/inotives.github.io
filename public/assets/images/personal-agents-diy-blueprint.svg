@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+  <title id="title">Building your own personal agent</title>
+  <desc id="desc">A do-it-yourself personal agent is an agent loop plus twelve parts. Five are easy and most of us already have them: persona file, model API, memory, a scheduler and MCP connectors. Three are medium: an always-on sandbox, an approval channel and an audit log. Four are hard: a credential vault the model cannot read, prompt-injection defence with real accounts, reliable computer use on any website, and keeping the cost under control when it runs all day.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="650" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="40" y="56" fill="#f6f9fc" font-size="28" font-weight="700">You can build one. The hard part is not the soul.md.</text>
+    <text x="40" y="85" fill="#a9bdd0" font-size="16">An agent loop plus twelve parts. Most of the easy column is already in a Claude Code setup.</text>
+
+    <rect x="330" y="110" width="540" height="70" rx="16" fill="#2c2f4f" stroke="#a99bf0" stroke-width="2"/>
+    <text x="600" y="140" fill="#fff" font-size="18" font-weight="700" text-anchor="middle">Agent loop</text>
+    <text x="600" y="164" fill="#d6d0f7" font-size="14" text-anchor="middle">Claude Agent SDK, Claude Code headless, or OpenClaw</text>
+    <g stroke="#90adc2" stroke-width="1.6" fill="none" marker-end="url(#a)">
+      <path d="M420 180 C 420 200, 200 196, 200 214"/>
+      <path d="M600 180 L 600 214"/>
+      <path d="M780 180 C 780 200, 1000 196, 1000 214"/>
+    </g>
+
+    <!-- columns -->
+    <g font-size="14">
+      <text x="50" y="244" fill="#7fd99a" font-size="16" font-weight="700">● Easy · you likely have it</text>
+      <rect x="40" y="258" width="350" height="56" rx="12" fill="#1f3326" stroke="#5fbf7a"/>
+      <text x="58" y="282" fill="#fff" font-weight="700">Persona</text><text x="58" y="302" fill="#cfe9d6">SOUL.md / CLAUDE.md, a few hundred words</text>
+      <rect x="40" y="322" width="350" height="56" rx="12" fill="#1f3326" stroke="#5fbf7a"/>
+      <text x="58" y="346" fill="#fff" font-weight="700">Model API</text><text x="58" y="366" fill="#cfe9d6">Same frontier models the products use</text>
+      <rect x="40" y="386" width="350" height="56" rx="12" fill="#1f3326" stroke="#5fbf7a"/>
+      <text x="58" y="410" fill="#fff" font-weight="700">Memory</text><text x="58" y="430" fill="#cfe9d6">Markdown files, a wiki, Postgres + MCP</text>
+      <rect x="40" y="450" width="350" height="56" rx="12" fill="#1f3326" stroke="#5fbf7a"/>
+      <text x="58" y="474" fill="#fff" font-weight="700">Scheduler</text><text x="58" y="494" fill="#cfe9d6">cron, /loop, HEARTBEAT.md every 30 min</text>
+      <rect x="40" y="514" width="350" height="56" rx="12" fill="#1f3326" stroke="#5fbf7a"/>
+      <text x="58" y="538" fill="#fff" font-weight="700">Connectors</text><text x="58" y="558" fill="#cfe9d6">MCP servers for mail, calendar, Slack</text>
+
+      <text x="435" y="244" fill="#e3ad5a" font-size="16" font-weight="700">◐ Medium · a weekend each</text>
+      <rect x="425" y="258" width="350" height="56" rx="12" fill="#3d3222" stroke="#e3ad5a"/>
+      <text x="443" y="282" fill="#fff" font-weight="700">Always-on sandbox</text><text x="443" y="302" fill="#f1d7aa">Docker or a small cloud VM, browser inside</text>
+      <rect x="425" y="322" width="350" height="56" rx="12" fill="#3d3222" stroke="#e3ad5a"/>
+      <text x="443" y="346" fill="#fff" font-weight="700">Approval channel</text><text x="443" y="366" fill="#f1d7aa">Telegram, Slack or WhatsApp buttons</text>
+      <rect x="425" y="386" width="350" height="56" rx="12" fill="#3d3222" stroke="#e3ad5a"/>
+      <text x="443" y="410" fill="#fff" font-weight="700">Audit log</text><text x="443" y="430" fill="#f1d7aa">Every action, its inputs and who approved</text>
+
+      <text x="820" y="244" fill="#f08a7a" font-size="16" font-weight="700">▲ Hard · where the labs spent</text>
+      <rect x="810" y="258" width="350" height="56" rx="12" fill="#3d2424" stroke="#e06b5b"/>
+      <text x="828" y="282" fill="#fff" font-weight="700">Credential vault</text><text x="828" y="302" fill="#f3c9c2">The agent uses logins it can never read</text>
+      <rect x="810" y="322" width="350" height="56" rx="12" fill="#3d2424" stroke="#e06b5b"/>
+      <text x="828" y="346" fill="#fff" font-weight="700">Prompt-injection defence</text><text x="828" y="366" fill="#f3c9c2">An email must not become an instruction</text>
+      <rect x="810" y="386" width="350" height="56" rx="12" fill="#3d2424" stroke="#e06b5b"/>
+      <text x="828" y="410" fill="#fff" font-weight="700">Reliable computer use</text><text x="828" y="430" fill="#f3c9c2">Any site, logins, captchas, layout changes</text>
+      <rect x="810" y="450" width="350" height="56" rx="12" fill="#3d2424" stroke="#e06b5b"/>
+      <text x="828" y="474" fill="#fff" font-weight="700">Cost at 24/7</text><text x="828" y="494" fill="#f3c9c2">You pay the same loop at API prices</text>
+    </g>
+
+    <rect x="425" y="460" width="350" height="110" rx="12" fill="#16222f" stroke="#3e5468"/>
+    <text x="443" y="486" fill="#fff" font-size="14" font-weight="700">What a subscription buys</text>
+    <text x="443" y="510" fill="#c8dbee" font-size="13">The hard column, done and red-teamed,</text>
+    <text x="443" y="530" fill="#c8dbee" font-size="13">plus OAuth to thousands of apps and a</text>
+    <text x="443" y="550" fill="#c8dbee" font-size="13">compute bill someone else rations.</text>
+
+    <text x="40" y="612" fill="#8fa6ba" font-size="13">Marker shape and label carry the difficulty as well as colour. HEARTBEAT.md and SOUL.md are OpenClaw’s workspace files.</text>
+  </g>
+</svg>

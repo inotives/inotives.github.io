@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" role="img" aria-labelledby="title desc">
+  <title id="title">Coding-agent roles versus a personal agent</title>
+  <desc id="desc">On the left, coding roles such as architect, coder and reviewer are prompt files used inside one terminal session that a person starts and that ends when the person leaves. On the right, a personal agent has one persona file but runs a loop all day: a heartbeat wakes it, it reads apps, decides, acts in its own computer, asks for approval and writes memory.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="640" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="40" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Same profile file, different life</text>
+    <text x="40" y="85" fill="#a9bdd0" font-size="16">Our roles lived inside a session. Their persona lives inside a computer that never logs off.</text>
+    <line x1="600" y1="110" x2="600" y2="560" stroke="#2c4560" stroke-dasharray="4 6"/>
+
+    <!-- LEFT -->
+    <text x="40" y="132" fill="#8cc0ec" font-size="18" font-weight="700">Coding roles: a prompt per session</text>
+    <rect x="40" y="150" width="120" height="44" rx="22" fill="#2c2f4f" stroke="#a99bf0"/>
+    <text x="100" y="178" fill="#fff" font-size="15" font-weight="700" text-anchor="middle">You type</text>
+    <line x1="160" y1="172" x2="196" y2="172" stroke="#90adc2" stroke-width="1.6" marker-end="url(#a)"/>
+    <rect x="200" y="140" width="360" height="240" rx="14" fill="#16222f" stroke="#5a7389"/>
+    <text x="218" y="166" fill="#c9d6e2" font-size="14" font-family="ui-monospace,Menlo,monospace">$ terminal session</text>
+    <g font-size="14">
+      <rect x="220" y="184" width="320" height="52" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="238" y="208" fill="#fff" font-weight="700">Architect</text>
+      <text x="238" y="226" fill="#c8dbee" font-family="ui-monospace,Menlo,monospace" font-size="12">model + architect.md</text>
+      <rect x="220" y="248" width="320" height="52" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="238" y="272" fill="#fff" font-weight="700">Coder</text>
+      <text x="238" y="290" fill="#c8dbee" font-family="ui-monospace,Menlo,monospace" font-size="12">model + coder.md</text>
+      <rect x="220" y="312" width="320" height="52" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="238" y="336" fill="#fff" font-weight="700">Reviewer</text>
+      <text x="238" y="354" fill="#c8dbee" font-family="ui-monospace,Menlo,monospace" font-size="12">model + reviewer.md</text>
+    </g>
+    <g stroke="#90adc2" stroke-width="1.4" marker-end="url(#a)">
+      <line x1="510" y1="236" x2="510" y2="245"/><line x1="510" y1="300" x2="510" y2="309"/>
+    </g>
+    <text x="40" y="418" fill="#d7e3ef" font-size="15" font-weight="700">When you close the terminal</text>
+    <text x="40" y="442" fill="#c8dbee" font-size="14">The context is gone. The repo, the plan and the handoff files stay.</text>
+    <text x="40" y="462" fill="#c8dbee" font-size="14">Nothing happens until you come back.</text>
+
+    <!-- left timeline -->
+    <text x="40" y="508" fill="#a9bdd0" font-size="13">Active hours in one day</text>
+    <rect x="40" y="518" width="520" height="16" rx="4" fill="#1b2a3b"/>
+    <rect x="170" y="518" width="44" height="16" rx="4" fill="#4a90d9"/>
+    <rect x="390" y="518" width="30" height="16" rx="4" fill="#4a90d9"/>
+    <g fill="#8fa6ba" font-size="12"><text x="40" y="552">00:00</text><text x="290" y="552" text-anchor="middle">12:00</text><text x="560" y="552" text-anchor="end">24:00</text></g>
+
+    <!-- RIGHT -->
+    <text x="640" y="132" fill="#e3ad5a" font-size="18" font-weight="700">Personal agent: a persona with a schedule</text>
+    <rect x="640" y="150" width="200" height="44" rx="10" fill="#3a2c4f" stroke="#b79cf0" stroke-width="2"/>
+    <text x="740" y="178" fill="#fff" font-size="15" font-weight="700" text-anchor="middle">soul.md (same idea)</text>
+    <text x="858" y="178" fill="#a9bdd0" font-size="13">loaded on every turn</text>
+
+    <g font-size="14">
+      <rect x="640" y="218" width="160" height="62" rx="12" fill="#4c3d2b" stroke="#e3ad5a"/>
+      <text x="656" y="244" fill="#fff" font-weight="700">Heartbeat</text>
+      <text x="656" y="266" fill="#f1d7aa">wakes on a timer</text>
+      <rect x="820" y="218" width="160" height="62" rx="12" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="836" y="244" fill="#fff" font-weight="700">Read apps</text>
+      <text x="836" y="266" fill="#c8dbee">mail, calendar…</text>
+      <rect x="1000" y="218" width="160" height="62" rx="12" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="1016" y="244" fill="#fff" font-weight="700">Decide</text>
+      <text x="1016" y="266" fill="#c8dbee">wait, tell, or act</text>
+      <rect x="1000" y="318" width="160" height="62" rx="12" fill="#1d3d45" stroke="#53dfdc"/>
+      <text x="1016" y="344" fill="#fff" font-weight="700">Act in its VM</text>
+      <text x="1016" y="366" fill="#c1e5e5">browser, terminal</text>
+      <rect x="820" y="318" width="160" height="62" rx="12" fill="#4c3d2b" stroke="#e3ad5a"/>
+      <text x="836" y="344" fill="#fff" font-weight="700">Ask approval</text>
+      <text x="836" y="366" fill="#f1d7aa">pay, send, delete</text>
+      <rect x="640" y="318" width="160" height="62" rx="12" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="656" y="344" fill="#fff" font-weight="700">Write memory</text>
+      <text x="656" y="366" fill="#c8dbee">what it learned</text>
+    </g>
+    <g stroke="#90adc2" stroke-width="1.6" fill="none" marker-end="url(#a)">
+      <line x1="800" y1="249" x2="816" y2="249"/>
+      <line x1="980" y1="249" x2="996" y2="249"/>
+      <line x1="1080" y1="280" x2="1080" y2="314"/>
+      <line x1="1000" y1="349" x2="984" y2="349"/>
+      <line x1="820" y1="349" x2="804" y2="349"/>
+      <line x1="720" y1="318" x2="720" y2="284"/>
+    </g>
+    <text x="640" y="418" fill="#d7e3ef" font-size="15" font-weight="700">When you close the app</text>
+    <text x="640" y="442" fill="#c8dbee" font-size="14">The loop keeps running in the cloud, and messages you first</text>
+    <text x="640" y="462" fill="#c8dbee" font-size="14">when something needs you.</text>
+
+    <!-- right timeline -->
+    <text x="640" y="508" fill="#a9bdd0" font-size="13">Active hours in one day</text>
+    <rect x="640" y="518" width="520" height="16" rx="4" fill="#1b2a3b"/>
+    <g fill="#c97a1e">
+      <rect x="791" y="518" width="8" height="16" rx="2"/><rect x="856" y="518" width="8" height="16" rx="2"/>
+      <rect x="878" y="518" width="62" height="16" rx="4"/><rect x="986" y="518" width="8" height="16" rx="2"/>
+      <rect x="1010" y="518" width="40" height="16" rx="4"/><rect x="1072" y="518" width="8" height="16" rx="2"/>
+      <rect x="1116" y="518" width="8" height="16" rx="2"/>
+    </g>
+    <g fill="#8fa6ba" font-size="12"><text x="640" y="552">00:00</text><text x="900" y="552" text-anchor="middle">12:00</text><text x="1160" y="552" text-anchor="end">24:00</text></g>
+
+    <text x="40" y="600" fill="#d7e3ef" font-size="15"><tspan font-weight="700" fill="#fff">Three shifts:</tspan> lifetime (session → always on), trigger (you → timer and events), permissions (a repo → your accounts and money).</text>
+  </g>
+</svg>

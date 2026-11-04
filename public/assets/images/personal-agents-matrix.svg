@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" role="img" aria-labelledby="title desc">
+  <title id="title">Five personal agents compared</title>
+  <desc id="desc">Gemini Spark, Grok Bot, Muse, Dots and Claude Duet compared on model, own computer, starting work by themselves, guardrails, reach and compute limits. All five have their own cloud computer and start work by themselves. They differ in the model, the reach of their ecosystem and how they ration compute.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+  </defs>
+  <rect width="1200" height="640" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif" font-size="13">
+    <text x="40" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Five launches, one architecture</text>
+    <text x="40" y="85" fill="#a9bdd0" font-size="16">The middle columns are nearly identical. The edges (model, reach, compute) are where they compete.</text>
+
+    <!-- header -->
+    <g fill="#d7e3ef" font-size="14" font-weight="700">
+      <text x="40" y="128">Agent · launch</text>
+      <text x="208" y="128">Model</text>
+      <text x="372" y="128">Own computer</text>
+      <text x="536" y="128">Starts by itself</text>
+      <text x="700" y="128">Guardrails</text>
+      <text x="864" y="128">Reach</text>
+      <text x="1028" y="128">Compute limits</text>
+    </g>
+    <rect x="360" y="108" width="492" height="452" rx="12" fill="#1d3d45" fill-opacity="0.45" stroke="#53dfdc" stroke-dasharray="5 5"/>
+    <line x1="40" y1="140" x2="1160" y2="140" stroke="#3e5468"/>
+
+    <!-- Spark -->
+    <text x="40" y="168" fill="#fff" font-size="15" font-weight="700">Gemini Spark</text>
+    <text x="40" y="188" fill="#8fa6ba">Google · May 19</text>
+    <g fill="#c8dbee">
+      <text x="208" y="168">Gemini 3.5 +</text><text x="208" y="186">Antigravity harness</text>
+      <text x="372" y="168">Runs in Google’s</text><text x="372" y="186">cloud, 24/7</text>
+      <text x="536" y="168">Watches Gmail,</text><text x="536" y="186">manages Calendar</text>
+      <text x="700" y="168">Opt-in apps; AP2</text><text x="700" y="186">spending caps</text>
+      <text x="864" y="168">Gmail, Docs, Chrome,</text><text x="864" y="186">Canva, Instacart</text>
+      <text x="1028" y="168">Google AI Ultra</text><text x="1028" y="186">only</text>
+    </g>
+    <line x1="40" y1="204" x2="1160" y2="204" stroke="#26394d"/>
+
+    <!-- Grok Bot -->
+    <text x="40" y="232" fill="#fff" font-size="15" font-weight="700">Grok Bot</text>
+    <text x="40" y="252" fill="#8fa6ba">xAI / SpaceX · Aug 11</text>
+    <g fill="#c8dbee">
+      <text x="208" y="232">xAI models; sold</text><text x="208" y="250">via SuperGrok, Cursor</text>
+      <text x="372" y="232">A shared cloud</text><text x="372" y="250">computer for the Bots</text>
+      <text x="536" y="232">Works 24/7, a team</text><text x="536" y="250">of Bots hands off</text>
+      <text x="700" y="232">Comes back only</text><text x="700" y="250">for approval</text>
+      <text x="864" y="232">Signs into apps with</text><text x="864" y="250">no API or MCP</text>
+      <text x="1028" y="232">Own weekly usage;</text><text x="1028" y="250">cut back in Nov</text>
+    </g>
+    <line x1="40" y1="268" x2="1160" y2="268" stroke="#26394d"/>
+
+    <!-- Muse -->
+    <text x="40" y="296" fill="#fff" font-size="15" font-weight="700">Muse</text>
+    <text x="40" y="316" fill="#8fa6ba">Meta · Sep 8</text>
+    <g fill="#c8dbee">
+      <text x="208" y="296">Muse Spark, built</text><text x="208" y="314">for agentic work</text>
+      <text x="372" y="296">Muse Secure VM:</text><text x="372" y="314">files, terminal, browser</text>
+      <text x="536" y="296">Proactive messages,</text><text x="536" y="314">with a high bar</text>
+      <text x="700" y="296">Sentinel agent gates</text><text x="700" y="314">egress; vault; audit</text>
+      <text x="864" y="296">Muse app, WhatsApp,</text><text x="864" y="314">small-business apps</text>
+      <text x="1028" y="296">Free, $20 and</text><text x="1028" y="314">$100 tiers</text>
+    </g>
+    <line x1="40" y1="332" x2="1160" y2="332" stroke="#26394d"/>
+
+    <!-- Dots -->
+    <text x="40" y="360" fill="#fff" font-size="15" font-weight="700">Dots</text>
+    <text x="40" y="380" fill="#8fa6ba">OpenAI · Sep 29</text>
+    <g fill="#c8dbee">
+      <text x="208" y="360">GPT-6 Astra; now a</text><text x="208" y="378">router to 6.1 Terra</text>
+      <text x="372" y="360">Own cloud computer</text><text x="372" y="378">and browser per dot</text>
+      <text x="536" y="360">Always on, works</text><text x="536" y="378">in the background</text>
+      <text x="700" y="360">Advises review of</text><text x="700" y="378">consequential work</text>
+      <text x="864" y="360">4,000+ apps;</text><text x="864" y="378">ChatGPT Space</text>
+      <text x="1028" y="360">Pro, Business Prem.;</text><text x="1028" y="378">“compute heavy”</text>
+    </g>
+    <line x1="40" y1="396" x2="1160" y2="396" stroke="#26394d"/>
+
+    <!-- Duet -->
+    <text x="40" y="424" fill="#fff" font-size="15" font-weight="700">Claude Duet</text>
+    <text x="40" y="444" fill="#8fa6ba">Anthropic · Oct 21</text>
+    <g fill="#c8dbee">
+      <text x="208" y="424">Claude Opus 5.5</text>
+      <text x="372" y="424">A VM with its</text><text x="372" y="442">own browser</text>
+      <text x="536" y="424">Morning brief; checks</text><text x="536" y="442">every few hours</text>
+      <text x="700" y="424">Auto-mode classifier,</text><text x="700" y="442">approvals, vault</text>
+      <text x="864" y="424">6,000+ connectors;</text><text x="864" y="442">Claude memory, skills</text>
+      <text x="1028" y="424">Shares Claude plan</text><text x="1028" y="442">limits</text>
+    </g>
+    <line x1="40" y1="460" x2="1160" y2="460" stroke="#3e5468"/>
+
+    <!-- verdict row -->
+    <text x="40" y="492" fill="#fff" font-size="15" font-weight="700">Same or different?</text>
+    <g font-size="14" font-weight="700">
+      <text x="208" y="492" fill="#f1d7aa">Different</text>
+      <text x="372" y="492" fill="#7fe3e0">Same idea</text>
+      <text x="536" y="492" fill="#7fe3e0">Same idea</text>
+      <text x="700" y="492" fill="#7fe3e0">Same pattern</text>
+      <text x="864" y="492" fill="#f1d7aa">Different</text>
+      <text x="1028" y="492" fill="#f1d7aa">Different</text>
+    </g>
+    <g fill="#a9bdd0">
+      <text x="208" y="514">each lab’s own model</text>
+      <text x="372" y="514">sandboxed cloud VM</text>
+      <text x="536" y="514">a schedule + an inbox</text>
+      <text x="700" y="514">different depth</text>
+      <text x="864" y="514">each lab’s ecosystem</text>
+      <text x="1028" y="514">all ration it</text>
+    </g>
+    <text x="372" y="546" fill="#c1e5e5" font-size="13">Dashed box: the parts that look alike across all five.</text>
+
+    <text x="40" y="604" fill="#8fa6ba" font-size="13">Sources: TechCrunch (I/O), x.ai, Meta newsroom, OpenAI DevDay coverage, Anthropic’s Duet post, Fortune (Nov 3). All dates 2026.</text>
+  </g>
+</svg>

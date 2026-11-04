@@ -1,6 +1,26 @@
 {
   "posts": [
     {
+      "slug": "2026-11-04-anthropic-amended-s1-what-changed",
+      "filename": "2026-11-04-anthropic-amended-s1-what-changed.md",
+      "category": "post",
+      "title": "Anthropic's amended S-1: what changed since the playground snapshot",
+      "date": "2026-11-04",
+      "tags": [
+        "anthropic",
+        "ipo",
+        "s-1",
+        "sec-filings",
+        "ai-economics",
+        "compute",
+        "valuation"
+      ],
+      "series": "building-ai-systems",
+      "summary": "On November 2, Anthropic filed Amendment No. 1 to its S-1. It adds the third quarter: $17.0B of revenue, but a small operating loss after a profitable Q2, mainly from $5.0B of expensive short-term compute. It also puts the first all-in number on compute commitments, $895.4B, and adds a sentence saying its models may soon meet its own threshold for AI that speeds up AI research. The price range is still blank. Here is how it compares with the data in our ANT IPO playground, what it means for a $1.5T to $2T valuation, and, judged against the first six months of SpaceX, Cerebras, CoreWeave, Circle and Figma, where a long-term entry has historically made more sense than day one. Not financial advice.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-04-nvidia-auto-ontology-vs-agent-wiki",
       "filename": "2026-11-04-nvidia-auto-ontology-vs-agent-wiki.md",
       "category": "post",
@@ -18,6 +38,26 @@
       ],
       "series": "building-ai-systems",
       "summary": "NVIDIA's open-source Auto Ontology builds a semantic graph over warehouse metadata so agents can generate SQL they can trust. Under the hood it looks a lot like Knowledge Grid, the team knowledge layer we are building: LLM extraction, Postgres with pgvector, and an MCP surface for agents. The difference is the unit of knowledge: a typed graph node that points at columns, or a wiki page that holds what the team means and why.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
+      "slug": "2026-11-04-personal-ai-agents-same-soul-new-body",
+      "filename": "2026-11-04-personal-ai-agents-same-soul-new-body.md",
+      "category": "post",
+      "title": "Personal AI agents: the same soul.md in a new body",
+      "date": "2026-11-04",
+      "tags": [
+        "ai-agents",
+        "personal-agents",
+        "agent-harnesses",
+        "inference-costs",
+        "agent-security",
+        "openclaw",
+        "claude-duet"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Gemini Spark, Grok Bot, Muse, Dots and Claude Duet all launched in 2026 as always-on personal agents. Under the branding, the persona is just a prompt, much like the architect, coder and reviewer roles we gave coding agents earlier this year. What the labs actually built is a computer for each agent, a schedule that wakes it, and a trust layer around your accounts. That loop is also why Grok and OpenAI now say the products are compute heavy, and it is why you can build one yourself but should expect to pay the same bill.",
       "featured_image": null,
       "draft": false
     },
