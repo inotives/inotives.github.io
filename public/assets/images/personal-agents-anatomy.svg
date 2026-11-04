@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 730" role="img" aria-labelledby="title desc">
+  <title id="title">What is inside a personal AI agent</title>
+  <desc id="desc">A personal agent is a stack of seven layers: persona, memory, tools and connectors, triggers, runtime, a trust layer and the model. The persona is the thinnest layer. Coding-agent roles from earlier in 2026 already had the persona and the model, part of memory, tools, runtime and trust, and none of the proactive triggers.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+  </defs>
+  <rect width="1200" height="730" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="40" y="56" fill="#f6f9fc" font-size="28" font-weight="700">The persona is the thinnest layer of the stack</text>
+    <text x="40" y="85" fill="#a9bdd0" font-size="16">Every 2026 personal agent has the same seven layers. The soul.md part is a few hundred words.</text>
+
+    <text x="40" y="122" fill="#d7e3ef" font-size="15" font-weight="700">Layer and what the products ship</text>
+    <text x="800" y="122" fill="#d7e3ef" font-size="15" font-weight="700">Our coding-agent roles (early 2026)</text>
+
+    <!-- 1 persona (thin) -->
+    <rect x="40" y="136" width="730" height="46" rx="10" fill="#3a2c4f" stroke="#b79cf0" stroke-width="2"/>
+    <text x="60" y="165" fill="#fff" font-size="16" font-weight="700">Persona · soul.md</text>
+    <text x="230" y="165" fill="#ddd0f7" font-size="14">Name, voice, rules. “Your purpose is to make your user’s life better.”</text>
+    <text x="800" y="165" fill="#7fd99a" font-size="15" font-weight="700">✓ Same</text>
+    <text x="870" y="165" fill="#c8dbee" font-size="14">architect.md, coder.md, reviewer.md</text>
+
+    <!-- 2 memory -->
+    <rect x="40" y="192" width="730" height="66" rx="12" fill="#263e5b" stroke="#75a8d5"/>
+    <text x="60" y="220" fill="#fff" font-size="16" font-weight="700">Memory</text>
+    <text x="60" y="244" fill="#c8dbee" font-size="14">One long thread; remembers across conversations; learns how you like things done</text>
+    <text x="800" y="220" fill="#e3ad5a" font-size="15" font-weight="700">◐ Partly</text>
+    <text x="800" y="244" fill="#c8dbee" font-size="14">CLAUDE.md, memory files, a shared wiki</text>
+
+    <!-- 3 tools -->
+    <rect x="40" y="268" width="730" height="66" rx="12" fill="#263e5b" stroke="#75a8d5"/>
+    <text x="60" y="296" fill="#fff" font-size="16" font-weight="700">Tools and connectors</text>
+    <text x="60" y="320" fill="#c8dbee" font-size="14">4,000+ apps (Dots), 6,000+ connectors (Duet), a browser for sites with no API</text>
+    <text x="800" y="296" fill="#e3ad5a" font-size="15" font-weight="700">◐ Partly</text>
+    <text x="800" y="320" fill="#c8dbee" font-size="14">Shell, git, MCP servers for dev tools</text>
+
+    <!-- 4 triggers -->
+    <rect x="40" y="344" width="730" height="66" rx="12" fill="#4c3d2b" stroke="#e3ad5a" stroke-width="2"/>
+    <text x="60" y="372" fill="#fff" font-size="16" font-weight="700">Triggers · heartbeat</text>
+    <text x="60" y="396" fill="#f1d7aa" font-size="14">Morning brief, checks every few hours, messages you first when something needs you</text>
+    <text x="800" y="372" fill="#f08a7a" font-size="15" font-weight="700">✗ Missing</text>
+    <text x="800" y="396" fill="#c8dbee" font-size="14">A person starts every session</text>
+
+    <!-- 5 runtime -->
+    <rect x="40" y="420" width="730" height="66" rx="12" fill="#4c3d2b" stroke="#e3ad5a" stroke-width="2"/>
+    <text x="60" y="448" fill="#fff" font-size="16" font-weight="700">Runtime · its own computer</text>
+    <text x="60" y="472" fill="#f1d7aa" font-size="14">A cloud VM per user or team: file system, terminal, browser, running 24/7</text>
+    <text x="800" y="448" fill="#e3ad5a" font-size="15" font-weight="700">◐ Partly</text>
+    <text x="800" y="472" fill="#c8dbee" font-size="14">Laptop, worktrees, Docker; stops with the lid</text>
+
+    <!-- 6 trust -->
+    <rect x="40" y="496" width="730" height="66" rx="12" fill="#4c3d2b" stroke="#e3ad5a" stroke-width="2"/>
+    <text x="60" y="524" fill="#fff" font-size="16" font-weight="700">Trust layer</text>
+    <text x="60" y="548" fill="#f1d7aa" font-size="14">Credential vault the model cannot read, egress guard, action classifier, approvals, audit</text>
+    <text x="800" y="524" fill="#e3ad5a" font-size="15" font-weight="700">◐ Partly</text>
+    <text x="800" y="548" fill="#c8dbee" font-size="14">Permission prompts, a sandbox, a reviewer role</text>
+
+    <!-- 7 model -->
+    <rect x="40" y="572" width="730" height="66" rx="12" fill="#1d3d45" stroke="#53dfdc"/>
+    <text x="60" y="600" fill="#fff" font-size="16" font-weight="700">Model</text>
+    <text x="60" y="624" fill="#c1e5e5" font-size="14">Post-trained for long agent runs: Gemini 3.5, Muse Spark, GPT-6 Astra, Claude Opus 5.5</text>
+    <text x="800" y="600" fill="#7fd99a" font-size="15" font-weight="700">✓ Same</text>
+    <text x="800" y="624" fill="#c8dbee" font-size="14">The same frontier models</text>
+
+    <rect x="40" y="660" width="14" height="14" rx="3" fill="#4c3d2b" stroke="#e3ad5a" stroke-width="2"/>
+    <text x="62" y="672" fill="#d7e3ef" font-size="14">Amber layers are where the 2026 products did most of their new work.</text>
+    <text x="40" y="700" fill="#8fa6ba" font-size="13">Sources: product launch posts from Google, xAI, Meta, OpenAI and Anthropic (May to October 2026). The Muse quote is the first line of its system prompt.</text>
+  </g>
+</svg>

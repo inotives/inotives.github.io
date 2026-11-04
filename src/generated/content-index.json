@@ -22,6 +22,26 @@
       "draft": false
     },
     {
+      "slug": "2026-11-04-personal-ai-agents-same-soul-new-body",
+      "filename": "2026-11-04-personal-ai-agents-same-soul-new-body.md",
+      "category": "post",
+      "title": "Personal AI agents: the same soul.md in a new body",
+      "date": "2026-11-04",
+      "tags": [
+        "ai-agents",
+        "personal-agents",
+        "agent-harnesses",
+        "inference-costs",
+        "agent-security",
+        "openclaw",
+        "claude-duet"
+      ],
+      "series": "building-ai-systems",
+      "summary": "Gemini Spark, Grok Bot, Muse, Dots and Claude Duet all launched in 2026 as always-on personal agents. Under the branding, the persona is just a prompt, much like the architect, coder and reviewer roles we gave coding agents earlier this year. What the labs actually built is a computer for each agent, a schedule that wakes it, and a trust layer around your accounts. That loop is also why Grok and OpenAI now say the products are compute heavy, and it is why you can build one yourself but should expect to pay the same bill.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-02-elephants-goldfish-and-trinary-agents",
       "filename": "2026-11-02-elephants-goldfish-and-trinary-agents.md",
       "category": "post",
