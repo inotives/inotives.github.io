@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" role="img" aria-labelledby="title desc">
+  <title id="title">A workflow with an agent step inside it</title>
+  <desc id="desc">A workflow runs trigger, intake, classify, an agent step, validate, a human approval gate and deliver. The agent step is a bounded loop of think, act and observe with access to tools, a step budget and a timeout. Above, the workflow owns order, retries, limits, logging and approvals. Below, the agent owns decisions, dynamic actions and tool use inside its box.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="500" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Workflow for the skeleton, agent for the judgment</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">The workflow decides when the agent runs and what happens to its output. The agent decides how.</text>
+
+    <!-- Workflow owns band -->
+    <rect x="45" y="110" width="1110" height="44" rx="12" fill="#1b2e22" stroke="#8fd16a" stroke-opacity=".6"/>
+    <text x="600" y="138" fill="#d3ecc2" font-size="15" text-anchor="middle"><tspan fill="#a6e07f" font-weight="700">Workflow owns:</tspan> step order · retries · budgets and timeouts · logging · approvals</text>
+
+    <!-- Pipeline: y 200..260 -->
+    <g font-size="14" text-anchor="middle">
+      <rect x="45" y="205" width="110" height="56" rx="10" fill="#25391f" stroke="#8fd16a"/>
+      <text x="100" y="238" fill="#fff">Trigger</text>
+      <rect x="180" y="205" width="110" height="56" rx="10" fill="#25391f" stroke="#8fd16a"/>
+      <text x="235" y="229" fill="#fff">Intake</text>
+      <text x="235" y="248" fill="#a9bdd0" font-size="11">code</text>
+      <rect x="315" y="205" width="110" height="56" rx="10" fill="#25391f" stroke="#8fd16a"/>
+      <text x="370" y="229" fill="#fff">Classify</text>
+      <text x="370" y="248" fill="#e3ad5a" font-size="11">LLM</text>
+
+      <!-- Agent box -->
+      <rect x="450" y="175" width="330" height="200" rx="16" fill="#22223d" stroke="#a99bf0" stroke-width="2"/>
+      <text x="615" y="202" fill="#fff" font-size="16" font-weight="700">Agent step</text>
+      <rect x="470" y="222" width="90" height="38" rx="9" fill="#2c2f4f" stroke="#a99bf0"/>
+      <text x="515" y="246" fill="#fff">Think</text>
+      <rect x="570" y="222" width="90" height="38" rx="9" fill="#2c2f4f" stroke="#a99bf0"/>
+      <text x="615" y="246" fill="#fff">Act</text>
+      <rect x="670" y="222" width="90" height="38" rx="9" fill="#2c2f4f" stroke="#a99bf0"/>
+      <text x="715" y="246" fill="#fff">Observe</text>
+      <text x="615" y="320" fill="#c8dbee" font-size="12">tools: MCP · search · SQL · APIs</text>
+      <text x="615" y="345" fill="#e3ad5a" font-size="12">max 15 steps · 3 min timeout · read-only by default</text>
+
+      <rect x="805" y="205" width="110" height="56" rx="10" fill="#25391f" stroke="#8fd16a"/>
+      <text x="860" y="229" fill="#fff">Validate</text>
+      <text x="860" y="248" fill="#a9bdd0" font-size="11">schema, rules</text>
+      <rect x="940" y="205" width="100" height="56" rx="10" fill="#3a3320" stroke="#e3ad5a"/>
+      <text x="990" y="229" fill="#fff">Approve</text>
+      <text x="990" y="248" fill="#f3d9a8" font-size="11">if risky</text>
+      <rect x="1060" y="205" width="95" height="56" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="1107" y="238" fill="#fff">Deliver</text>
+    </g>
+    <g stroke="#90adc2" stroke-width="1.6" fill="none" marker-end="url(#a)">
+      <path d="M156 233 H177"/><path d="M291 233 H312"/><path d="M426 233 H447"/>
+      <path d="M781 233 H802"/><path d="M916 233 H937"/><path d="M1041 233 H1057"/>
+      <path d="M561 241 H567"/><path d="M661 241 H667"/>
+      <path d="M715 261 C 715 295, 515 295, 515 264"/>
+    </g>
+    <path d="M860 262 C 860 400, 615 400, 615 378" stroke="#f08c7a" stroke-width="1.4" stroke-dasharray="5 4" fill="none" marker-end="url(#a)"/>
+    <text x="760" y="410" fill="#f3b3a6" font-size="12" text-anchor="middle">fails validation: retry once with the error</text>
+
+    <!-- Agent owns band -->
+    <rect x="45" y="430" width="1110" height="44" rx="12" fill="#22223d" stroke="#a99bf0" stroke-opacity=".7"/>
+    <text x="600" y="458" fill="#e5e0fb" font-size="15" text-anchor="middle"><tspan fill="#d6d0f7" font-weight="700">Agent owns:</tspan> decisions · dynamic actions · which tools to call and in what order</text>
+  </g>
+</svg>

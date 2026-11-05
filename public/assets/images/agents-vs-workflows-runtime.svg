@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 570" role="img" aria-labelledby="title desc">
+  <title id="title">Runtime profile of workflows and agents</title>
+  <desc id="desc">Three runs of a workflow are identical bars of four steps with the same length. Three runs of an agent differ: one has five steps, one has nine and runs much longer, one has three. Below, four cards compare latency, cost, debugging and failure: workflows are fixed, known per run, debugged at the failing step and fail loudly; agents are variable, scale with steps and context, need the whole trace and can drift, loop or overreach.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+  </defs>
+  <rect width="1200" height="570" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">At runtime: a fixed shape versus a variable one</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Three runs of the same task. Each bar segment is one step.</text>
+
+    <!-- Workflow lanes -->
+    <text x="45" y="135" fill="#a6e07f" font-size="17" font-weight="700">AI Workflow</text>
+    <g font-size="13" fill="#a9bdd0">
+      <text x="150" y="168" text-anchor="end">run 1</text>
+      <text x="150" y="203" text-anchor="end">run 2</text>
+      <text x="150" y="238" text-anchor="end">run 3</text>
+    </g>
+    <g id="wf">
+      <rect x="160" y="152" width="118" height="24" rx="4" fill="#4c7a35"/>
+      <rect x="280" y="152" width="178" height="24" rx="4" fill="#8fd16a"/>
+      <rect x="460" y="152" width="138" height="24" rx="4" fill="#4c7a35"/>
+      <rect x="600" y="152" width="98" height="24" rx="4" fill="#8fd16a"/>
+    </g>
+    <use href="#wf" y="35"/>
+    <use href="#wf" y="70"/>
+    <text x="930" y="180" fill="#d3ecc2" font-size="15">4 steps, every run</text>
+    <text x="930" y="204" fill="#d3ecc2" font-size="15">Same latency, same cost</text>
+    <g font-size="12" fill="#a9bdd0">
+      <rect x="930" y="223" width="12" height="12" rx="2" fill="#4c7a35"/><text x="948" y="234">code step</text>
+      <rect x="1030" y="223" width="12" height="12" rx="2" fill="#8fd16a"/><text x="1048" y="234">LLM step</text>
+    </g>
+
+    <!-- Agent lanes -->
+    <text x="45" y="290" fill="#d6d0f7" font-size="17" font-weight="700">AI Agent</text>
+    <g font-size="13" fill="#a9bdd0">
+      <text x="150" y="323" text-anchor="end">run 1</text>
+      <text x="150" y="358" text-anchor="end">run 2</text>
+      <text x="150" y="393" text-anchor="end">run 3</text>
+    </g>
+    <!-- run1: 80,60,140,60,120 -->
+    <g>
+      <rect x="160" y="307" width="78" height="24" rx="4" fill="#a99bf0"/>
+      <rect x="240" y="307" width="58" height="24" rx="4" fill="#4f7fae"/>
+      <rect x="300" y="307" width="138" height="24" rx="4" fill="#a99bf0"/>
+      <rect x="440" y="307" width="58" height="24" rx="4" fill="#4f7fae"/>
+      <rect x="500" y="307" width="118" height="24" rx="4" fill="#a99bf0"/>
+    </g>
+    <!-- run2: 80,60,90,60,70,60,110,60,100 -->
+    <g>
+      <rect x="160" y="342" width="78" height="24" rx="4" fill="#a99bf0"/>
+      <rect x="240" y="342" width="58" height="24" rx="4" fill="#4f7fae"/>
+      <rect x="300" y="342" width="88" height="24" rx="4" fill="#a99bf0"/>
+      <rect x="390" y="342" width="58" height="24" rx="4" fill="#4f7fae"/>
+      <rect x="450" y="342" width="68" height="24" rx="4" fill="#a99bf0"/>
+      <rect x="520" y="342" width="58" height="24" rx="4" fill="#4f7fae"/>
+      <rect x="580" y="342" width="108" height="24" rx="4" fill="#a99bf0"/>
+      <rect x="690" y="342" width="58" height="24" rx="4" fill="#4f7fae"/>
+      <rect x="750" y="342" width="98" height="24" rx="4" fill="#a99bf0"/>
+    </g>
+    <!-- run3: 80,60,120 -->
+    <g>
+      <rect x="160" y="377" width="78" height="24" rx="4" fill="#a99bf0"/>
+      <rect x="240" y="377" width="58" height="24" rx="4" fill="#4f7fae"/>
+      <rect x="300" y="377" width="118" height="24" rx="4" fill="#a99bf0"/>
+    </g>
+    <text x="930" y="335" fill="#d6d0f7" font-size="15">3 to 9 steps</text>
+    <text x="930" y="359" fill="#d6d0f7" font-size="15">Latency and cost vary per run</text>
+
+    <!-- Legend -->
+    <g font-size="12" fill="#a9bdd0">
+      <rect x="930" y="378" width="12" height="12" rx="2" fill="#a99bf0"/><text x="948" y="389">model turn</text>
+      <rect x="1030" y="378" width="12" height="12" rx="2" fill="#4f7fae"/><text x="1048" y="389">tool call</text>
+    </g>
+
+    <!-- Cards -->
+    <g font-size="13">
+      <rect x="45" y="430" width="262" height="110" rx="14" fill="#1b2a3d" stroke="#3d5674"/>
+      <text x="65" y="458" fill="#fff" font-size="16" font-weight="700">Latency</text>
+      <text x="65" y="488" fill="#a6e07f">W: fixed, steps can run in parallel</text>
+      <text x="65" y="514" fill="#d6d0f7">A: variable, one turn after another</text>
+
+      <rect x="327" y="430" width="262" height="110" rx="14" fill="#1b2a3d" stroke="#3d5674"/>
+      <text x="347" y="458" fill="#fff" font-size="16" font-weight="700">Cost</text>
+      <text x="347" y="488" fill="#a6e07f">W: known per run</text>
+      <text x="347" y="514" fill="#d6d0f7">A: grows with steps and context</text>
+
+      <rect x="609" y="430" width="262" height="110" rx="14" fill="#1b2a3d" stroke="#3d5674"/>
+      <text x="629" y="458" fill="#fff" font-size="16" font-weight="700">Debugging</text>
+      <text x="629" y="488" fill="#a6e07f">W: open the step that failed</text>
+      <text x="629" y="514" fill="#d6d0f7">A: read the whole trace</text>
+
+      <rect x="891" y="430" width="262" height="110" rx="14" fill="#1b2a3d" stroke="#3d5674"/>
+      <text x="911" y="458" fill="#fff" font-size="16" font-weight="700">Failure</text>
+      <text x="911" y="488" fill="#a6e07f">W: stops loudly at one step</text>
+      <text x="911" y="514" fill="#d6d0f7">A: can drift, loop or overreach</text>
+    </g>
+  </g>
+</svg>

@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-11-05-ai-agents-vs-ai-workflows",
+      "filename": "2026-11-05-ai-agents-vs-ai-workflows.md",
+      "category": "post",
+      "title": "AI agents vs AI workflows: who decides the next step",
+      "date": "2026-11-05",
+      "tags": [
+        "ai-agents",
+        "ai-workflows",
+        "agent-architecture",
+        "orchestration",
+        "agent-harnesses",
+        "tool-use"
+      ],
+      "series": "building-ai-systems",
+      "summary": "An AI agent decides what to do next and acts on its own. An AI workflow follows steps you wrote in advance, so it gets the same task done the same way every time. This note compares the two on concept, architecture, execution flow and runtime, then covers when to use each, and why the most useful systems put an agent inside a workflow instead of picking one.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-04-anthropic-amended-s1-what-changed",
       "filename": "2026-11-04-anthropic-amended-s1-what-changed.md",
       "category": "post",
