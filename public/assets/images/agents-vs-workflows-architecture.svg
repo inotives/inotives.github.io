@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">Architecture of an AI workflow and an AI agent</title>
+  <desc id="desc">Four layers compared. Control: in a workflow the code owns control flow as a DAG or state machine; in an agent the model owns it through a loop in the harness. Intelligence: a workflow calls the LLM per step with a fixed prompt and schema; an agent's LLM plans, picks the next action and judges when it is done. Tools: hard-wired calls in a fixed order versus a catalog the model chooses from. State: data passed and checkpointed step to step versus a context window and memory the agent reads and writes.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+  </defs>
+  <rect width="1200" height="560" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Same parts, different owner of control</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Both use an LLM, tools and state. What changes is who holds the steering wheel.</text>
+
+    <text x="457" y="128" fill="#a6e07f" font-size="18" font-weight="700" text-anchor="middle">AI Workflow</text>
+    <text x="942" y="128" fill="#d6d0f7" font-size="18" font-weight="700" text-anchor="middle">AI Agent</text>
+
+    <g font-size="15">
+      <!-- Row: Control -->
+      <rect x="45" y="145" width="160" height="88" rx="12" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="125" y="195" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">Control</text>
+      <rect x="225" y="145" width="465" height="88" rx="12" fill="#25391f" stroke="#8fd16a"/>
+      <text x="247" y="180" fill="#fff" font-weight="700">Your code owns the control flow</text>
+      <text x="247" y="208" fill="#d3ecc2">DAG, state machine, cron job, if/else routing</text>
+      <rect x="710" y="145" width="465" height="88" rx="12" fill="#2c2f4f" stroke="#a99bf0"/>
+      <text x="732" y="180" fill="#fff" font-weight="700">The model owns the control flow</text>
+      <text x="732" y="208" fill="#d6d0f7">A while-loop in the harness: run until "done"</text>
+
+      <!-- Row: Intelligence -->
+      <rect x="45" y="245" width="160" height="88" rx="12" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="125" y="295" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">LLM role</text>
+      <rect x="225" y="245" width="465" height="88" rx="12" fill="#25391f" stroke="#8fd16a"/>
+      <text x="247" y="280" fill="#fff" font-weight="700">A worker inside one step</text>
+      <text x="247" y="308" fill="#d3ecc2">Fixed prompt in, structured output out</text>
+      <rect x="710" y="245" width="465" height="88" rx="12" fill="#2c2f4f" stroke="#a99bf0"/>
+      <text x="732" y="280" fill="#fff" font-weight="700">The planner and decision maker</text>
+      <text x="732" y="308" fill="#d6d0f7">Picks the next action and judges when it is finished</text>
+
+      <!-- Row: Tools -->
+      <rect x="45" y="345" width="160" height="88" rx="12" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="125" y="395" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">Tools</text>
+      <rect x="225" y="345" width="465" height="88" rx="12" fill="#25391f" stroke="#8fd16a"/>
+      <text x="247" y="380" fill="#fff" font-weight="700">Hard-wired calls</text>
+      <text x="247" y="408" fill="#d3ecc2">Step 3 always calls the CRM API, never anything else</text>
+      <rect x="710" y="345" width="465" height="88" rx="12" fill="#2c2f4f" stroke="#a99bf0"/>
+      <text x="732" y="380" fill="#fff" font-weight="700">A catalog the model chooses from</text>
+      <text x="732" y="408" fill="#d6d0f7">MCP servers, shell, browser, APIs, other agents</text>
+
+      <!-- Row: State -->
+      <rect x="45" y="445" width="160" height="88" rx="12" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="125" y="495" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">State</text>
+      <rect x="225" y="445" width="465" height="88" rx="12" fill="#25391f" stroke="#8fd16a"/>
+      <text x="247" y="480" fill="#fff" font-weight="700">Typed data passed step to step</text>
+      <text x="247" y="508" fill="#d3ecc2">Checkpointed, so a failed run resumes at the step</text>
+      <rect x="710" y="445" width="465" height="88" rx="12" fill="#2c2f4f" stroke="#a99bf0"/>
+      <text x="732" y="480" fill="#fff" font-weight="700">Context window plus memory</text>
+      <text x="732" y="508" fill="#d6d0f7">Grows each turn; the agent reads and writes notes</text>
+    </g>
+  </g>
+</svg>

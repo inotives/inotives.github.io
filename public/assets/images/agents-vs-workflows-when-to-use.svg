@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">When to use an AI agent or an AI workflow</title>
+  <desc id="desc">A two by two map. The horizontal axis runs from fixed steps to open-ended tasks. The vertical axis runs from little to a lot of decision making and tool choice. Fixed steps with little decision making: plain automation such as scripts, cron and ETL. Fixed steps with a lot of judgment inside each step: an AI workflow, such as invoice extraction, ticket triage or a daily report. Open-ended with a lot of decision making: an AI agent, such as research, debugging or incident investigation. Open-ended with little decision making: chat or search. A hybrid zone sits across the top middle.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="620" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Pick by the shape of the task</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Can you write the steps down in advance, and how much judgment does the task need?</text>
+
+    <!-- Quadrants: x 160..1150, y 115..545; mid x 655, mid y 330 -->
+    <rect x="160" y="115" width="490" height="210" rx="16" fill="#1b2e22" stroke="#8fd16a" stroke-opacity=".7"/>
+    <rect x="660" y="115" width="490" height="210" rx="16" fill="#22223d" stroke="#a99bf0" stroke-opacity=".8"/>
+    <rect x="160" y="335" width="490" height="210" rx="16" fill="#172535" stroke="#3d5674"/>
+    <rect x="660" y="335" width="490" height="210" rx="16" fill="#172535" stroke="#3d5674"/>
+
+    <g font-size="15">
+      <text x="185" y="152" fill="#fff" font-size="21" font-weight="700">AI Workflow</text>
+      <text x="185" y="180" fill="#a6e07f">Known steps, an LLM inside each one</text>
+      <text x="185" y="214" fill="#d3ecc2">• Invoice and contract extraction</text>
+      <text x="185" y="240" fill="#d3ecc2">• Ticket triage and routing</text>
+      <text x="185" y="266" fill="#d3ecc2">• Daily market or ops summary</text>
+
+      <text x="685" y="152" fill="#fff" font-size="21" font-weight="700">AI Agent</text>
+      <text x="685" y="180" fill="#d6d0f7">Complex, open-ended, needs tools and decisions</text>
+      <text x="685" y="214" fill="#e5e0fb">• Research across many sources</text>
+      <text x="685" y="240" fill="#e5e0fb">• Debugging and code changes</text>
+      <text x="685" y="266" fill="#e5e0fb">• Incident investigation</text>
+
+      <text x="185" y="372" fill="#fff" font-size="21" font-weight="700">Plain automation</text>
+      <text x="185" y="400" fill="#a9bdd0">No LLM needed</text>
+      <text x="185" y="434" fill="#c8dbee">• Scripts, cron jobs, ETL</text>
+      <text x="185" y="460" fill="#c8dbee">• Rules you can write as if/else</text>
+
+      <text x="685" y="372" fill="#fff" font-size="21" font-weight="700">Chat or search</text>
+      <text x="685" y="400" fill="#a9bdd0">Open question, nothing to act on</text>
+      <text x="685" y="434" fill="#c8dbee">• Ask a model, read the answer</text>
+      <text x="685" y="460" fill="#c8dbee">• A human stays in charge of the next step</text>
+    </g>
+
+    <!-- Hybrid zone -->
+    <rect x="520" y="286" width="270" height="64" rx="32" fill="#3a3320" stroke="#e3ad5a" stroke-width="2"/>
+    <text x="655" y="314" fill="#fff" font-size="16" font-weight="700" text-anchor="middle">Hybrid</text>
+    <text x="655" y="336" fill="#f3d9a8" font-size="13" text-anchor="middle">workflow skeleton, agent steps</text>
+
+    <!-- Axes -->
+    <path d="M160 575 H1150" stroke="#90adc2" stroke-width="1.6" marker-end="url(#a)"/>
+    <text x="160" y="600" fill="#a9bdd0" font-size="14">fixed, known steps</text>
+    <text x="1150" y="600" fill="#a9bdd0" font-size="14" text-anchor="end">open-ended</text>
+    <path d="M130 545 V118" stroke="#90adc2" stroke-width="1.6" marker-end="url(#a)"/>
+    <text x="115" y="545" fill="#a9bdd0" font-size="14" text-anchor="end">little</text>
+    <text x="115" y="130" fill="#a9bdd0" font-size="14" text-anchor="end">a lot</text>
+    <text x="90" y="330" fill="#a9bdd0" font-size="14" text-anchor="middle" transform="rotate(-90 90 330)">decisions and tool choice</text>
+  </g>
+</svg>

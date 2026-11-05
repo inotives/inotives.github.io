@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" role="img" aria-labelledby="title desc">
+  <title id="title">Execution flow for one refund ticket</title>
+  <desc id="desc">The same support ticket handled two ways. Left, a workflow: the ticket is classified by an LLM, a fixed branch sends refunds to a refund template and everything else to an FAQ answer, then both paths are validated and the reply is sent. Right, an agent trace: it reads the ticket, looks up the order and gets not found, re-plans and searches by email, checks the refund policy, creates a refund that pauses for human approval, then replies. The agent's steps were not written in advance.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="600" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">One refund ticket, two execution flows</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">The workflow's path exists before the ticket arrives. The agent's path only exists after it has run.</text>
+
+    <!-- Workflow panel -->
+    <rect x="45" y="115" width="540" height="455" rx="18" fill="#1b2e22" stroke="#8fd16a" stroke-opacity=".6"/>
+    <text x="70" y="150" fill="#fff" font-size="20" font-weight="700">AI Workflow</text>
+    <text x="70" y="172" fill="#a6e07f" font-size="13">drawn at design time</text>
+
+    <g font-size="14" text-anchor="middle">
+      <rect x="225" y="190" width="180" height="40" rx="10" fill="#25391f" stroke="#8fd16a"/>
+      <text x="315" y="215" fill="#fff">Ticket arrives</text>
+      <rect x="225" y="255" width="180" height="40" rx="10" fill="#25391f" stroke="#8fd16a"/>
+      <text x="315" y="280" fill="#fff">Classify intent <tspan fill="#e3ad5a" font-size="11">LLM</tspan></text>
+      <path d="M315 318 L375 348 L315 378 L255 348 Z" fill="#3a3320" stroke="#e3ad5a"/>
+      <text x="315" y="353" fill="#fff">refund?</text>
+      <rect x="85" y="400" width="200" height="40" rx="10" fill="#25391f" stroke="#8fd16a"/>
+      <text x="185" y="425" fill="#fff">Refund draft <tspan fill="#e3ad5a" font-size="11">LLM</tspan></text>
+      <rect x="345" y="400" width="200" height="40" rx="10" fill="#25391f" stroke="#8fd16a"/>
+      <text x="445" y="425" fill="#fff">FAQ answer <tspan fill="#e3ad5a" font-size="11">RAG + LLM</tspan></text>
+      <rect x="225" y="465" width="180" height="40" rx="10" fill="#25391f" stroke="#8fd16a"/>
+      <text x="315" y="490" fill="#fff">Validate output</text>
+      <rect x="225" y="520" width="180" height="36" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="315" y="543" fill="#fff">Send reply</text>
+    </g>
+    <g stroke="#90adc2" stroke-width="1.6" fill="none" marker-end="url(#a)">
+      <path d="M315 231 V252"/>
+      <path d="M315 296 V315"/>
+      <path d="M255 348 H185 V397"/>
+      <path d="M375 348 H445 V397"/>
+      <path d="M185 441 V485 H222"/>
+      <path d="M445 441 V485 H408"/>
+      <path d="M315 506 V517"/>
+    </g>
+    <text x="215" y="340" fill="#a9bdd0" font-size="12" text-anchor="middle">yes</text>
+    <text x="415" y="340" fill="#a9bdd0" font-size="12" text-anchor="middle">no</text>
+
+    <!-- Agent panel -->
+    <rect x="615" y="115" width="540" height="455" rx="18" fill="#22223d" stroke="#a99bf0" stroke-opacity=".7"/>
+    <text x="640" y="150" fill="#fff" font-size="20" font-weight="700">AI Agent</text>
+    <text x="640" y="172" fill="#d6d0f7" font-size="13">recorded at run time (a trace)</text>
+
+    <g font-size="14">
+      <!-- rows: y = 205, 252, 299, 346, 393, 440, 487 -->
+      <g>
+        <circle cx="655" cy="205" r="14" fill="#2c2f4f" stroke="#a99bf0"/><text x="655" y="210" fill="#fff" text-anchor="middle" font-size="13">1</text>
+        <text x="682" y="210" fill="#fff">Think: customer wants a refund for #4821</text>
+      </g>
+      <g>
+        <circle cx="655" cy="252" r="14" fill="#263e5b" stroke="#75a8d5"/><text x="655" y="257" fill="#fff" text-anchor="middle" font-size="13">2</text>
+        <text x="682" y="257" fill="#c8dbee" font-family="ui-monospace,Menlo,monospace" font-size="13">orders.get(4821)</text>
+        <text x="1135" y="257" fill="#f08c7a" text-anchor="end" font-size="13">not found</text>
+      </g>
+      <g>
+        <circle cx="655" cy="299" r="14" fill="#3a3320" stroke="#e3ad5a"/><text x="655" y="304" fill="#fff" text-anchor="middle" font-size="13">3</text>
+        <text x="682" y="304" fill="#f3d9a8">Re-plan: maybe a typo, search by email</text>
+      </g>
+      <g>
+        <circle cx="655" cy="346" r="14" fill="#263e5b" stroke="#75a8d5"/><text x="655" y="351" fill="#fff" text-anchor="middle" font-size="13">4</text>
+        <text x="682" y="351" fill="#c8dbee" font-family="ui-monospace,Menlo,monospace" font-size="13">orders.search(email)</text>
+        <text x="1135" y="351" fill="#a6e07f" text-anchor="end" font-size="13">found #4812</text>
+      </g>
+      <g>
+        <circle cx="655" cy="393" r="14" fill="#263e5b" stroke="#75a8d5"/><text x="655" y="398" fill="#fff" text-anchor="middle" font-size="13">5</text>
+        <text x="682" y="398" fill="#c8dbee" font-family="ui-monospace,Menlo,monospace" font-size="13">policy.lookup("refund")</text>
+        <text x="1135" y="398" fill="#a6e07f" text-anchor="end" font-size="13">within 30 days</text>
+      </g>
+      <g>
+        <circle cx="655" cy="440" r="14" fill="#263e5b" stroke="#75a8d5"/><text x="655" y="445" fill="#fff" text-anchor="middle" font-size="13">6</text>
+        <text x="682" y="445" fill="#c8dbee" font-family="ui-monospace,Menlo,monospace" font-size="13">refunds.create(#4812)</text>
+        <text x="1135" y="445" fill="#e3ad5a" text-anchor="end" font-size="13">waits for approval</text>
+      </g>
+      <g>
+        <circle cx="655" cy="487" r="14" fill="#2c2f4f" stroke="#a99bf0"/><text x="655" y="492" fill="#fff" text-anchor="middle" font-size="13">7</text>
+        <text x="682" y="492" fill="#fff">Reply to customer and close the ticket</text>
+      </g>
+      <path d="M655 219 V238 M655 266 V285 M655 313 V332 M655 360 V379 M655 407 V426 M655 454 V473" stroke="#5d6f86" stroke-width="1.4"/>
+    </g>
+    <text x="640" y="540" fill="#d6d0f7" font-size="14">Step 3 was never designed. A workflow would have</text>
+    <text x="640" y="560" fill="#d6d0f7" font-size="14">stopped at "not found"; the agent worked around it.</text>
+  </g>
+</svg>
