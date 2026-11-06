@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-11-06-cognitive-surrender",
+      "filename": "2026-11-06-cognitive-surrender.md",
+      "category": "post",
+      "title": "Cognitive surrender: when the agent's answer quietly becomes yours",
+      "date": "2026-11-06",
+      "tags": [
+        "cognitive-surrender",
+        "cognitive-debt",
+        "ai-agents",
+        "critical-thinking",
+        "agentic-coding",
+        "engineering-practice"
+      ],
+      "series": null,
+      "summary": "Cognitive surrender is the point where an AI's output becomes your answer without you ever forming a view of your own. Addy Osmani describes a slide from cognitive offloading, through deferral, to surrender, and each step adds cognitive debt. This note summarises the three levels, how the debt compounds, why heavy AI use weakens the skills you need to supervise it, and the practical fixes. The goal is not to use AI less. It is to keep thinking while you use it.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-05-ai-agents-vs-ai-workflows",
       "filename": "2026-11-05-ai-agents-vs-ai-workflows.md",
       "category": "post",
