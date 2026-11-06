@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">Think before, during and after every delegation</title>
+  <desc id="desc">Three stages around one delegated task. Before you ask: write your own guess first, state the intent and definition of done, know whether you want help thinking or are outsourcing the thinking, and rewrite the prompt after two failed rounds. While you read: review it like an intern's pull request, look for the small decisions it made, ask for the strongest counterargument, and stress-test it. Before you ship: look at evidence before conclusions, remember one green check means one test passed, defend the result with the agent closed, and record failures in a test or hook. Underneath: friction by design.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="520" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Think before, during and after every delegation</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Let the agent do the work. Keep the parts that make the result yours.</text>
+
+    <!-- Before -->
+    <rect x="45" y="112" width="350" height="310" rx="18" fill="#17283d" stroke="#75a8d5" stroke-opacity=".7"/>
+    <text x="67" y="147" fill="#fff" font-size="20" font-weight="700">Before you ask</text>
+    <text x="67" y="170" fill="#a8cdec" font-size="14">have something to compare against</text>
+    <g font-size="14" fill="#d4e6f7">
+      <circle cx="80" cy="205" r="12" fill="#1f3956" stroke="#75a8d5"/><text x="80" y="210" text-anchor="middle" fill="#fff" font-size="12">1</text>
+      <text x="102" y="210">Write down your own guess first</text>
+      <circle cx="80" cy="260" r="12" fill="#1f3956" stroke="#75a8d5"/><text x="80" y="265" text-anchor="middle" fill="#fff" font-size="12">2</text>
+      <text x="102" y="256">State the intent: who it is for, hard</text>
+      <text x="102" y="274">limits, what "done" means</text>
+      <circle cx="80" cy="320" r="12" fill="#1f3956" stroke="#75a8d5"/><text x="80" y="325" text-anchor="middle" fill="#fff" font-size="12">3</text>
+      <text x="102" y="316">Know the mode: help me think, or</text>
+      <text x="102" y="334">think for me?</text>
+      <circle cx="80" cy="380" r="12" fill="#1f3956" stroke="#75a8d5"/><text x="80" y="385" text-anchor="middle" fill="#fff" font-size="12">4</text>
+      <text x="102" y="376">Two failed rounds? Stop patching,</text>
+      <text x="102" y="394">rewrite the prompt</text>
+    </g>
+
+    <!-- During -->
+    <rect x="425" y="112" width="350" height="310" rx="18" fill="#22223d" stroke="#a99bf0" stroke-opacity=".7"/>
+    <text x="447" y="147" fill="#fff" font-size="20" font-weight="700">While you read</text>
+    <text x="447" y="170" fill="#d6d0f7" font-size="14">read actively, not passively</text>
+    <g font-size="14" fill="#e4e0fa">
+      <circle cx="460" cy="205" r="12" fill="#2c2f4f" stroke="#a99bf0"/><text x="460" y="210" text-anchor="middle" fill="#fff" font-size="12">1</text>
+      <text x="482" y="210">Review it like an intern's PR</text>
+      <circle cx="460" cy="260" r="12" fill="#2c2f4f" stroke="#a99bf0"/><text x="460" y="265" text-anchor="middle" fill="#fff" font-size="12">2</text>
+      <text x="482" y="256">Find its small decisions: defaults,</text>
+      <text x="482" y="274">skipped cases, quiet reinterpretations</text>
+      <circle cx="460" cy="320" r="12" fill="#2c2f4f" stroke="#a99bf0"/><text x="460" y="325" text-anchor="middle" fill="#fff" font-size="12">3</text>
+      <text x="482" y="316">Ask for the strongest argument</text>
+      <text x="482" y="334">against its own answer</text>
+      <circle cx="460" cy="380" r="12" fill="#2c2f4f" stroke="#a99bf0"/><text x="460" y="385" text-anchor="middle" fill="#fff" font-size="12">4</text>
+      <text x="482" y="376">Stress it: 10x traffic, a dependency</text>
+      <text x="482" y="394">down for half an hour</text>
+    </g>
+
+    <!-- After -->
+    <rect x="805" y="112" width="350" height="310" rx="18" fill="#1b2e22" stroke="#8fd16a" stroke-opacity=".7"/>
+    <text x="827" y="147" fill="#fff" font-size="20" font-weight="700">Before you ship</text>
+    <text x="827" y="170" fill="#a6e07f" font-size="14">done means evidence, not "looks done"</text>
+    <g font-size="14" fill="#d3ecc2">
+      <circle cx="840" cy="205" r="12" fill="#25391f" stroke="#8fd16a"/><text x="840" y="210" text-anchor="middle" fill="#fff" font-size="12">1</text>
+      <text x="862" y="210">Read the evidence before the summary</text>
+      <circle cx="840" cy="260" r="12" fill="#25391f" stroke="#8fd16a"/><text x="840" y="265" text-anchor="middle" fill="#fff" font-size="12">2</text>
+      <text x="862" y="256">One green check means one test</text>
+      <text x="862" y="274">passed, nothing more</text>
+      <circle cx="840" cy="320" r="12" fill="#25391f" stroke="#8fd16a"/><text x="840" y="325" text-anchor="middle" fill="#fff" font-size="12">3</text>
+      <text x="862" y="316">Explain it to a colleague with the</text>
+      <text x="862" y="334">agent closed</text>
+      <circle cx="840" cy="380" r="12" fill="#25391f" stroke="#8fd16a"/><text x="840" y="385" text-anchor="middle" fill="#fff" font-size="12">4</text>
+      <text x="862" y="376">Turn each failure into a test, hook</text>
+      <text x="862" y="394">or rule in the agent's config</text>
+    </g>
+
+    <g stroke="#90adc2" stroke-width="1.8" fill="none" marker-end="url(#a)">
+      <path d="M397 267 H422"/><path d="M777 267 H802"/>
+    </g>
+
+    <rect x="45" y="442" width="1110" height="52" rx="14" fill="#1a2a3c" stroke="#4a6077"/>
+    <text x="67" y="474" fill="#fff" font-size="15" font-weight="700">Friction by design</text>
+    <text x="225" y="474" fill="#c8dbee" font-size="15">smaller PRs  ·  a spec before generation  ·  verification as the exit criterion  ·  review time on the calendar</text>
+  </g>
+</svg>

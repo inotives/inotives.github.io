@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">From builder to operator</title>
+  <desc id="desc">Left, a builder: form a view, direct the agent, check the result against that view, own the result. Thinking happens before and after the agent runs. Right, an operator: prompt, accept, ship, next prompt, in a loop. Thinking is handed over with the prompt, and throughput rises while understanding does not.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="420" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">From builder to operator</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Same tools, different posture. The difference is where the thinking happens.</text>
+
+    <!-- Builder -->
+    <rect x="45" y="115" width="540" height="270" rx="18" fill="#17283d" stroke="#75a8d5" stroke-opacity=".7"/>
+    <text x="70" y="152" fill="#fff" font-size="20" font-weight="700">Builder</text>
+    <text x="70" y="176" fill="#a8cdec" font-size="14">uses the agent to amplify a mental model they keep</text>
+    <g font-size="13" text-anchor="middle" fill="#fff">
+      <rect x="64" y="200" width="112" height="56" rx="10" fill="#1f3956" stroke="#75a8d5"/>
+      <text x="120" y="224">Form a view</text><text x="120" y="242" fill="#a8cdec" font-size="11">first</text>
+      <rect x="194" y="200" width="112" height="56" rx="10" fill="#2c2f4f" stroke="#a99bf0"/>
+      <text x="250" y="224">Direct the</text><text x="250" y="242">agent</text>
+      <rect x="324" y="200" width="112" height="56" rx="10" fill="#1f3956" stroke="#75a8d5"/>
+      <text x="380" y="224">Check against</text><text x="380" y="242">your view</text>
+      <rect x="454" y="200" width="112" height="56" rx="10" fill="#1f3956" stroke="#75a8d5"/>
+      <text x="510" y="224">Own the</text><text x="510" y="242">result</text>
+    </g>
+    <g stroke="#90adc2" stroke-width="1.6" fill="none" marker-end="url(#a)">
+      <path d="M177 228 H192"/><path d="M307 228 H322"/><path d="M437 228 H452"/>
+    </g>
+    <text x="70" y="310" fill="#d4e6f7" font-size="15">• Thinks before and after the agent runs</text>
+    <text x="70" y="335" fill="#d4e6f7" font-size="15">• Can explain every line they ship</text>
+    <text x="70" y="360" fill="#d4e6f7" font-size="15">• Faster, and still understands the system</text>
+
+    <!-- Operator -->
+    <rect x="615" y="115" width="540" height="270" rx="18" fill="#2a1f2a" stroke="#d08a8a" stroke-opacity=".7"/>
+    <text x="640" y="152" fill="#fff" font-size="20" font-weight="700">Operator</text>
+    <text x="640" y="176" fill="#e8b9b9" font-size="14">feeds the agent and passes its output along</text>
+    <g font-size="13" text-anchor="middle" fill="#fff">
+      <rect x="634" y="200" width="112" height="56" rx="10" fill="#2c2f4f" stroke="#a99bf0"/>
+      <text x="690" y="233">Prompt</text>
+      <rect x="764" y="200" width="112" height="56" rx="10" fill="#3a2428" stroke="#d08a8a"/>
+      <text x="820" y="233">Accept</text>
+      <rect x="894" y="200" width="112" height="56" rx="10" fill="#3a2428" stroke="#d08a8a"/>
+      <text x="950" y="233">Ship</text>
+      <rect x="1024" y="200" width="112" height="56" rx="10" fill="#2c2f4f" stroke="#a99bf0"/>
+      <text x="1080" y="233">Next prompt</text>
+    </g>
+    <g stroke="#90adc2" stroke-width="1.6" fill="none" marker-end="url(#a)">
+      <path d="M747 228 H762"/><path d="M877 228 H892"/><path d="M1007 228 H1022"/>
+      <path d="M1080 258 V268 H690 V260" stroke-dasharray="5 4"/>
+    </g>
+    <text x="885" y="286" fill="#a9bdd0" font-size="11" text-anchor="middle">repeat, faster each time</text>
+    <text x="640" y="310" fill="#f0d2d2" font-size="15">• Hands the thinking over with the prompt</text>
+    <text x="640" y="335" fill="#f0d2d2" font-size="15">• Can say what changed, not why</text>
+    <text x="640" y="360" fill="#f0d2d2" font-size="15">• Output goes up, understanding stays flat</text>
+  </g>
+</svg>

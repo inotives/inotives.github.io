@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" role="img" aria-labelledby="title desc">
+  <title id="title">How cognitive debt compounds</title>
+  <desc id="desc">A chart over time with heavy AI use. The amount of code in the system rises steeply while the amount of code someone understands flattens out. The widening gap between them is comprehension debt, and the bill comes due at a refactor, an incident or a new hire. Beside the chart, three kinds of debt: cognitive debt in your head, comprehension debt in the codebase, and intent debt in the decisions nobody deliberated.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="480" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">How cognitive debt compounds</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Each surrendered decision ships something nobody understands. The gap is the debt.</text>
+
+    <!-- axes -->
+    <g stroke="#4a6077" stroke-width="1.5" fill="none" marker-end="url(#a)">
+      <path d="M80 420 V122"/><path d="M80 420 H772"/>
+    </g>
+    <!-- gap -->
+    <path d="M80 400 C 300 360, 500 260, 760 150 L760 310 C 450 320, 250 340, 80 400 Z" fill="#e06c6c" fill-opacity=".18"/>
+    <path d="M80 400 C 300 360, 500 260, 760 150" fill="none" stroke="#e3ad5a" stroke-width="3"/>
+    <path d="M80 400 C 250 340, 450 320, 760 310" fill="none" stroke="#75a8d5" stroke-width="3"/>
+    <text x="560" y="222" fill="#f0c987" font-size="14" text-anchor="end">code in the system</text>
+    <text x="330" y="362" fill="#a8cdec" font-size="14">code someone understands</text>
+    <text x="662" y="250" fill="#f3c9c9" font-size="16" font-weight="700" text-anchor="middle">comprehension</text><text x="662" y="270" fill="#f3c9c9" font-size="16" font-weight="700" text-anchor="middle">debt</text>
+    <path d="M742 130 V420" stroke="#e06c6c" stroke-width="1.5" stroke-dasharray="5 4"/>
+    <text x="736" y="140" fill="#f0a0a0" font-size="13" text-anchor="end">bill comes due:</text>
+    <text x="736" y="157" fill="#f0a0a0" font-size="13" text-anchor="end">refactor, incident, new hire</text>
+    <text x="80" y="445" fill="#8ea3b8" font-size="13">time with heavy AI use →</text>
+
+    <!-- three debts -->
+    <rect x="800" y="120" width="355" height="95" rx="14" fill="#22223d" stroke="#a99bf0" stroke-opacity=".7"/>
+    <text x="820" y="150" fill="#fff" font-size="17" font-weight="700">Cognitive debt</text>
+    <text x="1135" y="150" fill="#d6d0f7" font-size="12" text-anchor="end">in your head</text>
+    <text x="820" y="175" fill="#d6d0f7" font-size="13">The mental model you never built because</text>
+    <text x="820" y="194" fill="#d6d0f7" font-size="13">the AI built the answer for you</text>
+
+    <rect x="800" y="227" width="355" height="95" rx="14" fill="#3a1f22" stroke="#e06c6c" stroke-opacity=".7"/>
+    <text x="820" y="257" fill="#fff" font-size="17" font-weight="700">Comprehension debt</text>
+    <text x="1135" y="257" fill="#f3c9c9" font-size="12" text-anchor="end">in the codebase</text>
+    <text x="820" y="282" fill="#f3c9c9" font-size="13">Code that exists, passes its tests, and</text>
+    <text x="820" y="301" fill="#f3c9c9" font-size="13">no one on the team really understands</text>
+
+    <rect x="800" y="334" width="355" height="95" rx="14" fill="#33291a" stroke="#e3ad5a" stroke-opacity=".7"/>
+    <text x="820" y="364" fill="#fff" font-size="17" font-weight="700">Intent debt</text>
+    <text x="1135" y="364" fill="#f3dfbd" font-size="12" text-anchor="end">in the decisions</text>
+    <text x="820" y="389" fill="#f3dfbd" font-size="13">Goals and constraints baked in that nobody</text>
+    <text x="820" y="408" fill="#f3dfbd" font-size="13">chose. No one can pay this one off for you</text>
+  </g>
+</svg>
