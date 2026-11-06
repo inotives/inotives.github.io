@@ -20,6 +20,25 @@
       "draft": false
     },
     {
+      "slug": "2026-11-05-why-banks-limit-ai-coding-for-non-engineers",
+      "filename": "2026-11-05-why-banks-limit-ai-coding-for-non-engineers.md",
+      "category": "post",
+      "title": "Why banks are taking AI coding tools away from traders",
+      "date": "2026-11-05",
+      "tags": [
+        "ai-coding",
+        "ai-governance",
+        "risk-management",
+        "vibe-coding",
+        "banking",
+        "claude-code"
+      ],
+      "series": null,
+      "summary": "In October 2026 Goldman Sachs limited Claude Code and GitHub's coding tools to engineers and strats, months after its CIO praised vibe coding by non-technical staff. Goldman only cited productivity and risk management. This note works through the risks behind that wording: untested tools nobody owns, client data in prompts, and juniors who stop learning to reason. It also covers why the line falls at engineering, and why that line is about process more than people.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-04-anthropic-amended-s1-what-changed",
       "filename": "2026-11-04-anthropic-amended-s1-what-changed.md",
       "category": "post",
