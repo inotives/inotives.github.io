@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" role="img" aria-labelledby="title desc">
+  <title id="title">Share the plumbing, duplicate the meaning</title>
+  <desc id="desc">One question sorts the code: does it change when the vendor changes? If not, share it: authentication and secrets, the HTTP client with retries and backoff, rate limiting, the raw writer with load metadata, logging and metrics, scheduling. If it does, keep a copy per pipeline: field names and types, parsing and casting rules, API version and endpoints, pagination quirks, null and default handling, dedup keys.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+  </defs>
+  <rect width="1200" height="450" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Share the plumbing, duplicate the meaning</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">One question decides it: does this code change when the vendor changes?</text>
+
+    <rect x="45" y="115" width="540" height="300" rx="18" fill="#1c2a3d" stroke="#75a8d5" stroke-opacity=".8"/>
+    <text x="70" y="152" fill="#fff" font-size="20" font-weight="700">No: share it</text>
+    <text x="70" y="176" fill="#c8dbee" font-size="14">one library, every pipeline imports it</text>
+    <g fill="#dbe8f4" font-size="16">
+      <text x="70" y="220">• Auth and secrets</text>
+      <text x="70" y="252">• HTTP client, retries, backoff</text>
+      <text x="70" y="284">• Rate limiting</text>
+      <text x="70" y="316">• Raw writer + load metadata</text>
+      <text x="70" y="348">• Logging and metrics</text>
+      <text x="70" y="380">• Scheduling, alerting</text>
+    </g>
+
+    <rect x="615" y="115" width="540" height="300" rx="18" fill="#1b2e22" stroke="#8fd16a" stroke-opacity=".7"/>
+    <text x="640" y="152" fill="#fff" font-size="20" font-weight="700">Yes: copy it per pipeline</text>
+    <text x="640" y="176" fill="#a6e07f" font-size="14">lives next to the source it describes</text>
+    <g fill="#d3ecc2" font-size="16">
+      <text x="640" y="220">• Field names and types</text>
+      <text x="640" y="252">• Parsing and casting rules</text>
+      <text x="640" y="284">• API version, endpoints</text>
+      <text x="640" y="316">• Pagination and auth quirks</text>
+      <text x="640" y="348">• Null and default handling</text>
+      <text x="640" y="380">• Dedup and primary keys</text>
+    </g>
+  </g>
+</svg>
