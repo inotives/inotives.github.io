@@ -92,11 +92,13 @@ Playground mocks are single, self-contained HTML files in `public/mocks/`, liste
 
 | Mock | Command | Updates |
 |---|---|---|
-| ToTo stats (`sg-toto.html`) | `npm run toto -- path/to/ToTo.csv` (no path: `~/Downloads/ToTo.csv`) | `public/mocks/data/sg-toto.json` |
+| ToTo stats (`sg-toto.html`), each draw | `npm run toto:latest` | `public/mocks/data/sg-toto.json` |
+| ToTo stats (`sg-toto.html`), backfill or reset | `npm run toto -- path/to/ToTo.csv` (no path: `~/Downloads/ToTo.csv`) | `public/mocks/data/sg-toto.json` |
 | Block explorer 3D (`block-explorer.html`) | `node scripts/mocks/block-explorer/capture.mjs` | `public/mocks/data/block-explorer.json` |
 | Fertility extinction clock (`world-fertility.html`) | `node scripts/mocks/world-fertility/capture.mjs` | `public/mocks/data/world-fertility.json` |
 
-- **ToTo:** when a human gives a newer Singapore Pools ToTo results CSV, or asks to update the ToTo data, run `npm run toto` with it. Don't edit the JSON by hand. The script reports new draws, prize figures filled in for earlier draws, and any `CHANGED` or `MISSING` draws. Show the human `CHANGED` or `MISSING` lines before committing: they usually mean a wrong or older CSV. The CSV parser lives in the mock between the `// <toto-csv>` markers and is shared with the page's "Update data" import, so change the CSV format handling there, not in the script.
+- **ToTo, each draw (default):** draws are Monday and Thursday evenings (SGT). When asked to update the ToTo data, run `npm run toto:latest` (`scripts/mocks/sg-toto/latest.mjs`). It reads the latest few draws from Singapore Pools' results page ([toto_results.aspx](https://www.singaporepools.com.sg/en/product/pages/toto_results.aspx), via its `toto_result_top_draws_en.html` data file), adds new draws, fills in prize figures missing from earlier draws, and checks overlapping draws against the file. It ends with `changed=true|false`; commit only when changed. It exits with an error on a `Gap` (the file is missing draws older than the page shows) or a `MISMATCH` (a past draw's numbers differ): show the human and fall back to the CSV below.
+- **ToTo, backfill or reset only:** when draws are missing beyond what the results page lists, the data needs rebuilding, or a human gives a newer Singapore Pools ToTo results CSV, run `npm run toto` with the full historical CSV. Don't edit the JSON by hand. The script reports new draws, prize figures filled in for earlier draws, and any `CHANGED` or `MISSING` draws. Show the human `CHANGED` or `MISSING` lines before committing: they usually mean a wrong or older CSV. The CSV parser lives in the mock between the `// <toto-csv>` markers and is shared with the page's "Update data" import, so change the CSV format handling there, not in the script.
 - Test at desktop width and at 390px phone width. Mocks in `public/` open from the dev server at `/mocks/<id>.html`; preview the template itself with `python3 -m http.server -d scripts/mocks/template`, because Vite rewrites HTML outside `public/`.
 
 ---

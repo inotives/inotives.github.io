@@ -14,6 +14,7 @@
     "postbuild": "node scripts/copy-spa-fallback.js",
     "content": "node scripts/sync-static-reports.js && node scripts/generate-content-index.js",
     "toto": "node scripts/mocks/sg-toto/build.mjs",
+    "toto:latest": "node scripts/mocks/sg-toto/latest.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
