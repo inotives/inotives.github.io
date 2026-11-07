@@ -1,6 +1,26 @@
 {
   "posts": [
     {
+      "slug": "2026-11-07-good-duplication-in-data-ingestion",
+      "filename": "2026-11-07-good-duplication-in-data-ingestion.md",
+      "category": "post",
+      "title": "Good duplication: why each ingestion pipeline should own its types",
+      "date": "2026-11-07",
+      "tags": [
+        "data-engineering",
+        "data-ingestion",
+        "data-pipelines",
+        "data-contracts",
+        "schema-drift",
+        "medallion-architecture",
+        "dbt"
+      ],
+      "series": null,
+      "summary": "Data teams like to reuse ingestion code through shared contracts and generator base classes. At the ingestion layer I'd rather not. Sources change their types, API versions and schemas whenever they like, and a shared contract turns one vendor's change into a release for every pipeline that uses it. This note argues for letting each pipeline own its own typing, sharing only the plumbing, and keeping contracts for the modeling layers where you control the schema.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-06-cognitive-surrender",
       "filename": "2026-11-06-cognitive-surrender.md",
       "category": "post",

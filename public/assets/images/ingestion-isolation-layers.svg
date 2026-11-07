@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 470" role="img" aria-labelledby="title desc">
+  <title id="title">Land it raw, then shape it</title>
+  <desc id="desc">Four kinds of source, an internal database, a vendor REST API, CSV files over SFTP and an event stream, all land in a raw layer (bronze) as-is. Data then moves to staging (silver), intermediate (silver) and mart (gold). Sources, raw and staging form the ingestion side, one pipeline per source that owns its own types. Intermediate and mart form the modeling side, with shared, stable contracts.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="470" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Land it raw, then shape it</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">The same layers under two names: dbt's staging, intermediate and mart, or medallion bronze, silver and gold.</text>
+
+    <!-- Sources -->
+    <g font-size="14" text-anchor="middle">
+      <rect x="45" y="130" width="170" height="52" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="130" y="152" fill="#fff">Internal DB</text>
+      <text x="130" y="171" fill="#a9bdd0" font-size="12">Postgres, CDC</text>
+      <rect x="45" y="196" width="170" height="52" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="130" y="218" fill="#fff">Vendor REST API</text>
+      <text x="130" y="237" fill="#a9bdd0" font-size="12">JSON, versioned</text>
+      <rect x="45" y="262" width="170" height="52" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="130" y="284" fill="#fff">Vendor files</text>
+      <text x="130" y="303" fill="#a9bdd0" font-size="12">CSV over SFTP</text>
+      <rect x="45" y="328" width="170" height="52" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="130" y="350" fill="#fff">Event stream</text>
+      <text x="130" y="369" fill="#a9bdd0" font-size="12">Kafka, webhooks</text>
+    </g>
+
+    <!-- Layers -->
+    <g font-size="14">
+      <rect x="285" y="130" width="190" height="250" rx="14" fill="#3a2d1d" stroke="#e3ad5a"/>
+      <text x="305" y="162" fill="#fff" font-size="18" font-weight="700">Raw</text>
+      <text x="305" y="184" fill="#e3ad5a" font-size="13">bronze</text>
+      <text x="305" y="222" fill="#f1dfc1">Source as-is</text>
+      <text x="305" y="246" fill="#f1dfc1">Append only</text>
+      <text x="305" y="270" fill="#f1dfc1">+ load time, file,</text>
+      <text x="305" y="290" fill="#f1dfc1">  API version</text>
+      <text x="305" y="330" fill="#c9b18c" font-size="12">Never reshaped, so you</text>
+      <text x="305" y="348" fill="#c9b18c" font-size="12">can always replay</text>
+
+      <rect x="525" y="130" width="190" height="250" rx="14" fill="#27303f" stroke="#b9c6d4"/>
+      <text x="545" y="162" fill="#fff" font-size="18" font-weight="700">Staging</text>
+      <text x="545" y="184" fill="#c9d4df" font-size="13">silver</text>
+      <text x="545" y="222" fill="#dbe4ec">One model per</text>
+      <text x="545" y="242" fill="#dbe4ec">source table</text>
+      <text x="545" y="270" fill="#dbe4ec">Typed, renamed,</text>
+      <text x="545" y="290" fill="#dbe4ec">deduped</text>
+      <text x="545" y="330" fill="#a9bdd0" font-size="12">Source quirks end here</text>
+
+      <rect x="765" y="130" width="190" height="250" rx="14" fill="#27303f" stroke="#b9c6d4"/>
+      <text x="785" y="162" fill="#fff" font-size="18" font-weight="700">Intermediate</text>
+      <text x="785" y="184" fill="#c9d4df" font-size="13">silver</text>
+      <text x="785" y="222" fill="#dbe4ec">Joins across</text>
+      <text x="785" y="242" fill="#dbe4ec">sources</text>
+      <text x="785" y="270" fill="#dbe4ec">Business logic</text>
+
+      <rect x="1005" y="130" width="150" height="250" rx="14" fill="#2c2a17" stroke="#e9d36a"/>
+      <text x="1025" y="162" fill="#fff" font-size="18" font-weight="700">Mart</text>
+      <text x="1025" y="184" fill="#e9d36a" font-size="13">gold</text>
+      <text x="1025" y="222" fill="#efe6b8">Facts and</text>
+      <text x="1025" y="242" fill="#efe6b8">dimensions</text>
+      <text x="1025" y="270" fill="#efe6b8">For BI, ML,</text>
+      <text x="1025" y="290" fill="#efe6b8">reverse ETL</text>
+    </g>
+
+    <g stroke="#90adc2" stroke-width="1.6" fill="none" marker-end="url(#a)">
+      <path d="M216 156 H282"/><path d="M216 222 H282"/><path d="M216 288 H282"/><path d="M216 354 H282"/>
+      <path d="M476 255 H522"/><path d="M716 255 H762"/><path d="M956 255 H1002"/>
+    </g>
+
+    <!-- Brackets -->
+    <path d="M45 404 V414 H715 V404" fill="none" stroke="#8fd16a" stroke-width="2"/>
+    <text x="380" y="440" fill="#a6e07f" font-size="15" text-anchor="middle" font-weight="600">Ingestion: one pipeline per source, owns its own types</text>
+    <path d="M765 404 V414 H1155 V404" fill="none" stroke="#a99bf0" stroke-width="2"/>
+    <text x="960" y="440" fill="#d6d0f7" font-size="15" text-anchor="middle" font-weight="600">Modeling: shared, stable contracts</text>
+  </g>
+</svg>

@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" role="img" aria-labelledby="title desc">
+  <title id="title">Each pipeline owns its types</title>
+  <desc id="desc">The same four sources, each with its own pipeline that holds its own schema and parser and lands into its own raw table. Vendor A moves to API v3, so only Pipeline A changes, with a new v3 parser. Pipelines B, C and D are untouched. All four sit on a shared plumbing library with no business types: HTTP client and retries, secrets, the raw writer, logging and scheduling.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="500" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Each pipeline owns its types</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Same vendor change. The blast radius stops at the pipeline that reads that vendor.</text>
+
+    <!-- Sources -->
+    <g font-size="15" text-anchor="middle">
+      <rect x="95" y="115" width="170" height="58" rx="10" fill="#3d1f24" stroke="#ef7b7b" stroke-width="2"/>
+      <text x="180" y="139" fill="#fff">Vendor A API</text>
+      <text x="180" y="160" fill="#f3a5a5" font-size="12">v3: amount now "12.50"</text>
+      <rect x="375" y="115" width="170" height="58" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="460" y="139" fill="#fff">Vendor B API</text>
+      <text x="460" y="160" fill="#a9bdd0" font-size="12">unchanged</text>
+      <rect x="655" y="115" width="170" height="58" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="740" y="139" fill="#fff">Vendor C files</text>
+      <text x="740" y="160" fill="#a9bdd0" font-size="12">unchanged</text>
+      <rect x="935" y="115" width="170" height="58" rx="10" fill="#263e5b" stroke="#75a8d5"/>
+      <text x="1020" y="139" fill="#fff">Internal ledger</text>
+      <text x="1020" y="160" fill="#a9bdd0" font-size="12">unchanged</text>
+    </g>
+    <g stroke="#90adc2" stroke-width="1.6" fill="none" marker-end="url(#a)">
+      <path d="M180 174 V211"/><path d="M460 174 V211"/><path d="M740 174 V211"/><path d="M1020 174 V211"/>
+    </g>
+
+    <!-- Pipelines -->
+    <g font-size="13">
+      <rect x="95" y="215" width="170" height="140" rx="12" fill="#3a2d1d" stroke="#e3ad5a" stroke-width="2"/>
+      <text x="180" y="242" fill="#fff" font-size="16" font-weight="700" text-anchor="middle">Pipeline A</text>
+      <text x="113" y="272" fill="#f1dfc1">vendor_a/schema.py</text>
+      <text x="113" y="294" fill="#f1dfc1">vendor_a/parse.py</text>
+      <text x="113" y="316" fill="#f1dfc1">→ raw.vendor_a</text>
+      <text x="180" y="342" fill="#e3ad5a" text-anchor="middle">updated: v3 parser</text>
+
+      <rect x="375" y="215" width="170" height="140" rx="12" fill="#1b2e22" stroke="#8fd16a"/>
+      <text x="460" y="242" fill="#fff" font-size="16" font-weight="700" text-anchor="middle">Pipeline B</text>
+      <text x="393" y="272" fill="#d3ecc2">vendor_b/schema.py</text>
+      <text x="393" y="294" fill="#d3ecc2">vendor_b/parse.py</text>
+      <text x="393" y="316" fill="#d3ecc2">→ raw.vendor_b</text>
+      <text x="460" y="342" fill="#a6e07f" text-anchor="middle">no change</text>
+
+      <rect x="655" y="215" width="170" height="140" rx="12" fill="#1b2e22" stroke="#8fd16a"/>
+      <text x="740" y="242" fill="#fff" font-size="16" font-weight="700" text-anchor="middle">Pipeline C</text>
+      <text x="673" y="272" fill="#d3ecc2">vendor_c/schema.py</text>
+      <text x="673" y="294" fill="#d3ecc2">vendor_c/parse.py</text>
+      <text x="673" y="316" fill="#d3ecc2">→ raw.vendor_c</text>
+      <text x="740" y="342" fill="#a6e07f" text-anchor="middle">no change</text>
+
+      <rect x="935" y="215" width="170" height="140" rx="12" fill="#1b2e22" stroke="#8fd16a"/>
+      <text x="1020" y="242" fill="#fff" font-size="16" font-weight="700" text-anchor="middle">Pipeline D</text>
+      <text x="953" y="272" fill="#d3ecc2">ledger/schema.py</text>
+      <text x="953" y="294" fill="#d3ecc2">ledger/parse.py</text>
+      <text x="953" y="316" fill="#d3ecc2">→ raw.ledger</text>
+      <text x="1020" y="342" fill="#a6e07f" text-anchor="middle">no change</text>
+    </g>
+
+    <g stroke="#75a8d5" stroke-width="1.4" stroke-dasharray="4 4" fill="none">
+      <path d="M180 356 V383"/><path d="M460 356 V383"/><path d="M740 356 V383"/><path d="M1020 356 V383"/>
+    </g>
+
+    <!-- Plumbing -->
+    <rect x="95" y="385" width="1010" height="62" rx="12" fill="#1c2a3d" stroke="#75a8d5"/>
+    <text x="600" y="412" fill="#fff" font-size="16" font-weight="700" text-anchor="middle">Shared plumbing, no business types</text>
+    <text x="600" y="434" fill="#c8dbee" font-size="13" text-anchor="middle">HTTP client + retries · secrets · raw writer + load metadata · logging · scheduling</text>
+
+    <text x="600" y="478" fill="#a6e07f" font-size="16" font-weight="600" text-anchor="middle">1 source changed. 1 pipeline in the release.</text>
+  </g>
+</svg>
