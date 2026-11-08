@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>US Macro Regimes</title>
+<!--
+  US macro regimes: reads 27 FRED series into four scores (growth, inflation, liquidity, risk
+  appetite), places every month since 1991 in one of four regimes by where growth and inflation are
+  heading, and turns the current regime into trading directions from what five assets did after
+  past months in the same regime.
+
+  Views:
+  - Regime: Three.js tunnel. x = growth momentum, y = inflation momentum, z = time, one point per
+    month along a thread; grey frames mark NBER recessions. Opens at today's end looking back.
+  - Signals: D3, the four pillar scores over time with recessions and the regime strip.
+  - Liquidity: D3, Fed net liquidity (balance sheet − reverse repo − Treasury account) against
+    stocks or Bitcoin, and policy rates.
+  - Playbook: D3, average forward return and hit rate per regime and asset; nearest past months
+    ("rhymes with") in the panel.
+
+  Data: FRED, Federal Reserve Bank of St. Louis (fred.stlouisfed.org), bundled as monthly averages
+  in data/fred-macro.json by scripts/mocks/fred-macro/build.mjs (`npm run fred`). FRED sends no
+  CORS headers, so the page can't fetch it directly: the panel links FRED's own zip downloads and
+  "Update data" reads them into IndexedDB. The parser between the `// <fred-files>` markers is
+  shared with build.mjs.
+  Scores are z-scores over the whole sample, so history is scored with hindsight; trading
+  directions only use months before the one being read.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-pink: #e58fb0;
+    --color-danger: #ff7a7a;
+    --color-good: #9ccf7f;
+    --color-bad: #f2706b;
+    --color-ink-2: #b8b5ac;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base { *, ::before, ::after { border-color: var(--color-border); } }
+</style>
+<style>
+  body { margin: 0; background: #15171b; }
+  .fi { display: inline-flex; line-height: 1; }
+  #stage { isolation: isolate; background: radial-gradient(ellipse 80% 70% at 60% 48%, #1b1e24 0%, #15171b 72%); touch-action: none; }
+  #stage canvas { display: block; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+  .lbl { font: 400 10.5px "Source Code Pro", monospace; color: #8b9099; white-space: nowrap; }
+  .lbl.q { font: 500 12px "IBM Plex Sans Condensed", sans-serif; letter-spacing: 0.01em; }
+  .lbl.now { color: #1fefd7; }
+  .lbl.sel { color: #f6c453; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
+  #drawer { --pg-panel-w: 380px; }   /* desktop panel width for this mock */
+  #chart { position: absolute; inset: 0; display: none; }
+  body[data-view="signals"] #chart, body[data-view="liquidity"] #chart, body[data-view="playbook"] #chart { display: block; }
+  body:not([data-view="regime"]) #stage canvas, body:not([data-view="regime"]) #stage .labels { visibility: hidden; }
+  #chart text { font: 400 10.5px "Source Code Pro", monospace; fill: #8b9099; }
+  #chart .ttl { font: 500 12px "IBM Plex Sans Condensed", sans-serif; fill: #b8b5ac; }
+  #chart .domain { display: none; }
+  #chart .tick line { stroke: #23262d; }
+  .meter { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; width: 70px; }
+  .meter span { height: 8px; border-radius: 2px; background: #23262d; }
+
+  /* <pg-layout v1> Playground layout standard (scripts/mocks/template/playground.html).
+     Side panel: a floating card on the left from 900px wide (.pg-float); below 900px it is a
+     drawer that slides in from the left over a scrim, with the stage legend folded into it.
+     Keep this block identical across mocks; check.mjs compares it with the template. */
+  .pg-drawer { display: flex; flex-direction: column; min-height: 0; }
+  .pg-drawer-head, .pg-drawer-legend, .pg-drawer-btn, .pg-scrim { display: none; }
+  @media (min-width: 900px) {
+    .pg-float { position: absolute; z-index: 10; left: 1.5rem; top: 4.5rem; width: var(--pg-panel-w, 360px); max-height: calc(100% - 6rem); }
+  }
+  @media (max-width: 899px) {
+    .pg-drawer { position: fixed; inset: 0 auto 0 0; z-index: 45; width: min(var(--pg-drawer-w, 360px), 88vw); height: auto; max-height: none; border: 0; border-right: 1px solid #2b2f37; border-radius: 0 0.75rem 0.75rem 0; background: #1d2026; box-shadow: 0 10px 40px rgb(0 0 0 / 0.5); transform: translateX(-104%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
+    body[data-drawer="open"] .pg-drawer { transform: none; visibility: visible; transition: transform 0.22s ease; }
+    body[data-drawer="open"] .pg-scrim { display: block; position: fixed; inset: 0; z-index: 44; background: rgb(0 0 0 / 0.5); }
+    .pg-drawer-head { display: flex; align-items: center; gap: 0.625rem; flex-shrink: 0; height: 3.5rem; padding: 0 0.75rem 0 1rem; border-bottom: 1px solid #2b2f37; }
+    .pg-drawer-legend:not(:empty) { display: block; flex-shrink: 0; padding: 0.75rem 1rem; border-top: 1px solid #2b2f37; font-size: 0.75rem; color: #8b9099; }
+    .pg-drawer-btn { display: inline-flex; }
+    .pg-hide-mobile, .pg-legend { display: none !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { .pg-drawer { transition: none !important; } }
+  /* </pg-layout> */
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased" data-view="regime">
+<div class="fixed inset-0 overflow-hidden">
+  <div id="stage" class="absolute inset-0"><svg id="chart" role="img" aria-label="Chart"></svg></div>
+  <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
+    <button id="drawer-btn" type="button" class="pg-drawer-btn pointer-events-auto size-9 shrink-0 items-center justify-center rounded-md border bg-background/80 text-base backdrop-blur hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-controls="drawer" aria-expanded="false" aria-label="Open the panel"><i class="fi fi-rr-menu-burger"></i></button>
+    <a href="/playground" class="pg-hide-mobile pointer-events-auto rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <span class="hidden text-sm text-muted-foreground xl:inline">Playground · US macro regimes</span>
+    <div role="tablist" aria-label="Views" id="tabs" class="pointer-events-auto mx-auto inline-flex h-9 max-w-full items-center overflow-x-auto rounded-lg bg-muted p-1 text-muted-foreground"></div>
+    <label id="action" class="pointer-events-auto inline-flex h-9 cursor-pointer items-center gap-2 whitespace-nowrap rounded-md border bg-background/80 px-3 text-sm font-medium transition-colors hover:bg-accent focus-within:ring-1 focus-within:ring-ring" title="Load FRED downloads (zip or CSV) into this browser"><i class="fi fi-rr-file-upload text-primary"></i><span class="hidden sm:inline">Update data</span><input id="files" type="file" multiple accept=".zip,.csv,application/zip,text/csv" class="sr-only" /></label>
+  </header>
+  <aside id="drawer" class="pg-drawer pg-float overflow-hidden rounded-xl border bg-card/90 shadow backdrop-blur" aria-label="Panel">
+    <div class="pg-drawer-head">
+      <a href="/playground" class="font-brand text-[24px] leading-none hover:text-primary" title="Back to the Playground">inoTives</a>
+      <span class="min-w-0 flex-1 truncate text-sm text-muted-foreground">US macro regimes</span>
+      <button id="drawer-close" type="button" class="inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Close the panel"><i class="fi fi-rr-cross-small"></i></button>
+    </div>
+    <div id="panel" class="scroll-thin min-h-0 flex-1 overflow-auto p-4"><p class="text-xs text-muted-foreground">Loading FRED data…</p></div>
+    <div id="drawer-legend" class="pg-drawer-legend"></div>
+  </aside>
+  <div id="scrim" class="pg-scrim"></div>
+  <div id="legend" class="pg-legend pointer-events-none absolute bottom-3 right-4 z-10 rounded-lg border bg-card/80 px-3 py-2 text-xs text-muted-foreground backdrop-blur"></div>
+  <div id="toast" hidden role="status" class="absolute bottom-4 left-1/2 z-40 max-w-[90vw] -translate-x-1/2 rounded-md border bg-background/95 px-3 py-2 text-xs shadow-lg"></div>
+</div>
+<div id="tip" hidden class="pointer-events-none fixed z-40 max-w-[280px] rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
+
+<script>
+/* <pg-layout-js v1> Playground layout standard: the mobile drawer (scripts/mocks/template/playground.html).
+   Opens from #drawer-btn; closes from #drawer-close, the scrim, Escape, links to #anchors or
+   [data-drawer-close] inside it, and when the window grows past 900px. Mirrors #legend into
+   #drawer-legend. Mocks can call window.pgDrawer.open() / .close(). Keep identical across mocks. */
+(() => {
+  const body = document.body, btn = document.getElementById('drawer-btn');
+  const set = (open) => { body.dataset.drawer = open ? 'open' : ''; btn?.setAttribute('aria-expanded', String(open)); };
+  const close = (refocus) => { if (body.dataset.drawer !== 'open') return; set(false); if (refocus) btn?.focus(); };
+  btn?.addEventListener('click', () => set(body.dataset.drawer !== 'open'));
+  document.getElementById('drawer-close')?.addEventListener('click', () => close(true));
+  document.getElementById('scrim')?.addEventListener('click', () => close(false));
+  document.getElementById('drawer')?.addEventListener('click', (e) => { if (e.target.closest('a[href^="#"], [data-drawer-close]')) close(false); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && body.dataset.drawer === 'open') { e.stopImmediatePropagation(); close(true); } }, true);
+  matchMedia('(min-width: 900px)').addEventListener('change', (m) => { if (m.matches) set(false); });
+  const legend = document.getElementById('legend'), copy = document.getElementById('drawer-legend');
+  if (legend && copy) {
+    const sync = () => { copy.innerHTML = legend.hidden ? '' : legend.innerHTML.trim(); };
+    new MutationObserver(sync).observe(legend, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+    sync();
+  }
+  window.pgDrawer = { open: () => set(true), close: () => close(false) };
+})();
+/* </pg-layout-js> */
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// ================= helpers =================
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const B = { paper: '#15171b', raise: '#1d2026', muted: '#23262d', line: '#2b2f37', ink: '#e4e1d8', ink2: '#b8b5ac', fog: '#8b9099', signal: '#1fefd7', amber: '#f6c453', good: '#9ccf7f', bad: '#f2706b', sky: '#7cc4dc', clay: '#e9a66c', rose: '#e58fb0', violet: '#c9a4f5' };
+let toastTimer;
+const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3600); };
+const tip = $('#tip');
+function showTip(html, ev) {
+  tip.innerHTML = html; tip.hidden = false;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - 14;
+  if (y + h > innerHeight - 8) y = ev.clientY - h - 14;
+  tip.style.left = `${x}px`; tip.style.top = `${y}px`;
+}
+const hideTip = () => { tip.hidden = true; };
+
+// shadcn/ui-style building blocks for the panel
+const section = (title, body, icon = '') => `<div class="mt-5"><div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">${icon ? `<i class="fi ${icon}"></i>` : ''}${esc(title)}</div>${body}</div>`;
+const btnCls = 'inline-flex h-8 items-center justify-center gap-1.5 rounded-md border bg-background/60 px-2.5 text-xs font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50';
+const toggle = (opts, value, act) => `<div class="inline-flex h-8 max-w-full items-center overflow-x-auto rounded-md bg-muted p-0.5 text-xs text-muted-foreground">${opts.map(([v, l]) => `<button type="button" data-act="${act}" data-v="${v}" data-state="${String(v) === String(value) ? 'active' : ''}" class="whitespace-nowrap rounded px-2.5 py-1 font-medium transition-colors hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow">${esc(l)}</button>`).join('')}</div>`;
+const extLink = (href, text) => `<a href="${href}" target="_blank" rel="noopener" class="text-primary hover:underline">${esc(text)}</a>`;
+const fredLink = (id) => extLink(`https://fred.stlouisfed.org/series/${id}`, id);
+
+const f = {
+  pct: d3.format('+.1%'), pct0: d3.format('.0%'), pctU: d3.format('.1%'), sc: d3.format('+.2f'), n2: d3.format('.2f'), pp: (v) => `${d3.format('+.2f')(v)} pp`,
+  tn: (v) => `$${d3.format('.2f')(v / 1000)}tn`, int: d3.format(','),
+};
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// ================= browser datastore (IndexedDB) =================
+const IDB = { name: 'inotives-fred-macro', store: 'kv' };
+function idbOpen() {
+  return new Promise((ok, no) => { const r = indexedDB.open(IDB.name, 1); r.onupgradeneeded = () => r.result.createObjectStore(IDB.store); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+}
+async function idb(mode, fn) {
+  const db = await idbOpen();
+  try { return await new Promise((ok, no) => { const tx = db.transaction(IDB.store, mode), req = fn(tx.objectStore(IDB.store)); tx.oncomplete = () => ok(req?.result); tx.onerror = () => no(tx.error); }); }
+  finally { db.close(); }
+}
+const store = {
+  get: async (key) => { try { return await idb('readonly', (s) => s.get(key)); } catch { return null; } },
+  put: async (key, value) => { try { await idb('readwrite', (s) => s.put(value, key)); return true; } catch { return false; } },
+  del: async (key) => { try { await idb('readwrite', (s) => s.delete(key)); } catch { /* blocked */ } },
+};
+
+// ================= FRED files → monthly series =================
+// scripts/mocks/fred-macro/build.mjs imports everything between the fred-files markers, so the
+// script and "Update data" read FRED's downloads the same way. Keep it free of page globals.
+// <fred-files>
+const START = '1990-01';
+const SETS = [
+  { id: 'growth', name: 'Growth and inflation', ids: ['INDPRO', 'PAYEMS', 'ICSA', 'UNRATE', 'RSAFS', 'CPIAUCSL', 'PCEPILFE', 'T5YIE', 'USREC'] },
+  { id: 'liquidity', name: 'Liquidity and rates', ids: ['FEDFUNDS', 'WALCL', 'RRPONTSYD', 'WTREGEN', 'M2SL', 'DGS10', 'DGS2', 'T10Y2Y', 'T10Y3M'] },
+  { id: 'markets', name: 'Markets and stress', ids: ['BAMLH0A0HYM2', 'BAA10Y', 'NFCI', 'VIXCLS', 'DTWEXBGS', 'SP500', 'NASDAQCOM', 'DCOILWTICO', 'CBBTCUSD'] },
+];
+const KNOWN = new Set(SETS.flatMap((s) => s.ids));
+const setUrl = (s) => `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${s.ids.join(',')}`;
+
+function parseCsv(text, obs) {
+  const [head, ...rows] = text.trim().split(/\r?\n/);
+  const cols = head.split(',');
+  if (cols[0] !== 'observation_date') return;
+  for (const row of rows) {
+    const cells = row.split(',');
+    for (let c = 1; c < cols.length; c++) {
+      const v = Number(cells[c]);
+      if (cells[c] !== '' && cells[c] !== '.' && Number.isFinite(v)) (obs[cols[c]] ||= []).push([cells[0], v]);
+    }
+  }
+}
+const inflate = (bytes) => new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+async function readFredFiles(files) {
+  const obs = {}, dec = new TextDecoder();
+  for (const file of files) {
+    const buf = new Uint8Array(await file.arrayBuffer());
+    if (buf[0] === 0x50 && buf[1] === 0x4b) {
+      const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+      for (let p = 0; p + 30 <= buf.length && dv.getUint32(p, true) === 0x04034b50;) {
+        const method = dv.getUint16(p + 8, true), size = dv.getUint32(p + 18, true), nl = dv.getUint16(p + 26, true), xl = dv.getUint16(p + 28, true);
+        const name = dec.decode(buf.subarray(p + 30, p + 30 + nl)), at = p + 30 + nl + xl, data = buf.subarray(at, at + size);
+        if (name.endsWith('.csv')) parseCsv(method === 8 ? await inflate(data) : dec.decode(data), obs);
+        p = at + size;
+      }
+    } else parseCsv(dec.decode(buf), obs);
+  }
+  return obs;
+}
+function toMonthly(obs) {
+  const last = Object.values(obs).flat().reduce((m, [d]) => (d > m ? d : m), START);
+  const months = [];
+  for (let [y, m] = START.split('-').map(Number); `${y}-${String(m).padStart(2, '0')}` <= last.slice(0, 7); m === 12 ? (y++, m = 1) : m++) months.push(`${y}-${String(m).padStart(2, '0')}`);
+  const at = new Map(months.map((k, i) => [k, i]));
+  const series = {}, lastObs = {};
+  for (const [id, list] of Object.entries(obs)) {
+    const sum = new Array(months.length).fill(0), n = new Array(months.length).fill(0);
+    for (const [d, v] of list) { const i = at.get(d.slice(0, 7)); if (i != null) { sum[i] += v; n[i]++; } }
+    series[id] = sum.map((s, i) => (n[i] ? Number((s / n[i]).toPrecision(6)) : null));
+    lastObs[id] = list.at(-1)[0];
+  }
+  return { start: START, months: months.length, series, last: lastObs };
+}
+// new series replace old ones; series the files don't carry are kept
+function mergeRaw(base, upd) {
+  const months = Math.max(base?.months || 0, upd.months);
+  const pad = (a) => (a.length < months ? a.concat(new Array(months - a.length).fill(null)) : a);
+  const series = {}, last = { ...(base?.last || {}), ...upd.last };
+  for (const [k, v] of Object.entries(base?.series || {})) series[k] = pad(v);
+  for (const [k, v] of Object.entries(upd.series)) series[k] = pad(v);
+  return { built: new Date().toISOString().slice(0, 10), source: 'FRED, Federal Reserve Bank of St. Louis', start: START, months, series, last };
+}
+const newest = (raw) => Object.values(raw?.last || {}).reduce((m, d) => (d > m ? d : m), '');
+// </fred-files>
+
+// ================= the model =================
+const REGIMES = [
+  { id: 'goldilocks', name: 'Goldilocks', color: B.sky, line: 'Growth is picking up while inflation eases.' },
+  { id: 'reflation', name: 'Reflation', color: B.clay, line: 'Growth and inflation are both picking up.' },
+  { id: 'stagflation', name: 'Stagflation', color: B.rose, line: 'Growth is slowing while inflation picks up.' },
+  { id: 'slowdown', name: 'Slowdown', color: B.violet, line: 'Growth is slowing and inflation is easing.' },
+];
+const MOMENTUM = 6;   // months: regimes read the 6-month change in the growth and inflation scores
+const ASSETS = [
+  { id: 'eq', name: 'US stocks', note: 'Nasdaq Composite', series: 'NASDAQCOM', risk: 1 },
+  { id: 'bond', name: '10-year Treasuries', note: 'Approximate total return: carry minus 8 × change in yield', series: 'DGS10', risk: -1 },
+  { id: 'usd', name: 'US dollar', note: 'Broad trade-weighted index, from 2006', series: 'DTWEXBGS', risk: -1 },
+  { id: 'oil', name: 'Crude oil', note: 'WTI spot', series: 'DCOILWTICO', risk: 1 },
+  { id: 'btc', name: 'Bitcoin', note: 'Coinbase price, from 2015', series: 'CBBTCUSD', risk: 1 },
+];
+const PILLARS = [
+  { id: 'G', name: 'Growth', color: B.ink, parts: [
+    { k: 'ip', name: 'Industrial production, year on year', id: 'INDPRO', fmt: f.pct },
+    { k: 'pay', name: 'Payrolls, year on year', id: 'PAYEMS', fmt: f.pct },
+    { k: 'claims', name: 'Jobless claims, 3-month average vs a year ago', id: 'ICSA', fmt: f.pct, inv: true },
+    { k: 'retail', name: 'Retail sales after inflation, year on year', id: 'RSAFS', fmt: f.pct },
+    { k: 'sahm', name: 'Sahm gap: unemployment above its 12-month low', id: 'UNRATE', fmt: f.pp, inv: true },
+  ] },
+  { id: 'I', name: 'Inflation', color: B.ink, parts: [
+    { k: 'cpi', name: 'CPI, year on year', id: 'CPIAUCSL', fmt: f.pct },
+    { k: 'core', name: 'Core PCE, year on year', id: 'PCEPILFE', fmt: f.pct },
+    { k: 'be', name: '5-year breakeven inflation', id: 'T5YIE', fmt: (v) => `${f.n2(v)}%` },
+  ] },
+  { id: 'L', name: 'Liquidity', color: B.ink, parts: [
+    { k: 'ff6', name: 'Fed funds, change over 6 months', id: 'FEDFUNDS', fmt: f.pp, inv: true },
+    { k: 'm2', name: 'M2 money supply, year on year', id: 'M2SL', fmt: f.pct },
+    { k: 'nl6', name: 'Net liquidity, change over 6 months', id: 'WALCL', fmt: f.pct },
+  ] },
+  { id: 'R', name: 'Risk appetite', color: B.ink, parts: [
+    { k: 'baa', name: 'Baa corporate spread over 10-year', id: 'BAA10Y', fmt: (v) => `${f.n2(v)} pp`, inv: true },
+    { k: 'nfci', name: 'Chicago Fed financial conditions', id: 'NFCI', fmt: f.sc, inv: true },
+    { k: 'vix', name: 'VIX', id: 'VIXCLS', fmt: d3.format('.1f'), inv: true },
+    { k: 'curve', name: '10-year minus 3-month yield', id: 'T10Y3M', fmt: (v) => `${f.sc(v)} pp` },
+    { k: 'usd6', name: 'Dollar, change over 6 months', id: 'DTWEXBGS', fmt: f.pct, inv: true },
+  ] },
+];
+
+function buildModel(raw) {
+  const N = raw.months, S = raw.series;
+  const [y0, m0] = raw.start.split('-').map(Number);
+  const mIdx = (i) => ({ y: y0 + Math.floor((m0 - 1 + i) / 12), m: (m0 - 1 + i) % 12 });
+  const label = (i) => { const { y, m } = mIdx(i); return `${MON[m]} ${y}`; };
+  const date = (i) => { const { y, m } = mIdx(i); return new Date(y, m, 15); };
+  const blank = () => new Array(N).fill(null);
+  const get = (id) => S[id] || blank();
+  // carry a value forward up to 3 months: monthly releases lag the calendar
+  const ffill = (a, gap = 3) => { const o = a.slice(); let last = null, age = 0; for (let i = 0; i < N; i++) { if (o[i] != null) { last = o[i]; age = 0; } else if (last != null && ++age <= gap) o[i] = last; } return o; };
+  const map = (fn) => Array.from({ length: N }, (_, i) => fn(i));
+  const ok = (...v) => v.every((x) => x != null && Number.isFinite(x));
+  const pct = (a, k) => map((i) => (i >= k && ok(a[i], a[i - k]) && a[i - k] ? a[i] / a[i - k] - 1 : null));
+  const diff = (a, k) => map((i) => (i >= k && ok(a[i], a[i - k]) ? a[i] - a[i - k] : null));
+  const avg = (a, k) => map((i) => { if (i < k - 1) return null; let s = 0; for (let j = i - k + 1; j <= i; j++) { if (a[j] == null) return null; s += a[j]; } return s / k; });
+  const neg = (a) => a.map((v) => (v == null ? null : -v));
+  const z = (a) => { const v = a.filter((x) => x != null); if (!v.length) return a; const m = d3.mean(v), sd = d3.deviation(v) || 1; return a.map((x) => (x == null ? null : Math.max(-3, Math.min(3, (x - m) / sd)))); };
+  const mean = (arrs) => map((i) => { const v = arrs.map((a) => a[i]).filter((x) => x != null); return v.length ? d3.mean(v) : null; });
+  const s = Object.fromEntries([...KNOWN].map((k) => [k, ffill(get(k))]));
+
+  // the last month with a payrolls release: later months only have market data
+  let last = N - 1; while (last > 0 && get('PAYEMS')[last] == null) last--;
+
+  const cpiY = pct(s.CPIAUCSL, 12), retY = pct(s.RSAFS, 12);
+  const ua = avg(s.UNRATE, 3);
+  const sahm = map((i) => { if (i < 15 || ua[i] == null) return null; let lo = Infinity; for (let j = i - 12; j < i; j++) if (ua[j] != null) lo = Math.min(lo, ua[j]); return ua[i] - lo; });
+  const nl = map((i) => (ok(s.WALCL[i], s.RRPONTSYD[i], s.WTREGEN[i]) ? s.WALCL[i] / 1e3 - s.RRPONTSYD[i] - s.WTREGEN[i] / 1e3 : null)); // $bn
+  const ind = {
+    ip: pct(s.INDPRO, 12), pay: pct(s.PAYEMS, 12), claims: pct(avg(s.ICSA, 3), 12), retail: map((i) => (ok(retY[i], cpiY[i]) ? retY[i] - cpiY[i] : null)), sahm,
+    cpi: cpiY, core: pct(s.PCEPILFE, 12), be: s.T5YIE,
+    ff6: diff(s.FEDFUNDS, 6), m2: pct(s.M2SL, 12), nl6: pct(nl, 6),
+    baa: s.BAA10Y, nfci: s.NFCI, vix: s.VIXCLS, curve: s.T10Y3M, usd6: pct(s.DTWEXBGS, 6),
+  };
+  const zz = {};
+  for (const p of PILLARS) for (const c of p.parts) zz[c.k] = c.inv ? neg(z(ind[c.k])) : z(ind[c.k]);
+  const pill = (id) => mean(PILLARS.find((p) => p.id === id).parts.map((c) => zz[c.k]));
+  const G = avg(pill('G'), 3), I = avg(pill('I'), 3), L = pill('L'), R = pill('R');
+  const gM = diff(G, MOMENTUM), iM = diff(I, MOMENTUM);
+  const regime = map((i) => (i <= last && ok(gM[i], iM[i]) ? (gM[i] >= 0 ? (iM[i] < 0 ? 0 : 1) : (iM[i] >= 0 ? 2 : 3)) : null));
+  const first = regime.findIndex((r) => r != null);
+  const fwd = {
+    eq: (i, h) => (ok(s.NASDAQCOM[i], s.NASDAQCOM[i + h]) ? s.NASDAQCOM[i + h] / s.NASDAQCOM[i] - 1 : null),
+    bond: (i, h) => (ok(s.DGS10[i], s.DGS10[i + h]) ? (s.DGS10[i] / 100) * (h / 12) - (8 * (s.DGS10[i + h] - s.DGS10[i])) / 100 : null),
+    usd: (i, h) => (ok(s.DTWEXBGS[i], s.DTWEXBGS[i + h]) ? s.DTWEXBGS[i + h] / s.DTWEXBGS[i] - 1 : null),
+    oil: (i, h) => (ok(s.DCOILWTICO[i], s.DCOILWTICO[i + h]) ? s.DCOILWTICO[i + h] / s.DCOILWTICO[i] - 1 : null),
+    btc: (i, h) => (ok(s.CBBTCUSD[i], s.CBBTCUSD[i + h]) ? s.CBBTCUSD[i + h] / s.CBBTCUSD[i] - 1 : null),
+  };
+  // forward returns in regime r over h months, from months whose window closed before `before`
+  const stats = (r, a, h, before = last + 1) => {
+    const v = [];
+    for (let i = first; i + h < before && i + h < N; i++) if (regime[i] === r) { const x = fwd[a](i, h); if (x != null) v.push(x); }
+    if (!v.length) return { n: 0 };
+    const mu = d3.mean(v), sd = d3.deviation(v) || 1;
+    return { n: v.length, mean: mu, hit: v.filter((x) => x > 0).length / v.length, sr: mu / sd };
+  };
+  return { N, last, first, label, date, s, ind, nl, G, I, L, R, gM, iM, regime, fwd, stats, usrec: get('USREC') };
+}
+
+// trading directions for month t: the forward record of its regime, nudged by liquidity and risk appetite
+const DIRS = [['Short', B.bad, -2], ['Lean short', B.bad, -1], ['Neutral', B.fog, 0], ['Lean long', B.good, 1], ['Long', B.good, 2]];
+function directions(t, h) {
+  const r = M.regime[t];
+  const tilt = ((M.L[t] ?? 0) + (M.R[t] ?? 0)) / 2;
+  return ASSETS.map((a) => {
+    const st = M.stats(r, a.id, h, t + 1);
+    if (!st.n) return { a, st, dir: null };
+    const score = st.sr + 0.15 * a.risk * tilt;
+    const k = score >= 0.4 ? 4 : score >= 0.15 ? 3 : score > -0.15 ? 2 : score > -0.4 ? 1 : 0;
+    return { a, st, score, dir: DIRS[k] };
+  });
+}
+// nearest past months on the six scores, at least a year apart, with a full forward window
+function analogues(t, h, k = 6) {
+  const vec = (i) => [M.G[i], M.gM[i], M.I[i], M.iM[i], M.L[i], M.R[i]];
+  const target = vec(t);
+  if (target.some((x) => x == null)) return [];
+  const cand = [];
+  for (let i = M.first; i + h <= M.last && i < t - 24; i++) {
+    const v = vec(i); if (v.some((x) => x == null)) continue;
+    cand.push({ i, d: Math.hypot(...v.map((x, j) => x - target[j])) });
+  }
+  cand.sort((a, b) => a.d - b.d);
+  const out = [];
+  for (const c of cand) { if (out.every((o) => Math.abs(o.i - c.i) >= 12)) out.push(c); if (out.length === k) break; }
+  return out;
+}
+
+// ================= state =================
+const VIEWS = {
+  regime: { name: 'Regime', icon: 'fi-rr-cube' },
+  signals: { name: 'Signals', icon: 'fi-rr-pulse' },
+  liquidity: { name: 'Liquidity', icon: 'fi-rr-coins' },
+  playbook: { name: 'Playbook', icon: 'fi-rr-book-alt' },
+};
+const state = { view: 'regime', sel: null, h: 3, compare: 'eq', source: 'bundled', raw: null, storedAt: null };
+let M = null;
+const cur = () => state.sel ?? M.last;
+
+// ================= stage: the regime tunnel (Three.js) =================
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.prepend(renderer.domElement);
+const labelR = new CSS2DRenderer(); labelR.domElement.className = 'labels'; stage.appendChild(labelR.domElement);
+const label = (parent, html, x, y, z, cls = '') => {
+  const el = document.createElement('div'); el.className = `lbl ${cls}`; el.innerHTML = html;
+  const o = new CSS2DObject(el); o.position.set(x, y, z); parent.add(o); return o;
+};
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(B.paper, 9, 34);
+scene.add(new THREE.HemisphereLight('#cfe9ff', B.paper, 1.3));
+const keyLight = new THREE.DirectionalLight('#ffffff', 1.4); keyLight.position.set(-6, 10, 12); scene.add(keyLight);
+const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 200);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.enableZoom = false;   // the wheel travels through time instead (travel() below)
+
+const panelOffset = () => (innerWidth >= 900 ? ($('#drawer').offsetWidth + 24) / 2 : 0);
+const resize = () => {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h); labelR.setSize(w, h); camera.aspect = w / h;
+  const off = panelOffset();
+  if (off) camera.setViewOffset(w, h, -off, 0, w, h); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+  if (M && state.view !== 'regime') drawChart();
+};
+addEventListener('resize', resize);
+
+const DZ = 0.07, W = 2.4;                                   // depth per month, half-width of the frame
+const sq = (v) => W * Math.tanh(v / 1.3);                   // squash 2020/2021 so the rest stays readable
+const pos = (i) => new THREE.Vector3(sq(M.gM[i]), sq(M.iM[i]), (i - M.last) * DZ);
+let tunnel = new THREE.Group(); scene.add(tunnel);
+let dots = null, selMark = null, selLabel = null, pts = [];
+const VIEWPOINTS = {
+  now: { pos: [5.2, 3.4, 9.2], target: [0, 0, -2.6] },
+  history: { pos: [20, 9, -6], target: [0, 0, -14] },
+};
+function frameRect(z, color, opacity) {
+  const g = new THREE.BufferGeometry().setFromPoints([[-W, -W], [W, -W], [W, W], [-W, W]].map(([x, y]) => new THREE.Vector3(x, y, z)));
+  return new THREE.LineLoop(g, new THREE.LineBasicMaterial({ color, transparent: true, opacity, fog: true }));
+}
+function buildTunnel() {
+  scene.remove(tunnel);
+  tunnel.traverse((o) => { if (o.element instanceof Element) o.element.remove(); o.geometry?.dispose(); o.material?.dispose(); });
+  tunnel = new THREE.Group(); scene.add(tunnel);
+  const idx = d3.range(M.first, M.last + 1).filter((i) => M.regime[i] != null);
+  pts = idx.map((i) => ({ i, p: pos(i) }));
+  const zMin = (M.first - M.last) * DZ;
+
+  // the axes run the length of the tunnel: growth momentum across, inflation momentum up
+  const axis = (a, b, color, opacity) => tunnel.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([a, b]), new THREE.LineBasicMaterial({ color, transparent: true, opacity })));
+  axis(new THREE.Vector3(0, -W, 0.4), new THREE.Vector3(0, -W, zMin), B.fog, 0.25);
+  axis(new THREE.Vector3(-W, 0, 0.4), new THREE.Vector3(-W, 0, zMin), B.fog, 0.25);
+  // the front face: the quadrant cross and the four regime names
+  axis(new THREE.Vector3(-W, 0, 0.4), new THREE.Vector3(W, 0, 0.4), B.fog, 0.6);
+  axis(new THREE.Vector3(0, -W, 0.4), new THREE.Vector3(0, W, 0.4), B.fog, 0.6);
+  tunnel.add(frameRect(0.4, B.fog, 0.45));
+  const q = [[W, -W, 0], [W, W, 1], [-W, W, 2], [-W, -W, 3]];
+  q.forEach(([x, y, r]) => label(tunnel, REGIMES[r].name, x * 0.72, y * 0.88, 0.4, 'q').element.style.color = REGIMES[r].color);
+  label(tunnel, 'growth picking up →', W * 0.6, -0.14, 0.4);
+  label(tunnel, '↑ inflation picking up', 0.1, W * 0.94, 0.4);
+
+  // a frame every five years, and one for each month of recession
+  for (let i = M.first; i <= M.last; i++) {
+    const { y, m } = { y: M.date(i).getFullYear(), m: M.date(i).getMonth() };
+    const z = (i - M.last) * DZ;
+    if (M.usrec[i] === 1) tunnel.add(frameRect(z, B.fog, 0.22));
+    if (m === 0 && y % 5 === 0) { tunnel.add(frameRect(z, B.fog, 0.35)); label(tunnel, String(y), -W - 0.08, -W - 0.08, z); }
+  }
+
+  // the thread, coloured by regime
+  const col = new THREE.Color(), cols = [];
+  for (const { i } of pts) { col.set(REGIMES[M.regime[i]].color); cols.push(col.r, col.g, col.b); }
+  const lg = new THREE.BufferGeometry().setFromPoints(pts.map((d) => d.p));
+  lg.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  tunnel.add(new THREE.Line(lg, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.5 })));
+
+  // one sphere per month
+  dots = new THREE.InstancedMesh(new THREE.SphereGeometry(0.05, 12, 8), new THREE.MeshStandardMaterial({ roughness: 0.5 }), pts.length);
+  const mtx = new THREE.Matrix4();
+  pts.forEach(({ i, p }, k) => { mtx.makeTranslation(p.x, p.y, p.z); dots.setMatrixAt(k, mtx); dots.setColorAt(k, col.set(REGIMES[M.regime[i]].color)); });
+  tunnel.add(dots);
+
+  // the latest month: live, so it gets the signal colour
+  const now = pos(M.last);
+  const nowDot = new THREE.Mesh(new THREE.SphereGeometry(0.11, 20, 14), new THREE.MeshStandardMaterial({ color: B.signal, emissive: B.signal, emissiveIntensity: 0.35 }));
+  nowDot.position.copy(now); tunnel.add(nowDot);
+  label(tunnel, `${M.label(M.last)}`, now.x + 0.16, now.y + 0.16, now.z, 'now');
+
+  selMark = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 10), new THREE.MeshBasicMaterial({ color: B.amber, wireframe: true }));
+  selMark.visible = false; tunnel.add(selMark);
+  selLabel = label(tunnel, '', 0, 0, 0, 'sel'); selLabel.visible = false;
+  markSelection();
+}
+function markSelection() {
+  if (!selMark) return;
+  const on = state.sel != null && state.sel !== M.last && M.regime[state.sel] != null;
+  selMark.visible = on; selLabel.visible = on;
+  if (on) { const p = pos(state.sel); selMark.position.copy(p); selLabel.position.set(p.x + 0.16, p.y + 0.16, p.z); selLabel.element.textContent = M.label(state.sel); }
+}
+let flight = null;
+function fly(to, tt, animate, dur = 1800) {
+  if (!animate || reduceMotion) { camera.position.copy(to); controls.target.copy(tt); flight = null; return; }
+  flight = { t0: performance.now(), dur, p0: camera.position.clone(), t0v: controls.target.clone(), to, tt };
+}
+function look(name, animate) {
+  const v = VIEWPOINTS[name];
+  fly(new THREE.Vector3(...v.pos), new THREE.Vector3(...v.target), animate);
+}
+// Travel along the time axis: camera and target move together, so the view keeps its angle.
+// The target sits a little ahead of the month being looked at (VIEWPOINTS.now looks 2.6 deep).
+const depthZ = (i) => (i - M.last) * DZ - 2.6;
+const depthOf = () => Math.round(M.last + (controls.target.z + 2.6) / DZ);
+function travel(i, animate) {
+  if (!M) return;
+  i = Math.max(M.first, Math.min(M.last, i));
+  const dz = depthZ(i) - (flight ? flight.tt.z : controls.target.z);
+  const base = flight ? flight.to : camera.position, baseT = flight ? flight.tt : controls.target;
+  fly(base.clone().setZ(base.z + dz), baseT.clone().setZ(baseT.z + dz), animate, 700);
+  syncDepth(i);
+}
+function syncDepth(i = depthOf()) {
+  const r = $('#depth'), o = $('#depth-label');
+  if (r) r.value = i;
+  if (o) o.textContent = M.label(Math.max(M.first, Math.min(M.last, i)));
+}
+renderer.domElement.addEventListener('wheel', (e) => {
+  if (!M || state.view !== 'regime') return;
+  e.preventDefault();
+  const step = Math.sign(e.deltaY) * Math.max(1, Math.min(24, Math.round(Math.abs(e.deltaY) / 8)));
+  travel((flight ? Math.round(M.last + (flight.tt.z + 2.6) / DZ) : depthOf()) - step, false);
+}, { passive: false });
+// screen-space picking: the spheres are small, so take the nearest within 14px
+const ndc = new THREE.Vector3();
+function pick(ev) {
+  const r = renderer.domElement.getBoundingClientRect();
+  let best = null, bd = 14;
+  for (const d of pts) {
+    ndc.copy(d.p).applyMatrix4(tunnel.matrixWorld).project(camera);
+    if (ndc.z > 1) continue;
+    const x = (ndc.x + 1) / 2 * r.width + r.left, y = (1 - ndc.y) / 2 * r.height + r.top;
+    const dd = Math.hypot(x - ev.clientX, y - ev.clientY);
+    if (dd < bd) { bd = dd; best = d.i; }
+  }
+  return best;
+}
+const monthTip = (i) => {
+  const rg = REGIMES[M.regime[i]];
+  return `<div class="font-medium">${M.label(i)}${M.usrec[i] === 1 ? ' <span class="text-muted-foreground">recession</span>' : ''}</div><div style="color:${rg.color}">${rg.name}</div><div class="mt-0.5 font-mono text-[11px] text-muted-foreground">growth ${f.sc(M.gM[i])} · inflation ${f.sc(M.iM[i])}</div>`;
+};
+let down = null;
+renderer.domElement.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; flight = null; });
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse' || e.buttons) return hideTip();
+  const i = pick(e);
+  renderer.domElement.style.cursor = i == null ? '' : 'pointer';
+  if (i == null) hideTip(); else showTip(monthTip(i), e);
+});
+renderer.domElement.addEventListener('pointerleave', hideTip);
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
+  const i = pick(e);
+  if (i != null) select(i === M.last ? null : i, true);
+});
+
+renderer.setAnimationLoop((now) => {
+  if (state.view !== 'regime') return;
+  if (flight) {
+    const k = Math.min(1, (now - flight.t0) / flight.dur), e = d3.easeCubicInOut(k);
+    camera.position.lerpVectors(flight.p0, flight.to, e); controls.target.lerpVectors(flight.t0v, flight.tt, e);
+    if (k === 1) { flight = null; syncDepth(); }
+  }
+  controls.update(); renderer.render(scene, camera); labelR.render(scene, camera);
+});
+
+// ================= stage: 2D charts (D3) =================
+const svg = d3.select('#chart');
+function frame() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  const left = innerWidth >= 900 ? $('#drawer').offsetWidth + 24 + 40 : 16;
+  return { w, h, x0: left + 34, x1: w - (innerWidth >= 900 ? 56 : 40), y0: 76, y1: h - (innerWidth >= 900 ? 72 : 28) };
+}
+const recBands = (g, x, y0, y1) => {
+  const runs = []; let s = null;
+  for (let i = M.first; i <= M.last + 1; i++) { if (M.usrec[i] === 1 && s == null) s = i; if (M.usrec[i] !== 1 && s != null) { runs.push([s, i - 1]); s = null; } }
+  g.selectAll('rect.rec').data(runs).join('rect').attr('class', 'rec').attr('x', (d) => x(M.date(d[0]))).attr('width', (d) => Math.max(1, x(M.date(d[1])) - x(M.date(d[0])))).attr('y', y0).attr('height', y1 - y0).attr('fill', B.fog).attr('opacity', 0.1);
+};
+function hoverLayer(g, x, F, html) {
+  const rule = g.append('line').attr('y1', F.y0).attr('y2', F.y1).attr('stroke', B.ink2).attr('stroke-opacity', 0.4).attr('visibility', 'hidden');
+  const at = (ev) => { const d = x.invert(d3.pointer(ev)[0]); const i = Math.round((d.getFullYear() - M.date(0).getFullYear()) * 12 + d.getMonth() - M.date(0).getMonth()); return Math.max(M.first, Math.min(M.last, i)); };
+  g.append('rect').attr('x', F.x0).attr('y', F.y0).attr('width', F.x1 - F.x0).attr('height', F.y1 - F.y0).attr('fill', 'transparent').style('cursor', 'crosshair')
+    .on('pointermove', (ev) => { const i = at(ev); rule.attr('x1', x(M.date(i))).attr('x2', x(M.date(i))).attr('visibility', 'visible'); if (ev.pointerType === 'mouse') showTip(html(i), ev); })
+    .on('pointerleave', () => { rule.attr('visibility', 'hidden'); hideTip(); })
+    .on('click', (ev) => select(at(ev)));
+}
+const selRule = (g, x, F) => { const i = cur(); g.append('line').attr('x1', x(M.date(i))).attr('x2', x(M.date(i))).attr('y1', F.y0).attr('y2', F.y1).attr('stroke', state.sel == null ? B.signal : B.amber).attr('stroke-width', 1.25); };
+
+function drawSignals() {
+  const F = frame(), g = svg.append('g');
+  const x = d3.scaleTime().domain([M.date(M.first), M.date(M.last)]).range([F.x0, F.x1]);
+  const rows = [['G', 'Growth'], ['I', 'Inflation'], ['L', 'Liquidity'], ['R', 'Risk appetite']];
+  const stripH = 10, gap = 18, rowH = (F.y1 - F.y0 - stripH - gap * rows.length) / rows.length;
+  recBands(g, x, F.y0, F.y1 - stripH - 6);
+  rows.forEach(([k, name], r) => {
+    const top = F.y0 + r * (rowH + gap), y = d3.scaleLinear().domain([-2.5, 2.5]).range([top + rowH, top + 14]).clamp(true);
+    g.append('text').attr('class', 'ttl').attr('x', F.x0).attr('y', top + 8).text(name);
+    g.append('line').attr('x1', F.x0).attr('x2', F.x1).attr('y1', y(0)).attr('y2', y(0)).attr('stroke', B.line);
+    g.append('g').attr('transform', `translate(${F.x0 - 6},0)`).call(d3.axisLeft(y).tickValues([-2, 0, 2]).tickSize(0)).selectAll('text').attr('dx', -2);
+    const data = d3.range(M.first, M.last + 1).filter((i) => M[k][i] != null);
+    const area = d3.area().x((i) => x(M.date(i))).y0(y(0)).y1((i) => y(M[k][i])).curve(d3.curveMonotoneX);
+    g.append('path').datum(data).attr('d', area).attr('fill', B.ink2).attr('opacity', 0.12);
+    g.append('path').datum(data).attr('d', d3.line().x((i) => x(M.date(i))).y((i) => y(M[k][i])).curve(d3.curveMonotoneX)).attr('fill', 'none').attr('stroke', B.ink2).attr('stroke-width', 1.5);
+  });
+  // regime strip under the four rows
+  const sy = F.y1 - stripH, cw = Math.max(1, (F.x1 - F.x0) / (M.last - M.first + 1) + 0.6);
+  g.selectAll('rect.rg').data(d3.range(M.first, M.last + 1).filter((i) => M.regime[i] != null)).join('rect').attr('class', 'rg').attr('x', (i) => x(M.date(i)) - cw / 2).attr('width', cw).attr('y', sy).attr('height', stripH).attr('fill', (i) => REGIMES[M.regime[i]].color);
+  g.append('g').attr('transform', `translate(0,${F.y1 + 4})`).call(d3.axisBottom(x).ticks(innerWidth < 600 ? 5 : 10).tickSize(0)).selectAll('text').attr('dy', 10);
+  selRule(g, x, F);
+  hoverLayer(g, x, F, (i) => `${monthTip(i)}<div class="mt-1 grid grid-cols-2 gap-x-3 font-mono text-[11px]">${rows.map(([k, n]) => `<span class="text-muted-foreground">${n}</span><span>${M[k][i] == null ? '—' : f.sc(M[k][i])}</span>`).join('')}</div>`);
+}
+
+const COMPARE = { eq: { name: 'Nasdaq Composite', id: 'NASDAQCOM' }, sp: { name: 'S&P 500', id: 'SP500' }, btc: { name: 'Bitcoin', id: 'CBBTCUSD' } };
+function drawLiquidity() {
+  const F = frame(), g = svg.append('g');
+  const from = M.nl.findIndex((v) => v != null);
+  if (from < 0) { g.append('text').attr('x', F.x0).attr('y', F.y0 + 20).text('No balance sheet data loaded.'); return; }
+  const x = d3.scaleTime().domain([M.date(from), M.date(M.last)]).range([F.x0, F.x1]);
+  const split = F.y0 + (F.y1 - F.y0) * 0.62;
+  recBands(g, x, F.y0, F.y1);
+  // top: net liquidity against the comparison asset (log scale, right axis)
+  const idx = d3.range(from, M.last + 1);
+  const nlIdx = idx.filter((i) => M.nl[i] != null);
+  const yL = d3.scaleLinear().domain(d3.extent(nlIdx, (i) => M.nl[i])).nice().range([split - 10, F.y0 + 22]);
+  const cmp = COMPARE[state.compare], cs = M.s[cmp.id], cIdx = idx.filter((i) => cs[i] != null && cs[i] > 0);
+  const yR = d3.scaleLog().domain(d3.extent(cIdx, (i) => cs[i])).nice().range([split - 10, F.y0 + 22]);
+  g.append('text').attr('class', 'ttl').attr('x', F.x0).attr('y', F.y0 + 8).text(`Net liquidity, $tn (left) and ${cmp.name}, log (right)`);
+  g.append('g').attr('transform', `translate(${F.x0 - 6},0)`).call(d3.axisLeft(yL).ticks(5).tickFormat((v) => d3.format('.1f')(v / 1000)).tickSize(-(F.x1 - F.x0 + 6))).call((a) => a.selectAll('.tick line').attr('stroke', B.muted));
+  g.append('g').attr('transform', `translate(${F.x1 + 6},0)`).call(d3.axisRight(yR).ticks(4, '~s').tickSize(0));
+  g.append('path').datum(cIdx).attr('d', d3.line().x((i) => x(M.date(i))).y((i) => yR(cs[i])).curve(d3.curveMonotoneX)).attr('fill', 'none').attr('stroke', B.clay).attr('stroke-width', 1.5);
+  g.append('path').datum(nlIdx).attr('d', d3.line().x((i) => x(M.date(i))).y((i) => yL(M.nl[i])).curve(d3.curveMonotoneX)).attr('fill', 'none').attr('stroke', B.sky).attr('stroke-width', 1.75);
+  // bottom: policy and market rates
+  const rates = [['FEDFUNDS', 'Fed funds', B.violet], ['DGS2', '2-year', B.rose], ['DGS10', '10-year', B.ink2]];
+  const yB = d3.scaleLinear().domain([0, d3.max(rates, ([id]) => d3.max(idx, (i) => M.s[id][i]))]).nice().range([F.y1, split + 26]);
+  g.append('text').attr('class', 'ttl').attr('x', F.x0).attr('y', split + 14).text('Rates, %');
+  g.append('g').attr('transform', `translate(${F.x0 - 6},0)`).call(d3.axisLeft(yB).ticks(4).tickSize(-(F.x1 - F.x0 + 6))).call((a) => a.selectAll('.tick line').attr('stroke', B.muted));
+  for (const [id, , c] of rates) g.append('path').datum(idx.filter((i) => M.s[id][i] != null)).attr('d', d3.line().x((i) => x(M.date(i))).y((i) => yB(M.s[id][i])).curve(d3.curveMonotoneX)).attr('fill', 'none').attr('stroke', c).attr('stroke-width', 1.5);
+  g.append('g').attr('transform', `translate(0,${F.y1 + 4})`).call(d3.axisBottom(x).ticks(innerWidth < 600 ? 5 : 10).tickSize(0)).selectAll('text').attr('dy', 10);
+  selRule(g, x, F);
+  hoverLayer(g, x, F, (i) => `<div class="font-medium">${M.label(i)}</div><div class="mt-1 grid grid-cols-2 gap-x-3 font-mono text-[11px]"><span style="color:${B.sky}">Net liquidity</span><span>${M.nl[i] == null ? '—' : f.tn(M.nl[i])}</span><span style="color:${B.clay}">${cmp.name}</span><span>${cs[i] == null ? '—' : f.int(Math.round(cs[i]))}</span>${rates.map(([id, n, c]) => `<span style="color:${c}">${n}</span><span>${M.s[id][i] == null ? '—' : `${f.n2(M.s[id][i])}%`}</span>`).join('')}</div>`);
+}
+
+const heat = d3.scaleDiverging([-0.6, 0, 0.6], (t) => d3.interpolateRgbBasis([B.bad, B.muted, B.good])(t)).clamp(true);
+function drawPlaybook() {
+  const F = frame(), g = svg.append('g');
+  const t = cur(), r = M.regime[t];
+  const labW = innerWidth < 600 ? 78 : 100, cols = ASSETS.length;
+  const cw = Math.min(150, (F.x1 - F.x0 - labW) / cols), ch = Math.min(84, (F.y1 - F.y0 - 60) / 4);
+  const gx = F.x0 + Math.max(0, (F.x1 - F.x0 - labW - cw * cols) / 2), gy = F.y0 + Math.max(24, (F.y1 - F.y0 - ch * 4 - 40) / 2);
+  g.append('text').attr('class', 'ttl').attr('x', gx).attr('y', gy - 30).text(`What each asset did over the next ${state.h} months, by regime`);
+  ASSETS.forEach((a, c) => g.append('text').attr('x', gx + labW + c * cw + cw / 2).attr('y', gy - 10).attr('text-anchor', 'middle').text(innerWidth < 600 ? a.name.split(' ').at(-1) : a.name));
+  REGIMES.forEach((rg, row) => {
+    const y = gy + row * ch;
+    g.append('circle').attr('cx', gx + 5).attr('cy', y + ch / 2).attr('r', 4).attr('fill', rg.color);
+    g.append('text').attr('class', 'ttl').attr('x', gx + 14).attr('y', y + ch / 2 + 4).text(rg.name);
+    ASSETS.forEach((a, c) => {
+      const st = M.stats(row, a.id, state.h, t + 1), x = gx + labW + c * cw;
+      const cell = g.append('g').attr('transform', `translate(${x},${y})`);
+      cell.append('rect').attr('x', 2).attr('y', 2).attr('width', cw - 4).attr('height', ch - 4).attr('rx', 6).attr('fill', st.n ? heat(st.sr) : B.raise).attr('opacity', st.n ? 0.55 : 1);
+      if (!st.n) { cell.append('text').attr('x', cw / 2).attr('y', ch / 2 + 4).attr('text-anchor', 'middle').text('no data'); return; }
+      cell.append('text').attr('x', cw / 2).attr('y', ch / 2 - 2).attr('text-anchor', 'middle').style('font-size', '14px').style('fill', B.ink).text(f.pct(st.mean));
+      cell.append('text').attr('x', cw / 2).attr('y', ch / 2 + 15).attr('text-anchor', 'middle').style('fill', B.ink2).text(`${f.pct0(st.hit)} up · ${st.n}`);
+      cell.on('pointermove', (ev) => ev.pointerType === 'mouse' && showTip(`<div class="font-medium">${a.name} after ${rg.name} months</div><div class="mt-1 font-mono text-[11px] text-muted-foreground">${st.n} months · average ${f.pct(st.mean)} · up ${f.pct0(st.hit)} of the time · return per unit of risk ${f.n2(st.sr)}</div><div class="mt-1 text-[11px] text-muted-foreground">${esc(a.note)}</div>`, ev)).on('pointerleave', hideTip);
+    });
+    if (row === r) g.append('rect').attr('x', gx - 6).attr('y', y + 1).attr('width', labW + cw * cols + 10).attr('height', ch - 2).attr('rx', 8).attr('fill', 'none').attr('stroke', state.sel == null ? B.signal : B.amber).attr('stroke-width', 1.25);
+  });
+  g.append('text').attr('x', gx).attr('y', gy + 4 * ch + 22).text(`Months from ${M.label(M.first)} whose ${state.h}-month window closed by ${M.label(t)}. Cells: average return, share of months it rose, number of months.`);
+}
+function drawChart() {
+  svg.selectAll('*').remove();
+  const F = frame(); svg.attr('width', F.w).attr('height', F.h);
+  ({ signals: drawSignals, liquidity: drawLiquidity, playbook: drawPlaybook })[state.view]?.();
+}
+
+// ================= panel =================
+const quadGlyph = (t) => {
+  const r = M.regime[t], c = (k) => (k === r ? REGIMES[k].color : B.muted);
+  const px = 22 + 18 * Math.tanh(M.gM[t] / 1.3), py = 22 - 18 * Math.tanh(M.iM[t] / 1.3);
+  return `<svg width="46" height="46" viewBox="0 0 44 44" aria-hidden="true" class="shrink-0"><rect x="1" y="1" width="20" height="20" rx="3" fill="${c(2)}" opacity="${r === 2 ? 0.9 : 1}"/><rect x="23" y="1" width="20" height="20" rx="3" fill="${c(1)}" opacity="${r === 1 ? 0.9 : 1}"/><rect x="1" y="23" width="20" height="20" rx="3" fill="${c(3)}" opacity="${r === 3 ? 0.9 : 1}"/><rect x="23" y="23" width="20" height="20" rx="3" fill="${c(0)}" opacity="${r === 0 ? 0.9 : 1}"/><circle cx="${px}" cy="${py}" r="3.2" fill="${state.sel == null ? B.signal : B.amber}"/></svg>`;
+};
+const bar = (v) => {
+  const c = Math.max(-2.5, Math.min(2.5, v ?? 0)), w = (Math.abs(c) / 2.5) * 50;
+  return `<div class="relative h-1.5 rounded-full bg-muted"><span class="absolute top-[-3px] h-3 w-px bg-input" style="left:50%"></span><span class="absolute h-1.5 rounded-full bg-ink-2" style="${c >= 0 ? 'left:50%' : `left:${50 - w}%`};width:${w}%"></span></div>`;
+};
+const trend = (a, t, k) => { const d = a[t] != null && a[t - k] != null ? a[t] - a[t - k] : null; if (d == null) return ''; return `<span class="text-muted-foreground">${d >= 0.05 ? 'rising' : d <= -0.05 ? 'falling' : 'flat'}</span>`; };
+function pillarRows(t) {
+  const rows = [['G', 'Growth', MOMENTUM], ['I', 'Inflation', MOMENTUM], ['L', 'Liquidity', 3], ['R', 'Risk appetite', 3]];
+  return `<div class="space-y-2">${rows.map(([k, n, w]) => `<div class="grid grid-cols-[88px_1fr_88px] items-center gap-2.5 text-xs"><span>${n}</span>${bar(M[k][t])}<span class="text-right"><span class="font-mono">${M[k][t] == null ? '—' : f.sc(M[k][t])}</span> ${trend(M[k], t, w)}</span></div>`).join('')}</div>
+    <p class="mt-2 text-[11px] leading-relaxed text-muted-foreground">Each score averages its signals as standard deviations from their 1990–today mean. 0 is normal, ±2 is rare.</p>`;
+}
+function directionRows(t) {
+  const rows = directions(t, state.h);
+  const r = M.regime[t];
+  return `<div class="divide-y">${rows.map(({ a, st, dir }) => {
+    const k = dir ? DIRS.indexOf(dir) : -1;
+    const meter = `<div class="meter" aria-hidden="true">${DIRS.map((d, j) => `<span style="${k >= 0 && (k < 2 ? j >= k && j < 2 : k > 2 ? j > 2 && j <= k : j === 2) ? `background:${DIRS[k][1]}` : ''}"></span>`).join('')}</div>`;
+    return `<div class="grid grid-cols-[1fr_70px_74px] items-center gap-2.5 py-1.5 text-xs" title="${esc(a.note)}"><span class="min-w-0 truncate">${esc(a.name)}</span>${meter}<span class="text-right ${dir ? '' : 'text-muted-foreground'}" style="${dir ? `color:${dir[1]}` : ''}">${dir ? dir[0] : 'No data'}</span>
+      ${st.n ? `<span class="col-span-3 -mt-1 font-mono text-[11px] text-muted-foreground">${f.pct(st.mean)} avg · up ${f.pct0(st.hit)} · ${st.n} months${st.n < 24 ? ' · few cases' : ''}</span>` : ''}</div>`;
+  }).join('')}</div>
+  <div class="mt-2 flex items-center justify-between gap-2"><span class="text-[11px] text-muted-foreground">Horizon</span>${toggle([[3, '3 months'], [6, '6 months'], [12, '12 months']], state.h, 'h')}</div>
+  <p class="mt-2 text-[11px] leading-relaxed text-muted-foreground">From what each asset did after past ${REGIMES[r].name.toLowerCase()} months, using only months before ${M.label(t)}, nudged toward risk when liquidity and risk appetite are high. A reading of history, not advice.</p>`;
+}
+function viewSection(t) {
+  if (state.view === 'regime') return section('The tunnel', `<p class="text-xs leading-relaxed text-ink-2">Each point is a month. Across is whether growth is picking up, up is whether inflation is, both over ${MOMENTUM} months. Time runs into the screen, so the thread shows how the economy moved between regimes. Grey frames are recession months.</p>
+    <label class="mt-3 block text-xs"><span class="flex items-baseline justify-between"><span class="text-muted-foreground">Travel back to</span><span id="depth-label" class="font-mono">${M.label(depthOf())}</span></span>
+      <input id="depth" type="range" min="${M.first}" max="${M.last}" step="1" value="${Math.max(M.first, Math.min(M.last, depthOf()))}" class="mt-1.5 w-full accent-[#1fefd7]" aria-label="Month to travel back to" /></label>
+    <p class="mt-1 text-[11px] text-muted-foreground">Or scroll over the tunnel. Drag to turn it.</p>
+    <div class="mt-2 flex gap-1.5"><button type="button" data-act="look" data-v="now" class="${btnCls} flex-1"><i class="fi fi-rr-time-fast"></i>From today</button><button type="button" data-act="look" data-v="history" class="${btnCls} flex-1"><i class="fi fi-rr-time-past"></i>Whole history</button></div>`, 'fi-rr-cube');
+  if (state.view === 'signals') return PILLARS.map((p) => section(p.name, `<div class="space-y-1">${p.parts.map((c) => { const v = M.ind[c.k][t]; return `<div class="flex items-baseline justify-between gap-3 text-xs"><span class="min-w-0 text-ink-2">${esc(c.name)} <span class="text-[10px]">${fredLink(c.id)}</span></span><span class="shrink-0 font-mono">${v == null ? '—' : c.fmt(v)}</span></div>`; }).join('')}</div>`)).join('');
+  if (state.view === 'liquidity') {
+    const s = M.s, nl6 = M.ind.nl6[t];
+    const row = (n, v, id) => `<div class="flex items-baseline justify-between gap-3 text-xs"><span class="text-ink-2">${n} <span class="text-[10px]">${fredLink(id)}</span></span><span class="font-mono">${v}</span></div>`;
+    return section('Net liquidity', `<div class="space-y-1">${row('Fed balance sheet', s.WALCL[t] == null ? '—' : f.tn(s.WALCL[t] / 1e3), 'WALCL')}${row('minus reverse repo', s.RRPONTSYD[t] == null ? '—' : f.tn(s.RRPONTSYD[t]), 'RRPONTSYD')}${row('minus Treasury account', s.WTREGEN[t] == null ? '—' : f.tn(s.WTREGEN[t] / 1e3), 'WTREGEN')}
+      <div class="flex items-baseline justify-between gap-3 border-t pt-1 text-xs font-medium"><span>Net liquidity</span><span class="font-mono">${M.nl[t] == null ? '—' : f.tn(M.nl[t])}${nl6 == null ? '' : ` <span class="text-muted-foreground">${f.pct(nl6)} in 6 months</span>`}</span></div></div>
+      <p class="mt-2 text-[11px] leading-relaxed text-muted-foreground">Dollars the Fed has put into the banking system, less what sits idle at the Fed. Risk assets have tended to follow it since 2008.</p>`, 'fi-rr-coins')
+      + section('Compare with', toggle(Object.entries(COMPARE).map(([k, v]) => [k, v.name]), state.compare, 'compare'), 'fi-rr-chart-line-up');
+  }
+  const an = analogues(t, 6);
+  return section(`Rhymes with`, an.length ? `<p class="mb-2 text-[11px] leading-relaxed text-muted-foreground">Past months closest to ${M.label(t)} on all six scores, and what came in the 6 months after.</p><div class="space-y-1.5">${an.map(({ i, d }) => {
+    const rg = REGIMES[M.regime[i]];
+    return `<button type="button" data-act="sel" data-v="${i}" class="block w-full rounded-md border bg-background/40 px-2.5 py-1.5 text-left text-xs hover:bg-accent"><div class="flex items-baseline justify-between gap-2"><span class="font-medium">${M.label(i)}</span><span style="color:${rg.color}">${rg.name}</span></div><div class="mt-0.5 grid grid-cols-5 gap-1 font-mono text-[10.5px]">${ASSETS.map((a) => { const v = M.fwd[a.id](i, 6); return `<span title="${esc(a.name)}"><span class="text-muted-foreground">${a.id}</span> ${v == null ? '—' : `<span style="color:${v >= 0 ? B.good : B.bad}">${d3.format('+.0%')(v)}</span>`}</span>`; }).join('')}</div></button>`;
+  }).join('')}</div>` : '<p class="text-xs text-muted-foreground">Not enough history before this month.</p>', 'fi-rr-shuffle');
+}
+function dataSection() {
+  const stored = state.source === 'stored';
+  return section('Data', `<p class="text-xs leading-relaxed text-ink-2">Monthly averages of 27 ${extLink('https://fred.stlouisfed.org/', 'FRED')} series, with readings to ${M.label(M.last)} and market prices to ${esc(newest(state.raw))}. ${stored ? `Loaded in this browser on ${esc(state.storedAt?.slice(0, 10) || '')}.` : 'Bundled with the page.'}</p>
+    <details class="mt-2 rounded-lg border bg-background/40 px-3 py-2 text-xs"><summary class="cursor-pointer font-medium">Update from FRED</summary>
+      <p class="mt-2 leading-relaxed text-muted-foreground">FRED doesn't let other sites fetch its data, so this takes two steps. Download the three files, then choose them all with <b class="text-foreground">Update data</b> at the top. They're kept in this browser.</p>
+      <div class="mt-2 space-y-1">${SETS.map((s) => `<a href="${setUrl(s)}" target="_blank" rel="noopener" download class="flex items-center justify-between gap-2 rounded-md px-2 py-1 hover:bg-accent"><span>${s.name}</span><span class="inline-flex items-center gap-1 text-primary"><i class="fi fi-rr-download"></i>${s.ids.length} series</span></a>`).join('')}</div>
+    </details>
+    ${stored ? `<button type="button" data-act="reset" class="${btnCls} mt-2 w-full"><i class="fi fi-rr-rotate-left"></i>Go back to the bundled data</button>` : ''}`, 'fi-rr-database');
+}
+function renderPanel() {
+  const t = cur(), r = M.regime[t], rg = REGIMES[r];
+  $('#panel').innerHTML = `<div class="flex items-center gap-3">${quadGlyph(t)}<div class="min-w-0">
+      <div class="text-[11px] text-muted-foreground">US economy, ${state.sel == null ? 'latest reading' : 'selected month'}: ${M.label(t)}</div>
+      <div class="text-[26px] font-semibold leading-none" style="color:${rg.color}">${rg.name}</div></div></div>
+    <p class="mt-2 text-sm text-ink-2">${rg.line}${M.usrec[t] === 1 ? ' This was a recession month.' : ''}</p>
+    ${state.sel != null ? `<button type="button" data-act="sel" data-v="" class="${btnCls} mt-2 w-full"><i class="fi fi-rr-time-fast"></i>Back to ${M.label(M.last)}</button>` : ''}
+    ${section('Scores', pillarRows(t), 'fi-rr-dashboard')}
+    ${section(`Trading directions, next ${state.h} months`, directionRows(t), 'fi-rr-arrows-repeat')}
+    ${viewSection(t)}
+    ${dataSection()}`;
+}
+const swatch = (c, n, shape = 'rounded-full') => `<span class="inline-flex items-center gap-1.5"><span class="inline-block size-2.5 ${shape}" style="background:${c}"></span>${n}</span>`;
+function renderLegend() {
+  const regimes = `<div class="flex flex-wrap gap-x-3 gap-y-1">${REGIMES.map((r) => swatch(r.color, r.name)).join('')}</div>`;
+  const L = {
+    regime: `${regimes}<div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">${swatch(B.signal, 'Latest month')}${swatch(B.amber, 'Selected')}<span class="inline-flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm border" style="border-color:${B.fog}"></span>Recession</span></div><div class="mt-1.5 border-t pt-1.5">Scroll to travel through time, drag to turn, click a month</div>`,
+    signals: `${regimes}<div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1"><span class="inline-flex items-center gap-1.5"><span class="inline-block h-2.5 w-4 rounded-sm" style="background:${B.fog};opacity:.3"></span>Recession</span></div>`,
+    liquidity: `<div class="flex flex-wrap gap-x-3 gap-y-1">${swatch(B.sky, 'Net liquidity', 'rounded-sm')}${swatch(B.clay, COMPARE[state.compare].name, 'rounded-sm')}${swatch(B.violet, 'Fed funds', 'rounded-sm')}${swatch(B.rose, '2-year', 'rounded-sm')}${swatch(B.ink2, '10-year', 'rounded-sm')}</div>`,
+    playbook: `<div class="mb-1 font-medium text-foreground">Return per unit of risk</div><div class="h-2 w-40 rounded-full" style="background:linear-gradient(90deg,${B.bad},${B.muted},${B.good})"></div><div class="mt-0.5 flex w-40 justify-between font-mono text-[10px]"><span>−0.6</span><span>0</span><span>+0.6</span></div>`,
+  };
+  $('#legend').innerHTML = L[state.view];
+}
+const renderTabs = () => {
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([k, v]) => `<button role="tab" data-tab="${k}" aria-label="${v.name}" aria-selected="${k === state.view}" data-state="${k === state.view ? 'active' : ''}" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi ${v.icon}"></i><span class="hidden sm:inline">${v.name}</span></button>`).join('');
+};
+function show() {
+  document.body.dataset.view = state.view;
+  renderTabs(); renderPanel(); renderLegend();
+  if (state.view === 'regime') { hideTip(); markSelection(); } else drawChart();
+}
+function select(i, go = false) {
+  state.sel = i == null || i === M.last ? null : i;
+  show();
+  if (go && state.view === 'regime') travel(state.sel ?? M.last, true);
+}
+
+$('#tabs').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-tab]'); if (!b) return;
+  state.view = b.dataset.tab;
+  const u = new URL(location.href); u.searchParams.set('view', state.view); history.replaceState(null, '', u);
+  show();
+});
+$('#panel').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const { act, v } = b.dataset;
+  if (act === 'h') { state.h = Number(v); show(); }
+  else if (act === 'compare') { state.compare = v; show(); }
+  else if (act === 'look') { if (state.view === 'regime') { look(v, true); if (reduceMotion) syncDepth(); } }
+  else if (act === 'sel') select(v === '' ? null : Number(v), true);
+  else if (act === 'reset') { await store.del('data'); await loadData(); toast('Back to the bundled data'); }
+});
+$('#panel').addEventListener('input', (e) => { if (e.target.id === 'depth') travel(Number(e.target.value), false); });
+$('#files').addEventListener('change', async (e) => {
+  const files = [...(e.target.files || [])];
+  e.target.value = '';
+  if (!files.length) return;
+  try {
+    const obs = await readFredFiles(files);
+    const ids = Object.keys(obs).filter((k) => KNOWN.has(k));
+    if (!ids.length) throw new Error('No FRED series this page uses were in those files. Use the three downloads under Update from FRED.');
+    const raw = mergeRaw(state.raw, toMonthly(Object.fromEntries(ids.map((k) => [k, obs[k]]))));
+    const at = new Date().toISOString();
+    const saved = await store.put('data', { raw, at });
+    setData(raw, saved ? 'stored' : 'bundled', at);
+    show(); buildTunnel();
+    toast(`Loaded ${ids.length} series to ${newest(raw)}${saved ? ', saved in this browser' : '. This browser blocks storage, so it lasts until you reload'}`);
+  } catch (err) { toast(err.message || 'Couldn’t read those files'); }
+});
+
+// ================= data =================
+function setData(raw, source, at = null) {
+  state.raw = raw; state.source = source; state.storedAt = at; state.sel = null;
+  M = buildModel(raw);
+}
+async function loadData() {
+  let bundled = null;
+  try { const r = await fetch('data/fred-macro.json'); if (!r.ok) throw new Error(r.status); bundled = await r.json(); } catch { /* fall back to stored */ }
+  const kept = await store.get('data');
+  // stored data wins while it reaches at least as far as the bundle
+  if (kept?.raw?.series && (!bundled || newest(kept.raw) >= newest(bundled))) setData(kept.raw, 'stored', kept.at);
+  else if (bundled) setData(bundled, 'bundled');
+  else throw new Error('no data');
+  show(); buildTunnel();
+}
+(async () => {
+  const v = new URL(location.href).searchParams.get('view');
+  if (VIEWS[v]) state.view = v;
+  resize(); renderTabs();
+  try { await loadData(); } catch { $('#panel').innerHTML = '<p class="text-sm">Couldn’t load the FRED data. Reload the page, or load the FRED downloads with Update data.</p>'; return; }
+  // the one orchestrated moment: fly from deep history up to today
+  camera.position.set(9, 5, -30); controls.target.set(0, 0, -26);
+  look('now', true);
+})();
+</script>
+</body>
+</html>

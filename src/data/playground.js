@@ -347,4 +347,19 @@ export const PLAYGROUND_MOCKS = [
       { name: 'world-atlas (Natural Earth 1:110m)', href: 'https://github.com/topojson/world-atlas' },
     ],
   },
+  {
+    id: 'fred-macro',
+    project: 'Data in 3D',
+    name: 'US macro regimes',
+    date: '2026-11-08',
+    href: '/mocks/fred-macro.html',
+    preview: '/mocks/previews/fred-macro.jpg',
+    description:
+      'Twenty-seven FRED series boiled down to four scores (growth, inflation, liquidity, risk appetite) and one question: which regime is the US economy in, and what has that meant for markets? Every month since 1991 sits in a 3D tunnel through time, placed by whether growth and inflation are picking up. A Signals tab shows the four scores over time, a Liquidity tab tracks Fed net liquidity against stocks or Bitcoin, and a Playbook tab shows what stocks, Treasuries, the dollar, oil and Bitcoin did after each regime, turned into trading directions for the latest month, with the past months it most rhymes with. Update data loads fresh FRED downloads into your browser.',
+    libraries: ['threejs', 'd3', 'shadcn', 'tailwind', 'flaticon'],
+    sources: [
+      { name: 'FRED, Federal Reserve Bank of St. Louis', href: 'https://fred.stlouisfed.org/' },
+      { name: 'NBER recession dates (USREC)', href: 'https://fred.stlouisfed.org/series/USREC' },
+    ],
+  },
 ]
