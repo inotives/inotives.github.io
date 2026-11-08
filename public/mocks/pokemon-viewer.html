@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Pokémon Specimen Lab</title>
+<!--
+  Pokémon specimen viewer. A single-page app over PokeAPI (https://pokeapi.co), laid out like a
+  sci-fi lab HUD.
+
+  List view: every Pokémon as a card, grouped by the generation (and its game versions) that
+  introduced it, with search and a type filter in the side panel.
+  Detail view (#/p/<id>): a specimen sheet. Moves by version and learn method, a type-matchup map
+  (D3-style curves from each attacking type to its damage multiplier), the evolution chain with
+  stat sparklines, the Pokédex entry with the official artwork as a Three.js point-cloud hologram,
+  species summary, base stats, a learnset heatmap across game versions, training values and where
+  each piece of data came from.
+
+  Data: the index (generations, types, damage relations, move types) is 27 PokeAPI requests,
+  bundled in public/mocks/data/pokemon-viewer.json by scripts/mocks/pokemon-viewer/capture.mjs,
+  which runs the loaders in the poke-data block of the module script. "Sync" reruns them live.
+  Specimen sheets load live from PokeAPI and are kept in IndexedDB. Sprites and cries come from
+  the PokeAPI sprites and cries repositories on GitHub.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<style type="text/tailwindcss">
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-pink: #e58fb0;
+    --color-sky: #7cc4dc;
+    --color-danger: #ff7a7a;
+    --color-ink-2: #b8b5ac;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base { *, ::before, ::after { border-color: var(--color-border); } }
+</style>
+<style>
+  body { margin: 0; background: #15171b; }
+  .fi { display: inline-flex; line-height: 1; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
+  #drawer { --pg-panel-w: 280px; --pg-drawer-w: 300px; }
+
+  /* <pg-layout v1> Playground layout standard (scripts/mocks/template/playground.html).
+     Side panel: a floating card on the left from 900px wide (.pg-float); below 900px it is a
+     drawer that slides in from the left over a scrim, with the stage legend folded into it.
+     Keep this block identical across mocks; check.mjs compares it with the template. */
+  .pg-drawer { display: flex; flex-direction: column; min-height: 0; }
+  .pg-drawer-head, .pg-drawer-legend, .pg-drawer-btn, .pg-scrim { display: none; }
+  @media (min-width: 900px) {
+    .pg-float { position: absolute; z-index: 10; left: 1.5rem; top: 4.5rem; width: var(--pg-panel-w, 360px); max-height: calc(100% - 6rem); }
+  }
+  @media (max-width: 899px) {
+    .pg-drawer { position: fixed; inset: 0 auto 0 0; z-index: 45; width: min(var(--pg-drawer-w, 360px), 88vw); height: auto; max-height: none; border: 0; border-right: 1px solid #2b2f37; border-radius: 0 0.75rem 0.75rem 0; background: #1d2026; box-shadow: 0 10px 40px rgb(0 0 0 / 0.5); transform: translateX(-104%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
+    body[data-drawer="open"] .pg-drawer { transform: none; visibility: visible; transition: transform 0.22s ease; }
+    body[data-drawer="open"] .pg-scrim { display: block; position: fixed; inset: 0; z-index: 44; background: rgb(0 0 0 / 0.5); }
+    .pg-drawer-head { display: flex; align-items: center; gap: 0.625rem; flex-shrink: 0; height: 3.5rem; padding: 0 0.75rem 0 1rem; border-bottom: 1px solid #2b2f37; }
+    .pg-drawer-legend:not(:empty) { display: block; flex-shrink: 0; padding: 0.75rem 1rem; border-top: 1px solid #2b2f37; font-size: 0.75rem; color: #8b9099; }
+    .pg-drawer-btn { display: inline-flex; }
+    .pg-hide-mobile, .pg-legend { display: none !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { .pg-drawer { transition: none !important; } }
+  /* </pg-layout> */
+
+  /* app layout: the side panel is a column in the list view, and steps aside for the specimen sheet */
+  @media (min-width: 900px) { body[data-view="detail"] #drawer { display: none; } }
+
+  /* type chips: categorical type colours, tuned for the dark paper */
+  .tchip { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 4px; font: 500 10px/1 "Source Code Pro", monospace; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; color: var(--t); background: color-mix(in srgb, var(--t) 14%, transparent); border: 1px solid color-mix(in srgb, var(--t) 42%, transparent); }
+  button.tchip { cursor: pointer; height: 22px; }
+  #typef:has([aria-pressed="true"]) .tchip[aria-pressed="false"] { opacity: 0.38; }
+  .tchip[aria-pressed="true"] { box-shadow: 0 0 0 1px var(--t); }
+
+  /* list */
+  .pgrid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
+  .gen-sec { content-visibility: auto; contain-intrinsic-size: auto 900px; }
+  .pcard { display: block; padding: 8px 10px 10px; border: 1px solid #2b2f37; border-radius: 10px; background: #1d2026; transition: border-color 0.15s, transform 0.15s; }
+  .pcard:hover { border-color: color-mix(in srgb, var(--t) 60%, #2b2f37); transform: translateY(-1px); }
+  .pcard:focus-visible { outline: none; box-shadow: 0 0 0 1px #1fefd7; }
+  .pcard.last { border-color: #1fefd7; }
+  .pc-img { display: flex; justify-content: center; height: 96px; margin: 2px 0 4px; background: radial-gradient(circle at 50% 55%, color-mix(in srgb, var(--t) 24%, transparent) 0, transparent 62%); }
+  .pc-img img, .px { image-rendering: pixelated; }
+
+  /* specimen sheet (HUD) */
+  .hud-bg { background-color: #15171b; background-image: radial-gradient(ellipse 90% 55% at 50% 0%, rgb(124 196 220 / 0.06), transparent 70%), linear-gradient(rgb(255 255 255 / 0.018) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.018) 1px, transparent 1px); background-size: auto, 28px 28px, 28px 28px; }
+  .hud { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 760px) { .hud { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1280px) {
+    .hud { grid-template-columns: 1fr 1fr 1.1fr 1fr; grid-template-rows: 330px 270px 262px; grid-template-areas: "moves map evo dex" "moves map evo sum" "stats heat abil prov"; }
+    .a-moves { grid-area: moves; } .a-map { grid-area: map; } .a-evo { grid-area: evo; } .a-dex { grid-area: dex; } .a-sum { grid-area: sum; }
+    .a-stats { grid-area: stats; } .a-heat { grid-area: heat; } .a-abil { grid-area: abil; } .a-prov { grid-area: prov; }
+    .fill { flex: 1; min-height: 0; max-height: none !important; }
+  }
+  .hp { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 12px 14px; border: 1px solid #2b2f37; border-radius: 10px; background: linear-gradient(180deg, rgb(29 32 38 / 0.94), rgb(23 25 30 / 0.94)); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.03); }
+  .hp-t { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #e4e1d8; }
+  .hp-s { margin-top: 1px; font-size: 11px; color: #8b9099; }
+  .mrow { display: flex; align-items: center; gap: 8px; padding: 4px 2px; border-bottom: 1px dashed rgb(43 47 55 / 0.8); }
+  .mtrack { position: relative; flex-shrink: 0; width: 44px; height: 4px; border-radius: 2px; background: repeating-linear-gradient(90deg, #343943 0 3px, transparent 3px 5px); }
+  .mtrack i { position: absolute; top: -2px; width: 3px; height: 8px; border-radius: 1px; background: #f6c453; transform: translateX(-50%); }
+  .mapsvg text { font: 400 9.5px "Source Code Pro", monospace; fill: #8b9099; }
+  .mapsvg text.bl { fill: #e4e1d8; font-size: 11px; }
+  .mapsvg .lk { fill: none; stroke-width: 1.3; opacity: 0.55; transition: opacity 0.15s; }
+  .mapsvg .ln { cursor: default; }
+  .mapsvg.hl .lk { opacity: 0.08; }
+  .mapsvg.hl .lk.on { opacity: 1; stroke-width: 2; }
+  .mapsvg.hl .ln:not(.on) { opacity: 0.4; }
+  .evo { position: relative; display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 14px; border: 1px solid transparent; border-radius: 8px; transition: background 0.15s; }
+  .evo:hover { background: #23262d; }
+  .evo.cur { border-color: #1fefd7; }
+  .evo:focus-visible { outline: none; box-shadow: 0 0 0 1px #1fefd7; }
+  .evo-bar { position: absolute; left: 4px; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: var(--t); }
+  .evo img { flex-shrink: 0; image-rendering: pixelated; filter: drop-shadow(0 0 6px rgb(124 196 220 / 0.35)); }
+  .holo { position: relative; height: 210px; overflow: hidden; border-radius: 8px; background: radial-gradient(ellipse 60% 55% at 50% 60%, rgb(124 196 220 / 0.08), transparent 70%); }
+  .holo canvas { display: block; }
+  .holo img { position: absolute; inset: 0; margin: auto; max-height: 100%; opacity: 0.85; filter: grayscale(1) sepia(1) hue-rotate(160deg) saturate(2.5) drop-shadow(0 0 10px rgb(124 196 220 / 0.5)); }
+  .holo-scan { position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgb(124 196 220 / 0.05) 0 1px, transparent 1px 3px); }
+  .holo-sweep { position: absolute; left: 0; right: 0; top: -40%; height: 40%; pointer-events: none; background: linear-gradient(180deg, transparent, rgb(124 196 220 / 0.1), transparent); animation: sweep 4.5s linear infinite; }
+  @keyframes sweep { to { top: 100%; } }
+  @media (min-width: 1280px) { .a-dex .holo { flex: 1; height: auto; min-height: 0; } }
+  .hrow { display: grid; grid-template-columns: 46px repeat(4, minmax(0, 1fr)); gap: 3px; width: 100%; padding: 1px; border-radius: 4px; text-align: left; }
+  .hrow:hover { background: #23262d; }
+  .hrow.on { box-shadow: 0 0 0 1px #1fefd7; }
+  .hcell { display: flex; align-items: center; justify-content: center; height: 16px; border-radius: 2px; font: 400 9.5px "Source Code Pro", monospace; color: #e4e1d8; }
+  .ring circle { fill: none; stroke-width: 4; }
+  .skel { border-radius: 10px; border: 1px solid #2b2f37; background: linear-gradient(90deg, #1d2026 0%, #23262d 50%, #1d2026 100%); background-size: 200% 100%; animation: skel 1.4s ease infinite; }
+  @keyframes skel { to { background-position: -200% 0; } }
+  @media (prefers-reduced-motion: reduce) { .holo-sweep, .skel { animation: none; } .pcard { transition: none; } }
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased" data-view="list">
+<div class="fixed inset-0 flex flex-col overflow-hidden">
+  <header class="relative z-20 flex h-14 shrink-0 items-center gap-3 border-b bg-background/95 px-3 sm:px-6">
+    <button id="drawer-btn" type="button" class="pg-drawer-btn size-9 shrink-0 items-center justify-center rounded-md border bg-background/80 text-base hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-controls="drawer" aria-expanded="false" aria-label="Open the panel"><i class="fi fi-rr-menu-burger"></i></button>
+    <a href="/playground" class="pg-hide-mobile rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <span class="hidden text-sm text-muted-foreground xl:inline">Playground · Pokémon specimen lab</span>
+    <div role="tablist" aria-label="Views" id="tabs" class="mx-auto inline-flex h-9 max-w-full items-center overflow-x-auto rounded-lg bg-muted p-1 text-muted-foreground"></div>
+    <button id="action" type="button" class="inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-md border bg-background/80 px-3 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50" title="Reload the index from PokeAPI"><i class="fi fi-rr-refresh text-primary"></i><span class="hidden sm:inline">Sync</span></button>
+  </header>
+  <div class="flex min-h-0 flex-1">
+    <aside id="drawer" class="pg-drawer w-[280px] shrink-0 border-r bg-card" aria-label="Pokédex filters">
+      <div class="pg-drawer-head">
+        <a href="/playground" class="font-brand text-[24px] leading-none hover:text-primary" title="Back to the Playground">inoTives</a>
+        <span class="min-w-0 flex-1 truncate text-sm text-muted-foreground">Pokémon specimen lab</span>
+        <button id="drawer-close" type="button" class="inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Close the panel"><i class="fi fi-rr-cross-small"></i></button>
+      </div>
+      <div id="panel" class="scroll-thin min-h-0 flex-1 overflow-auto p-4"></div>
+      <div id="drawer-legend" class="pg-drawer-legend"></div>
+    </aside>
+    <main class="relative min-w-0 flex-1">
+      <div id="list" class="scroll-thin absolute inset-0 overflow-auto px-4 pb-10 sm:px-6">
+        <div id="list-hero" class="py-4"></div>
+        <div id="list-body"></div>
+      </div>
+      <div id="detail" hidden class="hud-bg scroll-thin absolute inset-0 overflow-auto">
+        <div id="d-head"></div>
+        <div id="d-body" class="hud p-3 sm:p-4"></div>
+        <div id="d-foot"></div>
+      </div>
+    </main>
+  </div>
+  <div id="scrim" class="pg-scrim"></div>
+  <div id="toast" hidden role="status" class="absolute bottom-4 left-1/2 z-40 max-w-[90vw] -translate-x-1/2 rounded-md border bg-background/95 px-3 py-2 text-xs shadow-lg"></div>
+</div>
+<div id="tip" hidden class="pointer-events-none fixed z-40 max-w-[280px] rounded-md border bg-background/95 px-2.5 py-1.5 text-xs shadow-lg"></div>
+
+<script>
+/* <pg-layout-js v1> Playground layout standard: the mobile drawer (scripts/mocks/template/playground.html).
+   Opens from #drawer-btn; closes from #drawer-close, the scrim, Escape, links to #anchors or
+   [data-drawer-close] inside it, and when the window grows past 900px. Mirrors #legend into
+   #drawer-legend. Mocks can call window.pgDrawer.open() / .close(). Keep identical across mocks. */
+(() => {
+  const body = document.body, btn = document.getElementById('drawer-btn');
+  const set = (open) => { body.dataset.drawer = open ? 'open' : ''; btn?.setAttribute('aria-expanded', String(open)); };
+  const close = (refocus) => { if (body.dataset.drawer !== 'open') return; set(false); if (refocus) btn?.focus(); };
+  btn?.addEventListener('click', () => set(body.dataset.drawer !== 'open'));
+  document.getElementById('drawer-close')?.addEventListener('click', () => close(true));
+  document.getElementById('scrim')?.addEventListener('click', () => close(false));
+  document.getElementById('drawer')?.addEventListener('click', (e) => { if (e.target.closest('a[href^="#"], [data-drawer-close]')) close(false); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && body.dataset.drawer === 'open') { e.stopImmediatePropagation(); close(true); } }, true);
+  matchMedia('(min-width: 900px)').addEventListener('change', (m) => { if (m.matches) set(false); });
+  const legend = document.getElementById('legend'), copy = document.getElementById('drawer-legend');
+  if (legend && copy) {
+    const sync = () => { copy.innerHTML = legend.hidden ? '' : legend.innerHTML.trim(); };
+    new MutationObserver(sync).observe(legend, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+    sync();
+  }
+  window.pgDrawer = { open: () => set(true), close: () => close(false) };
+})();
+/* </pg-layout-js> */
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+// PokeAPI loaders, shared with scripts/mocks/pokemon-viewer/capture.mjs (which imports this block).
+// <poke-data>
+const POKE_DATA = (() => {
+  const API = 'https://pokeapi.co/api/v2/';
+  const TYPES = ['normal', 'fire', 'water', 'electric', 'grass', 'ice', 'fighting', 'poison', 'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy'];
+  const idOf = (url) => Number(String(url).match(/\/(\d+)\/?$/)[1]);
+  const get = async (path) => {
+    const r = await fetch(path.startsWith('http') ? path : API + path);
+    if (!r.ok) throw new Error(`PokeAPI ${r.status} for ${path}`);
+    return r.json();
+  };
+  const pretty = (s) => String(s || '').split('-').filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
+  const en = (arr) => (arr || []).filter((x) => x.language?.name === 'en');
+
+  // The index: every generation with its version groups and species, each Pokémon's types,
+  // each type's damage relations and every move's type. 9 generation + 18 type requests.
+  async function loadIndex(onStep = () => {}) {
+    const list = await get('generation?limit=50');
+    const gens = await Promise.all(list.results.map(async (g) => {
+      const d = await get(g.url); onStep();
+      return { id: d.id, name: d.name, region: d.main_region?.name ?? '', versionGroups: d.version_groups.map((v) => v.name), species: d.pokemon_species.map((s) => [idOf(s.url), s.name]) };
+    }));
+    gens.sort((a, b) => a.id - b.id);
+    const types = {}, moveTypes = {}, slots = {};
+    await Promise.all(TYPES.map(async (t) => {
+      const d = await get(`type/${t}`); onStep();
+      const r = d.damage_relations, n = (a) => a.map((x) => x.name);
+      types[t] = { x2: n(r.double_damage_from), x05: n(r.half_damage_from), x0: n(r.no_damage_from) };
+      for (const m of d.moves) moveTypes[m.name] = t;
+      for (const p of d.pokemon) { const id = idOf(p.pokemon.url); if (id < 10000) (slots[id] ||= [])[p.slot - 1] = t; }
+    }));
+    const pokemon = gens.flatMap((g) => g.species.map(([id, name]) => [id, name, g.id, ...(slots[id] || []).filter(Boolean)])).sort((a, b) => a[0] - b[0]);
+    return {
+      capturedAt: new Date().toISOString(),
+      gens: gens.map(({ species, ...g }) => ({ ...g, count: species.length })),
+      pokemon, types, moveTypes,
+    };
+  }
+
+  // A specimen, trimmed to what the sheet draws (the raw payload carries every move's history).
+  async function loadPokemon(id) {
+    const p = await get(`pokemon/${id}`);
+    return {
+      id: p.id, name: p.name, height: p.height, weight: p.weight, baseExp: p.base_experience,
+      types: p.types.map((t) => t.type.name),
+      stats: p.stats.map((s) => [s.stat.name, s.base_stat, s.effort]),
+      abilities: p.abilities.map((a) => [a.ability.name, a.is_hidden]),
+      moves: p.moves.map((m) => [m.move.name, m.version_group_details.map((d) => [d.version_group.name, idOf(d.version_group.url), d.move_learn_method.name, d.level_learned_at])]),
+      cry: p.cries?.latest || '', cryLegacy: p.cries?.legacy || '',
+      held: p.held_items.map((h) => h.item.name),
+      games: p.game_indices.map((g) => g.version.name),
+      art: p.sprites?.other?.['official-artwork']?.front_default || p.sprites?.front_default || '',
+    };
+  }
+
+  async function loadSpecies(id) {
+    const s = await get(`pokemon-species/${id}`);
+    const flav = en(s.flavor_text_entries).at(-1);
+    return {
+      id: s.id, slug: s.name, name: en(s.names)[0]?.name || pretty(s.name), genus: en(s.genera)[0]?.genus || '',
+      flavor: flav ? flav.flavor_text.replace(/[\f\n\r­]+/g, ' ').replace(/\s+/g, ' ').trim() : '', flavorVersion: flav?.version?.name || '',
+      genderRate: s.gender_rate, captureRate: s.capture_rate, happiness: s.base_happiness, hatch: s.hatch_counter,
+      growth: s.growth_rate?.name || '', eggGroups: s.egg_groups.map((e) => e.name), color: s.color?.name || '', shape: s.shape?.name || '', habitat: s.habitat?.name || '',
+      legendary: s.is_legendary, mythical: s.is_mythical, baby: s.is_baby, gen: s.generation?.name || '',
+      chain: s.evolution_chain ? idOf(s.evolution_chain.url) : null,
+    };
+  }
+
+  const how = (d) => {
+    if (!d) return '';
+    const parts = [], tr = d.trigger?.name;
+    if (d.min_level) parts.push(`Lv ${d.min_level}`);
+    if (d.item) parts.push(`Use ${pretty(d.item.name)}`);
+    if (tr === 'trade') parts.push('Trade');
+    if (d.held_item) parts.push(`holding ${pretty(d.held_item.name)}`);
+    if (d.min_happiness) parts.push('High friendship');
+    if (d.min_affection) parts.push('High affection');
+    if (d.known_move) parts.push(`knows ${pretty(d.known_move.name)}`);
+    if (d.known_move_type) parts.push(`knows a ${d.known_move_type.name} move`);
+    if (d.location) parts.push(`at ${pretty(d.location.name)}`);
+    if (d.time_of_day) parts.push(`(${d.time_of_day})`);
+    if (!parts.length && tr) parts.push(pretty(tr));
+    return parts.join(' ');
+  };
+  // An evolution chain, flattened in walk order with each stage's depth and how it is reached.
+  async function loadChain(chainId) {
+    const c = await get(`evolution-chain/${chainId}`);
+    const out = [];
+    const walk = (n, depth, from) => {
+      const id = idOf(n.species.url);
+      out.push({ id, name: n.species.name, depth, from, how: how(n.evolution_details?.[0]) });
+      n.evolves_to.forEach((k) => walk(k, depth + 1, id));
+    };
+    walk(c.chain, 0, null);
+    return out;
+  }
+
+  return { TYPES, loadIndex, loadPokemon, loadSpecies, loadChain };
+})();
+// </poke-data>
+
+// ================= helpers =================
+const D = POKE_DATA, TYPES = D.TYPES;
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const B = { paper: '#15171b', raise: '#1d2026', muted: '#23262d', line: '#2b2f37', ink: '#e4e1d8', ink2: '#b8b5ac', fog: '#8b9099', signal: '#1fefd7', amber: '#f6c453', pink: '#e58fb0', sky: '#7cc4dc' };
+const fmt = d3.format(',');
+let toastTimer;
+const toast = (msg, stay = false) => { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); if (!stay) toastTimer = setTimeout(() => { t.hidden = true; }, 3200); };
+
+const T_COLORS = { normal: '#a8a29a', fire: '#f08a5d', water: '#6aa7e8', electric: '#f6c453', grass: '#7cc47f', ice: '#8fd8e0', fighting: '#d9665b', poison: '#b57ad0', ground: '#d4a75f', flying: '#9fb4ea', psychic: '#e58fb0', bug: '#a9c25a', rock: '#b9a46b', ghost: '#8478c0', dragon: '#7b7fe8', dark: '#8a7a6e', steel: '#9fb3c0', fairy: '#eaa3d6' };
+const tc = (t) => T_COLORS[t] || B.fog;
+const chip = (t) => `<span class="tchip" style="--t:${tc(t)}">${esc(t)}</span>`;
+const pretty = (s) => String(s || '').split('-').filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
+const roman = (g) => String(g || '').split('-')[1]?.toUpperCase() || '';
+const no = (id) => String(id).padStart(4, '0');
+const SPRITES = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
+const sprite = (id) => `${SPRITES}${id}.png`;
+const artwork = (id) => `${SPRITES}other/official-artwork/${id}.png`;
+const imgFallback = (id) => `onerror="this.onerror=null;this.src='${artwork(id)}'"`;
+const VG = {
+  'red-blue': ['Red / Blue', 'RB'], yellow: ['Yellow', 'Y'], 'red-green-japan': ['Red / Green (JP)', 'RG-J'], 'blue-japan': ['Blue (JP)', 'B-J'],
+  'gold-silver': ['Gold / Silver', 'GS'], crystal: ['Crystal', 'C'], 'ruby-sapphire': ['Ruby / Sapphire', 'RS'], emerald: ['Emerald', 'E'],
+  'firered-leafgreen': ['FireRed / LeafGreen', 'FRLG'], colosseum: ['Colosseum', 'COL'], xd: ['XD', 'XD'], 'diamond-pearl': ['Diamond / Pearl', 'DP'],
+  platinum: ['Platinum', 'PT'], 'heartgold-soulsilver': ['HeartGold / SoulSilver', 'HGSS'], 'black-white': ['Black / White', 'BW'], 'black-2-white-2': ['Black 2 / White 2', 'B2W2'],
+  'x-y': ['X / Y', 'XY'], 'omega-ruby-alpha-sapphire': ['Omega Ruby / Alpha Sapphire', 'ORAS'], 'sun-moon': ['Sun / Moon', 'SM'], 'ultra-sun-ultra-moon': ['Ultra Sun / Ultra Moon', 'USUM'],
+  'lets-go-pikachu-lets-go-eevee': ["Let's Go Pikachu / Eevee", 'LGPE'], 'sword-shield': ['Sword / Shield', 'SWSH'], 'the-isle-of-armor': ['The Isle of Armor', 'IOA'], 'the-crown-tundra': ['The Crown Tundra', 'CT'],
+  'brilliant-diamond-shining-pearl': ['Brilliant Diamond / Shining Pearl', 'BDSP'], champions: ['Champions', 'CHMP'], 'legends-arceus': ['Legends: Arceus', 'PLA'], 'scarlet-violet': ['Scarlet / Violet', 'SV'],
+  'the-teal-mask': ['The Teal Mask', 'TM'], 'the-indigo-disk': ['The Indigo Disk', 'ID'], 'legends-za': ['Legends: Z-A', 'PLZA'], 'mega-dimension': ['Mega Dimension', 'MD'],
+};
+const vgName = (v) => VG[v]?.[0] || pretty(v);
+const vgAbbr = (v) => VG[v]?.[1] || v.split('-').map((w) => w[0]).join('').toUpperCase();
+const METHODS = [['level-up', 'Level'], ['machine', 'TM'], ['egg', 'Egg'], ['tutor', 'Tutor']];
+const STAT_LABEL = { hp: 'HP', attack: 'ATK', defense: 'DEF', 'special-attack': 'SP.ATK', 'special-defense': 'SP.DEF', speed: 'SPEED' };
+const STAT_LONG = { hp: 'HP', attack: 'Attack', defense: 'Defense', 'special-attack': 'Sp. Atk', 'special-defense': 'Sp. Def', speed: 'Speed' };
+
+// ================= browser datastore (IndexedDB) =================
+// The synced index and every specimen sheet are kept here, so the page reopens on what it has
+// already loaded; the bundled index is only the fallback. Every call is wrapped: storage can be blocked.
+const IDB = { name: 'inotives-pokemon-viewer', store: 'kv' };
+function idbOpen() {
+  return new Promise((ok, no) => { const r = indexedDB.open(IDB.name, 1); r.onupgradeneeded = () => r.result.createObjectStore(IDB.store); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+}
+async function idb(mode, fn) {
+  const db = await idbOpen();
+  try { return await new Promise((ok, no) => { const tx = db.transaction(IDB.store, mode), req = fn(tx.objectStore(IDB.store)); tx.oncomplete = () => ok(req?.result); tx.onerror = () => no(tx.error); }); }
+  finally { db.close(); }
+}
+const store = {
+  get: async (key) => { try { return await idb('readonly', (s) => s.get(key)); } catch { return null; } },
+  put: async (key, value) => { try { await idb('readwrite', (s) => s.put(value, key)); } catch { /* private mode or quota */ } },
+  clear: async () => { try { await idb('readwrite', (s) => s.clear()); } catch { /* blocked */ } },
+};
+// where each piece of the current sheet came from: this browser, or PokeAPI just now
+const prov = {};
+async function cached(key, loader) {
+  const hit = await store.get(key);
+  if (hit) { prov[key] = { src: 'cache' }; return hit; }
+  const t0 = performance.now();
+  const v = await loader();
+  prov[key] = { src: 'live', ms: Math.round(performance.now() - t0) };
+  store.put(key, v);
+  return v;
+}
+
+// ================= state =================
+const state = { idx: null, idxSrc: '', byId: new Map(), order: [], q: '', type: '', view: 'list', current: null, last: null, vg: null, method: 'level-up', sheet: null };
+
+function setIndex(idx, src) {
+  state.idx = idx; state.idxSrc = src;
+  state.byId = new Map(idx.pokemon.map((p) => [p[0], p]));
+  state.order = idx.pokemon.map((p) => p[0]);
+}
+async function loadIndex() {
+  const saved = await store.get('index');
+  if (saved?.pokemon?.length) return setIndex(saved, 'synced');
+  try {
+    const r = await fetch('data/pokemon-viewer.json');
+    if (!r.ok) throw new Error(r.status);
+    setIndex(await r.json(), 'bundled');
+  } catch {
+    toast('No bundled index found, loading it from PokeAPI', true);
+    const idx = await D.loadIndex();
+    store.put('index', idx);
+    setIndex(idx, 'synced');
+    $('#toast').hidden = true;
+  }
+}
+
+// ================= side panel =================
+const kpi = (label, value, sub = '') => `<div class="min-w-0 rounded-lg border bg-background/40 px-2.5 py-2"><div class="truncate text-[11px] text-muted-foreground">${esc(label)}</div><div class="truncate text-sm font-semibold">${value}</div>${sub ? `<div class="truncate text-[11px] text-muted-foreground">${sub}</div>` : ''}</div>`;
+const section = (title, body, icon = '') => `<div class="mt-4"><div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">${icon ? `<i class="fi ${icon}"></i>` : ''}${esc(title)}</div>${body}</div>`;
+const btnCls = 'inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border bg-background/60 px-2.5 text-xs font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50';
+
+function renderPanel() {
+  const idx = state.idx;
+  $('#panel').innerHTML = `<h1 class="text-lg font-semibold leading-tight">Pokédex</h1>
+    <p class="mt-1 text-xs text-muted-foreground">Every Pokémon, grouped by the generation of games that introduced it. Open one for its specimen sheet.</p>
+    <div class="mt-3 grid grid-cols-2 gap-2">${kpi('Pokémon', fmt(idx.pokemon.length))}${kpi('Generations', idx.gens.length, `${fmt(Object.keys(idx.moveTypes).length)} moves`)}</div>
+    ${section('Type', `<div id="typef" class="flex flex-wrap gap-1">${TYPES.map((t) => `<button type="button" data-type="${t}" aria-pressed="${state.type === t}" class="tchip" style="--t:${tc(t)}">${t}</button>`).join('')}</div>`, 'fi-rr-filter')}
+    ${section('Generations', '<nav id="gens" class="-mx-2 flex flex-col"></nav>', 'fi-rr-layers')}
+    ${section('Data', `<div id="datainfo" class="text-xs leading-relaxed text-muted-foreground"></div><button id="clear" type="button" class="${btnCls} mt-2"><i class="fi fi-rr-trash"></i>Clear stored data</button>`, 'fi-rr-database')}`;
+  renderGens(); renderDataInfo();
+}
+function renderGens() {
+  const counts = d3.rollup(filtered(), (v) => v.length, (p) => p[2]);
+  $('#gens').innerHTML = state.idx.gens.map((g) => `<button type="button" data-gen="${g.id}" data-drawer-close class="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${counts.get(g.id) ? '' : 'opacity-40'}">
+      <span class="w-8 shrink-0 pt-px font-mono text-xs text-muted-foreground">${roman(g.name)}</span>
+      <span class="min-w-0 flex-1"><span class="block text-sm">${esc(pretty(g.region) || 'Generation ' + roman(g.name))}</span><span class="block truncate text-[11px] text-muted-foreground">${esc(g.versionGroups.map(vgName).join(' · '))}</span></span>
+      <span class="shrink-0 pt-px font-mono text-xs text-muted-foreground">${counts.get(g.id) || 0}</span></button>`).join('');
+}
+function renderDataInfo() {
+  const d = new Date(state.idx.capturedAt);
+  const when = isNaN(d) ? '' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  $('#datainfo').innerHTML = `${state.idxSrc === 'bundled' ? 'Bundled snapshot' : 'Synced in this browser'} of the index, ${esc(when)}. From <a href="https://pokeapi.co" target="_blank" rel="noopener" class="underline decoration-dotted underline-offset-2 hover:text-primary">PokeAPI</a>: 27 requests for generations and types. Specimen sheets load live and stay in this browser. Sprites and cries from the PokeAPI repositories on GitHub.`;
+}
+
+// ================= list view =================
+function filtered() {
+  const q = state.q.trim().toLowerCase().replace(/\s+/g, '-').replace(/^#/, '');
+  return state.idx.pokemon.filter((p) => (!state.type || p[3] === state.type || p[4] === state.type) && (!q || (/^\d+$/.test(q) ? String(p[0]).includes(String(+q)) : p[1].includes(q))));
+}
+const card = ([id, slug, , t1, t2]) => `<a href="#/p/${id}" class="pcard ${state.last === id ? 'last' : ''}" style="--t:${tc(t1)}" aria-label="${esc(pretty(slug))}, number ${id}">
+  <div class="flex items-center justify-between font-mono text-[10px] text-muted-foreground"><span>No.${no(id)}</span></div>
+  <div class="pc-img"><img src="${sprite(id)}" loading="lazy" decoding="async" alt="" width="96" height="96" ${imgFallback(id)}></div>
+  <div class="truncate text-sm font-medium">${esc(pretty(slug))}</div>
+  <div class="mt-1.5 flex flex-wrap gap-1">${[t1, t2].filter(Boolean).map(chip).join('')}</div></a>`;
+function renderList() {
+  const items = filtered(), groups = d3.group(items, (p) => p[2]);
+  // the hero (with the search box) is built once so typing keeps focus; only the count line changes
+  if (!$('#q')) {
+    $('#list-hero').innerHTML = `<div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+      <div class="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1"><h1 class="text-xl font-semibold uppercase tracking-[0.06em]">Pokédex</h1><span id="list-count" class="text-xs text-muted-foreground"></span></div>
+      <label class="relative ml-auto block w-full sm:w-80"><span class="sr-only">Search Pokémon</span><i class="fi fi-rr-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"></i>
+        <input id="q" type="search" autocomplete="off" enterkeyhint="search" placeholder="Search by name or number" value="${esc(state.q)}" class="h-10 w-full rounded-lg border border-input bg-card pl-9 pr-3 text-base placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:h-9 sm:text-sm" /></label></div>`;
+  }
+  const filt = [state.q && `“${esc(state.q)}”`, state.type && chip(state.type)].filter(Boolean).join(' ');
+  $('#list-count').innerHTML = `<b class="font-mono text-foreground">${fmt(items.length)}</b> of ${fmt(state.idx.pokemon.length)} Pokémon ${filt ? `· ${filt}` : ''}
+    ${filt ? `<button type="button" data-reset class="ml-1 underline decoration-dotted underline-offset-2 hover:text-foreground">Clear filters</button>` : ''}`;
+  $('#list-body').innerHTML = state.idx.gens.map((g) => {
+    const ps = groups.get(g.id);
+    if (!ps) return '';
+    return `<section id="gen-${g.id}" class="gen-sec mb-8" aria-label="Generation ${roman(g.name)}">
+      <div class="sticky top-0 z-[1] -mx-4 mb-3 flex items-baseline gap-3 border-b bg-background/90 px-4 py-2.5 backdrop-blur sm:-mx-6 sm:px-6">
+        <h2 class="shrink-0 text-sm font-semibold uppercase tracking-[0.08em]">Generation ${roman(g.name)}</h2>
+        <span class="min-w-0 truncate text-xs text-muted-foreground">${esc(pretty(g.region))} · ${esc(g.versionGroups.map(vgName).join(' · '))}</span>
+        <span class="ml-auto shrink-0 font-mono text-xs text-muted-foreground">${ps.length}</span></div>
+      <div class="pgrid">${ps.map(card).join('')}</div></section>`;
+  }).join('') || '<p class="py-16 text-center text-sm text-muted-foreground">No Pokémon match these filters.</p>';
+}
+const refilter = () => { renderList(); renderGens(); };
+
+// ================= specimen sheet =================
+function matchup(defTypes) {
+  return TYPES.map((a) => {
+    let m = 1;
+    for (const d of defTypes) {
+      const r = state.idx.types[d];
+      if (!r) continue;
+      if (r.x0.includes(a)) m *= 0; else if (r.x2.includes(a)) m *= 2; else if (r.x05.includes(a)) m *= 0.5;
+    }
+    return [a, m];
+  });
+}
+const BUCKETS = [[4, '4×', B.pink], [2, '2×', B.amber], [1, '1×', B.fog], [0.5, '½×', B.sky], [0.25, '¼×', '#4f8fa8'], [0, '0×', '#59606d']];
+function mapSvg(types) {
+  const mu = matchup(types), W = 380, H = 450, top = 12, bot = 12, x0 = 74, x1 = W - 82;
+  const ly = (i) => top + (i * (H - top - bot)) / 17;
+  const by = (j) => top + 24 + (j * (H - top - bot - 48)) / 5;
+  const groups = BUCKETS.map(([v]) => mu.filter((m) => m[1] === v).map((m) => m[0]));
+  let links = '', left = '', right = '';
+  mu.forEach(([a, m], i) => {
+    const j = BUCKETS.findIndex((b) => b[0] === m), k = groups[j].indexOf(a), n = groups[j].length;
+    const y = ly(i), ty = by(j) + (k - (n - 1) / 2) * 3.4, mx = (x0 + x1) / 2;
+    links += `<path class="lk" data-t="${a}" d="M${x0},${y} C${mx},${y} ${mx},${ty} ${x1},${ty}" stroke="${tc(a)}"/>`;
+    left += `<g class="ln" data-t="${a}"><title>${pretty(a)} attacks: ${m}×</title><rect x="0" y="${y - 9}" width="${x0 + 6}" height="18" fill="transparent"/><text x="2" y="${y + 3.5}">${a.slice(0, 3).toUpperCase()}</text><line x1="30" x2="${x0}" y1="${y}" y2="${y}" stroke="${tc(a)}" stroke-width="2.5" stroke-linecap="round" opacity=".8"/><circle cx="${x0}" cy="${y}" r="3" fill="${B.ink}"/></g>`;
+  });
+  BUCKETS.forEach(([, lab, col], j) => {
+    const n = groups[j].length, h = Math.max(8, n * 3.4 + 8);
+    right += `<rect x="${x1}" y="${by(j) - h / 2}" width="14" height="${h}" rx="3" fill="${col}" opacity="${n ? 0.95 : 0.25}"/><text x="${x1 + 22}" y="${by(j) + 4}" class="bl">${lab}</text><text x="${x1 + 50}" y="${by(j) + 4}">${n}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" class="mapsvg block h-full w-full" role="img" aria-label="Damage taken from each attacking type">${links}${left}${right}</svg>`;
+}
+function statsSvg(stats) {
+  const W = 380, H = 190, l = 30, r = 6, t = 18, b = 30;
+  const max = Math.max(160, d3.max(stats, (s) => s[1]));
+  const y = d3.scaleLinear([0, max], [H - b, t]), bw = (W - l - r) / stats.length;
+  const grid = y.ticks(4).map((v) => `<line x1="${l}" x2="${W - r}" y1="${y(v)}" y2="${y(v)}" stroke="${B.line}" stroke-dasharray="2 3"/><text x="${l - 6}" y="${y(v) + 3}" text-anchor="end">${v}</text>`).join('');
+  const bars = stats.map(([name, v], i) => {
+    const x = l + i * bw + bw * 0.24, w = bw * 0.52;
+    return `<rect x="${x}" y="${y(v)}" width="${w}" height="${H - b - y(v)}" rx="2" fill="url(#sg)"><title>${STAT_LONG[name] || name}: ${v}</title></rect><text x="${x + w / 2}" y="${y(v) - 5}" text-anchor="middle" class="bl">${v}</text><text x="${x + w / 2}" y="${H - b + 15}" text-anchor="middle">${STAT_LABEL[name] || name}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" class="mapsvg block h-full w-full" role="img" aria-label="Base stats"><defs><linearGradient id="sg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${B.sky}"/><stop offset="1" stop-color="#2b5566"/></linearGradient></defs>${grid}${bars}</svg>`;
+}
+const spark = (stats) => {
+  const w = 60, h = 26, bw = w / stats.length;
+  return `<svg width="${w}" height="${h}" class="shrink-0" aria-hidden="true">${stats.map(([, v], i) => { const bh = Math.max(2, Math.min(1, v / 180) * h); return `<rect x="${i * bw + 1}" y="${h - bh}" width="${bw - 2}" height="${bh}" rx="1" fill="${B.sky}" opacity=".85"/>`; }).join('')}</svg>`;
+};
+const panel = (area, title, sub, body, extra = '') => `<section class="hp a-${area}" aria-label="${esc(title)}"><header class="mb-2 flex shrink-0 items-start gap-2"><div class="min-w-0 flex-1"><h2 class="hp-t">${title}</h2><p class="hp-s truncate">${sub}</p></div>${extra}</header>${body}</section>`;
+
+// game versions in release order: by generation, then as PokeAPI lists them (its ids are not chronological)
+function vgsOf(p) {
+  const rank = new Map(state.idx.gens.flatMap((g) => g.versionGroups).map((v, i) => [v, i]));
+  const set = new Set(p.moves.flatMap(([, det]) => det.map((d) => d[0])));
+  return [...set].sort((a, b) => (rank.get(a) ?? 999) - (rank.get(b) ?? 999));
+}
+function movesFor(p, vg, method) {
+  return p.moves.flatMap(([name, det]) => det.filter((d) => d[0] === vg && d[2] === method).map((d) => ({ name, level: d[3] })))
+    .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
+}
+function renderMoves() {
+  const { p } = state.sheet, vg = state.vg;
+  const list = movesFor(p, vg, state.method);
+  const lv = state.method === 'level-up';
+  $('#moves-sub').textContent = `${list.length} by ${METHODS.find((m) => m[0] === state.method)[1].toLowerCase()} · ${vgName(vg)}`;
+  $('#moves-list').innerHTML = list.map(({ name, level }) => {
+    const t = state.idx.moveTypes[name];
+    return `<div class="mrow"><span class="w-10 shrink-0 font-mono text-[11px] ${lv ? 'text-amber' : 'text-muted-foreground'}">${lv ? (level ? `Lv${String(level).padStart(2, '0')}` : 'Evo') : '—'}</span>${lv ? `<span class="mtrack" aria-hidden="true"><i style="left:${Math.min(100, level)}%"></i></span>` : ''}<span class="min-w-0 flex-1 truncate text-[13px]">${esc(pretty(name))}</span>${t ? chip(t) : ''}</div>`;
+  }).join('') || `<p class="py-6 text-center text-xs text-muted-foreground">No moves learned this way in ${esc(vgName(vg))}.</p>`;
+  document.querySelectorAll('#method [data-method]').forEach((b) => { const on = b.dataset.method === state.method; b.dataset.state = on ? 'active' : ''; b.setAttribute('aria-pressed', on); });
+  document.querySelectorAll('#heat [data-vg]').forEach((b) => b.classList.toggle('on', b.dataset.vg === vg));
+  const sel = $('#vg-sel'); if (sel) sel.value = vg;
+}
+
+function renderSheet() {
+  const { p, s, chain, members } = state.sheet, id = p.id;
+  const name = s.name || pretty(p.name);
+  const gen = state.idx.gens.find((g) => g.name === s.gen);
+  const bst = d3.sum(p.stats, (x) => x[1]);
+  const at = state.order.indexOf(id), prev = state.order[at - 1], next = state.order[at + 1];
+  const meta = (k, v) => `<div class="min-w-0"><dt class="text-[10px] uppercase tracking-wider text-muted-foreground">${k}</dt><dd class="truncate font-mono text-[13px]">${v}</dd></div>`;
+  const navBtn = (to, icon, label) => to ? `<a href="#/p/${to}" class="inline-flex h-8 items-center gap-1 rounded-md border bg-background/60 px-2 font-mono text-xs hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="${label} #${to}">${icon === 'l' ? '<i class="fi fi-rr-angle-small-left"></i>' : ''}${no(to)}${icon === 'r' ? '<i class="fi fi-rr-angle-small-right"></i>' : ''}</a>` : '';
+  $('#d-head').innerHTML = `<div class="flex flex-wrap items-center gap-x-6 gap-y-3 border-b bg-background/70 px-3 py-3 backdrop-blur sm:px-4">
+    <button type="button" data-back class="${btnCls}"><i class="fi fi-rr-arrow-small-left"></i>Pokédex</button>
+    <div class="min-w-0"><div class="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Specimen · ${esc(s.genus)}</div><h1 class="truncate text-xl font-semibold uppercase leading-tight tracking-[0.06em]">${esc(name)}</h1></div>
+    <dl class="flex flex-wrap gap-x-6 gap-y-2">${meta('Dex no.', `#${no(id)}`)}${meta('Generation', `${roman(s.gen)}${gen ? ` · ${esc(pretty(gen.region))}` : ''}`)}${meta('Height', `${d3.format('.1f')(p.height / 10)} m`)}${meta('Weight', `${d3.format('.1f')(p.weight / 10)} kg`)}${meta('Base exp', p.baseExp ?? '—')}${meta('Stat total', bst)}</dl>
+    <div class="flex items-center gap-1.5">${p.types.map(chip).join('')}</div>
+    <div class="ml-auto flex items-center gap-1.5">${navBtn(prev, 'l', 'Previous')}${navBtn(next, 'r', 'Next')}</div></div>`;
+
+  // moves
+  const vgs = vgsOf(p);
+  const methodBtns = `<div id="method" class="inline-flex h-7 shrink-0 items-center rounded-md bg-muted p-0.5 text-muted-foreground">${METHODS.map(([m, l]) => `<button type="button" data-method="${m}" class="rounded px-2 py-0.5 text-[11px] font-medium hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground">${l}</button>`).join('')}</div>`;
+  const movesPanel = panel('moves', 'Move sequences', '<span id="moves-sub"></span>', `
+    <select id="vg-sel" aria-label="Game version" class="mb-2 h-7 w-full shrink-0 rounded-md border border-input bg-background/60 px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">${vgs.map((v) => `<option value="${v}">${esc(vgName(v))}</option>`).join('')}</select>
+    <div id="moves-list" class="fill scroll-thin max-h-[380px] overflow-auto pr-1"></div>`, methodBtns);
+
+  // type matchup
+  const mu = matchup(p.types);
+  const weak = mu.filter((m) => m[1] >= 2).map((m) => m[0]), immune = mu.filter((m) => m[1] === 0).map((m) => m[0]);
+  const mapPanel = panel('map', 'Type matchup mapping', 'Damage taken, by attacking type', `
+    <div class="fill max-h-[440px] min-h-[300px]">${mapSvg(p.types)}</div>
+    <div class="mt-2 shrink-0 space-y-1 border-t pt-2 text-[11px] text-muted-foreground"><div class="flex flex-wrap items-center gap-1">Weak to ${weak.map(chip).join('') || '<span class="text-foreground">nothing</span>'}</div>${immune.length ? `<div class="flex flex-wrap items-center gap-1">Immune to ${immune.map(chip).join('')}</div>` : ''}</div>`);
+
+  // evolution chain
+  const evoRows = chain.map((n, i) => {
+    const m = members[i], ent = state.byId.get(n.id), t1 = m?.types[0] || ent?.[3];
+    const total = m ? d3.sum(m.stats, (x) => x[1]) : null;
+    return `<a href="#/p/${n.id}" class="evo ${n.id === id ? 'cur' : ''}" style="--t:${tc(t1)};margin-left:${n.depth * 12}px"${n.id === id ? ' aria-current="page"' : ''}><span class="evo-bar"></span><img src="${sprite(n.id)}" ${imgFallback(n.id)} alt="" width="56" height="56" loading="lazy">
+      <span class="min-w-0 flex-1"><span class="block truncate text-[13px] font-semibold uppercase tracking-wide">${esc(pretty(n.name))}</span><span class="block truncate text-[11px] text-muted-foreground">${esc(n.how || (n.depth ? 'Evolves' : 'Base form'))}</span>
+      <span class="mt-0.5 flex gap-3 font-mono text-[10.5px] text-muted-foreground"><span>Stage ${n.depth + 1}</span>${total ? `<span>BST <b class="font-medium text-foreground">${total}</b></span>` : ''}</span></span>${m ? spark(m.stats) : ''}</a>`;
+  }).join('');
+  const evoPanel = panel('evo', 'Evolution modules', chain.length > 1 ? `${chain.length} forms in this chain` : 'Does not evolve', `<div class="fill scroll-thin max-h-[420px] space-y-1 overflow-auto pr-1">${evoRows}</div>`);
+
+  // pokédex entry + hologram
+  const dexPanel = panel('dex', 'Pokédex entry', `${esc(s.genus)}${s.flavorVersion ? ` · ${esc(pretty(s.flavorVersion))}` : ''}`, `
+    <p class="shrink-0 text-[13px] leading-relaxed text-ink-2">${esc(s.flavor) || 'No entry.'}</p>
+    <div id="holo" class="holo mt-2"><div class="holo-scan"></div><div class="holo-sweep"></div></div>`);
+
+  // classification summary
+  const gender = s.genderRate < 0 ? 'Genderless' : `${100 - s.genderRate * 12.5}% ♂ · ${s.genderRate * 12.5}% ♀`;
+  const status = [s.legendary && 'Legendary', s.mythical && 'Mythical', s.baby && 'Baby'].filter(Boolean).join(', ') || 'Standard';
+  const row = (k, v) => `<div class="flex items-baseline justify-between gap-3 py-[3px] text-[12px]"><span class="shrink-0 text-muted-foreground">${k}</span><span class="truncate text-right">${v}</span></div>`;
+  const pct = s.captureRate / 255, C = 2 * Math.PI * 15;
+  const sumPanel = panel('sum', 'Classification summary', 'Species data', `
+    <div class="fill scroll-thin overflow-auto">${row('Habitat', esc(pretty(s.habitat)) || '—')}${row('Shape', esc(pretty(s.shape)) || '—')}${row('Colour', esc(pretty(s.color)) || '—')}${row('Egg groups', esc(s.eggGroups.map(pretty).join(', ')) || '—')}${row('Growth rate', esc(pretty(s.growth)))}${row('Gender', gender)}${row('Status', status)}</div>
+    <div class="mt-2 flex shrink-0 items-center justify-between rounded-md border bg-background/40 px-3 py-1.5"><span class="text-[11px] uppercase tracking-wider text-muted-foreground">Capture rate</span><span class="ml-auto mr-3 font-mono text-lg text-sky">${s.captureRate}<span class="text-xs text-muted-foreground">/255</span></span>
+      <svg class="ring" width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" stroke="${B.line}"/><circle cx="18" cy="18" r="15" stroke="${B.sky}" stroke-linecap="round" stroke-dasharray="${C * pct} ${C}" transform="rotate(-90 18 18)"/></svg></div>`);
+
+  // base stats
+  const ev = p.stats.filter((x) => x[2]).map((x) => `+${x[2]} ${STAT_LONG[x[0]] || x[0]}`).join(', ');
+  const statsPanel = panel('stats', 'Base stat distribution', `Total ${bst}`, `<div class="fill min-h-[170px]">${statsSvg(p.stats)}</div>`);
+
+  // learnset heatmap
+  const counts = vgs.map((vg) => METHODS.map(([m]) => p.moves.filter(([, det]) => det.some((d) => d[0] === vg && d[2] === m)).length));
+  const cmax = d3.max(counts.flat()) || 1, heatCol = d3.interpolateRgb('#20262e', B.sky);
+  const heatPanel = panel('heat', 'Learnset heatmap', `Moves by game version and method · ${vgs.length} versions`, `
+    <div class="mb-1 grid shrink-0 grid-cols-[46px_repeat(4,minmax(0,1fr))] gap-[3px] px-px font-mono text-[9.5px] uppercase text-muted-foreground"><span></span>${METHODS.map(([, l]) => `<span class="text-center">${l}</span>`).join('')}</div>
+    <div id="heat" class="fill scroll-thin max-h-[220px] space-y-[3px] overflow-auto">${vgs.map((vg, i) => `<button type="button" data-vg="${vg}" class="hrow" title="${esc(vgName(vg))}"><span class="truncate font-mono text-[10px] leading-4 text-muted-foreground">${vgAbbr(vg)}</span>${counts[i].map((n) => `<span class="hcell" style="background:${n ? heatCol(0.15 + 0.85 * (n / cmax)) : '#1a1d22'}">${n || ''}</span>`).join('')}</button>`).join('')}</div>
+    <div class="mt-2 flex shrink-0 items-center gap-2 font-mono text-[10px] text-muted-foreground"><span>0</span><span class="h-1.5 flex-1 rounded-full" style="background:linear-gradient(90deg,${heatCol(0.15)},${B.sky})"></span><span>${cmax}</span><span class="ml-2 font-sans">Pick a row for its moves</span></div>`);
+
+  // abilities and training
+  const bar = (k, v, max, sub = '') => `<div class="grid grid-cols-[88px_1fr_44px] items-center gap-2 py-[3px] text-[11px]"><span class="text-muted-foreground">${k}</span><span class="h-1.5 overflow-hidden rounded-full bg-muted"><i class="block h-full rounded-full bg-sky" style="width:${Math.min(100, (100 * (v ?? 0)) / max)}%"></i></span><span class="text-right font-mono">${v ?? '—'}${sub}</span></div>`;
+  const abilPanel = panel('abil', 'Abilities & training', `EV yield ${ev || '—'}`, `
+    <div class="flex shrink-0 flex-wrap gap-1.5">${p.abilities.map(([a, h]) => `<span class="inline-flex h-6 items-center gap-1 rounded-md border bg-background/40 px-2 text-xs">${esc(pretty(a))}${h ? '<span class="text-[10px] uppercase tracking-wider text-pink">hidden</span>' : ''}</span>`).join('')}</div>
+    <div class="fill mt-2 scroll-thin overflow-auto">${bar('Base exp', p.baseExp, 400)}${bar('Friendship', s.happiness, 255)}${bar('Capture rate', s.captureRate, 255)}${bar('Egg cycles', s.hatch, 120)}${bar('Games', p.games.length, 40)}
+    ${p.held.length ? `<div class="mt-1.5 text-[11px] text-muted-foreground">Held in the wild: <span class="text-foreground">${esc(p.held.map(pretty).join(', '))}</span></div>` : ''}</div>`);
+
+  // data provenance
+  const memberKeys = chain.filter((n) => n.id !== id).map((n) => `p:${n.id}`);
+  const fromCache = memberKeys.filter((k) => prov[k]?.src === 'cache').length;
+  const sources = [
+    ['Pokédex index', state.idxSrc === 'bundled' ? { src: 'bundle' } : { src: 'cache' }],
+    [`pokemon/${id}`, prov[`p:${id}`]],
+    [`pokemon-species/${id}`, prov[`s:${id}`]],
+    ...(s.chain ? [[`evolution-chain/${s.chain}`, prov[`c:${s.chain}`]]] : []),
+    ...(memberKeys.length ? [[`chain members ×${memberKeys.length}`, { src: fromCache === memberKeys.length ? 'cache' : 'live', ms: d3.max(memberKeys, (k) => prov[k]?.ms) }]] : []),
+  ];
+  const provRow = ([label, pv]) => {
+    const live = pv?.src === 'live', txt = live ? `live${pv.ms != null ? ` ${pv.ms} ms` : ''}` : pv?.src === 'bundle' ? 'bundled' : 'this browser';
+    return `<div class="py-[3px]"><div class="flex justify-between gap-2 text-[11px]"><span class="truncate font-mono">${esc(label)}</span><span class="shrink-0 ${live ? 'text-primary' : 'text-muted-foreground'}">${txt}</span></div><div class="mt-1 h-1.5 rounded-full bg-muted"><div class="h-full rounded-full ${live ? 'bg-primary' : 'bg-sky/50'}" style="width:100%"></div></div></div>`;
+  };
+  const provPanel = panel('prov', 'Data provenance', 'PokeAPI v2 · this browser', `<div class="fill scroll-thin overflow-auto">${sources.map(provRow).join('')}</div>
+    <button type="button" data-clear class="${btnCls} mt-2 shrink-0 self-start"><i class="fi fi-rr-trash"></i>Clear stored data</button>`);
+
+  $('#d-body').innerHTML = movesPanel + mapPanel + evoPanel + dexPanel + sumPanel + statsPanel + heatPanel + abilPanel + provPanel;
+
+  const keys = sources.slice(1).length, local = sources.slice(1).filter(([, pv]) => pv?.src !== 'live').length;
+  const bulba = `https://bulbapedia.bulbagarden.net/wiki/${encodeURIComponent(name.replace(/ /g, '_'))}_(Pok%C3%A9mon)`;
+  $('#d-foot').innerHTML = `<div class="flex flex-wrap items-center gap-x-6 gap-y-2 border-t bg-card/70 px-3 py-2.5 text-xs sm:px-4">
+    <span class="text-muted-foreground">Status <span class="ml-1 text-foreground"><span class="text-sky">●</span> Specimen loaded</span></span>
+    <span class="text-muted-foreground">Moves <b class="font-mono font-medium text-foreground">${p.moves.length}</b></span>
+    <span class="text-muted-foreground">Games <b class="font-mono font-medium text-foreground">${p.games.length}</b></span>
+    <span class="text-muted-foreground">From this browser <b class="font-mono font-medium text-foreground">${local}/${keys}</b></span>
+    <div class="ml-auto flex flex-wrap gap-2">${p.cry || p.cryLegacy ? `<button type="button" data-cry class="${btnCls}"><i class="fi fi-rr-volume text-primary"></i>Play cry</button>` : ''}
+      <a href="${bulba}" target="_blank" rel="noopener" class="${btnCls}">Bulbapedia<i class="fi fi-rr-arrow-up-right-from-square text-[10px]"></i></a>
+      <a href="https://pokeapi.co/api/v2/pokemon/${id}" target="_blank" rel="noopener" class="${btnCls}">PokeAPI<i class="fi fi-rr-arrow-up-right-from-square text-[10px]"></i></a></div></div>`;
+
+  renderMoves();
+  mountHolo($('#holo'), p.art || artwork(id));
+}
+
+function renderSkeleton(id) {
+  const ent = state.byId.get(id);
+  $('#d-head').innerHTML = `<div class="flex items-center gap-6 border-b bg-background/70 px-3 py-3 sm:px-4"><button type="button" data-back class="${btnCls}"><i class="fi fi-rr-arrow-small-left"></i>Pokédex</button>
+    <div><div class="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Specimen · loading</div><h1 class="text-xl font-semibold uppercase leading-tight tracking-[0.06em]">${esc(pretty(ent?.[1] || `#${id}`))}</h1></div>
+    <div class="flex gap-1.5">${(ent?.slice(3) || []).map(chip).join('')}</div></div>`;
+  $('#d-body').innerHTML = ['moves', 'map', 'evo', 'dex', 'sum', 'stats', 'heat', 'abil', 'prov'].map((a) => `<div class="skel a-${a} min-h-[220px]"></div>`).join('');
+  $('#d-foot').innerHTML = '';
+}
+function renderError(id, err) {
+  $('#d-body').innerHTML = `<div class="hp col-span-full items-center py-14 text-center"><p class="text-sm">Could not load this specimen from PokeAPI.</p><p class="mt-1 font-mono text-xs text-muted-foreground">${esc(err.message || err)}</p><button type="button" data-retry="${id}" class="${btnCls} mt-4"><i class="fi fi-rr-refresh"></i>Try again</button></div>`;
+}
+
+let loadToken = 0;
+async function showDetail(id) {
+  if (!state.byId.has(id)) { location.hash = ''; return; }
+  setView('detail');
+  state.current = id; state.last = id;
+  renderTabs();
+  if (state.sheet?.p.id === id) return;
+  disposeHolo();
+  const token = ++loadToken;
+  renderSkeleton(id);
+  $('#detail').scrollTop = 0;
+  try {
+    const [p, s] = await Promise.all([cached(`p:${id}`, () => D.loadPokemon(id)), cached(`s:${id}`, () => D.loadSpecies(id))]);
+    const chain = s.chain ? await cached(`c:${s.chain}`, () => D.loadChain(s.chain)) : [{ id, name: p.name, depth: 0, from: null, how: '' }];
+    const members = await Promise.all(chain.map((n) => (n.id === id ? p : cached(`p:${n.id}`, () => D.loadPokemon(n.id)).catch(() => null))));
+    if (token !== loadToken) return;
+    state.sheet = { p, s, chain, members };
+    const vgs = vgsOf(p);
+    // open on the newest game version where it learns moves by level
+    state.vg = [...vgs].reverse().find((vg) => movesFor(p, vg, 'level-up').length) || vgs.at(-1);
+    state.method = 'level-up';
+    renderSheet();
+    document.title = `${s.name} · Pokémon Specimen Lab`;
+  } catch (err) {
+    if (token === loadToken) renderError(id, err);
+  }
+}
+function showList() {
+  setView('list');
+  disposeHolo(); state.sheet = null; loadToken++;
+  document.title = 'Pokémon Specimen Lab';
+  renderTabs();
+  document.querySelectorAll('.pcard.last').forEach((c) => c.classList.remove('last'));
+  const c = state.last && document.querySelector(`.pcard[href="#/p/${state.last}"]`);
+  if (c) { c.classList.add('last'); const r = c.getBoundingClientRect(), L = $('#list').getBoundingClientRect(); if (r.top < L.top + 40 || r.bottom > L.bottom) c.scrollIntoView({ block: 'center' }); }
+}
+function setView(v) {
+  state.view = v; document.body.dataset.view = v;
+  $('#list').hidden = v !== 'list'; $('#detail').hidden = v !== 'detail';
+}
+const renderTabs = () => {
+  const tabs = [['list', 'Pokédex', 'fi-rr-apps'], ['detail', 'Specimen', 'fi-rr-dna']];
+  $('#tabs').innerHTML = tabs.map(([k, n, icon]) => { const on = state.view === k, off = k === 'detail' && !state.last; return `<button role="tab" type="button" data-tab="${k}" aria-label="${n}" aria-selected="${on}" data-state="${on ? 'active' : ''}" ${off ? 'disabled' : ''} class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi ${icon}"></i><span class="hidden sm:inline">${n}</span></button>`; }).join('');
+};
+function route() {
+  const m = location.hash.match(/^#\/p\/(\d+)/);
+  if (m) showDetail(Number(m[1])); else showList();
+}
+const toList = () => { if (location.hash) history.pushState(null, '', location.pathname + location.search); showList(); };
+
+// ================= hologram (Three.js point cloud of the official artwork) =================
+let holo = null;
+function disposeHolo() {
+  if (!holo) return;
+  holo.renderer.setAnimationLoop(null); holo.ro.disconnect();
+  holo.scene.traverse((o) => { o.geometry?.dispose(); o.material?.dispose(); });
+  holo.renderer.dispose(); holo.renderer.domElement.remove();
+  holo = null;
+}
+const loadImg = (url) => new Promise((ok, no) => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => ok(im); im.onerror = () => no(new Error('image')); im.src = url; });
+async function mountHolo(el, url) {
+  disposeHolo();
+  const token = loadToken;
+  let im;
+  try { im = await loadImg(url); } catch { return; }
+  if (token !== loadToken || !el.isConnected) return;
+  let px;
+  try {
+    const N = 150, c = document.createElement('canvas'); c.width = c.height = N;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    const k = N / Math.max(im.width, im.height);
+    g.drawImage(im, (N - im.width * k) / 2, (N - im.height * k) / 2, im.width * k, im.height * k);
+    px = g.getImageData(0, 0, N, N).data;
+    const pos = [], col = [], sky = new THREE.Color(B.sky), white = new THREE.Color('#ffffff'), tmp = new THREE.Color();
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const i = (y * N + x) * 4;
+      if (px[i + 3] < 70) continue;
+      const lum = (0.3 * px[i] + 0.59 * px[i + 1] + 0.11 * px[i + 2]) / 255;
+      pos.push((x / N - 0.5) * 2, -(y / N - 0.5) * 2, (lum - 0.5) * 0.35 + (Math.random() - 0.5) * 0.05);
+      tmp.copy(sky).lerp(white, lum * 0.55).multiplyScalar(0.35 + lum * 0.75);
+      col.push(tmp.r, tmp.g, tmp.b);
+    }
+    const scene = new THREE.Scene();
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.016, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+    scene.add(pts);
+    // projector pedestal: three rings under the specimen
+    const base = new THREE.Group(); base.position.y = -1.08; base.rotation.x = -Math.PI / 2;
+    [0.55, 0.78, 1.0].forEach((r, i) => {
+      const ring = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(new THREE.Path().absarc(0, 0, r, 0, Math.PI * 2).getPoints(72)), new THREE.LineBasicMaterial({ color: B.sky, transparent: true, opacity: 0.45 - i * 0.12 }));
+      base.add(ring);
+    });
+    scene.add(base);
+    const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 20);
+    camera.position.set(0, 0.25, 4.6); camera.lookAt(0, -0.1, 0);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    el.prepend(renderer.domElement);
+    const size = () => { const w = el.clientWidth, h = el.clientHeight; if (!w || !h) return; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); };
+    const ro = new ResizeObserver(size); ro.observe(el); size();
+    const clock = new THREE.Clock();
+    renderer.setAnimationLoop(() => {
+      const t = clock.getElapsedTime();
+      if (!reduceMotion) { pts.rotation.y = Math.sin(t * 0.5) * 0.55; base.rotation.z = t * 0.3; pts.material.opacity = 0.88 + Math.sin(t * 9) * 0.04 + (Math.random() < 0.02 ? -0.2 : 0); }
+      renderer.render(scene, camera);
+    });
+    holo = { renderer, scene, ro };
+  } catch {
+    // no WebGL or a tainted canvas: show the artwork with a hologram tint instead
+    const img = document.createElement('img'); img.src = url; img.alt = ''; el.prepend(img);
+  }
+}
+
+// ================= events =================
+document.addEventListener('click', async (e) => {
+  const t = e.target;
+  if (t.closest('[data-back]')) return toList();
+  const tab = t.closest('[data-tab]');
+  if (tab) { if (tab.dataset.tab === 'list') toList(); else if (state.last) location.hash = `#/p/${state.last}`; return; }
+  const gen = t.closest('[data-gen]');
+  if (gen) {
+    if (state.view !== 'list') toList();
+    $(`#gen-${gen.dataset.gen}`)?.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+    return;
+  }
+  const ty = t.closest('[data-type]');
+  if (ty) { state.type = state.type === ty.dataset.type ? '' : ty.dataset.type; document.querySelectorAll('#typef [data-type]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.type === state.type)); if (state.view !== 'list') toList(); refilter(); $('#list').scrollTop = 0; return; }
+  if (t.closest('[data-reset]')) { state.q = ''; state.type = ''; $('#q').value = ''; document.querySelectorAll('#typef [data-type]').forEach((b) => b.setAttribute('aria-pressed', 'false')); refilter(); return; }
+  const meth = t.closest('[data-method]');
+  if (meth) { state.method = meth.dataset.method; renderMoves(); return; }
+  const vg = t.closest('#heat [data-vg]');
+  if (vg) { state.vg = vg.dataset.vg; renderMoves(); return; }
+  const retry = t.closest('[data-retry]');
+  if (retry) { state.sheet = null; showDetail(Number(retry.dataset.retry)); return; }
+  if (t.closest('[data-cry]')) {
+    const { p } = state.sheet;
+    try { const a = new Audio(p.cry || p.cryLegacy); a.volume = 0.5; await a.play(); }
+    catch { try { await new Audio(p.cryLegacy).play(); } catch { toast('This browser cannot play the cry (OGG audio)'); } }
+    return;
+  }
+  if (t.closest('#clear, [data-clear]')) {
+    await store.clear();
+    for (const k of Object.keys(prov)) delete prov[k];
+    if (state.idxSrc === 'synced') { await loadIndex(); renderPanel(); refilter(); }
+    toast('Cleared what this page stored in your browser');
+  }
+});
+// type matchup map: hovering an attacking type traces its curve to its multiplier
+let hoverType = '';
+document.addEventListener('mouseover', (e) => {
+  const ln = e.target.closest?.('.mapsvg [data-t]'), t = ln?.dataset.t || '';
+  if (t === hoverType) return;
+  hoverType = t;
+  document.querySelectorAll('.mapsvg').forEach((svg) => {
+    const on = t && svg.contains(ln) ? t : '';
+    svg.classList.toggle('hl', !!on);
+    svg.querySelectorAll('[data-t]').forEach((x) => x.classList.toggle('on', x.dataset.t === on));
+  });
+});
+document.addEventListener('change', (e) => { if (e.target.id === 'vg-sel') { state.vg = e.target.value; renderMoves(); } });
+let qTimer;
+document.addEventListener('input', (e) => {
+  if (e.target.id !== 'q') return;
+  clearTimeout(qTimer);
+  qTimer = setTimeout(() => { state.q = e.target.value; if (state.view !== 'list') toList(); refilter(); $('#list').scrollTop = 0; }, 120);
+});
+addEventListener('keydown', (e) => {
+  if (state.view !== 'detail' || e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+  const at = state.order.indexOf(state.current);
+  if (e.key === 'Escape') toList();
+  else if (e.key === 'ArrowLeft' && at > 0) location.hash = `#/p/${state.order[at - 1]}`;
+  else if (e.key === 'ArrowRight' && at < state.order.length - 1) location.hash = `#/p/${state.order[at + 1]}`;
+});
+addEventListener('hashchange', route);
+addEventListener('popstate', route);
+
+let syncing = false;
+$('#action').addEventListener('click', async () => {
+  if (syncing) return;
+  syncing = true; $('#action').disabled = true;
+  let n = 0;
+  toast('Syncing the index from PokeAPI…', true);
+  try {
+    const idx = await D.loadIndex(() => { n++; toast(`Syncing the index from PokeAPI · ${n} of 27`, true); });
+    await store.put('index', idx);
+    setIndex(idx, 'synced');
+    renderPanel(); renderList();
+    if (state.view === 'detail') showList();
+    toast(`Synced ${fmt(idx.pokemon.length)} Pokémon from PokeAPI`);
+  } catch (err) {
+    toast(`Sync failed: ${err.message}`);
+  } finally { syncing = false; $('#action').disabled = false; }
+});
+
+(async () => {
+  setView('list'); renderTabs();
+  $('#list-hero').innerHTML = '<p class="text-sm text-muted-foreground">Loading the Pokédex…</p>';
+  try { await loadIndex(); }
+  catch (err) { $('#list-hero').innerHTML = `<p class="text-sm">Could not load the Pokédex: <span class="font-mono text-xs text-muted-foreground">${esc(err.message)}</span></p>`; return; }
+  renderPanel(); renderList(); route();
+})();
+</script>
+</body>
+</html>
