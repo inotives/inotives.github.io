@@ -417,8 +417,6 @@ function renderPanel() {
   $('#panel').innerHTML = `<h1 class="text-lg font-semibold leading-tight">Pokédex</h1>
     <p class="mt-1 text-xs text-muted-foreground">Every Pokémon, grouped by the generation of games that introduced it. Open one for its specimen sheet.</p>
     <div class="mt-3 grid grid-cols-2 gap-2">${kpi('Pokémon', fmt(idx.pokemon.length))}${kpi('Generations', idx.gens.length, `${fmt(Object.keys(idx.moveTypes).length)} moves`)}</div>
-    <label class="relative mt-3 block"><span class="sr-only">Search</span><i class="fi fi-rr-search pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"></i>
-      <input id="q" type="search" autocomplete="off" placeholder="Name or number" value="${esc(state.q)}" class="h-8 w-full rounded-md border border-input bg-background/60 pl-8 pr-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" /></label>
     ${section('Type', `<div id="typef" class="flex flex-wrap gap-1">${TYPES.map((t) => `<button type="button" data-type="${t}" aria-pressed="${state.type === t}" class="tchip" style="--t:${tc(t)}">${t}</button>`).join('')}</div>`, 'fi-rr-filter')}
     ${section('Generations', '<nav id="gens" class="-mx-2 flex flex-col"></nav>', 'fi-rr-layers')}
     ${section('Data', `<div id="datainfo" class="text-xs leading-relaxed text-muted-foreground"></div><button id="clear" type="button" class="${btnCls} mt-2"><i class="fi fi-rr-trash"></i>Clear stored data</button>`, 'fi-rr-database')}`;
@@ -449,10 +447,16 @@ const card = ([id, slug, , t1, t2]) => `<a href="#/p/${id}" class="pcard ${state
   <div class="mt-1.5 flex flex-wrap gap-1">${[t1, t2].filter(Boolean).map(chip).join('')}</div></a>`;
 function renderList() {
   const items = filtered(), groups = d3.group(items, (p) => p[2]);
+  // the hero (with the search box) is built once so typing keeps focus; only the count line changes
+  if (!$('#q')) {
+    $('#list-hero').innerHTML = `<div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+      <div class="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1"><h1 class="text-xl font-semibold uppercase tracking-[0.06em]">Pokédex</h1><span id="list-count" class="text-xs text-muted-foreground"></span></div>
+      <label class="relative ml-auto block w-full sm:w-80"><span class="sr-only">Search Pokémon</span><i class="fi fi-rr-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"></i>
+        <input id="q" type="search" autocomplete="off" enterkeyhint="search" placeholder="Search by name or number" value="${esc(state.q)}" class="h-10 w-full rounded-lg border border-input bg-card pl-9 pr-3 text-base placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:h-9 sm:text-sm" /></label></div>`;
+  }
   const filt = [state.q && `“${esc(state.q)}”`, state.type && chip(state.type)].filter(Boolean).join(' ');
-  $('#list-hero').innerHTML = `<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1"><h1 class="text-xl font-semibold uppercase tracking-[0.06em]">Pokédex</h1>
-    <span class="text-xs text-muted-foreground"><b class="font-mono text-foreground">${fmt(items.length)}</b> of ${fmt(state.idx.pokemon.length)} Pokémon ${filt ? `· ${filt}` : ''}</span>
-    ${filt ? `<button type="button" data-reset class="text-xs text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground">Clear filters</button>` : ''}</div>`;
+  $('#list-count').innerHTML = `<b class="font-mono text-foreground">${fmt(items.length)}</b> of ${fmt(state.idx.pokemon.length)} Pokémon ${filt ? `· ${filt}` : ''}
+    ${filt ? `<button type="button" data-reset class="ml-1 underline decoration-dotted underline-offset-2 hover:text-foreground">Clear filters</button>` : ''}`;
   $('#list-body').innerHTML = state.idx.gens.map((g) => {
     const ps = groups.get(g.id);
     if (!ps) return '';
