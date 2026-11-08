@@ -433,6 +433,7 @@ const keyLight = new THREE.DirectionalLight('#ffffff', 1.4); keyLight.position.s
 const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 200);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+controls.enableZoom = false;   // the wheel travels through time instead (travel() below)
 
 const panelOffset = () => (innerWidth >= 900 ? ($('#drawer').offsetWidth + 24) / 2 : 0);
 const resize = () => {
@@ -518,11 +519,37 @@ function markSelection() {
   if (on) { const p = pos(state.sel); selMark.position.copy(p); selLabel.position.set(p.x + 0.16, p.y + 0.16, p.z); selLabel.element.textContent = M.label(state.sel); }
 }
 let flight = null;
-function look(name, animate) {
-  const v = VIEWPOINTS[name], to = new THREE.Vector3(...v.pos), tt = new THREE.Vector3(...v.target);
+function fly(to, tt, animate, dur = 1800) {
   if (!animate || reduceMotion) { camera.position.copy(to); controls.target.copy(tt); flight = null; return; }
-  flight = { t0: performance.now(), dur: 1800, p0: camera.position.clone(), t0v: controls.target.clone(), to, tt };
+  flight = { t0: performance.now(), dur, p0: camera.position.clone(), t0v: controls.target.clone(), to, tt };
 }
+function look(name, animate) {
+  const v = VIEWPOINTS[name];
+  fly(new THREE.Vector3(...v.pos), new THREE.Vector3(...v.target), animate);
+}
+// Travel along the time axis: camera and target move together, so the view keeps its angle.
+// The target sits a little ahead of the month being looked at (VIEWPOINTS.now looks 2.6 deep).
+const depthZ = (i) => (i - M.last) * DZ - 2.6;
+const depthOf = () => Math.round(M.last + (controls.target.z + 2.6) / DZ);
+function travel(i, animate) {
+  if (!M) return;
+  i = Math.max(M.first, Math.min(M.last, i));
+  const dz = depthZ(i) - (flight ? flight.tt.z : controls.target.z);
+  const base = flight ? flight.to : camera.position, baseT = flight ? flight.tt : controls.target;
+  fly(base.clone().setZ(base.z + dz), baseT.clone().setZ(baseT.z + dz), animate, 700);
+  syncDepth(i);
+}
+function syncDepth(i = depthOf()) {
+  const r = $('#depth'), o = $('#depth-label');
+  if (r) r.value = i;
+  if (o) o.textContent = M.label(Math.max(M.first, Math.min(M.last, i)));
+}
+renderer.domElement.addEventListener('wheel', (e) => {
+  if (!M || state.view !== 'regime') return;
+  e.preventDefault();
+  const step = Math.sign(e.deltaY) * Math.max(1, Math.min(24, Math.round(Math.abs(e.deltaY) / 8)));
+  travel((flight ? Math.round(M.last + (flight.tt.z + 2.6) / DZ) : depthOf()) - step, false);
+}, { passive: false });
 // screen-space picking: the spheres are small, so take the nearest within 14px
 const ndc = new THREE.Vector3();
 function pick(ev) {
@@ -553,7 +580,7 @@ renderer.domElement.addEventListener('pointerleave', hideTip);
 renderer.domElement.addEventListener('pointerup', (e) => {
   if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
   const i = pick(e);
-  select(i == null || i === M.last ? null : i);
+  if (i != null) select(i === M.last ? null : i, true);
 });
 
 renderer.setAnimationLoop((now) => {
@@ -561,7 +588,7 @@ renderer.setAnimationLoop((now) => {
   if (flight) {
     const k = Math.min(1, (now - flight.t0) / flight.dur), e = d3.easeCubicInOut(k);
     camera.position.lerpVectors(flight.p0, flight.to, e); controls.target.lerpVectors(flight.t0v, flight.tt, e);
-    if (k === 1) flight = null;
+    if (k === 1) { flight = null; syncDepth(); }
   }
   controls.update(); renderer.render(scene, camera); labelR.render(scene, camera);
 });
@@ -704,6 +731,9 @@ function directionRows(t) {
 }
 function viewSection(t) {
   if (state.view === 'regime') return section('The tunnel', `<p class="text-xs leading-relaxed text-ink-2">Each point is a month. Across is whether growth is picking up, up is whether inflation is, both over ${MOMENTUM} months. Time runs into the screen, so the thread shows how the economy moved between regimes. Grey frames are recession months.</p>
+    <label class="mt-3 block text-xs"><span class="flex items-baseline justify-between"><span class="text-muted-foreground">Travel back to</span><span id="depth-label" class="font-mono">${M.label(depthOf())}</span></span>
+      <input id="depth" type="range" min="${M.first}" max="${M.last}" step="1" value="${Math.max(M.first, Math.min(M.last, depthOf()))}" class="mt-1.5 w-full accent-[#1fefd7]" aria-label="Month to travel back to" /></label>
+    <p class="mt-1 text-[11px] text-muted-foreground">Or scroll over the tunnel. Drag to turn it.</p>
     <div class="mt-2 flex gap-1.5"><button type="button" data-act="look" data-v="now" class="${btnCls} flex-1"><i class="fi fi-rr-time-fast"></i>From today</button><button type="button" data-act="look" data-v="history" class="${btnCls} flex-1"><i class="fi fi-rr-time-past"></i>Whole history</button></div>`, 'fi-rr-cube');
   if (state.view === 'signals') return PILLARS.map((p) => section(p.name, `<div class="space-y-1">${p.parts.map((c) => { const v = M.ind[c.k][t]; return `<div class="flex items-baseline justify-between gap-3 text-xs"><span class="min-w-0 text-ink-2">${esc(c.name)} <span class="text-[10px]">${fredLink(c.id)}</span></span><span class="shrink-0 font-mono">${v == null ? '—' : c.fmt(v)}</span></div>`; }).join('')}</div>`)).join('');
   if (state.view === 'liquidity') {
@@ -745,7 +775,7 @@ const swatch = (c, n, shape = 'rounded-full') => `<span class="inline-flex items
 function renderLegend() {
   const regimes = `<div class="flex flex-wrap gap-x-3 gap-y-1">${REGIMES.map((r) => swatch(r.color, r.name)).join('')}</div>`;
   const L = {
-    regime: `${regimes}<div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">${swatch(B.signal, 'Latest month')}${swatch(B.amber, 'Selected')}<span class="inline-flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm border" style="border-color:${B.fog}"></span>Recession</span></div><div class="mt-1.5 border-t pt-1.5">Drag to orbit, scroll to zoom, click a month</div>`,
+    regime: `${regimes}<div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">${swatch(B.signal, 'Latest month')}${swatch(B.amber, 'Selected')}<span class="inline-flex items-center gap-1.5"><span class="inline-block size-2.5 rounded-sm border" style="border-color:${B.fog}"></span>Recession</span></div><div class="mt-1.5 border-t pt-1.5">Scroll to travel through time, drag to turn, click a month</div>`,
     signals: `${regimes}<div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1"><span class="inline-flex items-center gap-1.5"><span class="inline-block h-2.5 w-4 rounded-sm" style="background:${B.fog};opacity:.3"></span>Recession</span></div>`,
     liquidity: `<div class="flex flex-wrap gap-x-3 gap-y-1">${swatch(B.sky, 'Net liquidity', 'rounded-sm')}${swatch(B.clay, COMPARE[state.compare].name, 'rounded-sm')}${swatch(B.violet, 'Fed funds', 'rounded-sm')}${swatch(B.rose, '2-year', 'rounded-sm')}${swatch(B.ink2, '10-year', 'rounded-sm')}</div>`,
     playbook: `<div class="mb-1 font-medium text-foreground">Return per unit of risk</div><div class="h-2 w-40 rounded-full" style="background:linear-gradient(90deg,${B.bad},${B.muted},${B.good})"></div><div class="mt-0.5 flex w-40 justify-between font-mono text-[10px]"><span>−0.6</span><span>0</span><span>+0.6</span></div>`,
@@ -760,7 +790,11 @@ function show() {
   renderTabs(); renderPanel(); renderLegend();
   if (state.view === 'regime') { hideTip(); markSelection(); } else drawChart();
 }
-function select(i) { state.sel = i == null || i === M.last ? null : i; show(); }
+function select(i, go = false) {
+  state.sel = i == null || i === M.last ? null : i;
+  show();
+  if (go && state.view === 'regime') travel(state.sel ?? M.last, true);
+}
 
 $('#tabs').addEventListener('click', (e) => {
   const b = e.target.closest('[data-tab]'); if (!b) return;
@@ -773,10 +807,11 @@ $('#panel').addEventListener('click', async (e) => {
   const { act, v } = b.dataset;
   if (act === 'h') { state.h = Number(v); show(); }
   else if (act === 'compare') { state.compare = v; show(); }
-  else if (act === 'look') { if (state.view === 'regime') look(v, true); }
-  else if (act === 'sel') select(v === '' ? null : Number(v));
+  else if (act === 'look') { if (state.view === 'regime') { look(v, true); if (reduceMotion) syncDepth(); } }
+  else if (act === 'sel') select(v === '' ? null : Number(v), true);
   else if (act === 'reset') { await store.del('data'); await loadData(); toast('Back to the bundled data'); }
 });
+$('#panel').addEventListener('input', (e) => { if (e.target.id === 'depth') travel(Number(e.target.value), false); });
 $('#files').addEventListener('change', async (e) => {
   const files = [...(e.target.files || [])];
   e.target.value = '';
