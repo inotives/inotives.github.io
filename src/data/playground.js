@@ -362,4 +362,20 @@ export const PLAYGROUND_MOCKS = [
       { name: 'NBER recession dates (USREC)', href: 'https://fred.stlouisfed.org/series/USREC' },
     ],
   },
+  {
+    id: 'pokemon-viewer',
+    project: 'Pokédex',
+    name: 'Pokémon specimen lab',
+    date: '2026-11-08',
+    href: '/mocks/pokemon-viewer.html',
+    preview: '/mocks/previews/pokemon-viewer.jpg',
+    description:
+      'A single-page Pokédex laid out like a sci-fi lab console. All 1,025 Pokémon as cards, grouped by the generation of games that introduced them, with search and a type filter. Open one for its specimen sheet: moves by game version and learn method, a map tracing every attacking type to the damage it deals, the evolution chain with stat sparklines, the Pokédex entry beside a Three.js point-cloud hologram of the artwork, base stats, a learnset heatmap across games, training values and where each figure came from. Sheets load live from PokeAPI and stay in your browser.',
+    libraries: ['threejs', 'd3', 'shadcn', 'tailwind', 'flaticon'],
+    sources: [
+      { name: 'PokeAPI', href: 'https://pokeapi.co/' },
+      { name: 'PokeAPI sprites', href: 'https://github.com/PokeAPI/sprites' },
+      { name: 'PokeAPI cries', href: 'https://github.com/PokeAPI/cries' },
+    ],
+  },
 ]
