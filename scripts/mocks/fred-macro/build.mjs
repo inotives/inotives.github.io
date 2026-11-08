@@ -1,74 +1,95 @@
-// Data for the US macro regime mock (public/mocks/fred-macro.html): pulls the FRED series it uses
-// and writes monthly averages to public/mocks/data/fred-macro.json.
+// Updates the bundled data for the US macro regimes mock (public/mocks/fred-macro.html) from FRED.
 //
-//   npm run fred
+//   npm run fred                                   download the three FRED sets, then update
+//   npm run fred -- path/to/a.zip path/to/b.csv    update from files you already downloaded
+//   node scripts/mocks/fred-macro/build.mjs …
 //
-// FRED's graph download (fredgraph.csv?id=A,B,C) needs no API key. Asking for several series
-// returns a zip with one CSV per frequency, and it takes at most 12 series, so the series are split
-// into the same three sets the mock offers as downloads. The parsing and monthly averaging below
-// mirror `readFredFiles()` and `toMonthly()` in the mock; change both together.
-import { writeFile } from 'node:fs/promises';
-import { inflateRawSync } from 'node:zlib';
+// FRED's graph download (fredgraph.csv?id=A,B,C) needs no API key. Several series come back as a
+// zip with one CSV per frequency, at most 12 series per request, so the 27 series are split into
+// the three sets the mock links under "Update from FRED". Downloads are kept in
+// .cache/fred-macro/ (gitignored). Files can also be the zips from the mock's links or
+// single-series CSVs from a FRED series page.
+//
+// The parser lives in the mock itself, between the `// <fred-files>` markers, so this script and
+// the page's "Update data" read FRED's files the same way. Series in the files replace the ones in
+// the JSON; series they don't carry are kept.
+//
+// Reports new months, each series whose latest observation moved, and past values FRED revised.
+// Writes public/mocks/data/fred-macro.json only when something changed. Prints `changed=true|false`
+// last, so CI can decide whether to commit. Exit 1 on a failed download or unreadable files.
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { basename } from 'node:path';
 
-const START = '1990-01';
-export const SETS = [
-  { id: 'growth', name: 'Growth and inflation', ids: ['INDPRO', 'PAYEMS', 'ICSA', 'UNRATE', 'RSAFS', 'CPIAUCSL', 'PCEPILFE', 'T5YIE', 'USREC'] },
-  { id: 'liquidity', name: 'Liquidity and rates', ids: ['FEDFUNDS', 'WALCL', 'RRPONTSYD', 'WTREGEN', 'M2SL', 'DGS10', 'DGS2', 'T10Y2Y', 'T10Y3M'] },
-  { id: 'markets', name: 'Markets and stress', ids: ['BAMLH0A0HYM2', 'BAA10Y', 'NFCI', 'VIXCLS', 'DTWEXBGS', 'SP500', 'NASDAQCOM', 'DCOILWTICO', 'CBBTCUSD'] },
-];
-const out = new URL('../../../public/mocks/data/fred-macro.json', import.meta.url);
+const root = new URL('../../../', import.meta.url);
+const page = new URL('public/mocks/fred-macro.html', root);
+const out = new URL('public/mocks/data/fred-macro.json', root);
+const cache = new URL('.cache/fred-macro/', root);
 const fail = (msg) => { console.error(msg); process.exit(1); };
 
-// zip → [{name, text}]; FRED's zips store sizes in the local headers (no data descriptors)
-function unzip(buf) {
-  const files = [];
-  for (let p = 0; buf.readUInt32LE(p) === 0x04034b50;) {
-    const method = buf.readUInt16LE(p + 8), size = buf.readUInt32LE(p + 18), nl = buf.readUInt16LE(p + 26), xl = buf.readUInt16LE(p + 28);
-    const name = buf.toString('utf8', p + 30, p + 30 + nl), at = p + 30 + nl + xl, data = buf.subarray(at, at + size);
-    files.push({ name, text: (method === 8 ? inflateRawSync(data) : data).toString('utf8') });
-    p = at + size;
-  }
-  return files;
-}
-// CSV with an observation_date column and one column per series → { ID: [[yyyy-mm-dd, value], ...] }
-function parseCsv(text, obs) {
-  const [head, ...rows] = text.trim().split(/\r?\n/);
-  const cols = head.split(',');
-  if (cols[0] !== 'observation_date') return;
-  for (const row of rows) {
-    const cells = row.split(',');
-    for (let c = 1; c < cols.length; c++) {
-      const v = Number(cells[c]);
-      if (cells[c] !== '' && cells[c] !== '.' && Number.isFinite(v)) (obs[cols[c]] ||= []).push([cells[0], v]);
-    }
+const html = await readFile(page, 'utf8');
+const block = html.match(/\/\/ <fred-files>\n([\s\S]*?)\/\/ <\/fred-files>/);
+if (!block) fail('fred-files block not found in fred-macro.html');
+const src = `${block[1]}\nexport default { SETS, KNOWN, setUrl, readFredFiles, toMonthly, mergeRaw, newest };\n`;
+const { default: F } = await import(`data:text/javascript;base64,${Buffer.from(src).toString('base64')}`);
+
+// 1. the files: given on the command line, or downloaded now
+let paths = process.argv.slice(2);
+if (!paths.length) {
+  await mkdir(cache, { recursive: true });
+  for (const set of F.SETS) {
+    const url = F.setUrl(set);
+    const res = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; inotives-fred-macro)' } });
+    if (!res.ok) fail(`Download failed: ${res.status} ${url}`);
+    const file = new URL(`${set.id}.zip`, cache);
+    await writeFile(file, Buffer.from(await res.arrayBuffer()));
+    paths.push(file.pathname);
+    console.log(`downloaded ${set.name} (${set.ids.length} series) → .cache/fred-macro/${set.id}.zip`);
   }
 }
-// observations → monthly averages from START, aligned on one month axis
-function toMonthly(obs) {
-  const last = Object.values(obs).flat().reduce((m, [d]) => (d > m ? d : m), START);
-  const months = [];
-  for (let [y, m] = START.split('-').map(Number); `${y}-${String(m).padStart(2, '0')}` <= last.slice(0, 7); m === 12 ? (y++, m = 1) : m++) months.push(`${y}-${String(m).padStart(2, '0')}`);
-  const at = new Map(months.map((k, i) => [k, i]));
-  const series = {}, lastObs = {};
-  for (const [id, list] of Object.entries(obs)) {
-    const sum = new Array(months.length).fill(0), n = new Array(months.length).fill(0);
-    for (const [d, v] of list) { const i = at.get(d.slice(0, 7)); if (i != null) { sum[i] += v; n[i]++; } }
-    series[id] = sum.map((s, i) => (n[i] ? Number((s / n[i]).toPrecision(6)) : null));
-    lastObs[id] = list.at(-1)[0];
-  }
-  return { start: START, months: months.length, series, last: lastObs };
+const files = [];
+for (const p of paths) {
+  try { files.push(new File([await readFile(p)], basename(p))); } catch { fail(`Couldn't read ${p}\nusage: npm run fred [-- file.zip file.csv …]`); }
 }
 
-const obs = {};
-for (const set of SETS) {
-  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${set.ids.join(',')}`;
-  const res = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; inotives-fred-macro)' } });
-  if (!res.ok) fail(`Fetch failed: ${res.status} ${url}`);
-  for (const f of unzip(Buffer.from(await res.arrayBuffer()))) if (f.name.endsWith('.csv')) parseCsv(f.text, obs);
-  const missing = set.ids.filter((id) => !obs[id]?.length);
-  if (missing.length) fail(`${set.name}: no observations for ${missing.join(', ')}`);
+// 2. parse with the mock's own reader, keeping only series the mock uses
+const obs = await F.readFredFiles(files);
+const ids = Object.keys(obs).filter((k) => F.KNOWN.has(k)).sort();
+if (!ids.length) fail('No series the mock uses were in those files.');
+const missing = [...F.KNOWN].filter((k) => !ids.includes(k));
+if (!process.argv[2] && missing.length) fail(`The FRED downloads lack ${missing.join(', ')}; check the series ids in SETS.`);
+
+// 3. merge into the current file and compare
+let before = null;
+try { before = JSON.parse(await readFile(out, 'utf8')); } catch { /* first build */ }
+const fresh = F.toMonthly(Object.fromEntries(ids.map((k) => [k, obs[k]])));
+const after = F.mergeRaw(before, fresh);
+
+const label = (i) => { const t = 1990 * 12 + i; return `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}`; };
+const lines = [];
+if (!before) lines.push('No previous file: wrote a fresh one.');
+else {
+  if (after.months > before.months) lines.push(`  months   ${label(before.months - 1)} → ${label(after.months - 1)} (+${after.months - before.months})`);
+  for (const id of ids) {
+    const was = before.last?.[id], now = after.last[id];
+    if (!was) { lines.push(`  new      ${id} to ${now}`); continue; }
+    if (now < was) lines.push(`  OLDER    ${id.padEnd(13)} file had ${was}, these files end ${now}`);
+    else if (now !== was) lines.push(`  latest   ${id.padEnd(13)} ${was} → ${now}`);
+    // revisions: months both files have, where the value moved
+    const a = before.series[id] || [], b = after.series[id];
+    const rev = [];
+    for (let i = 0; i < Math.min(a.length, b.length); i++) if (a[i] != null && b[i] != null && a[i] !== b[i]) rev.push(i);
+    const lost = a.filter((v, i) => v != null && b[i] == null).length;
+    if (rev.length) lines.push(`  revised  ${id.padEnd(13)} ${rev.length} month${rev.length > 1 ? 's' : ''}${rev.length <= 3 ? ` (${rev.map(label).join(', ')})` : `, latest ${label(rev.at(-1))}`}`);
+    if (lost) lines.push(`  DROPPED  ${id.padEnd(13)} ${lost} months the file had are missing from these files`);
+  }
 }
-const data = { built: new Date().toISOString().slice(0, 10), source: 'FRED, Federal Reserve Bank of St. Louis', ...toMonthly(obs) };
-await writeFile(out, JSON.stringify(data));
-const latest = Object.entries(data.last).sort((a, b) => a[1].localeCompare(b[1]));
-console.log(`Wrote ${data.months} months × ${Object.keys(data.series).length} series from ${START}. Oldest latest point: ${latest[0][0]} ${latest[0][1]}; newest: ${latest.at(-1)[1]}.`);
+const strip = (d) => (d ? JSON.stringify({ ...d, built: '' }) : '');
+const changed = strip(before) !== strip(after);
+if (changed) {
+  await writeFile(out, JSON.stringify(after));
+  for (const l of lines) console.log(l);
+  console.log(`${after.months} months × ${Object.keys(after.series).length} series from ${after.start}, newest point ${F.newest(after)}. Wrote public/mocks/data/fred-macro.json`);
+} else {
+  console.log(`No changes: the file already has these ${ids.length} series to ${F.newest(after)}.`);
+}
+console.log(`changed=${changed}`);

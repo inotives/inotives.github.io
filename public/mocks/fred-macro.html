@@ -23,7 +23,8 @@
   Data: FRED, Federal Reserve Bank of St. Louis (fred.stlouisfed.org), bundled as monthly averages
   in data/fred-macro.json by scripts/mocks/fred-macro/build.mjs (`npm run fred`). FRED sends no
   CORS headers, so the page can't fetch it directly: the panel links FRED's own zip downloads and
-  "Update data" reads them into IndexedDB. readFredFiles()/toMonthly() mirror build.mjs.
+  "Update data" reads them into IndexedDB. The parser between the `// <fred-files>` markers is
+  shared with build.mjs.
   Scores are z-scores over the whole sample, so history is scored with hindsight; trading
   directions only use months before the one being read.
 -->
@@ -212,7 +213,10 @@ const store = {
   del: async (key) => { try { await idb('readwrite', (s) => s.delete(key)); } catch { /* blocked */ } },
 };
 
-// ================= FRED files → monthly series (mirrors scripts/mocks/fred-macro/build.mjs) =================
+// ================= FRED files → monthly series =================
+// scripts/mocks/fred-macro/build.mjs imports everything between the fred-files markers, so the
+// script and "Update data" read FRED's downloads the same way. Keep it free of page globals.
+// <fred-files>
 const START = '1990-01';
 const SETS = [
   { id: 'growth', name: 'Growth and inflation', ids: ['INDPRO', 'PAYEMS', 'ICSA', 'UNRATE', 'RSAFS', 'CPIAUCSL', 'PCEPILFE', 'T5YIE', 'USREC'] },
@@ -275,6 +279,7 @@ function mergeRaw(base, upd) {
   return { built: new Date().toISOString().slice(0, 10), source: 'FRED, Federal Reserve Bank of St. Louis', start: START, months, series, last };
 }
 const newest = (raw) => Object.values(raw?.last || {}).reduce((m, d) => (d > m ? d : m), '');
+// </fred-files>
 
 // ================= the model =================
 const REGIMES = [
