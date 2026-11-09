@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" role="img" aria-labelledby="title desc">
+  <title id="title">Why cognitive surrender feels alright</title>
+  <desc id="desc">Three everyday pulls lead toward accepting the first AI answer: the need for closure, a confident tone that reads as a cue to accept, and the fact that hard thinking is unpleasant while approving is cheap. On the right, counter-moves: ask for the other side, read the sources, treat confidence like a sales pitch, practise hard thinking on purpose, and tell the AI to help you not surrender.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#e2a76f" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="480" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Why surrender feels alright</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Three ordinary tendencies, all pulling the same way</text>
+
+    <g>
+      <rect x="45" y="112" width="430" height="96" rx="16" fill="#17283d" stroke="#75a8d5" stroke-opacity=".7"/>
+      <text x="67" y="145" fill="#fff" font-size="19" font-weight="700">Need for closure</text>
+      <text x="67" y="170" fill="#d4e6f7" font-size="14">An answer ends the discomfort of not knowing.</text>
+      <text x="67" y="190" fill="#d4e6f7" font-size="14">Any answer, even a wrong one.</text>
+
+      <rect x="45" y="226" width="430" height="96" rx="16" fill="#22223d" stroke="#a99bf0" stroke-opacity=".7"/>
+      <text x="67" y="259" fill="#fff" font-size="19" font-weight="700">Confident tone</text>
+      <text x="67" y="284" fill="#ddd7fb" font-size="14">Fluent, certain prose reads as a cue to accept.</text>
+      <text x="67" y="304" fill="#ddd7fb" font-size="14">Models are tuned for what users like, not truth.</text>
+
+      <rect x="45" y="340" width="430" height="96" rx="16" fill="#2a2420" stroke="#e2a76f" stroke-opacity=".7"/>
+      <text x="67" y="373" fill="#fff" font-size="19" font-weight="700">Thinking is effortful</text>
+      <text x="67" y="398" fill="#f3dcc6" font-size="14">Hard thinking is unpleasant. Approving is cheap,</text>
+      <text x="67" y="418" fill="#f3dcc6" font-size="14">and it gets cheaper the more tired you are.</text>
+    </g>
+
+    <g stroke="#e2a76f" stroke-width="2" fill="none" marker-end="url(#a)">
+      <path d="M480 160 C520 160 530 240 556 255"/>
+      <path d="M480 274 L556 274"/>
+      <path d="M480 388 C520 388 530 308 556 293"/>
+    </g>
+
+    <rect x="562" y="204" width="270" height="140" rx="18" fill="#3a1f24" stroke="#e07a7a"/>
+    <text x="697" y="256" fill="#fff" font-size="20" font-weight="700" text-anchor="middle">Accept the</text>
+    <text x="697" y="282" fill="#fff" font-size="20" font-weight="700" text-anchor="middle">first answer</text>
+    <text x="697" y="312" fill="#f2b8b8" font-size="14" text-anchor="middle">feels like relief, not risk</text>
+
+    <rect x="866" y="112" width="290" height="324" rx="16" fill="#132b27" stroke="#5fc7a6" stroke-opacity=".8"/>
+    <text x="888" y="145" fill="#fff" font-size="19" font-weight="700">Counter-moves</text>
+    <g font-size="14" fill="#cdeee2">
+      <text x="888" y="182">• Never take the first answer:</text>
+      <text x="900" y="201">ask for the other side</text>
+      <text x="888" y="234">• Ask for sources, then read them</text>
+      <text x="888" y="267">• Treat confidence like a</text>
+      <text x="900" y="286">salesperson's pitch</text>
+      <text x="888" y="319">• Do some hard thinking on</text>
+      <text x="900" y="338">purpose, every week</text>
+      <text x="888" y="371">• Tell the AI to help you</text>
+      <text x="900" y="390">not surrender</text>
+    </g>
+    <text x="45" y="462" fill="#7f95aa" font-size="12">After Patrick Gallagher, "Why Cognitive Surrender Feels Alright", Psychology Today, 9 Nov 2026</text>
+  </g>
+</svg>

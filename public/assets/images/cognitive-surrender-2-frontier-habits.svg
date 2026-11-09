@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 450" role="img" aria-labelledby="title desc">
+  <title id="title">What the heaviest AI users do differently</title>
+  <desc id="desc">From Microsoft's 2026 Work Trend Index survey of 20,000 AI users. Frontier Professionals, the most advanced 16 percent, are more likely to intentionally do some work without AI to keep skills sharp, 43 percent versus 30 percent, and to pause before starting to decide what AI should do versus a human, 53 percent versus 33 percent. Asked which human skills matter more as AI takes on work, 50 percent named quality control of AI output and 46 percent named critical thinking.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+  </defs>
+  <rect width="1200" height="450" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">The heaviest AI users protect their own thinking</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Frontier Professionals (top 16% of AI users) compared with everyone else</text>
+
+    <rect x="45" y="110" width="660" height="280" rx="16" fill="#17283d" stroke="#75a8d5" stroke-opacity=".5"/>
+    <rect x="67" y="126" width="14" height="14" rx="3" fill="#5fc7a6"/>
+    <text x="88" y="138" fill="#d4e6f7" font-size="13">Frontier Professionals</text>
+    <rect x="250" y="126" width="14" height="14" rx="3" fill="#6f8aa3"/>
+    <text x="271" y="138" fill="#d4e6f7" font-size="13">Other AI users</text>
+
+    <text x="67" y="182" fill="#fff" font-size="16" font-weight="700">Do some work without AI to keep skills sharp</text>
+    <rect x="67" y="196" width="387" height="22" rx="4" fill="#5fc7a6"/>
+    <text x="462" y="213" fill="#fff" font-size="15" font-weight="700">43%</text>
+    <rect x="67" y="224" width="270" height="22" rx="4" fill="#6f8aa3"/>
+    <text x="345" y="241" fill="#fff" font-size="15">30%</text>
+
+    <text x="67" y="290" fill="#fff" font-size="16" font-weight="700">Pause first to decide what AI does vs a human</text>
+    <rect x="67" y="304" width="477" height="22" rx="4" fill="#5fc7a6"/>
+    <text x="552" y="321" fill="#fff" font-size="15" font-weight="700">53%</text>
+    <rect x="67" y="332" width="297" height="22" rx="4" fill="#6f8aa3"/>
+    <text x="372" y="349" fill="#fff" font-size="15">33%</text>
+
+    <rect x="735" y="110" width="420" height="280" rx="16" fill="#22223d" stroke="#a99bf0" stroke-opacity=".6"/>
+    <text x="757" y="146" fill="#fff" font-size="17" font-weight="700">Human skills that matter more</text>
+    <text x="757" y="167" fill="#ddd7fb" font-size="13">as AI takes on more of the work (all respondents)</text>
+
+    <text x="757" y="212" fill="#fff" font-size="15">Quality control of AI output</text>
+    <rect x="757" y="224" width="300" height="24" rx="4" fill="#a99bf0"/>
+    <text x="1067" y="242" fill="#fff" font-size="15" font-weight="700">50%</text>
+
+    <text x="757" y="290" fill="#fff" font-size="15">Critical thinking</text>
+    <rect x="757" y="302" width="276" height="24" rx="4" fill="#a99bf0" fill-opacity=".8"/>
+    <text x="1043" y="320" fill="#fff" font-size="15" font-weight="700">46%</text>
+    <text x="757" y="364" fill="#ddd7fb" font-size="13">Ranked first and second</text>
+
+    <text x="45" y="428" fill="#7f95aa" font-size="12">Microsoft 2026 Work Trend Index, survey of 20,000 AI users in 10 countries (May 2026). Self-reported associations, not causal effects.</text>
+  </g>
+</svg>
