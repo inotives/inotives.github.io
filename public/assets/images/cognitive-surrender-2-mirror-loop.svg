@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 470" role="img" aria-labelledby="title desc">
+  <title id="title">Build the mirror into the agent loop</title>
+  <desc id="desc">Five steps around each delegated task. One, predict: write your own guess. Two, guidance first: hints and plans before full answers. Three, allow "I don't know": the agent and you may abstain. Four, evidence first: read tests, logs and diffs before the summary. Five, the mirror: a short report of what you accepted without checking, what was not verified, and which decisions the agent made for you. An arrow loops back from the mirror to the next prediction: the next task starts better calibrated.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+    <marker id="g" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#5fc7a6" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="470" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Build the mirror into the agent loop</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Not more willpower. A loop that shows you how you are using the agent, every time.</text>
+
+    <g font-size="14">
+      <rect x="50" y="130" width="200" height="190" rx="16" fill="#17283d" stroke="#75a8d5" stroke-opacity=".7"/>
+      <text x="70" y="164" fill="#a8cdec" font-size="13">1</text>
+      <text x="70" y="188" fill="#fff" font-size="18" font-weight="700">Predict</text>
+      <text x="70" y="218" fill="#d4e6f7">Write your own guess</text>
+      <text x="70" y="238" fill="#d4e6f7">before you ask.</text>
+      <text x="70" y="268" fill="#d4e6f7">One line is enough.</text>
+
+      <rect x="275" y="130" width="200" height="190" rx="16" fill="#17283d" stroke="#75a8d5" stroke-opacity=".7"/>
+      <text x="295" y="164" fill="#a8cdec" font-size="13">2</text>
+      <text x="295" y="188" fill="#fff" font-size="18" font-weight="700">Guidance first</text>
+      <text x="295" y="218" fill="#d4e6f7">Plan, hints or a</text>
+      <text x="295" y="238" fill="#d4e6f7">review of your attempt.</text>
+      <text x="295" y="268" fill="#d4e6f7">Full answer on request.</text>
+
+      <rect x="500" y="130" width="200" height="190" rx="16" fill="#22223d" stroke="#a99bf0" stroke-opacity=".7"/>
+      <text x="520" y="164" fill="#ddd7fb" font-size="13">3</text>
+      <text x="520" y="188" fill="#fff" font-size="18" font-weight="700">Allow "I don't</text>
+      <text x="520" y="210" fill="#fff" font-size="18" font-weight="700">know"</text>
+      <text x="520" y="240" fill="#ddd7fb">For the agent and for</text>
+      <text x="520" y="260" fill="#ddd7fb">you. Unknown is a</text>
+      <text x="520" y="280" fill="#ddd7fb">valid answer.</text>
+
+      <rect x="725" y="130" width="200" height="190" rx="16" fill="#22223d" stroke="#a99bf0" stroke-opacity=".7"/>
+      <text x="745" y="164" fill="#ddd7fb" font-size="13">4</text>
+      <text x="745" y="188" fill="#fff" font-size="18" font-weight="700">Evidence first</text>
+      <text x="745" y="218" fill="#ddd7fb">Tests, logs, the diff.</text>
+      <text x="745" y="238" fill="#ddd7fb">Then the summary.</text>
+
+      <rect x="950" y="130" width="200" height="190" rx="16" fill="#132b27" stroke="#5fc7a6"/>
+      <text x="970" y="164" fill="#a6e3cf" font-size="13">5</text>
+      <text x="970" y="188" fill="#fff" font-size="18" font-weight="700">The mirror</text>
+      <text x="970" y="218" fill="#cdeee2">• accepted unchecked</text>
+      <text x="970" y="242" fill="#cdeee2">• not verified</text>
+      <text x="970" y="266" fill="#cdeee2">• decisions it made</text>
+      <text x="982" y="286" fill="#cdeee2">for you</text>
+    </g>
+
+    <g stroke="#90adc2" stroke-width="2" fill="none" marker-end="url(#a)">
+      <path d="M252 225 L272 225"/>
+      <path d="M477 225 L497 225"/>
+      <path d="M702 225 L722 225"/>
+      <path d="M927 225 L947 225"/>
+    </g>
+
+    <path d="M1050 322 C1050 400 1000 400 900 400 L250 400 C170 400 150 390 150 330" fill="none" stroke="#5fc7a6" stroke-width="2.2" stroke-dasharray="7 6" marker-end="url(#g)"/>
+    <text x="600" y="430" fill="#a6e3cf" font-size="15" text-anchor="middle">the next task starts better calibrated</text>
+  </g>
+</svg>

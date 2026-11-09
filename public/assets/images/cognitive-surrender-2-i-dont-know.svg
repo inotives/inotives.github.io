@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 490" role="img" aria-labelledby="title desc">
+  <title id="title">AI advice crowds out "I don't know"</title>
+  <desc id="desc">Indexed bar chart, no-AI condition equals 100. With wrong AI advice available, willingness to say "I don't know" was nearly eliminated, correct answers fell to about a third, and confidence nearly doubled. Approximate values from the abstract of Marcoccia, Quattrociocchi and Capraro, 2026, five experiments, 3,132 participants.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+  </defs>
+  <rect width="1200" height="490" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">AI advice crowds out "I don't know"</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Hard questions, the option to abstain, and AI advice that was always wrong</text>
+
+    <rect x="880" y="40" width="16" height="16" rx="3" fill="#6f8aa3"/>
+    <text x="904" y="53" fill="#d4e6f7" font-size="14">Without AI (= 100)</text>
+    <rect x="880" y="66" width="16" height="16" rx="3" fill="#e2a76f"/>
+    <text x="904" y="79" fill="#d4e6f7" font-size="14">With AI advice</text>
+
+    <line x1="80" y1="410" x2="1140" y2="410" stroke="#4a6177"/>
+    <line x1="80" y1="260" x2="1140" y2="260" stroke="#4a6177" stroke-dasharray="4 6" stroke-opacity=".6"/>
+    <text x="84" y="252" fill="#7f95aa" font-size="12">100</text>
+
+    <!-- Says I don't know -->
+    <rect x="175" y="260" width="90" height="150" rx="6" fill="#6f8aa3"/>
+    <rect x="285" y="402" width="90" height="8" rx="3" fill="#e2a76f"/>
+    <text x="330" y="390" fill="#f3dcc6" font-size="15" font-weight="700" text-anchor="middle">≈ 0</text>
+    <text x="275" y="440" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">Says "I don't know"</text>
+    <text x="275" y="461" fill="#a9bdd0" font-size="13" text-anchor="middle">nearly eliminated</text>
+
+    <!-- Correct -->
+    <rect x="525" y="260" width="90" height="150" rx="6" fill="#6f8aa3"/>
+    <rect x="635" y="360" width="90" height="50" rx="6" fill="#e2a76f"/>
+    <text x="680" y="350" fill="#f3dcc6" font-size="15" font-weight="700" text-anchor="middle">≈ ⅓</text>
+    <text x="625" y="440" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">Correct answers</text>
+    <text x="625" y="461" fill="#a9bdd0" font-size="13" text-anchor="middle">answered more, right far less</text>
+
+    <!-- Confidence -->
+    <rect x="875" y="260" width="90" height="150" rx="6" fill="#6f8aa3"/>
+    <rect x="985" y="125" width="90" height="285" rx="6" fill="#e2a76f"/>
+    <text x="1030" y="115" fill="#f3dcc6" font-size="15" font-weight="700" text-anchor="middle">≈ 2×</text>
+    <text x="975" y="440" fill="#fff" font-size="17" font-weight="700" text-anchor="middle">Confidence</text>
+    <text x="975" y="461" fill="#a9bdd0" font-size="13" text-anchor="middle">nearly doubled</text>
+
+    <text x="45" y="482" fill="#7f95aa" font-size="12">Indexed, approximate, from the abstract of Marcoccia, Quattrociocchi &amp; Capraro (arXiv 2607.13562, Jul 2026): 5 experiments, N = 3,132</text>
+  </g>
+</svg>

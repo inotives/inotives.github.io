@@ -1,6 +1,26 @@
 {
   "posts": [
     {
+      "slug": "2026-11-09-designing-against-cognitive-surrender",
+      "filename": "2026-11-09-designing-against-cognitive-surrender.md",
+      "category": "post",
+      "title": "Designing against cognitive surrender: mirrors, not willpower",
+      "date": "2026-11-09",
+      "tags": [
+        "cognitive-surrender",
+        "cognitive-debt",
+        "ai-agents",
+        "critical-thinking",
+        "agentic-coding",
+        "engineering-practice",
+        "research"
+      ],
+      "series": null,
+      "summary": "A follow-up to the cognitive surrender note, covering what the research added this year. AI advice nearly wipes out people's willingness to say 'I don't know' while doubling their confidence. Students now spend about a quarter less time on maths problems that AI can solve, and remember less. The heaviest AI users deliberately work without it. The most useful finding is that a short 'here is how you used the assistant' feedback message reduced offloading and improved test scores, while paying people for effort did nothing. So the fix is a mirror built into the workflow, not more willpower.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-07-good-duplication-in-data-ingestion",
       "filename": "2026-11-07-good-duplication-in-data-ingestion.md",
       "category": "post",
