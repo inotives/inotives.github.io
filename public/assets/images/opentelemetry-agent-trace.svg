@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" role="img" aria-labelledby="title desc">
+  <title id="title">One agent run as an OpenTelemetry trace</title>
+  <desc id="desc">A waterfall chart of a single support-agent run lasting 9.4 seconds. The parent span is invoke_agent support-agent. Under it, in order: chat claude-sonnet-5-5 for 1.8 seconds, 1,240 input and 180 output tokens; execute_tool search_orders for 0.6 seconds; a second chat call for 2.1 seconds with 3,100 input tokens because the context grew; execute_tool refund_order that failed with a timeout after 0.7 seconds; a retry of refund_order that succeeded in 0.9 seconds; and a final chat call for 2.5 seconds. Below the chart, the gen_ai attributes attached to the spans: operation name, provider name, request model, input and output token usage, tool name, and error type. Three readings of the trace: the tool retry is visible, input tokens grow on every turn, and the model calls account for most of the time.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+  </defs>
+  <rect width="1200" height="640" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">One agent run, as a trace</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Span names follow the GenAI semantic conventions: "{operation} {model or tool}".</text>
+
+    <!-- time axis -->
+    <g fill="#7f97ad" font-size="12" text-anchor="middle">
+      <text x="360" y="122">0s</text>
+      <text x="517" y="122">2s</text>
+      <text x="675" y="122">4s</text>
+      <text x="832" y="122">6s</text>
+      <text x="990" y="122">8s</text>
+    </g>
+    <g stroke="#2a4157" stroke-width="1">
+      <line x1="360" y1="130" x2="360" y2="420"/>
+      <line x1="517" y1="130" x2="517" y2="420"/>
+      <line x1="675" y1="130" x2="675" y2="420"/>
+      <line x1="832" y1="130" x2="832" y2="420"/>
+      <line x1="990" y1="130" x2="990" y2="420"/>
+    </g>
+
+    <g font-family="ui-monospace,Menlo,monospace" font-size="13.5">
+      <!-- row 1 -->
+      <text x="50" y="157" fill="#fff" font-weight="700">invoke_agent support-agent</text>
+      <rect x="360" y="142" width="740" height="22" rx="5" fill="#5ec4e0" opacity=".85"/>
+      <text x="1092" y="158" fill="#0b1522" font-size="12.5" font-weight="700" text-anchor="end">9.4s</text>
+
+      <!-- row 2 -->
+      <text x="70" y="197" fill="#ddd7fb">chat claude-sonnet-5-5</text>
+      <rect x="368" y="182" width="142" height="22" rx="5" fill="#a99bf0"/>
+      <text x="518" y="198" fill="#ddd7fb" font-size="12">1.8s · 1,240 in / 180 out</text>
+
+      <!-- row 3 -->
+      <text x="70" y="237" fill="#cdeee2">execute_tool search_orders</text>
+      <rect x="517" y="222" width="47" height="22" rx="5" fill="#5fc7a6"/>
+      <text x="572" y="238" fill="#cdeee2" font-size="12">0.6s</text>
+
+      <!-- row 4 -->
+      <text x="70" y="277" fill="#ddd7fb">chat claude-sonnet-5-5</text>
+      <rect x="572" y="262" width="165" height="22" rx="5" fill="#a99bf0"/>
+      <text x="745" y="278" fill="#ddd7fb" font-size="12">2.1s · 3,100 in / 220 out</text>
+
+      <!-- row 5 error -->
+      <text x="70" y="317" fill="#f4b3a8">execute_tool refund_order</text>
+      <rect x="746" y="302" width="55" height="22" rx="5" fill="#e0705f"/>
+      <text x="809" y="318" fill="#f4b3a8" font-size="12">0.7s · error.type=timeout</text>
+
+      <!-- row 6 -->
+      <text x="70" y="357" fill="#cdeee2">execute_tool refund_order</text>
+      <rect x="809" y="342" width="71" height="22" rx="5" fill="#5fc7a6"/>
+      <text x="888" y="358" fill="#cdeee2" font-size="12">0.9s · retry ok</text>
+
+      <!-- row 7 -->
+      <text x="70" y="397" fill="#ddd7fb">chat claude-sonnet-5-5</text>
+      <rect x="895" y="382" width="197" height="22" rx="5" fill="#a99bf0"/>
+      <text x="886" y="398" fill="#ddd7fb" font-size="12" text-anchor="end">2.5s · 4,050 in / 310 out</text>
+    </g>
+
+    <!-- attributes panel -->
+    <rect x="50" y="446" width="640" height="160" rx="16" fill="#17283d" stroke="#3d5a72"/>
+    <text x="72" y="476" fill="#fff" font-size="16" font-weight="700">Attributes on the spans (gen_ai.*)</text>
+    <g font-family="ui-monospace,Menlo,monospace" font-size="13">
+      <text x="72" y="504" fill="#a8cdec">gen_ai.operation.name</text><text x="330" y="504" fill="#d4e6f7">chat | execute_tool | invoke_agent</text>
+      <text x="72" y="526" fill="#a8cdec">gen_ai.provider.name</text><text x="330" y="526" fill="#d4e6f7">anthropic</text>
+      <text x="72" y="548" fill="#a8cdec">gen_ai.request.model</text><text x="330" y="548" fill="#d4e6f7">claude-sonnet-5-5</text>
+      <text x="72" y="570" fill="#a8cdec">gen_ai.usage.input_tokens</text><text x="330" y="570" fill="#d4e6f7">3100</text>
+      <text x="72" y="592" fill="#a8cdec">gen_ai.tool.name</text><text x="330" y="592" fill="#d4e6f7">refund_order</text>
+    </g>
+
+    <!-- readings -->
+    <rect x="710" y="446" width="440" height="160" rx="16" fill="#132b27" stroke="#5fc7a6"/>
+    <text x="732" y="476" fill="#fff" font-size="16" font-weight="700">What you can read off it</text>
+    <g font-size="14" fill="#cdeee2">
+      <text x="732" y="506">• The refund tool timed out once, then worked.</text>
+      <text x="732" y="534">• Input tokens grow every turn: 1.2k → 3.1k → 4k.</text>
+      <text x="732" y="562">• Model calls are about 6.4s of the 9.4s.</text>
+      <text x="732" y="590">• Total cost = sum of token usage on chat spans.</text>
+    </g>
+  </g>
+</svg>

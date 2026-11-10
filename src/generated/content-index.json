@@ -1,6 +1,25 @@
 {
   "posts": [
     {
+      "slug": "2026-11-10-what-is-opentelemetry",
+      "filename": "2026-11-10-what-is-opentelemetry.md",
+      "category": "post",
+      "title": "What is OpenTelemetry, and why does it keep showing up in AI?",
+      "date": "2026-11-10",
+      "tags": [
+        "opentelemetry",
+        "observability",
+        "ai-agents",
+        "llm-ops",
+        "tracing",
+        "engineering-practice"
+      ],
+      "series": null,
+      "summary": "OpenTelemetry (OTel) is the vendor-neutral standard for producing and moving telemetry: traces, metrics, logs and, since this year, profiles. It is not a dashboard or a database. Its core pieces are the API, the SDK, instrumentation libraries, the OTLP protocol, the Collector and semantic conventions. It matters in AI because an agent run is a distributed system that makes decisions, and the GenAI semantic conventions give every framework and model provider one shared way to record model calls, tool calls, tokens and errors. So you instrument once and can see cost, latency, loops and failures in whatever backend you choose.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-09-designing-against-cognitive-surrender",
       "filename": "2026-11-09-designing-against-cognitive-surrender.md",
       "category": "post",

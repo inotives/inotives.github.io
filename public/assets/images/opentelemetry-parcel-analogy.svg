@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" role="img" aria-labelledby="title desc">
+  <title id="title">OpenTelemetry explained as parcel tracking</title>
+  <desc id="desc">A parcel with tracking number 4bf92f travels from pick-up, to a sorting hub, to the airport, to a local courier, to the door. Each stop scans the parcel and records the time; each scan is like a span, and the full scan history is like a trace. At the airport a driver's note says "delayed by weather", which is like a log. A small chart of parcels delivered per day is like a metric. Below, two outcomes. Without a shared standard, the local courier uses its own tracking number and the trail goes cold at the handover. With a shared standard, every company scans the same label in the same way, so you get one unbroken history, and you can view it on any tracking website you like. OpenTelemetry is the shared label and scanning standard, not the tracking website.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="600" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Think of it as parcel tracking</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">One label, scanned at every stop, by every company, in the same way.</text>
+
+    <!-- label -->
+    <rect x="50" y="108" width="330" height="40" rx="10" fill="#f2d8a8"/>
+    <text x="68" y="134" fill="#1b2330" font-size="15" font-weight="700">Tracking no. 4bf92f</text>
+    <text x="395" y="134" fill="#f2d8a8" font-size="14">← the same number follows the parcel everywhere  (= trace id)</text>
+
+    <!-- stops -->
+    <g font-size="14">
+      <rect x="50" y="172" width="190" height="96" rx="14" fill="#17283d" stroke="#75a8d5" stroke-opacity=".8"/>
+      <text x="68" y="202" fill="#fff" font-size="16" font-weight="700">Picked up</text>
+      <text x="68" y="226" fill="#a8cdec">scan 09:00</text>
+      <text x="68" y="250" fill="#7f97ad" font-size="12.5">Courier A</text>
+
+      <rect x="275" y="172" width="190" height="96" rx="14" fill="#17283d" stroke="#75a8d5" stroke-opacity=".8"/>
+      <text x="293" y="202" fill="#fff" font-size="16" font-weight="700">Sorting hub</text>
+      <text x="293" y="226" fill="#a8cdec">scan 11:20 – 13:40</text>
+      <text x="293" y="250" fill="#7f97ad" font-size="12.5">Courier A</text>
+
+      <rect x="500" y="172" width="190" height="96" rx="14" fill="#17283d" stroke="#e8b96a"/>
+      <text x="518" y="202" fill="#fff" font-size="16" font-weight="700">Airport</text>
+      <text x="518" y="226" fill="#a8cdec">scan 15:05 – 21:30</text>
+      <text x="518" y="250" fill="#7f97ad" font-size="12.5">Airline</text>
+
+      <rect x="725" y="172" width="190" height="96" rx="14" fill="#17283d" stroke="#75a8d5" stroke-opacity=".8"/>
+      <text x="743" y="202" fill="#fff" font-size="16" font-weight="700">Local courier</text>
+      <text x="743" y="226" fill="#a8cdec">scan 08:10 (+1 day)</text>
+      <text x="743" y="250" fill="#7f97ad" font-size="12.5">Courier B</text>
+
+      <rect x="950" y="172" width="200" height="96" rx="14" fill="#132b27" stroke="#5fc7a6"/>
+      <text x="968" y="202" fill="#fff" font-size="16" font-weight="700">Delivered</text>
+      <text x="968" y="226" fill="#cdeee2">scan 10:42</text>
+      <text x="968" y="250" fill="#7f97ad" font-size="12.5">Courier B</text>
+    </g>
+    <g stroke="#90adc2" stroke-width="2" fill="none" marker-end="url(#a)">
+      <path d="M242 220 L271 220"/>
+      <path d="M467 220 L496 220"/>
+      <path d="M692 220 L721 220"/>
+      <path d="M917 220 L946 220"/>
+    </g>
+
+    <!-- annotations -->
+    <path d="M370 272 L370 296" stroke="#75a8d5" stroke-width="1.6" stroke-dasharray="3 4"/>
+    <text x="275" y="316" fill="#a8cdec" font-size="14">each scan = a <tspan font-weight="700" fill="#fff">span</tspan></text>
+    <text x="275" y="336" fill="#a8cdec" font-size="14">all scans = a <tspan font-weight="700" fill="#fff">trace</tspan></text>
+
+    <path d="M595 272 L595 296" stroke="#e8b96a" stroke-width="1.6" stroke-dasharray="3 4"/>
+    <rect x="500" y="300" width="190" height="44" rx="8" fill="#2c2618"/>
+    <text x="514" y="319" fill="#f2d8a8" font-size="13" font-style="italic">"Delayed by weather"</text>
+    <text x="514" y="336" fill="#f5e6c8" font-size="13">driver's note = a <tspan font-weight="700" fill="#fff">log</tspan></text>
+
+    <g transform="translate(950 296)">
+      <rect x="0" y="0" width="200" height="56" rx="8" fill="#17283d"/>
+      <g fill="#5fc7a6">
+        <rect x="14" y="30" width="10" height="16"/><rect x="28" y="24" width="10" height="22"/><rect x="42" y="28" width="10" height="18"/><rect x="56" y="18" width="10" height="28"/><rect x="70" y="14" width="10" height="32"/>
+      </g>
+      <text x="92" y="26" fill="#cdeee2" font-size="12.5">parcels per day</text>
+      <text x="92" y="44" fill="#cdeee2" font-size="13">= a <tspan font-weight="700" fill="#fff">metric</tspan></text>
+    </g>
+
+    <!-- outcomes -->
+    <rect x="50" y="380" width="530" height="180" rx="16" fill="#2a1a1f" stroke="#e0705f" stroke-opacity=".7"/>
+    <text x="72" y="412" fill="#fff" font-size="18" font-weight="700">Without a shared standard</text>
+    <g font-size="14.5" fill="#f4c9c1">
+      <text x="72" y="444">Courier B prints its own label, "LC-77310".</text>
+      <text x="72" y="470">The trail goes cold at the handover.</text>
+      <text x="72" y="496">Each company has its own tracking website.</text>
+      <text x="72" y="522">Change courier = learn a new system.</text>
+    </g>
+
+    <rect x="620" y="380" width="530" height="180" rx="16" fill="#132b27" stroke="#5fc7a6"/>
+    <text x="642" y="412" fill="#fff" font-size="18" font-weight="700">With OpenTelemetry</text>
+    <g font-size="14.5" fill="#cdeee2">
+      <text x="642" y="444">Everyone scans the same label, the same way.</text>
+      <text x="642" y="470">One unbroken history, end to end.</text>
+      <text x="642" y="496">Read it on any tracking website you like.</text>
+      <text x="642" y="522">OTel is the label and the scanning rules,</text>
+      <text x="642" y="546">not the website.</text>
+    </g>
+  </g>
+</svg>
