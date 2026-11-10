@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Next Open Signals</title>
+<!--
+  Next open signals: pulls the last 60 daily OHLCV bars for a stock symbol from Yahoo Finance and
+  reads them into common technical signals for the next market opening. Each signal votes bullish,
+  bearish or neutral; the votes add up to a bias, next to an expected opening range from the
+  stock's usual overnight gap and a day range from ATR.
+
+  Views (tabs) change the overlays on the candlestick chart; volume, RSI and MACD panes stay:
+  - Trend: SMA 10 / 20 and EMA 9 / 21, with SMA 10/20 crosses marked on the candles
+  - Bands: Bollinger Bands (20, 2)
+  - Levels: classic pivots (P, R1/R2, S1/S2) for the next session and the expected opening range
+
+  Charts: TradingView Lightweight Charts 5.2.1 (panes, candles, histogram, price lines).
+
+  Data: Yahoo Finance chart API (query1.finance.yahoo.com/v8/finance/chart), daily bars, last 60
+  completed sessions. Yahoo sends no CORS headers, so "Sync data" goes through, in order: the Vite
+  dev proxy (/yahoo, on localhost only), a proxy you set in the panel, then public CORS proxies.
+  A bundled snapshot in data/stock-signals.json, made by scripts/mocks/stock-signals/capture.mjs
+  (`npm run stocks`), is the fallback. Synced symbols are kept in IndexedDB. The Yahoo parser
+  between the `// <yahoo-data>` markers is shared with capture.mjs.
+
+  Signals are computed in the browser from daily bars only. Exchange holidays are not known, so
+  the next session is the next weekday. A mock for learning, not trading advice.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"></script>
+<style type="text/tailwindcss">
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-pink: #e58fb0;
+    --color-danger: #ff7a7a;
+    --color-good: #9ccf7f;
+    --color-bad: #f2706b;
+    --color-ink-2: #b8b5ac;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base { *, ::before, ::after { border-color: var(--color-border); } }
+</style>
+<style>
+  body { margin: 0; background: #15171b; }
+  .fi { display: inline-flex; line-height: 1; }
+  #stage { isolation: isolate; background: radial-gradient(ellipse 80% 70% at 60% 48%, #1b1e24 0%, #15171b 72%); }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
+  #drawer { --pg-panel-w: 380px; }   /* desktop panel width for this mock */
+  /* the chart fills the free space right of the floating panel, above the legend */
+  #chart { position: absolute; top: 4.25rem; right: 1.5rem; bottom: 3.25rem; left: calc(var(--pg-panel-w, 380px) + 3rem); }
+  @media (max-width: 899px) { #chart { top: 3.75rem; left: 0.5rem; right: 0.5rem; bottom: 0.5rem; } }
+  #ohlc { position: absolute; z-index: 5; top: 4px; left: 8px; pointer-events: none; font: 400 11px "Source Code Pro", monospace; color: #8b9099; }
+  #ohlc b { font-weight: 500; color: #e4e1d8; }
+  .key { display: inline-block; width: 12px; height: 2px; margin-right: 5px; vertical-align: middle; border-radius: 1px; }
+  .key.dash { background: none !important; border-top: 2px dashed currentColor; height: 0; }
+
+  /* <pg-layout v1> Playground layout standard (scripts/mocks/template/playground.html).
+     Side panel: a floating card on the left from 900px wide (.pg-float); below 900px it is a
+     drawer that slides in from the left over a scrim, with the stage legend folded into it.
+     Keep this block identical across mocks; check.mjs compares it with the template. */
+  .pg-drawer { display: flex; flex-direction: column; min-height: 0; }
+  .pg-drawer-head, .pg-drawer-legend, .pg-drawer-btn, .pg-scrim { display: none; }
+  @media (min-width: 900px) {
+    .pg-float { position: absolute; z-index: 10; left: 1.5rem; top: 4.5rem; width: var(--pg-panel-w, 360px); max-height: calc(100% - 6rem); }
+  }
+  @media (max-width: 899px) {
+    .pg-drawer { position: fixed; inset: 0 auto 0 0; z-index: 45; width: min(var(--pg-drawer-w, 360px), 88vw); height: auto; max-height: none; border: 0; border-right: 1px solid #2b2f37; border-radius: 0 0.75rem 0.75rem 0; background: #1d2026; box-shadow: 0 10px 40px rgb(0 0 0 / 0.5); transform: translateX(-104%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
+    body[data-drawer="open"] .pg-drawer { transform: none; visibility: visible; transition: transform 0.22s ease; }
+    body[data-drawer="open"] .pg-scrim { display: block; position: fixed; inset: 0; z-index: 44; background: rgb(0 0 0 / 0.5); }
+    .pg-drawer-head { display: flex; align-items: center; gap: 0.625rem; flex-shrink: 0; height: 3.5rem; padding: 0 0.75rem 0 1rem; border-bottom: 1px solid #2b2f37; }
+    .pg-drawer-legend:not(:empty) { display: block; flex-shrink: 0; padding: 0.75rem 1rem; border-top: 1px solid #2b2f37; font-size: 0.75rem; color: #8b9099; }
+    .pg-drawer-btn { display: inline-flex; }
+    .pg-hide-mobile, .pg-legend { display: none !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { .pg-drawer { transition: none !important; } }
+  /* </pg-layout> */
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+<div class="fixed inset-0 overflow-hidden">
+  <div id="stage" class="absolute inset-0">
+    <div id="chart"><div id="ohlc"></div></div>
+  </div>
+  <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
+    <button id="drawer-btn" type="button" class="pg-drawer-btn pointer-events-auto size-9 shrink-0 items-center justify-center rounded-md border bg-background/80 text-base backdrop-blur hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-controls="drawer" aria-expanded="false" aria-label="Open the panel"><i class="fi fi-rr-menu-burger"></i></button>
+    <a href="/playground" class="pg-hide-mobile pointer-events-auto rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+    <span class="hidden text-sm text-muted-foreground xl:inline">Playground · Next open signals</span>
+    <div role="tablist" aria-label="Chart overlays" id="tabs" class="pointer-events-auto mx-auto inline-flex h-9 max-w-full items-center overflow-x-auto rounded-lg bg-muted p-1 text-muted-foreground"></div>
+    <form id="sym-form" class="pointer-events-auto flex items-center gap-2" autocomplete="off">
+      <label for="sym" class="sr-only">Stock symbol</label>
+      <input id="sym" name="sym" value="NVDA" maxlength="15" spellcheck="false" class="h-9 w-20 rounded-md border border-input bg-background/80 px-2.5 font-mono text-sm uppercase backdrop-blur placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:w-28" placeholder="NVDA" />
+      <button id="action" type="submit" class="inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-md border bg-background/80 px-3 text-sm font-medium backdrop-blur transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60" title="Pull the last 60 daily bars from Yahoo Finance"><i class="fi fi-rr-refresh text-primary"></i><span class="hidden sm:inline">Sync data</span></button>
+    </form>
+  </header>
+  <aside id="drawer" class="pg-drawer pg-float overflow-hidden rounded-xl border bg-card/90 shadow backdrop-blur" aria-label="Panel">
+    <div class="pg-drawer-head">
+      <a href="/playground" class="font-brand text-[24px] leading-none hover:text-primary" title="Back to the Playground">inoTives</a>
+      <span class="min-w-0 flex-1 truncate text-sm text-muted-foreground">Next open signals</span>
+      <button id="drawer-close" type="button" class="inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-label="Close the panel"><i class="fi fi-rr-cross-small"></i></button>
+    </div>
+    <div id="panel" class="scroll-thin min-h-0 flex-1 overflow-auto p-4"><p class="text-xs text-muted-foreground">Loading…</p></div>
+    <div id="drawer-legend" class="pg-drawer-legend"></div>
+  </aside>
+  <div id="scrim" class="pg-scrim"></div>
+  <div id="legend" class="pg-legend pointer-events-none absolute bottom-3 right-6 z-10 rounded-lg border bg-card/80 px-3 py-2 text-xs text-muted-foreground backdrop-blur"></div>
+  <div id="toast" hidden role="status" class="absolute bottom-4 left-1/2 z-40 max-w-[90vw] -translate-x-1/2 rounded-md border bg-background/95 px-3 py-2 text-xs shadow-lg"></div>
+</div>
+
+<script>
+/* <pg-layout-js v1> Playground layout standard: the mobile drawer (scripts/mocks/template/playground.html).
+   Opens from #drawer-btn; closes from #drawer-close, the scrim, Escape, links to #anchors or
+   [data-drawer-close] inside it, and when the window grows past 900px. Mirrors #legend into
+   #drawer-legend. Mocks can call window.pgDrawer.open() / .close(). Keep identical across mocks. */
+(() => {
+  const body = document.body, btn = document.getElementById('drawer-btn');
+  const set = (open) => { body.dataset.drawer = open ? 'open' : ''; btn?.setAttribute('aria-expanded', String(open)); };
+  const close = (refocus) => { if (body.dataset.drawer !== 'open') return; set(false); if (refocus) btn?.focus(); };
+  btn?.addEventListener('click', () => set(body.dataset.drawer !== 'open'));
+  document.getElementById('drawer-close')?.addEventListener('click', () => close(true));
+  document.getElementById('scrim')?.addEventListener('click', () => close(false));
+  document.getElementById('drawer')?.addEventListener('click', (e) => { if (e.target.closest('a[href^="#"], [data-drawer-close]')) close(false); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && body.dataset.drawer === 'open') { e.stopImmediatePropagation(); close(true); } }, true);
+  matchMedia('(min-width: 900px)').addEventListener('change', (m) => { if (m.matches) set(false); });
+  const legend = document.getElementById('legend'), copy = document.getElementById('drawer-legend');
+  if (legend && copy) {
+    const sync = () => { copy.innerHTML = legend.hidden ? '' : legend.innerHTML.trim(); };
+    new MutationObserver(sync).observe(legend, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+    sync();
+  }
+  window.pgDrawer = { open: () => set(true), close: () => close(false) };
+})();
+/* </pg-layout-js> */
+</script>
+
+<script type="module">
+// ================= Yahoo Finance data (shared with scripts/mocks/stock-signals/capture.mjs) =================
+// <yahoo-data>
+const YAHOO = {
+  host: 'https://query1.finance.yahoo.com',
+  // 3 months of daily bars is ~63 sessions: enough for the last 60 completed ones
+  path: (symbol) => `/v8/finance/chart/${encodeURIComponent(symbol)}?range=3mo&interval=1d&includePrePost=false`,
+  keep: 60,
+  // Chart JSON -> { symbol, name, exchange, currency, timezone, openAt, inSession, bars: [[date, o, h, l, c, v]] }.
+  // A bar for a session still trading is dropped: signals read completed sessions only.
+  parse(json, now = Date.now()) {
+    const r = json?.chart?.result?.[0];
+    if (!r) throw new Error(json?.chart?.error?.description || 'No chart data in the response');
+    const m = r.meta || {}, q = r.indicators?.quote?.[0] || {}, off = m.gmtoffset || 0;
+    const day = (t) => new Date((t + off) * 1000).toISOString().slice(0, 10);
+    const round = (x) => Math.round(x * 1e4) / 1e4;
+    let bars = (r.timestamp || [])
+      .map((t, i) => [day(t), q.open?.[i], q.high?.[i], q.low?.[i], q.close?.[i], q.volume?.[i] ?? 0])
+      .filter((b) => b.slice(1, 5).every(Number.isFinite));
+    const reg = m.currentTradingPeriod?.regular, s = now / 1000;
+    const inSession = !!(reg && s >= reg.start && s < reg.end && bars.length && bars.at(-1)[0] === day(reg.start));
+    if (inSession) bars = bars.slice(0, -1);
+    bars = bars.slice(-YAHOO.keep).map(([d, o, h, l, c, v]) => [d, round(o), round(h), round(l), round(c), Math.round(v)]);
+    return {
+      symbol: m.symbol, name: m.longName || m.shortName || m.symbol,
+      exchange: m.fullExchangeName || m.exchangeName || '', currency: m.currency || '',
+      timezone: m.exchangeTimezoneName || 'America/New_York', openAt: reg?.start ?? null,
+      inSession: inSession ? day(reg.start) : null, bars,
+    };
+  },
+};
+// </yahoo-data>
+
+// ================= helpers =================
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const B = { paper: '#15171b', raise: '#1d2026', muted: '#23262d', line: '#2b2f37', ink: '#e4e1d8', ink2: '#b8b5ac', fog: '#8b9099', signal: '#1fefd7', amber: '#f6c453', pink: '#e58fb0', sky: '#7cc4dc', good: '#9ccf7f', bad: '#f2706b' };
+const LC = window.LightweightCharts;
+const f2 = d3.format(',.2f'), pct = d3.format('+.2%'), pct1 = d3.format('.1%'), n1 = d3.format('.1f');
+const vol = (v) => d3.format('.3~s')(v).replace('G', 'B');
+const dayFmt = (iso, opts = { weekday: 'short', day: 'numeric', month: 'short' }) => new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-GB', { ...opts, timeZone: 'UTC' });
+let toastTimer;
+const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 4200); };
+const kpi = (label, value, sub = '') => `<div class="min-w-0 rounded-lg border bg-background/40 px-2.5 py-2"><div class="truncate text-[11px] text-muted-foreground">${esc(label)}</div><div class="truncate font-mono text-sm font-medium">${value}</div>${sub ? `<div class="truncate text-[11px] text-muted-foreground">${sub}</div>` : ''}</div>`;
+const section = (title, body, icon = '') => `<div class="mt-5"><div class="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">${icon ? `<i class="fi ${icon}"></i>` : ''}${esc(title)}</div>${body}</div>`;
+
+// ================= browser datastore (IndexedDB) =================
+const IDB = { name: 'inotives-stock-signals', store: 'kv' };
+function idbOpen() {
+  return new Promise((ok, no) => { const r = indexedDB.open(IDB.name, 1); r.onupgradeneeded = () => r.result.createObjectStore(IDB.store); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+}
+async function idb(mode, fn) {
+  const db = await idbOpen();
+  try { return await new Promise((ok, no) => { const tx = db.transaction(IDB.store, mode), req = fn(tx.objectStore(IDB.store)); tx.oncomplete = () => ok(req?.result); tx.onerror = () => no(tx.error); }); }
+  finally { db.close(); }
+}
+const store = {
+  get: async (key) => { try { return await idb('readonly', (s) => s.get(key)); } catch { return null; } },
+  put: async (key, value) => { try { await idb('readwrite', (s) => s.put(value, key)); } catch { /* private mode or quota */ } },
+  keys: async () => { try { return (await idb('readonly', (s) => s.getAllKeys())) || []; } catch { return []; } },
+  clear: async () => { try { await idb('readwrite', (s) => s.clear()); } catch { /* blocked */ } },
+};
+
+// ================= indicators =================
+const sma = (a, n) => a.map((_, i) => (i < n - 1 ? null : d3.mean(a.slice(i - n + 1, i + 1))));
+function ema(a, n) {
+  // seeded with the SMA of the first n values; leading nulls (e.g. MACD before it starts) are skipped
+  const s = a.findIndex((v) => v != null), out = a.map(() => null);
+  if (s < 0 || a.length - s < n) return out;
+  const k = 2 / (n + 1);
+  let e = d3.mean(a.slice(s, s + n)); out[s + n - 1] = e;
+  for (let i = s + n; i < a.length; i++) { e = a[i] * k + e * (1 - k); out[i] = e; }
+  return out;
+}
+function rsi(c, n = 14) {
+  const out = c.map(() => null);
+  if (c.length <= n) return out;
+  let g = 0, l = 0;
+  for (let i = 1; i <= n; i++) { const d = c[i] - c[i - 1]; if (d > 0) g += d; else l -= d; }
+  g /= n; l /= n;
+  const val = () => (l === 0 ? 100 : 100 - 100 / (1 + g / l));
+  out[n] = val();
+  for (let i = n + 1; i < c.length; i++) { const d = c[i] - c[i - 1]; g = (g * (n - 1) + Math.max(d, 0)) / n; l = (l * (n - 1) + Math.max(-d, 0)) / n; out[i] = val(); }
+  return out;
+}
+function atr(b, n = 14) {
+  const tr = b.map((x, i) => (i === 0 ? x.high - x.low : Math.max(x.high - x.low, Math.abs(x.high - b[i - 1].close), Math.abs(x.low - b[i - 1].close))));
+  const out = b.map(() => null);
+  if (b.length <= n) return out;
+  let a = d3.mean(tr.slice(1, n + 1)); out[n] = a;
+  for (let i = n + 1; i < b.length; i++) { a = (a * (n - 1) + tr[i]) / n; out[i] = a; }
+  return out;
+}
+function bollinger(c, n = 20, k = 2) {
+  const mid = sma(c, n);
+  const sd = c.map((_, i) => (mid[i] == null ? null : Math.sqrt(d3.mean(c.slice(i - n + 1, i + 1), (x) => (x - mid[i]) ** 2))));
+  return { mid, upper: mid.map((m, i) => (m == null ? null : m + k * sd[i])), lower: mid.map((m, i) => (m == null ? null : m - k * sd[i])) };
+}
+function indicators(bars) {
+  const c = bars.map((b) => b.close), v = bars.map((b) => b.volume);
+  const e12 = ema(c, 12), e26 = ema(c, 26);
+  const macd = c.map((_, i) => (e12[i] == null || e26[i] == null ? null : e12[i] - e26[i]));
+  const signal = ema(macd, 9);
+  const obv = []; c.forEach((x, i) => { obv.push(i === 0 ? 0 : obv[i - 1] + Math.sign(x - c[i - 1]) * v[i]); });
+  const gaps = bars.slice(1).map((b, i) => (b.open - bars[i].close) / bars[i].close);
+  return {
+    sma10: sma(c, 10), sma20: sma(c, 20), ema9: ema(c, 9), ema21: ema(c, 21),
+    rsi: rsi(c), atr: atr(bars), bb: bollinger(c), volAvg: sma(v, 20), obv,
+    macd, signal, hist: macd.map((m, i) => (m == null || signal[i] == null ? null : m - signal[i])), gaps,
+  };
+}
+// index of the last bar where a - b changed sign (a cross), or -1
+function lastCross(a, b) {
+  for (let i = a.length - 1; i > 0; i--) {
+    if ([a[i], b[i], a[i - 1], b[i - 1]].some((x) => x == null)) return -1;
+    if (Math.sign(a[i] - b[i]) !== Math.sign(a[i - 1] - b[i - 1])) return i;
+  }
+  return -1;
+}
+const pivots = (b) => { const P = (b.high + b.low + b.close) / 3; return { P, R1: 2 * P - b.low, S1: 2 * P - b.high, R2: P + (b.high - b.low), S2: P - (b.high - b.low) }; };
+function nextWeekday(iso) {
+  const d = new Date(`${iso}T12:00:00Z`);
+  do d.setUTCDate(d.getUTCDate() + 1); while ([0, 6].includes(d.getUTCDay()));
+  return d.toISOString().slice(0, 10);
+}
+
+// Each signal votes +1 (bullish), -1 (bearish) or 0 (neutral) for the next session
+function readSignals(bars, ind) {
+  const n = bars.length - 1, last = bars[n], prev = bars[n - 1], c = last.close;
+  const ago = (i) => (i < 0 ? '' : n - i === 0 ? 'today' : `${n - i} session${n - i === 1 ? '' : 's'} ago`);
+  const rows = [];
+  const add = (group, name, value, vote, note) => rows.push({ group, name, value, vote, note });
+
+  const crossMa = (group, name, a, b, la, lb) => {
+    if (a[n] == null || b[n] == null) return add(group, name, '—', null, 'Not enough history');
+    const up = a[n] > b[n], x = lastCross(a, b);
+    add(group, name, `${f2(a[n])} / ${f2(b[n])}`, up ? 1 : -1,
+      x >= 0 && n - x <= 10 ? `${la} crossed ${up ? 'above' : 'below'} ${lb} ${ago(x)}` : `${la} ${up ? 'above' : 'below'} ${lb}`);
+  };
+  crossMa('Trend', 'SMA 10 / 20', ind.sma10, ind.sma20, 'SMA 10', 'SMA 20');
+  crossMa('Trend', 'EMA 9 / 21', ind.ema9, ind.ema21, 'EMA 9', 'EMA 21');
+  const d20 = (c - ind.sma20[n]) / ind.sma20[n];
+  add('Trend', 'Close vs SMA 20', pct(d20), Math.abs(d20) < 0.005 ? 0 : Math.sign(d20), Math.abs(d20) < 0.005 ? 'Sitting on its 20-day average' : `${d20 > 0 ? 'Above' : 'Below'} its 20-day average`);
+
+  const r = ind.rsi[n];
+  add('Momentum', 'RSI 14', n1(r), r > 70 ? -1 : r < 30 ? 1 : Math.abs(r - 50) <= 5 ? 0 : Math.sign(r - 50),
+    r > 70 ? 'Overbought: pullbacks are common from here' : r < 30 ? 'Oversold: bounces are common from here' : Math.abs(r - 50) <= 5 ? 'Balanced momentum' : `Momentum ${r > 50 ? 'positive' : 'negative'}, not stretched`);
+  const h = ind.hist[n], hp = ind.hist[n - 1];
+  if (h == null) add('Momentum', 'MACD 12·26·9', '—', null, 'Not enough history');
+  else {
+    const xm = lastCross(ind.macd, ind.signal);
+    const vote = h > 0 && h >= hp ? 1 : h < 0 && h <= hp ? -1 : 0;
+    add('Momentum', 'MACD 12·26·9', `${h >= 0 ? '+' : ''}${f2(h)}`, vote,
+      xm >= 0 && n - xm <= 5 ? `MACD crossed ${h > 0 ? 'above' : 'below'} its signal ${ago(xm)}` : vote === 0 ? `Histogram ${h > 0 ? 'positive but shrinking' : 'negative but recovering'}` : `Histogram ${h > 0 ? 'positive and growing' : 'negative and deepening'}`);
+  }
+
+  const { upper, lower, mid } = ind.bb, pb = (c - lower[n]) / (upper[n] - lower[n]);
+  const bw = upper.map((u, i) => (u == null ? null : (u - lower[i]) / mid[i])), recent = bw.slice(-20).filter((x) => x != null);
+  const squeeze = recent.length >= 10 && bw[n] <= d3.min(recent) * 1.05;
+  add('Volatility', 'Bollinger %B', n1(pb * 100), pb > 1 ? -1 : pb < 0 ? 1 : 0,
+    pb > 1 ? 'Closed above the upper band: stretched' : pb < 0 ? 'Closed below the lower band: stretched' : squeeze ? 'Squeeze: bands at their narrowest in 20 sessions' : pb > 0.8 ? 'Near the upper band' : pb < 0.2 ? 'Near the lower band' : 'Inside the bands');
+
+  const vr = last.volume / ind.volAvg[n], dir = Math.sign(c - prev.close);
+  add('Volume', 'Volume vs 20-day', `${n1(vr)}×`, vr >= 1.3 ? dir : 0, vr >= 1.3 ? `Heavy volume on a${dir > 0 ? 'n up' : ' down'} day` : vr < 0.7 ? 'Light volume' : 'Normal volume');
+  const k = Math.min(10, n), dObv = ind.obv[n] - ind.obv[n - k], dPx = c - bars[n - k].close;
+  add('Volume', 'OBV, 10 sessions', `${dObv >= 0 ? '+' : '−'}${vol(Math.abs(dObv))}`, Math.sign(dObv),
+    Math.sign(dObv) === Math.sign(dPx) ? `Volume confirms the ${dPx >= 0 ? 'rise' : 'fall'}` : `Diverges from price: volume ${dObv > 0 ? 'accumulating' : 'leaving'}`);
+
+  const pv = pivots(last), dp = (c - pv.P) / pv.P;
+  add('Levels', 'Close vs pivot', pct(dp), Math.abs(dp) < 0.001 ? 0 : Math.sign(dp), dp > 0 ? "Closed in the upper part of the day's range" : "Closed in the lower part of the day's range");
+  return rows;
+}
+
+function analyse(data) {
+  const bars = data.bars.map(([time, open, high, low, close, volume]) => ({ time, open, high, low, close, volume }));
+  const ind = indicators(bars), rows = readSignals(bars, ind), last = bars.at(-1), n = bars.length - 1;
+  const counted = rows.filter((r) => r.vote != null);
+  const score = d3.sum(counted, (r) => r.vote) / (counted.length || 1);
+  const absGap = ind.gaps.map(Math.abs), medGap = d3.median(absGap) || 0;
+  return {
+    bars, ind, rows, last, score,
+    bias: score >= 0.25 ? 'Bullish' : score <= -0.25 ? 'Bearish' : 'Neutral',
+    tally: { bull: counted.filter((r) => r.vote > 0).length, bear: counted.filter((r) => r.vote < 0).length, flat: counted.filter((r) => r.vote === 0).length },
+    pv: pivots(last), atr: ind.atr[n], medGap, upGaps: ind.gaps.filter((g) => g > 0).length / (ind.gaps.length || 1),
+    next: nextWeekday(data.inSession || last.time),
+  };
+}
+
+// ================= chart =================
+const VIEWS = { trend: { name: 'Trend', icon: 'fi-rr-chart-line-up' }, bands: { name: 'Bands', icon: 'fi-rr-chart-histogram' }, levels: { name: 'Levels', icon: 'fi-rr-layers' } };
+const state = { view: 'trend', data: null, a: null, source: '', syncedAt: null, proxy: '', snapshot: null, errors: [], syncing: false };
+let chart = null, S = {}, priceLines = [];
+const line = (arr, times) => arr.map((v, i) => (v == null ? null : { time: times[i], value: v })).filter(Boolean);
+
+function drawChart() {
+  const { a } = state, el = $('#chart');
+  if (chart) { chart.remove(); chart = null; priceLines = []; }
+  const times = a.bars.map((b) => b.time);
+  chart = LC.createChart(el, {
+    autoSize: true,
+    layout: { background: { type: 'solid', color: 'transparent' }, textColor: B.fog, fontFamily: 'Source Code Pro, monospace', fontSize: 11, panes: { separatorColor: B.line, separatorHoverColor: B.muted } },
+    grid: { vertLines: { color: '#1f2228' }, horzLines: { color: '#1f2228' } },
+    rightPriceScale: { borderColor: B.line },
+    timeScale: { borderColor: B.line, rightOffset: 2, barSpacing: 10 },
+    crosshair: { mode: LC.CrosshairMode.Normal, vertLine: { color: B.fog, labelBackgroundColor: B.muted }, horzLine: { color: B.fog, labelBackgroundColor: B.muted } },
+    localization: { priceFormatter: f2 },
+  });
+  S.candles = chart.addSeries(LC.CandlestickSeries, { upColor: B.good, downColor: B.bad, wickUpColor: B.good, wickDownColor: B.bad, borderVisible: false, priceLineColor: B.fog });
+  // the empty slot at the right edge is the next session the signals are for
+  S.candles.setData([...a.bars, { time: a.next }]);
+  S.candles.priceScale().applyOptions({ scaleMargins: { top: 0.06, bottom: 0.24 } });
+  S.volume = chart.addSeries(LC.HistogramSeries, { priceFormat: { type: 'volume' }, priceScaleId: 'vol', lastValueVisible: false, priceLineVisible: false });
+  S.volume.priceScale().applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+  S.volume.setData(a.bars.map((b, i) => ({ time: b.time, value: b.volume, color: (i && b.close < a.bars[i - 1].close ? B.bad : B.good) + '55' })));
+
+  const ov = { lineWidth: 1.5, lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false };
+  S.trend = [
+    [a.ind.sma10, B.amber, 'SMA 10'], [a.ind.sma20, B.pink, 'SMA 20'],
+    [a.ind.ema9, B.sky, 'EMA 9', LC.LineStyle.Dashed], [a.ind.ema21, B.ink2, 'EMA 21', LC.LineStyle.Dashed],
+  ].map(([arr, color, title, lineStyle = LC.LineStyle.Solid]) => { const s = chart.addSeries(LC.LineSeries, { ...ov, color, lineStyle, title: '' }); s.setData(line(arr, times)); s.label = title; return s; });
+  S.bands = [[a.ind.bb.upper, B.sky], [a.ind.bb.mid, B.fog], [a.ind.bb.lower, B.sky]].map(([arr, color], i) => {
+    const s = chart.addSeries(LC.LineSeries, { ...ov, color, lineWidth: i === 1 ? 1 : 1.5, lineStyle: i === 1 ? LC.LineStyle.Dotted : LC.LineStyle.Solid });
+    s.setData(line(arr, times)); return s;
+  });
+
+  // SMA 10/20 crosses on the candles
+  const markers = [];
+  for (let i = 1; i < times.length; i++) {
+    const [a1, b1, a0, b0] = [a.ind.sma10[i], a.ind.sma20[i], a.ind.sma10[i - 1], a.ind.sma20[i - 1]];
+    if ([a1, b1, a0, b0].some((x) => x == null)) continue;
+    if (a0 <= b0 && a1 > b1) markers.push({ time: times[i], position: 'belowBar', color: B.good, shape: 'arrowUp' });
+    if (a0 >= b0 && a1 < b1) markers.push({ time: times[i], position: 'aboveBar', color: B.bad, shape: 'arrowDown' });
+  }
+  S.crosses = markers;
+  S.markers = LC.createSeriesMarkers(S.candles, markers);
+
+  // RSI pane
+  S.rsi = chart.addSeries(LC.LineSeries, { color: B.amber, lineWidth: 1.5, priceLineVisible: false, title: 'RSI 14', priceFormat: { type: 'custom', formatter: n1 } }, 1);
+  S.rsi.setData(line(a.ind.rsi, times));
+  [70, 30].forEach((p) => S.rsi.createPriceLine({ price: p, color: B.fog, lineWidth: 1, lineStyle: LC.LineStyle.Dashed, axisLabelVisible: false }));
+  // MACD pane
+  S.hist = chart.addSeries(LC.HistogramSeries, { priceLineVisible: false, lastValueVisible: false }, 2);
+  S.hist.setData(a.ind.hist.map((h, i) => (h == null ? null : { time: times[i], value: h, color: (h >= 0 ? B.good : B.bad) + (Math.abs(h) >= Math.abs(a.ind.hist[i - 1] ?? 0) ? 'cc' : '66') })).filter(Boolean));
+  S.macd = chart.addSeries(LC.LineSeries, { color: B.sky, lineWidth: 1.5, priceLineVisible: false, title: 'MACD' }, 2);
+  S.macd.setData(line(a.ind.macd, times));
+  S.sig = chart.addSeries(LC.LineSeries, { color: B.pink, lineWidth: 1, priceLineVisible: false, lastValueVisible: false }, 2);
+  S.sig.setData(line(a.ind.signal, times));
+  // price pane gets most of the height; RSI and MACD share the rest
+  const panes = chart.panes();
+  [3, 1, 1.2].forEach((f, i) => { try { panes[i]?.setStretchFactor(f); } catch { /* older API */ } });
+
+  chart.subscribeCrosshairMove((p) => ohlc(p?.time && p.seriesData.get(S.candles)));
+  applyView();
+  chart.timeScale().fitContent();
+  ohlc(null);
+}
+
+function ohlc(bar) {
+  const { a } = state;
+  const b = bar?.open != null ? bar : a.last;
+  const i = a.bars.findIndex((x) => x.time === b.time), prev = a.bars[i - 1];
+  const ch = prev ? (b.close - prev.close) / prev.close : 0;
+  $('#ohlc').innerHTML = `<b>${esc(state.data.symbol)}</b> ${dayFmt(b.time)} · O <b>${f2(b.open)}</b> H <b>${f2(b.high)}</b> L <b>${f2(b.low)}</b> C <b>${f2(b.close)}</b> <span style="color:${ch >= 0 ? B.good : B.bad}">${pct(ch)}</span> · V <b>${vol(a.bars[i]?.volume ?? 0)}</b>`;
+}
+
+function applyView() {
+  const { a, view } = state;
+  S.trend.forEach((s) => s.applyOptions({ visible: view === 'trend' }));
+  S.bands.forEach((s) => s.applyOptions({ visible: view === 'bands' }));
+  S.markers.setMarkers(view === 'trend' ? S.crosses : []);
+  priceLines.forEach((l) => S.candles.removePriceLine(l)); priceLines = [];
+  if (view === 'levels') {
+    const c = a.last.close, pl = (price, color, title, lineStyle = LC.LineStyle.Solid) => priceLines.push(S.candles.createPriceLine({ price, color, title, lineStyle, lineWidth: 1, axisLabelVisible: true }));
+    pl(a.pv.R2, B.bad, 'R2'); pl(a.pv.R1, B.bad, 'R1'); pl(a.pv.P, B.ink2, 'P', LC.LineStyle.Dotted); pl(a.pv.S1, B.good, 'S1'); pl(a.pv.S2, B.good, 'S2');
+    pl(c * (1 + a.medGap), B.amber, 'open hi', LC.LineStyle.Dashed); pl(c * (1 - a.medGap), B.amber, 'open lo', LC.LineStyle.Dashed);
+  }
+  const key = (color, label, dash = false) => `<div class="flex items-center"><span class="key${dash ? ' dash' : ''}" style="background:${color};color:${color}"></span>${label}</div>`;
+  const keys = {
+    trend: key(B.amber, 'SMA 10') + key(B.pink, 'SMA 20') + key(B.sky, 'EMA 9', true) + key(B.ink2, 'EMA 21', true) + `<div class="flex items-center gap-1"><span style="color:${B.good}">▲</span><span style="color:${B.bad}">▼</span> SMA 10/20 cross</div>`,
+    bands: key(B.sky, 'Bollinger 20, 2σ') + key(B.fog, 'Middle (SMA 20)', true),
+    levels: key(B.bad, 'Resistance R1, R2') + key(B.ink2, 'Pivot P', true) + key(B.good, 'Support S1, S2') + key(B.amber, 'Expected open range', true),
+  };
+  $('#legend').innerHTML = `<div class="flex flex-wrap items-center gap-x-3 gap-y-1"><span class="font-medium text-foreground">${VIEWS[view].name}</span>${keys[view]}<span>· panes: RSI 14, MACD · blank slot: ${dayFmt(a.next)}</span></div>`;
+}
+
+const renderTabs = () => {
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([k, v]) => `<button role="tab" data-tab="${k}" aria-label="${v.name}" aria-selected="${k === state.view}" data-state="${k === state.view ? 'active' : ''}" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi ${v.icon}"></i><span class="hidden sm:inline">${v.name}</span></button>`).join('');
+};
+$('#tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b && state.a) { state.view = b.dataset.tab; renderTabs(); applyView(); } });
+
+// ================= panel =================
+async function renderPanel() {
+  const { a, data } = state;
+  const saved = (await store.keys()).filter((k) => String(k).startsWith('sym:')).map((k) => k.slice(4));
+  const known = [...new Set([...saved, ...Object.keys(state.snapshot?.symbols || {})])].sort();
+  const chips = known.map((s) => `<button type="button" data-sym="${esc(s)}" class="inline-flex h-7 items-center gap-1 rounded-md border px-2 font-mono text-xs hover:bg-accent ${s === data?.symbol ? 'border-primary text-primary' : ''}">${esc(s)}${saved.includes(s) ? '' : '<span class="text-[10px] text-muted-foreground">snap</span>'}</button>`).join('');
+  const settings = section('Data', `
+    <div class="space-y-1 text-[11px] text-muted-foreground">
+      ${data ? `<div>Source: <span class="text-foreground">${esc(state.source)}</span>${state.syncedAt ? ` · ${new Date(state.syncedAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}` : ''}</div>
+      <div>${a.bars.length} daily sessions, ${dayFmt(a.bars[0].time, { day: 'numeric', month: 'short' })} to ${dayFmt(a.last.time, { day: 'numeric', month: 'short', year: 'numeric' })}${data.inSession ? '. Today’s session is still trading and left out.' : ''}</div>` : ''}
+      ${state.errors.length ? `<div class="rounded-md border border-danger/40 bg-danger/5 p-2 text-danger"><div class="font-medium">Last sync failed</div>${state.errors.map((e) => `<div class="font-mono">${esc(e)}</div>`).join('')}</div>` : ''}
+    </div>
+    ${known.length ? `<div class="mt-2 flex flex-wrap gap-1.5">${chips}</div>` : ''}
+    <label for="proxy" class="mt-3 block text-[11px] text-muted-foreground">CORS proxy (optional). Yahoo blocks direct browser requests; use <span class="font-mono">{url}</span> for the encoded Yahoo URL.</label>
+    <div class="mt-1 flex gap-1.5"><input id="proxy" value="${esc(state.proxy)}" spellcheck="false" placeholder="https://corsproxy.io/?key=…&url={url}" class="h-8 min-w-0 flex-1 rounded-md border border-input bg-background/60 px-2 font-mono text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" /><button id="proxy-save" type="button" class="h-8 rounded-md border px-2.5 text-xs hover:bg-accent">Save</button></div>
+    <button id="clear" type="button" class="mt-3 inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"><i class="fi fi-rr-trash"></i>Clear stored data</button>`, 'fi-rr-database');
+  const about = section('About', `<p class="text-[11px] leading-relaxed text-muted-foreground">Daily bars from <a class="underline hover:text-primary" href="https://finance.yahoo.com/quote/${esc(data?.symbol || 'NVDA')}/history" target="_blank" rel="noopener">Yahoo Finance</a>, read into signals in your browser. Each signal votes; the bias is the average vote (±0.25 or more leans one way). Exchange holidays aren't known, so the next session is the next weekday. A learning mock, not trading advice.</p>`, 'fi-rr-info');
+
+  if (!a) {
+    $('#panel').innerHTML = `<h1 class="text-lg font-semibold leading-tight">Next open signals</h1><p class="mt-1 text-xs text-muted-foreground">Enter a symbol and press Sync data to pull its last 60 daily sessions from Yahoo Finance.</p>${settings}${about}`;
+    return;
+  }
+  const last = a.last, prev = a.bars.at(-2), ch = (last.close - prev.close) / prev.close;
+  const biasColor = a.bias === 'Bullish' ? B.good : a.bias === 'Bearish' ? B.bad : B.ink2;
+  const stale = (Date.now() - new Date(`${last.time}T21:00:00Z`)) / 864e5 > 4;
+  const openTime = data.openAt ? new Date(data.openAt * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: data.timezone, timeZoneName: 'short' }) : '';
+  const vote = (v) => (v == null ? '<span class="text-muted-foreground">n/a</span>' : v > 0 ? '<span class="text-good">▲ bull</span>' : v < 0 ? '<span class="text-bad">▼ bear</span>' : '<span class="text-muted-foreground">● flat</span>');
+  const groups = d3.groups(a.rows, (r) => r.group).map(([g, rows]) => `<div class="mt-2 first:mt-0"><div class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">${g}</div><ul>${rows.map((r) => `<li class="border-b border-border/60 py-1.5 last:border-0"><div class="flex items-baseline justify-between gap-2"><span class="text-sm">${r.name}</span><span class="font-mono text-xs">${r.value}</span></div><div class="mt-0.5 flex items-baseline justify-between gap-2 text-[11px] text-muted-foreground"><span>${esc(r.note)}</span><span class="shrink-0 font-mono">${vote(r.vote)}</span></div></li>`).join('')}</ul></div>`).join('');
+  const lv = (k, v, color) => `<div class="flex justify-between font-mono text-xs"><span style="color:${color}">${k}</span><span>${f2(v)}</span><span class="w-14 text-right text-muted-foreground">${pct((v - last.close) / last.close)}</span></div>`;
+
+  $('#panel').innerHTML = `
+    <div class="flex items-baseline gap-2"><h1 class="font-mono text-xl font-medium leading-tight">${esc(data.symbol)}</h1><span class="min-w-0 truncate text-sm text-muted-foreground">${esc(data.name)}</span></div>
+    <p class="mt-0.5 text-xs text-muted-foreground">${esc(data.exchange)} · ${esc(data.currency)} · close ${dayFmt(last.time)} <span class="font-mono text-foreground">${f2(last.close)}</span> <span class="font-mono" style="color:${ch >= 0 ? B.good : B.bad}">${pct(ch)}</span></p>
+    ${stale ? `<p class="mt-2 rounded-md border border-amber/40 bg-amber/5 px-2 py-1.5 text-[11px] text-amber">This data ends ${dayFmt(last.time)}. Sync data for current signals.</p>` : ''}
+    <div class="mt-3 rounded-lg border bg-background/40 p-3" style="border-color:${biasColor}66">
+      <div class="flex items-baseline justify-between"><span class="text-[11px] text-muted-foreground">Bias for the open, ${dayFmt(a.next)}${openTime ? ` ${openTime}` : ''}</span><span class="font-mono text-xs" style="color:${biasColor}">${a.score >= 0 ? '+' : ''}${d3.format('.2f')(a.score)}</span></div>
+      <div class="mt-0.5 text-2xl font-semibold" style="color:${biasColor}">${a.bias}</div>
+      <div class="relative mt-2 h-1.5 rounded-full" style="background:linear-gradient(90deg,${B.bad}88,${B.muted} 40%,${B.muted} 60%,${B.good}88)"><span class="absolute -top-1 h-3.5 w-1 -translate-x-1/2 rounded-sm bg-foreground" style="left:${(a.score + 1) * 50}%"></span></div>
+      <div class="mt-1.5 text-[11px] text-muted-foreground"><span class="text-good">${a.tally.bull} bullish</span> · <span class="text-bad">${a.tally.bear} bearish</span> · ${a.tally.flat} neutral</div>
+    </div>
+    <div class="mt-3 grid grid-cols-2 gap-2">
+      ${kpi('Expected open', `${f2(last.close * (1 - a.medGap))}–${f2(last.close * (1 + a.medGap))}`, `gap ±${pct1(a.medGap)} · ${d3.format('.0%')(a.upGaps)} gap up`)}
+      ${kpi('Day range (ATR 14)', `${f2(last.close - a.atr)}–${f2(last.close + a.atr)}`, `ATR ${f2(a.atr)} · ${pct1(a.atr / last.close)} of price`)}
+    </div>
+    ${section('Signals', groups, 'fi-rr-chart-line-up')}
+    ${section(`Levels for ${dayFmt(a.next)}`, `<div class="space-y-1 rounded-lg border bg-background/40 p-2.5">${lv('R2', a.pv.R2, B.bad)}${lv('R1', a.pv.R1, B.bad)}${lv('P', a.pv.P, B.ink2)}${lv('S1', a.pv.S1, B.good)}${lv('S2', a.pv.S2, B.good)}</div><p class="mt-1 text-[11px] text-muted-foreground">Classic pivots from ${dayFmt(last.time)}'s high, low and close. Open the Levels tab to see them on the chart.</p>`, 'fi-rr-layers')}
+    ${settings}${about}`;
+}
+
+$('#panel').addEventListener('click', async (e) => {
+  const chip = e.target.closest('[data-sym]');
+  if (chip) { $('#sym').value = chip.dataset.sym; await show(chip.dataset.sym); return; }
+  if (e.target.closest('#proxy-save')) { state.proxy = $('#proxy').value.trim(); await store.put('proxy', state.proxy); toast(state.proxy ? 'Proxy saved in this browser' : 'Proxy cleared'); return; }
+  if (e.target.closest('#clear')) { await store.clear(); state.proxy = ''; state.errors = []; toast('Cleared synced symbols and settings from this browser'); await show(state.data?.symbol || 'NVDA'); }
+});
+
+// ================= load and sync =================
+function use(data, source, syncedAt) {
+  state.data = data; state.source = source; state.syncedAt = syncedAt;
+  state.a = analyse(data);
+  $('#sym').value = data.symbol;
+  drawChart(); renderPanel();
+}
+
+// shows a symbol from this browser's store, else the bundled snapshot
+async function show(symbol) {
+  const saved = await store.get(`sym:${symbol}`);
+  if (saved) { use(saved.data, saved.source, saved.syncedAt); await store.put('last', symbol); return true; }
+  const snap = state.snapshot?.symbols?.[symbol];
+  if (snap) { use(snap, 'Bundled snapshot', state.snapshot.capturedAt); return true; }
+  return false;
+}
+
+const PUBLIC_PROXIES = ['https://api.allorigins.win/raw?url={url}', 'https://api.codetabs.com/v1/proxy/?quest={raw}'];
+const fill = (tpl, target) => (tpl.includes('{raw}') ? tpl.replace('{raw}', target) : tpl.includes('{url}') ? tpl.replace('{url}', encodeURIComponent(target)) : tpl + encodeURIComponent(target));
+
+async function sync(symbol) {
+  if (state.syncing) return;
+  state.syncing = true; $('#action').disabled = true; $('#action i').classList.add('animate-spin');
+  const path = YAHOO.path(symbol), target = YAHOO.host + path, errors = [];
+  const routes = [];
+  if (['localhost', '127.0.0.1'].includes(location.hostname)) routes.push({ name: 'Vite dev proxy', url: `/yahoo${path}` });
+  if (state.proxy) routes.push({ name: 'your proxy', url: fill(state.proxy, target) });
+  PUBLIC_PROXIES.forEach((p) => routes.push({ name: new URL(p.split('?')[0]).host, url: fill(p, target) }));
+  try {
+    for (const r of routes) {
+      try {
+        const res = await fetch(r.url, { signal: AbortSignal.timeout(9000), cache: 'no-store' });
+        const text = await res.text();
+        let json; try { json = JSON.parse(text); } catch { throw new Error(`HTTP ${res.status}, not JSON`); }
+        // Yahoo's own answer (e.g. an unknown symbol) is final: no point asking another proxy
+        if (json?.chart?.error) { errors.push(`Yahoo: ${json.chart.error.description}`); break; }
+        const data = YAHOO.parse(json);
+        if (data.bars.length < 30) throw new Error(`only ${data.bars.length} sessions`);
+        const entry = { data, source: `Yahoo Finance via ${r.name}`, syncedAt: new Date().toISOString() };
+        await store.put(`sym:${data.symbol}`, entry); await store.put('last', data.symbol);
+        state.errors = [];
+        use(entry.data, entry.source, entry.syncedAt);
+        toast(`Synced ${data.symbol}: ${data.bars.length} sessions via ${r.name}`);
+        return;
+      } catch (e) { errors.push(`${r.name}: ${e.name === 'TimeoutError' ? 'timed out' : e.message}`); }
+    }
+    state.errors = errors;
+    toast(`Couldn't sync ${symbol}. ${state.data ? 'Showing the last data.' : ''}`);
+    if (!state.data || state.data.symbol !== symbol) await show(symbol);
+    renderPanel();
+  } finally {
+    state.syncing = false; $('#action').disabled = false; $('#action i').classList.remove('animate-spin');
+  }
+}
+
+$('#sym-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const symbol = $('#sym').value.trim().toUpperCase();
+  if (!/^[A-Z0-9.^=-]{1,15}$/.test(symbol)) { toast('Use a ticker like NVDA, BRK-B or ^GSPC'); return; }
+  sync(symbol);
+});
+
+(async () => {
+  renderTabs();
+  state.proxy = (await store.get('proxy')) || '';
+  try { const r = await fetch('data/stock-signals.json'); if (r.ok) state.snapshot = await r.json(); } catch { /* no snapshot */ }
+  const first = new URLSearchParams(location.search).get('symbol')?.toUpperCase() || (await store.get('last')) || 'NVDA';
+  if (!(await show(first)) && !(await show('NVDA'))) renderPanel();
+})();
+</script>
+</body>
+</html>

@@ -80,6 +80,14 @@ export const PLAYGROUND_LIBRARIES = [
     repo: 'chenglou/pretext',
   },
   {
+    id: 'lightweight-charts',
+    name: 'Lightweight Charts',
+    kind: 'Financial charting',
+    description: 'TradingView’s canvas library for financial charts: candlesticks, volume, stacked panes, markers and price lines, small and fast.',
+    site: 'https://www.tradingview.com/lightweight-charts/',
+    repo: 'tradingview/lightweight-charts',
+  },
+  {
     id: 'tailwind',
     name: 'Tailwind CSS',
     kind: 'CSS framework',
@@ -377,5 +385,17 @@ export const PLAYGROUND_MOCKS = [
       { name: 'PokeAPI sprites', href: 'https://github.com/PokeAPI/sprites' },
       { name: 'PokeAPI cries', href: 'https://github.com/PokeAPI/cries' },
     ],
+  },
+  {
+    id: 'stock-signals',
+    project: 'Market signals',
+    name: 'Next open signals',
+    date: '2026-11-10',
+    href: '/mocks/stock-signals.html',
+    preview: '/mocks/previews/stock-signals.jpg',
+    description:
+      'Type a ticker such as NVDA and Sync data pulls its last 60 daily sessions from Yahoo Finance, then reads them into the usual technical signals for the next market opening: SMA and EMA crosses, RSI, MACD, Bollinger Bands, volume against its 20-day average, OBV and the close against the pivot. Each signal votes bullish, bearish or neutral, and the votes add up to a bias, beside an expected opening range from the stock’s usual overnight gap, a day range from ATR and the pivot levels. Candles, volume, RSI and MACD share one chart, with tabs for trend lines, bands and levels. Synced symbols stay in your browser. A learning mock, not trading advice.',
+    libraries: ['lightweight-charts', 'd3', 'shadcn', 'tailwind', 'flaticon'],
+    sources: [{ name: 'Yahoo Finance chart API (daily bars)', href: 'https://finance.yahoo.com/' }],
   },
 ]

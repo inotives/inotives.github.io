@@ -8,6 +8,15 @@ export default defineConfig({
   server: {
     port: 8551,
     strictPort: true,
+    // Yahoo Finance sends no CORS headers; the stock-signals mock syncs through this on localhost
+    proxy: {
+      '/yahoo': {
+        target: 'https://query1.finance.yahoo.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/yahoo/, ''),
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+      },
+    },
   },
   preview: {
     port: 8551,

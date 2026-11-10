@@ -18,7 +18,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "fred": "node scripts/mocks/fred-macro/build.mjs",
-    "pokemon": "node scripts/mocks/pokemon-viewer/capture.mjs"
+    "pokemon": "node scripts/mocks/pokemon-viewer/capture.mjs",
+    "stocks": "node scripts/mocks/stock-signals/capture.mjs"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
