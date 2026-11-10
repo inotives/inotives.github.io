@@ -31,6 +31,10 @@ export function formatMonth(value) {
   })
 }
 
-export function isRecent(value, days = 7) {
-  return (Date.now() - parseDate(value).getTime()) / 86400000 <= days
+// Content dates carry no time, so a note counts as published at the start of
+// its day: with 72 hours it's new on that day and the two after. Future-dated
+// notes aren't new yet.
+export function isRecent(value, hours = 72) {
+  const age = Date.now() - new Date(`${value}T00:00:00`).getTime()
+  return age >= 0 && age < hours * 3600000
 }

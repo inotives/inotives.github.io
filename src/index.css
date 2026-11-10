@@ -535,6 +535,29 @@ button.tag-active:hover {
   gap: 14px;
 }
 
+.heatmap-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.heatmap-view {
+  display: flex;
+  gap: 6px;
+}
+
+.heatmap-view .tag {
+  font-family: var(--font-mono, inherit);
+  letter-spacing: 0.04em;
+}
+
+button.tag:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .heatmap-years {
   display: flex;
   flex-wrap: wrap;

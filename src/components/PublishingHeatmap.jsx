@@ -5,6 +5,16 @@ import Heatmap3D from './Heatmap3D'
 
 const WEEKDAY_LABELS = ['', 'Tue', '', 'Thu', '', 'Sat', '']
 
+const VIEW_KEY = 'heatmap-view'
+
+function readView() {
+  try {
+    return localStorage.getItem(VIEW_KEY) === '2d' ? '2d' : '3d'
+  } catch {
+    return '3d'
+  }
+}
+
 // Monday-first weekday index (0 = Monday)
 function weekday(date) {
   return (date.getDay() + 6) % 7
@@ -31,9 +41,21 @@ export default function PublishingHeatmap({ posts }) {
   }, [posts])
   const [year, setYear] = useState(years[0])
   const [selectedDay, setSelectedDay] = useState(posts[0]?.date)
-  // Falls back to the flat grid when WebGL or the three.js CDN is unavailable
-  const [flat, setFlat] = useState(false)
-  const showFlat = useCallback(() => setFlat(true), [])
+  // The viewer picks 2D or 3D (remembered per browser); 3D falls back to the
+  // flat grid when WebGL or the three.js CDN is unavailable
+  const [view, setView] = useState(readView)
+  const [noWebgl, setNoWebgl] = useState(false)
+  const showFlat = useCallback(() => setNoWebgl(true), [])
+  const flat = view === '2d' || noWebgl
+
+  function chooseView(next) {
+    setView(next)
+    try {
+      localStorage.setItem(VIEW_KEY, next)
+    } catch {
+      // storage unavailable; the choice just won't persist
+    }
+  }
 
   const { cells, months } = useMemo(() => {
     if (!year) return { cells: [], months: [] }
@@ -80,19 +102,39 @@ export default function PublishingHeatmap({ posts }) {
 
   return (
     <section className="heatmap" aria-label="Publishing history">
-      <div className="heatmap-years" role="group" aria-label="Show year">
-        {years.map((y) => (
-          <button
-            key={y}
-            type="button"
-            className={`tag ${y === year ? 'tag-active' : ''}`}
-            aria-pressed={y === year}
-            onClick={() => chooseYear(y)}
-          >
-            {y}
-            <small>{yearCounts[y]} notes</small>
-          </button>
-        ))}
+      <div className="heatmap-bar">
+        <div className="heatmap-view" role="group" aria-label="Heatmap view">
+          {['2d', '3d'].map((v) => {
+            const active = v === '2d' ? flat : !flat
+            return (
+              <button
+                key={v}
+                type="button"
+                className={`tag ${active ? 'tag-active' : ''}`}
+                aria-pressed={active}
+                disabled={v === '3d' && noWebgl}
+                title={v === '3d' && noWebgl ? '3D view is unavailable in this browser' : undefined}
+                onClick={() => chooseView(v)}
+              >
+                {v.toUpperCase()}
+              </button>
+            )
+          })}
+        </div>
+        <div className="heatmap-years" role="group" aria-label="Show year">
+          {years.map((y) => (
+            <button
+              key={y}
+              type="button"
+              className={`tag ${y === year ? 'tag-active' : ''}`}
+              aria-pressed={y === year}
+              onClick={() => chooseYear(y)}
+            >
+              {y}
+              <small>{yearCounts[y]} notes</small>
+            </button>
+          ))}
+        </div>
       </div>
       {!flat ? (
         <Heatmap3D
