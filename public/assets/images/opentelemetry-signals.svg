@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">OpenTelemetry signals: three pillars plus one, tied together by context</title>
+  <desc id="desc">Three stable signals. Traces show what happened, step by step, as a tree of timed spans. Metrics show how much and how often, as counters, gauges and histograms. Logs show what was said, as timestamped records. A fourth signal, profiles, shows where CPU and memory went and has been in public alpha since March 2026. Underneath all of them, a shared context bar: every record carries the same trace id, span id and resource attributes such as service name and version, so you can jump from a metric spike to the traces and logs behind it. Below that, semantic conventions give every signal the same attribute names, such as http, db and gen_ai.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+  </defs>
+  <rect width="1200" height="560" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">The signals: three pillars, plus one</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Each signal answers a different question. Context is what makes them one picture instead of three.</text>
+
+    <!-- Traces -->
+    <rect x="50" y="120" width="255" height="230" rx="16" fill="#17283d" stroke="#75a8d5" stroke-opacity=".8"/>
+    <text x="72" y="156" fill="#fff" font-size="20" font-weight="700">Traces</text>
+    <text x="72" y="180" fill="#a8cdec" font-size="14">What happened, step by step?</text>
+    <g fill="#75a8d5">
+      <rect x="72" y="200" width="200" height="12" rx="4"/>
+      <rect x="82" y="218" width="70" height="12" rx="4" opacity=".85"/>
+      <rect x="158" y="236" width="40" height="12" rx="4" opacity=".7"/>
+      <rect x="204" y="254" width="66" height="12" rx="4" opacity=".85"/>
+    </g>
+    <text x="72" y="294" fill="#d4e6f7" font-size="14">A tree of timed spans.</text>
+    <text x="72" y="316" fill="#d4e6f7" font-size="14">One trace = one request</text>
+    <text x="72" y="336" fill="#d4e6f7" font-size="14">or one agent run.</text>
+
+    <!-- Metrics -->
+    <rect x="325" y="120" width="255" height="230" rx="16" fill="#17283d" stroke="#5fc7a6" stroke-opacity=".8"/>
+    <text x="347" y="156" fill="#fff" font-size="20" font-weight="700">Metrics</text>
+    <text x="347" y="180" fill="#a6e3cf" font-size="14">How much, how often?</text>
+    <polyline points="350,262 380,250 410,256 440,236 470,242 500,214 530,224 555,204" fill="none" stroke="#5fc7a6" stroke-width="3" stroke-linejoin="round"/>
+    <line x1="347" y1="268" x2="558" y2="268" stroke="#3d5a72"/>
+    <text x="347" y="294" fill="#cdeee2" font-size="14">Counters, gauges,</text>
+    <text x="347" y="316" fill="#cdeee2" font-size="14">histograms. Cheap to keep</text>
+    <text x="347" y="336" fill="#cdeee2" font-size="14">for a long time.</text>
+
+    <!-- Logs -->
+    <rect x="600" y="120" width="255" height="230" rx="16" fill="#17283d" stroke="#e8b96a" stroke-opacity=".8"/>
+    <text x="622" y="156" fill="#fff" font-size="20" font-weight="700">Logs</text>
+    <text x="622" y="180" fill="#f2d8a8" font-size="14">What was said?</text>
+    <g font-family="ui-monospace,Menlo,monospace" font-size="11.5" fill="#f2d8a8">
+      <text x="622" y="210">10:02:11 INFO  start</text>
+      <text x="622" y="228">10:02:13 WARN  retry 1</text>
+      <text x="622" y="246">10:02:14 ERROR timeout</text>
+      <text x="622" y="264">10:02:16 INFO  done</text>
+    </g>
+    <text x="622" y="294" fill="#f5e6c8" font-size="14">Timestamped records,</text>
+    <text x="622" y="316" fill="#f5e6c8" font-size="14">ideally structured, now</text>
+    <text x="622" y="336" fill="#f5e6c8" font-size="14">stamped with trace ids.</text>
+
+    <!-- Profiles -->
+    <rect x="875" y="120" width="275" height="230" rx="16" fill="#1a1f33" stroke="#a99bf0" stroke-opacity=".8" stroke-dasharray="7 5"/>
+    <text x="897" y="156" fill="#fff" font-size="20" font-weight="700">Profiles</text>
+    <rect x="1000" y="140" width="128" height="22" rx="11" fill="#2e2a52"/>
+    <text x="1064" y="156" fill="#ddd7fb" font-size="12" text-anchor="middle">alpha, Mar 2026</text>
+    <text x="897" y="180" fill="#ddd7fb" font-size="14">Where did CPU and memory go?</text>
+    <g fill="#a99bf0">
+      <rect x="897" y="200" width="230" height="12" rx="3" opacity=".55"/>
+      <rect x="897" y="216" width="140" height="12" rx="3" opacity=".7"/>
+      <rect x="1041" y="216" width="86" height="12" rx="3" opacity=".7"/>
+      <rect x="897" y="232" width="90" height="12" rx="3" opacity=".85"/>
+      <rect x="1041" y="232" width="40" height="12" rx="3" opacity=".85"/>
+    </g>
+    <text x="897" y="294" fill="#ddd7fb" font-size="14">Continuous profiling.</text>
+    <text x="897" y="316" fill="#ddd7fb" font-size="14">The newest signal. Not for</text>
+    <text x="897" y="336" fill="#ddd7fb" font-size="14">production alerting yet.</text>
+
+    <!-- connectors -->
+    <g stroke="#90adc2" stroke-width="2" stroke-dasharray="4 5">
+      <line x1="177" y1="352" x2="177" y2="390"/>
+      <line x1="452" y1="352" x2="452" y2="390"/>
+      <line x1="727" y1="352" x2="727" y2="390"/>
+      <line x1="1012" y1="352" x2="1012" y2="390"/>
+    </g>
+
+    <!-- context bar -->
+    <rect x="50" y="390" width="1100" height="70" rx="14" fill="#0f3a4a" stroke="#5ec4e0"/>
+    <text x="72" y="420" fill="#fff" font-size="17" font-weight="700">Shared context</text>
+    <text x="72" y="445" fill="#bfe8f4" font-size="14">Every record carries the same trace_id, span_id and resource (service.name, service.version, host).</text>
+    <text x="1128" y="432" fill="#bfe8f4" font-size="14" text-anchor="end">metric spike → trace → log line</text>
+
+    <!-- semconv bar -->
+    <rect x="50" y="476" width="1100" height="54" rx="14" fill="#17283d" stroke="#3d5a72"/>
+    <text x="72" y="509" fill="#fff" font-size="16" font-weight="700">Semantic conventions</text>
+    <text x="270" y="509" fill="#a9bdd0" font-size="14">The same attribute names everywhere:</text>
+    <g font-family="ui-monospace,Menlo,monospace" font-size="13.5" fill="#d4e6f7">
+      <text x="580" y="509">http.*</text>
+      <text x="660" y="509">db.*</text>
+      <text x="726" y="509">messaging.*</text>
+      <text x="856" y="509" fill="#a6e3cf" font-weight="700">gen_ai.*</text>
+    </g>
+  </g>
+</svg>

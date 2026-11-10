@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">OpenTelemetry components: from your code to any backend</title>
+  <desc id="desc">On the left, your application holds three layers: instrumentation libraries, automatic or manual, that create the telemetry; the API, the small interface your code calls; and the SDK, which handles sampling, batching and resource attributes. The SDK sends data over OTLP, the OpenTelemetry protocol, to the Collector in the middle. The Collector is a pipeline of receivers, processors and exporters. Processors batch, filter, redact sensitive data and sample. Exporters send the data to any backend on the right: tracing tools such as Jaeger or Tempo, metrics stores such as Prometheus, log stores such as Loki or Elasticsearch, commercial platforms such as Datadog or Honeycomb, and LLM observability tools such as Langfuse or Phoenix. A note at the bottom: change the backend by editing Collector config, not application code.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="560" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">The components: from your code to any backend</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">OpenTelemetry produces and moves telemetry. It does not store or display it.</text>
+
+    <!-- App -->
+    <rect x="50" y="120" width="320" height="350" rx="18" fill="#132033" stroke="#75a8d5" stroke-opacity=".7"/>
+    <text x="72" y="152" fill="#fff" font-size="19" font-weight="700">Your app / agent</text>
+
+    <rect x="72" y="170" width="276" height="86" rx="12" fill="#1c3049"/>
+    <text x="90" y="198" fill="#fff" font-size="16" font-weight="700">Instrumentation</text>
+    <text x="90" y="222" fill="#d4e6f7" font-size="13.5">auto: HTTP, DB, LLM SDK clients</text>
+    <text x="90" y="242" fill="#d4e6f7" font-size="13.5">manual: your own spans</text>
+
+    <rect x="72" y="266" width="276" height="74" rx="12" fill="#1c3049"/>
+    <text x="90" y="294" fill="#fff" font-size="16" font-weight="700">API</text>
+    <text x="90" y="318" fill="#d4e6f7" font-size="13.5">what code calls. No-op if unset.</text>
+
+    <rect x="72" y="350" width="276" height="100" rx="12" fill="#1c3049"/>
+    <text x="90" y="378" fill="#fff" font-size="16" font-weight="700">SDK</text>
+    <text x="90" y="402" fill="#d4e6f7" font-size="13.5">sampling, batching,</text>
+    <text x="90" y="422" fill="#d4e6f7" font-size="13.5">resource (service.name),</text>
+    <text x="90" y="442" fill="#d4e6f7" font-size="13.5">exporters</text>
+
+    <!-- OTLP arrow -->
+    <path d="M372 400 L438 400" stroke="#90adc2" stroke-width="2.4" fill="none" marker-end="url(#a)"/>
+    <rect x="378" y="364" width="54" height="24" rx="12" fill="#0f3a4a" stroke="#5ec4e0"/>
+    <text x="405" y="381" fill="#bfe8f4" font-size="13" font-weight="700" text-anchor="middle">OTLP</text>
+
+    <!-- Collector -->
+    <rect x="442" y="120" width="390" height="350" rx="18" fill="#132b27" stroke="#5fc7a6"/>
+    <text x="464" y="152" fill="#fff" font-size="19" font-weight="700">Collector</text>
+    <text x="560" y="152" fill="#a6e3cf" font-size="14">optional, but you will want it</text>
+
+    <rect x="464" y="176" width="346" height="66" rx="12" fill="#1b3a34"/>
+    <text x="482" y="204" fill="#fff" font-size="16" font-weight="700">Receivers</text>
+    <text x="482" y="226" fill="#cdeee2" font-size="13.5">OTLP, Prometheus, files, Kafka …</text>
+
+    <rect x="464" y="256" width="346" height="96" rx="12" fill="#1b3a34"/>
+    <text x="482" y="284" fill="#fff" font-size="16" font-weight="700">Processors</text>
+    <text x="482" y="308" fill="#cdeee2" font-size="13.5">batch, filter, add attributes,</text>
+    <text x="482" y="328" fill="#cdeee2" font-size="13.5">redact prompts / PII, tail sampling</text>
+
+    <rect x="464" y="366" width="346" height="84" rx="12" fill="#1b3a34"/>
+    <text x="482" y="394" fill="#fff" font-size="16" font-weight="700">Exporters</text>
+    <text x="482" y="418" fill="#cdeee2" font-size="13.5">fan out to one or many backends</text>
+    <text x="482" y="438" fill="#cdeee2" font-size="13.5">at the same time</text>
+
+    <g stroke="#5fc7a6" stroke-width="2" fill="none">
+      <path d="M637 243 L637 254"/>
+      <path d="M637 353 L637 364"/>
+    </g>
+
+    <!-- fan-out arrows -->
+    <g stroke="#90adc2" stroke-width="2" fill="none" marker-end="url(#a)">
+      <path d="M834 408 C860 408 860 160 892 160"/>
+      <path d="M834 408 C866 408 866 226 892 226"/>
+      <path d="M834 408 C872 408 872 292 892 292"/>
+      <path d="M834 408 C878 408 878 358 892 358"/>
+      <path d="M834 408 C884 408 884 424 892 424"/>
+    </g>
+
+    <!-- backends -->
+    <g font-size="14">
+      <rect x="896" y="134" width="254" height="52" rx="12" fill="#17283d" stroke="#75a8d5" stroke-opacity=".7"/>
+      <text x="914" y="157" fill="#fff" font-weight="700">Traces</text>
+      <text x="914" y="176" fill="#a9bdd0" font-size="13">Jaeger, Grafana Tempo</text>
+
+      <rect x="896" y="200" width="254" height="52" rx="12" fill="#17283d" stroke="#75a8d5" stroke-opacity=".7"/>
+      <text x="914" y="223" fill="#fff" font-weight="700">Metrics</text>
+      <text x="914" y="242" fill="#a9bdd0" font-size="13">Prometheus, Mimir</text>
+
+      <rect x="896" y="266" width="254" height="52" rx="12" fill="#17283d" stroke="#75a8d5" stroke-opacity=".7"/>
+      <text x="914" y="289" fill="#fff" font-weight="700">Logs</text>
+      <text x="914" y="308" fill="#a9bdd0" font-size="13">Loki, Elasticsearch, ClickHouse</text>
+
+      <rect x="896" y="332" width="254" height="52" rx="12" fill="#17283d" stroke="#75a8d5" stroke-opacity=".7"/>
+      <text x="914" y="355" fill="#fff" font-weight="700">All-in-one platforms</text>
+      <text x="914" y="374" fill="#a9bdd0" font-size="13">Datadog, Honeycomb, New Relic</text>
+
+      <rect x="896" y="398" width="254" height="52" rx="12" fill="#22223d" stroke="#a99bf0"/>
+      <text x="914" y="421" fill="#fff" font-weight="700">LLM observability</text>
+      <text x="914" y="440" fill="#ddd7fb" font-size="13">Langfuse, Phoenix, LangSmith</text>
+    </g>
+
+    <text x="600" y="512" fill="#a6e3cf" font-size="16" text-anchor="middle">Instrument once. Change the backend by editing Collector config, not application code.</text>
+  </g>
+</svg>

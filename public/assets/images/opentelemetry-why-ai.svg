@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" role="img" aria-labelledby="title desc">
+  <title id="title">Why OpenTelemetry matters for AI systems</title>
+  <desc id="desc">Two sides. On the left, before a standard: each framework, model provider and LLM observability vendor has its own tracing SDK and data format, so switching tools means re-instrumenting, and agent traces cannot be joined with the rest of the system's traces. On the right, with OpenTelemetry: agent frameworks, LLM client libraries and your own services all emit the same OTLP data with gen_ai attributes into one Collector, which feeds whatever backends you choose. Six questions this lets you answer: what did this run cost, where did the time go, is the agent looping, which tool fails most, what changed after a prompt or model update, and who or what did this, for audit.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+    <marker id="r" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#e0705f" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="500" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Why it matters for AI</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Agents are distributed systems that make decisions. You need to see them like one.</text>
+
+    <!-- Before -->
+    <rect x="50" y="115" width="520" height="210" rx="18" fill="#2a1a1f" stroke="#e0705f" stroke-opacity=".7"/>
+    <text x="72" y="146" fill="#fff" font-size="18" font-weight="700">Without a standard</text>
+    <g font-size="13.5">
+      <rect x="72" y="166" width="140" height="34" rx="8" fill="#3a2329"/><text x="142" y="188" fill="#f4c9c1" text-anchor="middle">Framework A SDK</text>
+      <rect x="72" y="210" width="140" height="34" rx="8" fill="#3a2329"/><text x="142" y="232" fill="#f4c9c1" text-anchor="middle">Framework B SDK</text>
+      <rect x="72" y="254" width="140" height="34" rx="8" fill="#3a2329"/><text x="142" y="276" fill="#f4c9c1" text-anchor="middle">Your services</text>
+      <rect x="370" y="166" width="180" height="34" rx="8" fill="#3a2329"/><text x="460" y="188" fill="#f4c9c1" text-anchor="middle">Vendor X (format X)</text>
+      <rect x="370" y="210" width="180" height="34" rx="8" fill="#3a2329"/><text x="460" y="232" fill="#f4c9c1" text-anchor="middle">Vendor Y (format Y)</text>
+      <rect x="370" y="254" width="180" height="34" rx="8" fill="#3a2329"/><text x="460" y="276" fill="#f4c9c1" text-anchor="middle">APM tool</text>
+    </g>
+    <g stroke="#e0705f" stroke-width="1.8" fill="none" marker-end="url(#r)">
+      <path d="M214 183 L366 183"/>
+      <path d="M214 227 L366 227"/>
+      <path d="M214 271 L366 271"/>
+    </g>
+    <text x="72" y="312" fill="#f4c9c1" font-size="13.5">Switch vendor = re-instrument. Agent traces live apart from the rest.</text>
+
+    <!-- After -->
+    <rect x="630" y="115" width="520" height="210" rx="18" fill="#132b27" stroke="#5fc7a6"/>
+    <text x="652" y="146" fill="#fff" font-size="18" font-weight="700">With OpenTelemetry</text>
+    <g font-size="13.5">
+      <rect x="652" y="166" width="140" height="34" rx="8" fill="#1b3a34"/><text x="722" y="188" fill="#cdeee2" text-anchor="middle">Agent frameworks</text>
+      <rect x="652" y="210" width="140" height="34" rx="8" fill="#1b3a34"/><text x="722" y="232" fill="#cdeee2" text-anchor="middle">LLM clients</text>
+      <rect x="652" y="254" width="140" height="34" rx="8" fill="#1b3a34"/><text x="722" y="276" fill="#cdeee2" text-anchor="middle">Your services</text>
+      <rect x="846" y="196" width="122" height="62" rx="10" fill="#0f3a4a" stroke="#5ec4e0"/><text x="907" y="222" fill="#fff" text-anchor="middle" font-weight="700">Collector</text><text x="907" y="242" fill="#bfe8f4" font-size="12" text-anchor="middle">OTLP + gen_ai.*</text>
+      <rect x="1010" y="196" width="120" height="62" rx="10" fill="#1b3a34"/><text x="1070" y="222" fill="#cdeee2" text-anchor="middle">any</text><text x="1070" y="242" fill="#cdeee2" text-anchor="middle">backend(s)</text>
+    </g>
+    <g stroke="#90adc2" stroke-width="1.8" fill="none" marker-end="url(#a)">
+      <path d="M794 183 C820 183 822 218 846 220"/>
+      <path d="M794 227 L846 227"/>
+      <path d="M794 271 C820 271 822 236 846 234"/>
+      <path d="M970 227 L1006 227"/>
+    </g>
+    <text x="652" y="312" fill="#cdeee2" font-size="13.5">One trace from user request → agent → model → tool → database.</text>
+
+    <!-- questions -->
+    <text x="50" y="368" fill="#fff" font-size="17" font-weight="700">Questions you can finally answer</text>
+    <g font-size="14.5">
+      <rect x="50" y="384" width="355" height="40" rx="10" fill="#17283d"/><text x="68" y="410" fill="#d4e6f7">What did this run cost?</text>
+      <rect x="422" y="384" width="355" height="40" rx="10" fill="#17283d"/><text x="440" y="410" fill="#d4e6f7">Where did the time go?</text>
+      <rect x="794" y="384" width="356" height="40" rx="10" fill="#17283d"/><text x="812" y="410" fill="#d4e6f7">Is the agent looping?</text>
+      <rect x="50" y="436" width="355" height="40" rx="10" fill="#17283d"/><text x="68" y="462" fill="#d4e6f7">Which tool fails most?</text>
+      <rect x="422" y="436" width="355" height="40" rx="10" fill="#17283d"/><text x="440" y="462" fill="#d4e6f7">What changed after a model swap?</text>
+      <rect x="794" y="436" width="356" height="40" rx="10" fill="#17283d"/><text x="812" y="462" fill="#d4e6f7">Who or what did this? (audit)</text>
+    </g>
+  </g>
+</svg>
