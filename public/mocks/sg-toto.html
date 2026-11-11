@@ -2246,7 +2246,7 @@ function setData(draws, source) {
 }
 async function loadData() {
   let bundled = null;
-  try { const r = await fetch('data/sg-toto.json'); if (!r.ok) throw new Error(r.status); bundled = (await r.json()).draws.map(fromCompact); } catch { /* fall back to stored */ }
+  try { const r = await fetch('data/sg-toto.json', { cache: 'no-cache' }); if (!r.ok) throw new Error(r.status); bundled = (await r.json()).draws.map(fromCompact); } catch { /* fall back to stored */ }
   const kept = await store.get('data');
   const stored = kept?.draws?.length ? kept.draws.map(fromCompact) : null;
   // a stored CSV wins only while it is newer than the bundle
