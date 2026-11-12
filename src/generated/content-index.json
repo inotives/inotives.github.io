@@ -1,6 +1,26 @@
 {
   "posts": [
     {
+      "slug": "2026-11-12-tracing-one-agent-run-opentelemetry",
+      "filename": "2026-11-12-tracing-one-agent-run-opentelemetry.md",
+      "category": "post",
+      "title": "Tracing one agent run end to end with OpenTelemetry",
+      "date": "2026-11-12",
+      "tags": [
+        "opentelemetry",
+        "observability",
+        "ai-agents",
+        "llm-ops",
+        "tracing",
+        "grafana",
+        "claude-api"
+      ],
+      "series": null,
+      "summary": "A hands-on follow-up to the OpenTelemetry explainer. I built a small crypto agent on the Claude API, sent its telemetry to a local Grafana stack, and ran it until something broke. The Anthropic Python SDK now emits its own spans, so adding a third-party instrumentor doubled every model call. About twenty lines of manual spans turned scattered spans into one trace per run. The traces then showed things the final answer hides: a rate-limited tool made the failed run the most expensive one, the agent ignored a 'one at a time' instruction, and the same failure cost different amounts on different runs. Every number in this note comes from real spans.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-10-what-is-opentelemetry",
       "filename": "2026-11-10-what-is-opentelemetry.md",
       "category": "post",
