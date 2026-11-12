@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" role="img" aria-labelledby="title desc">
+  <title id="title">What each traced run cost</title>
+  <desc id="desc">Left: cost per run, worked out from the gen_ai token attributes at 2 dollars per million input tokens and 10 dollars per million output tokens for Claude Sonnet 5.5. Clean two-coin question: 3 turns, 4.1 seconds, 0.70 cents. Same question with an injected 3-second tool timeout: 4 turns, 8.0 seconds, 0.95 cents. Four-coin portfolio question while CoinGecko was rate-limiting: 6 turns, 12.3 seconds, 3.11 cents, and no answer. The same portfolio question after the rate limit cleared: 5 turns, 10.7 seconds, 2.57 cents, with a full answer. The failed run was the most expensive. Right: input tokens per model call in the two portfolio runs. In the rate-limited run input grows from 608 to 2,387 tokens over six calls, each call re-sending the growing history of failed tool results; the successful run grows from 608 to 2,049 over five calls.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+  </defs>
+  <rect width="1200" height="640" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">What the traces say each run cost</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Sum of gen_ai.usage.* on the model-call spans, at Sonnet 5.5 list price ($2 / $10 per million tokens).</text>
+
+    <!-- left: cost bars. scale: 3.2 cents = 360px -->
+    <text x="45" y="132" fill="#d9e4ee" font-size="17" font-weight="700">Cost per run (US cents)</text>
+    <g font-size="14">
+      <text x="45" y="178" fill="#d9e4ee" font-weight="700">Clean question</text>
+      <text x="45" y="198" fill="#8aa1b6" font-size="12.5">3 turns · 4.1s · 2,227 in / 250 out</text>
+      <rect x="275" y="168" width="79" height="26" rx="5" fill="#5fc7a6"/>
+      <text x="362" y="187" fill="#cdeee2" font-weight="700">0.70¢</text>
+
+      <text x="45" y="258" fill="#d9e4ee" font-weight="700">Tool timeout (injected)</text>
+      <text x="45" y="278" fill="#8aa1b6" font-size="12.5">4 turns · 8.0s · 3,185 in / 308 out</text>
+      <rect x="275" y="248" width="107" height="26" rx="5" fill="#f0b35e"/>
+      <text x="390" y="267" fill="#fbe3bf" font-weight="700">0.95¢</text>
+
+      <text x="45" y="338" fill="#d9e4ee" font-weight="700">Portfolio, rate-limited</text>
+      <text x="45" y="358" fill="#8aa1b6" font-size="12.5">6 turns · 12.3s · 10,594 in / 996 out</text>
+      <rect x="275" y="328" width="350" height="26" rx="5" fill="#f08a8a"/>
+      <text x="633" y="347" fill="#fbd0d0" font-weight="700">3.11¢</text>
+      <text x="275" y="374" fill="#f08a8a" font-size="12.5">no prices, no answer</text>
+
+      <text x="45" y="418" fill="#d9e4ee" font-weight="700">Portfolio, after cooldown</text>
+      <text x="45" y="438" fill="#8aa1b6" font-size="12.5">5 turns · 10.7s · 7,103 in / 1,149 out</text>
+      <rect x="275" y="408" width="289" height="26" rx="5" fill="#5ec4e0"/>
+      <text x="572" y="427" fill="#e3f6fb" font-weight="700">2.57¢</text>
+      <text x="275" y="454" fill="#5ec4e0" font-size="12.5">full answer</text>
+    </g>
+    <rect x="45" y="490" width="610" height="104" rx="12" fill="#2a1d24" stroke="#f08a8a" stroke-opacity=".6"/>
+    <text x="65" y="522" fill="#fbd0d0" font-size="16" font-weight="700">The failed run cost the most.</text>
+    <text x="65" y="547" fill="#e3c3c3" font-size="14">Each retry re-sends the whole history, including every error</text>
+    <text x="65" y="568" fill="#e3c3c3" font-size="14">message. Without traces you see a bill, not why it went up.</text>
+
+    <!-- right: input tokens per call. x: call 1..6 at 760..1130 (74px), y: 0..2500 tokens = 560..180 -->
+    <text x="700" y="132" fill="#d9e4ee" font-size="17" font-weight="700">Input tokens per model call</text>
+    <g stroke="#2a4157" stroke-width="1">
+      <line x1="760" y1="560" x2="1140" y2="560"/>
+      <line x1="760" y1="484" x2="1140" y2="484"/>
+      <line x1="760" y1="408" x2="1140" y2="408"/>
+      <line x1="760" y1="332" x2="1140" y2="332"/>
+      <line x1="760" y1="256" x2="1140" y2="256"/>
+      <line x1="760" y1="180" x2="1140" y2="180"/>
+    </g>
+    <g fill="#7f97ad" font-size="12" text-anchor="end">
+      <text x="750" y="564">0</text>
+      <text x="750" y="488">500</text>
+      <text x="750" y="412">1,000</text>
+      <text x="750" y="336">1,500</text>
+      <text x="750" y="260">2,000</text>
+      <text x="750" y="184">2,500</text>
+    </g>
+    <g fill="#7f97ad" font-size="12" text-anchor="middle">
+      <text x="780" y="582">1</text><text x="852" y="582">2</text><text x="924" y="582">3</text>
+      <text x="996" y="582">4</text><text x="1068" y="582">5</text><text x="1140" y="582">6</text>
+      <text x="960" y="604">model call in the run</text>
+    </g>
+    <!-- rate-limited: 608 1499 1837 2047 2216 2387 ; y = 560 - t*0.152 -->
+    <polyline fill="none" stroke="#f08a8a" stroke-width="3" points="780,467.6 852,332.2 924,280.8 996,248.9 1068,223.2 1140,197.2"/>
+    <g fill="#f08a8a"><circle cx="780" cy="467.6" r="4.5"/><circle cx="852" cy="332.2" r="4.5"/><circle cx="924" cy="280.8" r="4.5"/><circle cx="996" cy="248.9" r="4.5"/><circle cx="1068" cy="223.2" r="4.5"/><circle cx="1140" cy="197.2" r="4.5"/></g>
+    <text x="1132" y="186" fill="#fbd0d0" font-size="13" text-anchor="end">rate-limited: 2,387</text>
+    <!-- ok: 608 1217 1573 1656 2049 -->
+    <polyline fill="none" stroke="#5ec4e0" stroke-width="3" points="780,467.6 852,375.0 924,320.9 996,308.3 1068,248.6"/>
+    <g fill="#5ec4e0"><circle cx="852" cy="375.0" r="4.5"/><circle cx="924" cy="320.9" r="4.5"/><circle cx="996" cy="308.3" r="4.5"/><circle cx="1068" cy="248.6" r="4.5"/></g>
+    <text x="960" y="348" fill="#e3f6fb" font-size="13" text-anchor="middle">after cooldown: 2,049 at call 5</text>
+  </g>
+</svg>
