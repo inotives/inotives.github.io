@@ -10,6 +10,11 @@ on:
       - 'index.html'
       - 'vite.config.js'
       - 'package.json'
+  # Weekdays after the US close (21:00 UTC in winter, 20:00 in summer): refreshes the
+  # stock-signals snapshot, since the page can't call Yahoo from github.io (no CORS).
+  schedule:
+    - cron: '30 22 * * 1-5'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -32,6 +37,12 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      # Fresh daily bars for the stock-signals mock. Goes into the deployed build only; if
+      # Yahoo refuses the runner, the committed snapshot ships instead.
+      - name: Refresh stock-signals snapshot
+        run: npm run stocks
+        continue-on-error: true
 
       - run: npm run build
 

@@ -3,7 +3,7 @@
 //   npm run stocks                     capture the default symbols
 //   npm run stocks -- NVDA AMD ^GSPC   capture these instead
 //
-// Fetches the last 60 completed daily sessions per symbol from the Yahoo Finance chart API (no
+// Fetches the last 120 completed daily sessions per symbol from the Yahoo Finance chart API (no
 // key needed server side; browsers are blocked by CORS, which is why the page needs a snapshot).
 // The parser lives in the mock itself, between the `// <yahoo-data>` markers, so this snapshot
 // and the page's "Sync data" share one data shape. Writes public/mocks/data/stock-signals.json.

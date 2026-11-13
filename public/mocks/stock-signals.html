@@ -6,24 +6,38 @@
 <meta name="color-scheme" content="dark" />
 <title>Next Open Signals</title>
 <!--
-  Next open signals: pulls the last 60 daily OHLCV bars for a stock symbol from Yahoo Finance and
+  Next open signals: pulls the last 120 daily OHLCV bars for a stock symbol from Yahoo Finance and
   reads them into common technical signals for the next market opening. Each signal votes bullish,
-  bearish or neutral; the votes add up to a bias, next to an expected opening range from the
+  bearish or neutral; the votes add up to a bias (equal votes by default; optionally weighted by the ADX regime: trend-following votes
+  count more in a trend, RSI and %B more in a range), next to an expected opening range from the
   stock's usual overnight gap and a day range from ATR.
 
   Views (tabs) change the overlays on the candlestick chart; volume, RSI and MACD panes stay:
   - Trend: SMA 10 / 20 and EMA 9 / 21, with SMA 10/20 crosses marked on the candles
   - Bands: Bollinger Bands (20, 2)
   - Levels: classic pivots (P, R1/R2, S1/S2) for the next session and the expected opening range
+  - Track record: replays the signals on every past session (using only the bars up to it) and
+    scores each call against the next open or close. Hit/miss dots on the candles; the RSI and MACD
+    panes give way to an equity pane (following the bias vs always long). The panel shows the
+    bias hit rate against the base rate, and each signal's own hit rate.
+  - Phase space (3D): every past session as a point in a space of three indicator readings you
+    pick (default: RSI 14, ADX 14, ATR % of price: momentum, trend strength, volatility),
+    coloured by whether the next open/close went up, sized by the move, joined in date order; today pulses. The 10 nearest past sessions to
+    today are linked and their up rate is set against the base rate. Click a point to see it on
+    the chart.
 
-  Charts: TradingView Lightweight Charts 5.2.1 (panes, candles, histogram, price lines).
+  Charts: TradingView Lightweight Charts 5.2.1 (panes, candles, histogram, price lines); Three.js
+  r180 for the phase space, imported only when that tab is first opened.
 
-  Data: Yahoo Finance chart API (query1.finance.yahoo.com/v8/finance/chart), daily bars, last 60
+  Data: Yahoo Finance chart API (query1.finance.yahoo.com/v8/finance/chart), daily bars, last 120
   completed sessions. Yahoo sends no CORS headers, so "Sync data" goes through, in order: the Vite
-  dev proxy (/yahoo, on localhost only), a proxy you set in the panel, then public CORS proxies.
-  A bundled snapshot in data/stock-signals.json, made by scripts/mocks/stock-signals/capture.mjs
-  (`npm run stocks`), is the fallback. Synced symbols are kept in IndexedDB. The Yahoo parser
-  between the `// <yahoo-data>` markers is shared with capture.mjs.
+  dev proxy (/yahoo, on localhost only), a proxy you set in the panel, then a fresh read of the
+  bundled snapshot in data/stock-signals.json. The snapshot is made by
+  scripts/mocks/stock-signals/capture.mjs (`npm run stocks`), which the deploy workflow runs every
+  weekday after the US close, so on github.io it is the live source. Free public CORS proxies are
+  not used: they were dead or rate-limited. Synced symbols are kept in IndexedDB; the newer of a
+  stored symbol and its snapshot copy is shown. The Yahoo parser between the `// <yahoo-data>`
+  markers is shared with capture.mjs.
 
   Signals are computed in the browser from daily bars only. Exchange holidays are not known, so
   the next session is the next weekday. A mock for learning, not trading advice.
@@ -35,6 +49,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
 <style type="text/tailwindcss">
   @theme {
     --color-background: #15171b;
@@ -67,8 +87,15 @@
   .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
   #drawer { --pg-panel-w: 380px; }   /* desktop panel width for this mock */
   /* the chart fills the free space right of the floating panel, above the legend */
-  #chart { position: absolute; top: 4.25rem; right: 1.5rem; bottom: 3.25rem; left: calc(var(--pg-panel-w, 380px) + 3rem); }
-  @media (max-width: 899px) { #chart { top: 3.75rem; left: 0.5rem; right: 0.5rem; bottom: 0.5rem; } }
+  #chart, #phase { position: absolute; top: 4.25rem; right: 1.5rem; bottom: 3.25rem; left: calc(var(--pg-panel-w, 380px) + 3rem); }
+  @media (max-width: 899px) { #chart, #phase { top: 3.75rem; left: 0.5rem; right: 0.5rem; bottom: 0.5rem; } }
+  #phase-gl { position: absolute; inset: 0; cursor: grab; }
+  #phase-gl:active { cursor: grabbing; }
+  .phase-labels { position: absolute; inset: 0; pointer-events: none; }
+  .plbl { font: 400 10px "Source Code Pro", monospace; color: #8b9099; white-space: nowrap; }
+  .plbl.name { font: 500 11px "IBM Plex Sans Condensed", sans-serif; color: #e4e1d8; }
+  .plbl.today { font: 500 11px "Source Code Pro", monospace; color: #1fefd7; margin-top: -26px; }
+  #phase-tip { position: absolute; z-index: 6; pointer-events: none; }
   #ohlc { position: absolute; z-index: 5; top: 4px; left: 8px; pointer-events: none; font: 400 11px "Source Code Pro", monospace; color: #8b9099; }
   #ohlc b { font-weight: 500; color: #e4e1d8; }
   .key { display: inline-block; width: 12px; height: 2px; margin-right: 5px; vertical-align: middle; border-radius: 1px; }
@@ -100,6 +127,11 @@
 <div class="fixed inset-0 overflow-hidden">
   <div id="stage" class="absolute inset-0">
     <div id="chart"><div id="ohlc"></div></div>
+    <div id="phase" hidden>
+      <div id="phase-gl"></div>
+      <div id="phase-ui" class="absolute left-2 top-2 z-[5] w-64 max-w-[calc(100%-1rem)] rounded-lg border bg-card/85 p-2.5 text-[11px] text-muted-foreground backdrop-blur"></div>
+      <div id="phase-tip" hidden class="rounded-md border bg-background/95 px-2 py-1.5 font-mono text-[11px] shadow-lg"></div>
+    </div>
   </div>
   <header class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-3 py-3 sm:px-6">
     <button id="drawer-btn" type="button" class="pg-drawer-btn pointer-events-auto size-9 shrink-0 items-center justify-center rounded-md border bg-background/80 text-base backdrop-blur hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-controls="drawer" aria-expanded="false" aria-label="Open the panel"><i class="fi fi-rr-menu-burger"></i></button>
@@ -109,7 +141,7 @@
     <form id="sym-form" class="pointer-events-auto flex items-center gap-2" autocomplete="off">
       <label for="sym" class="sr-only">Stock symbol</label>
       <input id="sym" name="sym" value="NVDA" maxlength="15" spellcheck="false" class="h-9 w-20 rounded-md border border-input bg-background/80 px-2.5 font-mono text-sm uppercase backdrop-blur placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:w-28" placeholder="NVDA" />
-      <button id="action" type="submit" class="inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-md border bg-background/80 px-3 text-sm font-medium backdrop-blur transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60" title="Pull the last 60 daily bars from Yahoo Finance"><i class="fi fi-rr-refresh text-primary"></i><span class="hidden sm:inline">Sync data</span></button>
+      <button id="action" type="submit" class="inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-md border bg-background/80 px-3 text-sm font-medium backdrop-blur transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60" title="Pull the last 120 daily bars from Yahoo Finance"><i class="fi fi-rr-refresh text-primary"></i><span class="hidden sm:inline">Sync data</span></button>
     </form>
   </header>
   <aside id="drawer" class="pg-drawer pg-float overflow-hidden rounded-xl border bg-card/90 shadow backdrop-blur" aria-label="Panel">
@@ -157,9 +189,9 @@
 // <yahoo-data>
 const YAHOO = {
   host: 'https://query1.finance.yahoo.com',
-  // 3 months of daily bars is ~63 sessions: enough for the last 60 completed ones
-  path: (symbol) => `/v8/finance/chart/${encodeURIComponent(symbol)}?range=3mo&interval=1d&includePrePost=false`,
-  keep: 60,
+  // 6 months of daily bars is ~126 sessions: enough for the last 120 completed ones (two quarters)
+  path: (symbol) => `/v8/finance/chart/${encodeURIComponent(symbol)}?range=6mo&interval=1d&includePrePost=false`,
+  keep: 120,
   // Chart JSON -> { symbol, name, exchange, currency, timezone, openAt, inSession, bars: [[date, o, h, l, c, v]] }.
   // A bar for a session still trading is dropped: signals read completed sessions only.
   parse(json, now = Date.now()) {
@@ -250,6 +282,27 @@ function bollinger(c, n = 20, k = 2) {
   const sd = c.map((_, i) => (mid[i] == null ? null : Math.sqrt(d3.mean(c.slice(i - n + 1, i + 1), (x) => (x - mid[i]) ** 2))));
   return { mid, upper: mid.map((m, i) => (m == null ? null : m + k * sd[i])), lower: mid.map((m, i) => (m == null ? null : m - k * sd[i])) };
 }
+// Wilder's ADX with +DI / −DI: trend strength (not direction) and which side is pushing
+function adx(b, n = 14) {
+  const out = { adx: b.map(() => null), pdi: b.map(() => null), mdi: b.map(() => null) };
+  if (b.length <= 2 * n) return out;
+  let tr = 0, pdm = 0, mdm = 0, a = 0;
+  const dx = [];
+  for (let i = 1; i < b.length; i++) {
+    const up = b[i].high - b[i - 1].high, down = b[i - 1].low - b[i].low;
+    const t = Math.max(b[i].high - b[i].low, Math.abs(b[i].high - b[i - 1].close), Math.abs(b[i].low - b[i - 1].close));
+    const p = up > down && up > 0 ? up : 0, m = down > up && down > 0 ? down : 0;
+    if (i <= n) { tr += t; pdm += p; mdm += m; if (i < n) continue; }
+    else { tr = tr - tr / n + t; pdm = pdm - pdm / n + p; mdm = mdm - mdm / n + m; }
+    const pdi = tr ? (100 * pdm) / tr : 0, mdi = tr ? (100 * mdm) / tr : 0;
+    out.pdi[i] = pdi; out.mdi[i] = mdi;
+    dx.push(pdi + mdi ? (100 * Math.abs(pdi - mdi)) / (pdi + mdi) : 0);
+    if (dx.length === n) a = d3.mean(dx);
+    else if (dx.length > n) a = (a * (n - 1) + dx.at(-1)) / n;
+    if (dx.length >= n) out.adx[i] = a;
+  }
+  return out;
+}
 function indicators(bars) {
   const c = bars.map((b) => b.close), v = bars.map((b) => b.volume);
   const e12 = ema(c, 12), e26 = ema(c, 26);
@@ -259,7 +312,7 @@ function indicators(bars) {
   const gaps = bars.slice(1).map((b, i) => (b.open - bars[i].close) / bars[i].close);
   return {
     sma10: sma(c, 10), sma20: sma(c, 20), ema9: ema(c, 9), ema21: ema(c, 21),
-    rsi: rsi(c), atr: atr(bars), bb: bollinger(c), volAvg: sma(v, 20), obv,
+    rsi: rsi(c), atr: atr(bars), bb: bollinger(c), volAvg: sma(v, 20), obv, dmi: adx(bars),
     macd, signal, hist: macd.map((m, i) => (m == null || signal[i] == null ? null : m - signal[i])), gaps,
   };
 }
@@ -295,6 +348,10 @@ function readSignals(bars, ind) {
   crossMa('Trend', 'EMA 9 / 21', ind.ema9, ind.ema21, 'EMA 9', 'EMA 21');
   const d20 = (c - ind.sma20[n]) / ind.sma20[n];
   add('Trend', 'Close vs SMA 20', pct(d20), Math.abs(d20) < 0.005 ? 0 : Math.sign(d20), Math.abs(d20) < 0.005 ? 'Sitting on its 20-day average' : `${d20 > 0 ? 'Above' : 'Below'} its 20-day average`);
+  const { adx: ax, pdi, mdi } = ind.dmi, A = ax[n], side = pdi[n] > mdi[n] ? '+DI' : '−DI';
+  if (A == null) add('Trend', 'ADX 14', '—', null, 'Not enough history');
+  else add('Trend', 'ADX 14', `${n1(A)} · ${n1(pdi[n])}/${n1(mdi[n])}`, A >= 20 ? Math.sign(pdi[n] - mdi[n]) : 0,
+    A >= 25 ? `Strong trend, ${side} leads${A > ax[n - 1] ? ' and strengthening' : ''}` : A >= 20 ? `Trend forming, ${side} leads` : 'No clear trend: ranging');
 
   const r = ind.rsi[n];
   add('Momentum', 'RSI 14', n1(r), r > 70 ? -1 : r < 30 ? 1 : Math.abs(r - 50) <= 5 ? 0 : Math.sign(r - 50),
@@ -322,18 +379,61 @@ function readSignals(bars, ind) {
 
   const pv = pivots(last), dp = (c - pv.P) / pv.P;
   add('Levels', 'Close vs pivot', pct(dp), Math.abs(dp) < 0.001 ? 0 : Math.sign(dp), dp > 0 ? "Closed in the upper part of the day's range" : "Closed in the lower part of the day's range");
-  return rows;
+
+  // ADX regime: in a trend, trend-following votes count more and mean-reversion votes less; in a range, the reverse
+  const regime = A == null ? 'Mixed' : A >= 25 ? 'Trending' : A <= 20 ? 'Ranging' : 'Mixed';
+  rows.forEach((r) => { r.kind = SIGNAL_KIND[r.name] || 'other'; r.w = REGIME_WEIGHT[regime][r.kind] ?? 1; });
+  return { rows, regime, adx: A };
+}
+const SIGNAL_KIND = { 'SMA 10 / 20': 'trend', 'EMA 9 / 21': 'trend', 'Close vs SMA 20': 'trend', 'ADX 14': 'trend', 'MACD 12·26·9': 'trend', 'RSI 14': 'revert', 'Bollinger %B': 'revert' };
+const REGIME_WEIGHT = { Trending: { trend: 1.5, revert: 0.5 }, Ranging: { trend: 0.5, revert: 1.5 }, Mixed: {} };
+const WEIGHTINGS = { adx: 'ADX-weighted', equal: 'Equal votes' };
+
+// the bias is the (weighted) average vote; ±0.25 or more leans one way
+const scoreOf = (rows, scheme) => {
+  const counted = rows.filter((r) => r.vote != null), w = (r) => (scheme === 'adx' ? r.w : 1);
+  return { counted, score: d3.sum(counted, (r) => w(r) * r.vote) / (d3.sum(counted, w) || 1) };
+};
+const lean = (score) => (score >= 0.25 ? 1 : score <= -0.25 ? -1 : 0);
+
+// ================= track record =================
+// Replays the signals on each past session using only the bars up to it (no look-ahead), then
+// records the next session's move from that close: to its open (the gap this page forecasts) and
+// to its close. MACD needs ~35 sessions before its histogram exists, so replays start there.
+const TRACK_START = 35;
+function backtest(bars) {
+  const calls = [];
+  for (let i = TRACK_START; i < bars.length - 1; i++) {
+    const past = bars.slice(0, i + 1), { rows } = readSignals(past, indicators(past));
+    const c = bars[i].close, nx = bars[i + 1];
+    const dir = Object.fromEntries(Object.keys(WEIGHTINGS).map((s) => [s, lean(scoreOf(rows, s).score)]));
+    calls.push({ time: bars[i].time, at: nx.time, dir, votes: rows.filter((r) => r.vote).map((r) => [r.name, r.vote]), move: { open: nx.open / c - 1, close: nx.close / c - 1 } });
+  }
+  return calls;
+}
+function trackStats(all, mode, scheme) {
+  const calls = all.map((c) => ({ ...c, dir: c.dir[scheme] }));
+  const mv = (c) => c.move[mode], right = (dir, c) => Math.sign(mv(c)) === dir;
+  const taken = calls.filter((c) => c.dir), bull = taken.filter((c) => c.dir > 0), bear = taken.filter((c) => c.dir < 0);
+  const sig = new Map();
+  calls.forEach((c) => c.votes.forEach(([name, v]) => { const s = sig.get(name) || { calls: 0, hits: 0 }; s.calls++; if (right(v, c)) s.hits++; sig.set(name, s); }));
+  let eq = 1, hold = 1;
+  const curve = calls.map((c) => { eq *= 1 + c.dir * mv(c); hold *= 1 + mv(c); return { time: c.at, eq: eq - 1, hold: hold - 1 }; });
+  return {
+    n: calls.length, from: calls[0]?.time, taken: taken.length, hits: taken.filter((c) => right(c.dir, c)).length,
+    up: calls.filter((c) => mv(c) > 0).length, bullN: bull.length, bullAvg: d3.mean(bull, mv), bearN: bear.length, bearAvg: d3.mean(bear, mv),
+    sig, curve, marks: taken.map((c) => ({ time: c.at, position: c.dir > 0 ? 'belowBar' : 'aboveBar', color: right(c.dir, c) ? B.good : B.bad, shape: 'circle', size: 0.5 })),
+  };
 }
 
 function analyse(data) {
   const bars = data.bars.map(([time, open, high, low, close, volume]) => ({ time, open, high, low, close, volume }));
-  const ind = indicators(bars), rows = readSignals(bars, ind), last = bars.at(-1), n = bars.length - 1;
-  const counted = rows.filter((r) => r.vote != null);
-  const score = d3.sum(counted, (r) => r.vote) / (counted.length || 1);
+  const ind = indicators(bars), { rows, regime, adx: adxNow } = readSignals(bars, ind), last = bars.at(-1), n = bars.length - 1;
+  const { counted, score } = scoreOf(rows, state.weighting);
   const absGap = ind.gaps.map(Math.abs), medGap = d3.median(absGap) || 0;
   return {
-    bars, ind, rows, last, score,
-    bias: score >= 0.25 ? 'Bullish' : score <= -0.25 ? 'Bearish' : 'Neutral',
+    bars, ind, rows, last, score, regime, adx: adxNow, track: backtest(bars),
+    bias: ['Bearish', 'Neutral', 'Bullish'][lean(score) + 1],
     tally: { bull: counted.filter((r) => r.vote > 0).length, bear: counted.filter((r) => r.vote < 0).length, flat: counted.filter((r) => r.vote === 0).length },
     pv: pivots(last), atr: ind.atr[n], medGap, upGaps: ind.gaps.filter((g) => g > 0).length / (ind.gaps.length || 1),
     next: nextWeekday(data.inSession || last.time),
@@ -341,8 +441,9 @@ function analyse(data) {
 }
 
 // ================= chart =================
-const VIEWS = { trend: { name: 'Trend', icon: 'fi-rr-chart-line-up' }, bands: { name: 'Bands', icon: 'fi-rr-chart-histogram' }, levels: { name: 'Levels', icon: 'fi-rr-layers' } };
-const state = { view: 'trend', data: null, a: null, source: '', syncedAt: null, proxy: '', snapshot: null, errors: [], syncing: false };
+const VIEWS = { trend: { name: 'Trend', icon: 'fi-rr-chart-line-up' }, bands: { name: 'Bands', icon: 'fi-rr-chart-histogram' }, levels: { name: 'Levels', icon: 'fi-rr-layers' }, track: { name: 'Track record', icon: 'fi-rr-bullseye-arrow' }, phase: { name: 'Phase space', icon: 'fi-rr-cube' } };
+const TRACK_MODES = { open: 'next open', close: 'next close' };
+const state = { view: 'trend', trackMode: 'open', weighting: 'equal', axes: { x: 'rsi', y: 'adx', z: 'atrp' }, data: null, a: null, source: '', syncedAt: null, proxy: '', snapshot: null, errors: [], syncing: false };
 let chart = null, S = {}, priceLines = [];
 const line = (arr, times) => arr.map((v, i) => (v == null ? null : { time: times[i], value: v })).filter(Boolean);
 
@@ -388,20 +489,33 @@ function drawChart() {
   S.crosses = markers;
   S.markers = LC.createSeriesMarkers(S.candles, markers);
 
-  // RSI pane
-  S.rsi = chart.addSeries(LC.LineSeries, { color: B.amber, lineWidth: 1.5, priceLineVisible: false, title: 'RSI 14', priceFormat: { type: 'custom', formatter: n1 } }, 1);
-  S.rsi.setData(line(a.ind.rsi, times));
-  [70, 30].forEach((p) => S.rsi.createPriceLine({ price: p, color: B.fog, lineWidth: 1, lineStyle: LC.LineStyle.Dashed, axisLabelVisible: false }));
-  // MACD pane
-  S.hist = chart.addSeries(LC.HistogramSeries, { priceLineVisible: false, lastValueVisible: false }, 2);
-  S.hist.setData(a.ind.hist.map((h, i) => (h == null ? null : { time: times[i], value: h, color: (h >= 0 ? B.good : B.bad) + (Math.abs(h) >= Math.abs(a.ind.hist[i - 1] ?? 0) ? 'cc' : '66') })).filter(Boolean));
-  S.macd = chart.addSeries(LC.LineSeries, { color: B.sky, lineWidth: 1.5, priceLineVisible: false, title: 'MACD' }, 2);
-  S.macd.setData(line(a.ind.macd, times));
-  S.sig = chart.addSeries(LC.LineSeries, { color: B.pink, lineWidth: 1, priceLineVisible: false, lastValueVisible: false }, 2);
-  S.sig.setData(line(a.ind.signal, times));
-  // price pane gets most of the height; RSI and MACD share the rest
+  S.trackMarks = [];
+  if (state.view === 'track') {
+    // hit (green) / miss (red) dots on the session each past call was about, and an equity pane:
+    // following the bias (long Bullish, short Bearish, flat Neutral) vs always long
+    const t = trackStats(a.track, state.trackMode, state.weighting), pf = { type: 'custom', formatter: d3.format('+.1%'), minMove: 0.0001 };
+    S.eq = chart.addSeries(LC.LineSeries, { color: B.signal, lineWidth: 2, priceLineVisible: false, title: 'Bias', priceFormat: pf }, 1);
+    S.eq.setData(t.curve.map((p) => ({ time: p.time, value: p.eq })));
+    S.eq.createPriceLine({ price: 0, color: B.fog, lineWidth: 1, lineStyle: LC.LineStyle.Dotted, axisLabelVisible: false });
+    S.hold = chart.addSeries(LC.LineSeries, { color: B.fog, lineWidth: 1.5, lineStyle: LC.LineStyle.Dashed, priceLineVisible: false, title: 'Long', priceFormat: pf }, 1);
+    S.hold.setData(t.curve.map((p) => ({ time: p.time, value: p.hold })));
+    S.trackMarks = t.marks;
+  } else {
+    // RSI pane
+    S.rsi = chart.addSeries(LC.LineSeries, { color: B.amber, lineWidth: 1.5, priceLineVisible: false, title: 'RSI 14', priceFormat: { type: 'custom', formatter: n1 } }, 1);
+    S.rsi.setData(line(a.ind.rsi, times));
+    [70, 30].forEach((p) => S.rsi.createPriceLine({ price: p, color: B.fog, lineWidth: 1, lineStyle: LC.LineStyle.Dashed, axisLabelVisible: false }));
+    // MACD pane
+    S.hist = chart.addSeries(LC.HistogramSeries, { priceLineVisible: false, lastValueVisible: false }, 2);
+    S.hist.setData(a.ind.hist.map((h, i) => (h == null ? null : { time: times[i], value: h, color: (h >= 0 ? B.good : B.bad) + (Math.abs(h) >= Math.abs(a.ind.hist[i - 1] ?? 0) ? 'cc' : '66') })).filter(Boolean));
+    S.macd = chart.addSeries(LC.LineSeries, { color: B.sky, lineWidth: 1.5, priceLineVisible: false, title: 'MACD' }, 2);
+    S.macd.setData(line(a.ind.macd, times));
+    S.sig = chart.addSeries(LC.LineSeries, { color: B.pink, lineWidth: 1, priceLineVisible: false, lastValueVisible: false }, 2);
+    S.sig.setData(line(a.ind.signal, times));
+  }
+  // price pane gets most of the height; RSI and MACD (or the equity pane) share the rest
   const panes = chart.panes();
-  [3, 1, 1.2].forEach((f, i) => { try { panes[i]?.setStretchFactor(f); } catch { /* older API */ } });
+  (state.view === 'track' ? [3, 1.6] : [3, 1, 1.2]).forEach((f, i) => { try { panes[i]?.setStretchFactor(f); } catch { /* older API */ } });
 
   chart.subscribeCrosshairMove((p) => ohlc(p?.time && p.seriesData.get(S.candles)));
   applyView();
@@ -421,7 +535,7 @@ function applyView() {
   const { a, view } = state;
   S.trend.forEach((s) => s.applyOptions({ visible: view === 'trend' }));
   S.bands.forEach((s) => s.applyOptions({ visible: view === 'bands' }));
-  S.markers.setMarkers(view === 'trend' ? S.crosses : []);
+  S.markers.setMarkers(view === 'trend' ? S.crosses : view === 'track' ? S.trackMarks : []);
   priceLines.forEach((l) => S.candles.removePriceLine(l)); priceLines = [];
   if (view === 'levels') {
     const c = a.last.close, pl = (price, color, title, lineStyle = LC.LineStyle.Solid) => priceLines.push(S.candles.createPriceLine({ price, color, title, lineStyle, lineWidth: 1, axisLabelVisible: true }));
@@ -433,14 +547,228 @@ function applyView() {
     trend: key(B.amber, 'SMA 10') + key(B.pink, 'SMA 20') + key(B.sky, 'EMA 9', true) + key(B.ink2, 'EMA 21', true) + `<div class="flex items-center gap-1"><span style="color:${B.good}">▲</span><span style="color:${B.bad}">▼</span> SMA 10/20 cross</div>`,
     bands: key(B.sky, 'Bollinger 20, 2σ') + key(B.fog, 'Middle (SMA 20)', true),
     levels: key(B.bad, 'Resistance R1, R2') + key(B.ink2, 'Pivot P', true) + key(B.good, 'Support S1, S2') + key(B.amber, 'Expected open range', true),
+    track: `<div class="flex items-center gap-1"><span style="color:${B.good}">●</span><span style="color:${B.bad}">●</span> call right / wrong (below: Bullish, above: Bearish)</div>` + key(B.signal, 'Following the bias') + key(B.fog, 'Always long', true),
   };
-  $('#legend').innerHTML = `<div class="flex flex-wrap items-center gap-x-3 gap-y-1"><span class="font-medium text-foreground">${VIEWS[view].name}</span>${keys[view]}<span>· panes: RSI 14, MACD · blank slot: ${dayFmt(a.next)}</span></div>`;
+  const panesNote = view === 'track' ? `pane: return to the ${TRACK_MODES[state.trackMode]}` : 'panes: RSI 14, MACD';
+  $('#legend').innerHTML = `<div class="flex flex-wrap items-center gap-x-3 gap-y-1"><span class="font-medium text-foreground">${VIEWS[view].name}</span>${keys[view]}<span>· ${panesNote} · blank slot: ${dayFmt(a.next)}</span></div>`;
 }
 
 const renderTabs = () => {
   $('#tabs').innerHTML = Object.entries(VIEWS).map(([k, v]) => `<button role="tab" data-tab="${k}" aria-label="${v.name}" aria-selected="${k === state.view}" data-state="${k === state.view ? 'active' : ''}" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"><i class="fi ${v.icon}"></i><span class="hidden sm:inline">${v.name}</span></button>`).join('');
 };
-$('#tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b && state.a) { state.view = b.dataset.tab; renderTabs(); applyView(); } });
+$('#tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b && state.a) {
+  const was = state.view; state.view = b.dataset.tab; renderTabs();
+  // Track record swaps the lower panes and Phase space swaps the whole stage: rebuild going in or out
+  if ([was, state.view].some((v) => v === 'track' || v === 'phase') && was !== state.view) showView(); else applyView();
+} });
+
+// shows the 2D chart or the 3D phase space for the current view
+function showView() {
+  const phase = state.view === 'phase';
+  $('#chart').hidden = phase; $('#phase').hidden = !phase;
+  if (phase) drawPhase(); else { stopPhase(); drawChart(); }
+}
+
+// ================= phase space (3D) =================
+// Indicator readings a session can be placed by. All are causal (use bars up to i only).
+const FEATURES = {
+  d20: { name: 'Close vs SMA 20', kind: 'trend', fmt: pct, get: (a, i) => (a.ind.sma20[i] == null ? null : a.bars[i].close / a.ind.sma20[i] - 1) },
+  roc10: { name: '10-day return', kind: 'trend', fmt: pct, get: (a, i) => (i < 10 ? null : a.bars[i].close / a.bars[i - 10].close - 1) },
+  macd: { name: 'MACD hist, % of price', kind: 'trend', fmt: d3.format('+.2%'), get: (a, i) => (a.ind.hist[i] == null ? null : a.ind.hist[i] / a.bars[i].close) },
+  rsi: { name: 'RSI 14', kind: 'momentum', fmt: n1, get: (a, i) => a.ind.rsi[i] },
+  pb: { name: 'Bollinger %B', kind: 'momentum', fmt: (v) => n1(v * 100), get: (a, i) => { const { upper: u, lower: l } = a.ind.bb; return u[i] == null ? null : (a.bars[i].close - l[i]) / (u[i] - l[i]); } },
+  adx: { name: 'ADX 14', kind: 'regime', fmt: n1, get: (a, i) => a.ind.dmi.adx[i] },
+  bw: { name: 'Bollinger bandwidth', kind: 'regime', fmt: pct1, get: (a, i) => { const { upper: u, lower: l, mid: m } = a.ind.bb; return m[i] == null ? null : (u[i] - l[i]) / m[i]; } },
+  atrp: { name: 'ATR, % of price', kind: 'regime', fmt: pct1, get: (a, i) => (a.ind.atr[i] == null ? null : a.ind.atr[i] / a.bars[i].close) },
+  vr: { name: 'Volume vs 20-day', kind: 'volume', fmt: (v) => `${n1(v)}×`, get: (a, i) => (a.ind.volAvg[i] ? a.bars[i].volume / a.ind.volAvg[i] : null) },
+};
+const AXIS_ROLE = { x: 'X, left–right', y: 'Y, up', z: 'Z, depth' };
+const NEAREST = 10;
+let P = null;
+
+async function phaseInit() {
+  if (P) return P;
+  const THREE = await import('three');
+  const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+  const { CSS2DRenderer, CSS2DObject } = await import('three/addons/renderers/CSS2DRenderer.js');
+  const host = $('#phase-gl');
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  host.appendChild(renderer.domElement);
+  const labels = new CSS2DRenderer(); labels.domElement.className = 'phase-labels'; host.appendChild(labels.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100); camera.position.set(3.9, 2.6, 4.5);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  Object.assign(controls, { enableDamping: true, autoRotate: true, autoRotateSpeed: 0.5, minDistance: 2.5, maxDistance: 10 });
+  controls.addEventListener('start', () => { controls.autoRotate = false; });
+  scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.8); sun.position.set(3, 5, 4); scene.add(sun);
+  const resize = () => {
+    const w = host.clientWidth, h = host.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h); labels.setSize(w, h); camera.aspect = w / h;
+    // on wide stages, centre the cube in the space right of the controls card
+    const shift = w > 760 ? -($('#phase-ui').offsetWidth + 8) / 2 : 0;
+    camera.setViewOffset(w, h, shift, 0, w, h);
+    camera.updateProjectionMatrix();
+  };
+  new ResizeObserver(resize).observe(host);
+  P = { THREE, CSS2DObject, renderer, labels, scene, camera, controls, resize, ray: new THREE.Raycaster(), ndc: new THREE.Vector2(), group: null, hits: [], running: false };
+
+  // hover shows a session; a click (not a drag) jumps the 2D chart to it
+  const pick = (e) => {
+    const r = renderer.domElement.getBoundingClientRect();
+    P.ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    P.ray.setFromCamera(P.ndc, camera);
+    const hit = P.ray.intersectObjects(P.hits, false)[0];
+    if (!hit) return null;
+    return hit.object.isInstancedMesh ? hit.object.userData.pts[hit.instanceId] : hit.object.userData.pt;
+  };
+  let down = null;
+  renderer.domElement.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; });
+  renderer.domElement.addEventListener('pointerup', (e) => {
+    if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 5) { const pt = pick(e); if (pt) jumpTo(pt.time); }
+    down = null;
+  });
+  renderer.domElement.addEventListener('pointerleave', () => { $('#phase-tip').hidden = true; });
+  renderer.domElement.addEventListener('pointermove', (e) => {
+    const pt = pick(e), tip = $('#phase-tip');
+    if (!pt) { tip.hidden = true; renderer.domElement.style.cursor = ''; return; }
+    renderer.domElement.style.cursor = 'pointer';
+    const ax = ['x', 'y', 'z'].map((k) => FEATURES[state.axes[k]]);
+    tip.innerHTML = `<div class="font-sans font-medium text-foreground">${dayFmt(pt.time, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}${pt.move == null ? ' · today' : ''}</div>`
+      + ax.map((f, k) => `<div class="flex justify-between gap-3"><span class="text-muted-foreground">${f.name}</span><span>${f.fmt(pt.v[k])}</span></div>`).join('')
+      + (pt.move == null ? `<div class="text-muted-foreground">next ${state.trackMode}: to come</div>` : `<div class="flex justify-between gap-3"><span class="text-muted-foreground">next ${state.trackMode}</span><span style="color:${pt.move >= 0 ? B.good : B.bad}">${pct(pt.move)}</span></div>`)
+      + '<div class="mt-0.5 font-sans text-[10px] text-muted-foreground">Click to see it on the chart</div>';
+    const host = $('#phase').getBoundingClientRect();
+    let x = e.clientX - host.left + 14, y = e.clientY - host.top + 14;
+    tip.hidden = false;
+    if (x + tip.offsetWidth > host.width - 4) x -= tip.offsetWidth + 28;
+    if (y + tip.offsetHeight > host.height - 4) y -= tip.offsetHeight + 28;
+    tip.style.left = `${x}px`; tip.style.top = `${y}px`;
+  });
+  return P;
+}
+
+function phaseLoop() {
+  if (!P?.running) return;
+  requestAnimationFrame(phaseLoop);
+  P.controls.update();
+  if (P.today) P.today.scale.setScalar(1 + 0.22 * Math.sin(performance.now() / 280));
+  P.renderer.render(P.scene, P.camera); P.labels.render(P.scene, P.camera);
+}
+function stopPhase() { if (P) P.running = false; $('#phase-tip').hidden = true; }
+
+async function drawPhase() {
+  const { a } = state;
+  if (!a) return;
+  if (!P) $('#phase-ui').innerHTML = 'Loading Three.js…';
+  try { await phaseInit(); } catch (err) { $('#phase-ui').innerHTML = `<span class="text-danger">Couldn't load Three.js: ${esc(err.message)}</span>`; return; }
+  if (state.view !== 'phase') return;
+  const { THREE, CSS2DObject, scene } = P;
+  if (P.group) {
+    scene.remove(P.group);
+    P.group.traverse((o) => { o.geometry?.dispose(); o.material?.dispose(); if (o.isCSS2DObject) o.element.remove(); });
+  }
+  const g = (P.group = new THREE.Group()); scene.add(g);
+  P.hits = []; P.today = null;
+
+  // points: each replayed session (with its next move) plus today (move still to come)
+  const n = a.bars.length - 1, mode = state.trackMode, keys = ['x', 'y', 'z'], ax = keys.map((k) => FEATURES[state.axes[k]]);
+  const pts = [];
+  for (let i = TRACK_START; i <= n; i++) {
+    const v = ax.map((f) => f.get(a, i));
+    if (v.some((x) => x == null || !Number.isFinite(x))) continue;
+    pts.push({ i, time: a.bars[i].time, v, move: i < n ? a.track[i - TRACK_START].move[mode] : null });
+  }
+  const today = pts.at(-1)?.i === n ? pts.at(-1) : null, past = pts.filter((p) => p.move != null);
+  const ext = keys.map((_, k) => d3.extent(pts, (p) => p.v[k]));
+  const norm = (val, k) => (ext[k][1] === ext[k][0] ? 0 : ((val - ext[k][0]) / (ext[k][1] - ext[k][0])) * 2 - 1);
+  pts.forEach((p) => { p.p = new THREE.Vector3(norm(p.v[0], 0), norm(p.v[1], 1), norm(p.v[2], 2)); });
+
+  // frame: cube, floor grid, axis names and ranges
+  g.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(2, 2, 2)), new THREE.LineBasicMaterial({ color: B.line })));
+  const grid = new THREE.GridHelper(2, 8, B.line, '#1f2228'); grid.position.y = -1; g.add(grid);
+  const lbl = (text, pos, cls = '') => { const d = document.createElement('div'); d.className = `plbl ${cls}`; d.textContent = text; const o = new CSS2DObject(d); o.position.copy(pos); g.add(o); return o; };
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  lbl(`${ax[0].name} →`, V(0, -1.22, 1.22), 'name'); lbl(ax[0].fmt(ext[0][0]), V(-1, -1.1, 1.12)); lbl(ax[0].fmt(ext[0][1]), V(1, -1.1, 1.12));
+  lbl(`↑ ${ax[1].name}`, V(-1.12, 1.16, 1.12), 'name'); lbl(ax[1].fmt(ext[1][0]), V(-1.16, -1, 1.12)); lbl(ax[1].fmt(ext[1][1]), V(-1.16, 1, 1.12));
+  lbl(`${ax[2].name} →`, V(1.3, -1.22, 0), 'name'); lbl(ax[2].fmt(ext[2][0]), V(1.14, -1.1, 1)); lbl(ax[2].fmt(ext[2][1]), V(1.14, -1.1, -1));
+
+  // date-order path, brighter towards today
+  if (pts.length > 1) {
+    const geo = new THREE.BufferGeometry().setFromPoints(pts.map((p) => p.p));
+    const c0 = new THREE.Color(B.muted), c1 = new THREE.Color(B.fog), cols = [];
+    pts.forEach((_, k) => { const c = c0.clone().lerp(c1, k / (pts.length - 1)); cols.push(c.r, c.g, c.b); });
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+    g.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.7 })));
+  }
+
+  // past sessions: green if the next open/close was higher, red if lower; size grows with the move
+  const maxMove = d3.max(past, (p) => Math.abs(p.move)) || 1;
+  if (past.length) {
+    const mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 14, 10), new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.05 }), past.length);
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), good = new THREE.Color(B.good), bad = new THREE.Color(B.bad);
+    past.forEach((p, k) => {
+      const r = 0.022 + 0.05 * Math.sqrt(Math.abs(p.move) / maxMove);
+      mesh.setMatrixAt(k, m.compose(p.p, q, V(r, r, r)));
+      mesh.setColorAt(k, p.move >= 0 ? good : bad);
+    });
+    mesh.userData.pts = past; g.add(mesh); P.hits.push(mesh);
+  }
+
+  // today: pulsing, with a drop line to the floor and links to its nearest past sessions
+  let near = [];
+  if (today) {
+    const t = new THREE.Mesh(new THREE.SphereGeometry(0.06, 20, 14), new THREE.MeshStandardMaterial({ color: B.signal, emissive: B.signal, emissiveIntensity: 0.6 }));
+    t.position.copy(today.p); t.userData.pt = today; g.add(t); P.hits.push(t); P.today = t;
+    lbl('today', today.p.clone(), 'today');
+    g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([today.p, V(today.p.x, -1, today.p.z)]), new THREE.LineDashedMaterial({ color: B.signal, dashSize: 0.04, gapSize: 0.04, transparent: true, opacity: 0.6 })).computeLineDistances());
+    near = past.map((p) => ({ p, d: p.p.distanceTo(today.p) })).sort((x, y) => x.d - y.d).slice(0, NEAREST).map((x) => x.p);
+    const seg = near.flatMap((p) => [today.p, p.p]);
+    g.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(seg), new THREE.LineBasicMaterial({ color: B.signal, transparent: true, opacity: 0.35 })));
+  }
+
+  // controls and the nearest-neighbour read
+  const up = past.filter((p) => p.move > 0).length, nUp = near.filter((p) => p.move > 0).length;
+  const select = (k) => `<label class="flex items-center justify-between gap-2"><span>${AXIS_ROLE[k]}</span><select data-axis="${k}" class="h-6 w-36 rounded border border-input bg-background px-1 text-[11px] text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">${
+    d3.groups(Object.entries(FEATURES), ([, f]) => f.kind).map(([kind, fs]) => `<optgroup label="${kind}">${fs.map(([id, f]) => `<option value="${id}" ${state.axes[k] === id ? 'selected' : ''}>${f.name}</option>`).join('')}</optgroup>`).join('')}</select></label>`;
+  const rate = (x, nn) => (nn ? d3.format('.0%')(x / nn) : '—');
+  $('#phase-ui').innerHTML = `
+    <div class="mb-1.5 text-xs font-semibold text-foreground">Phase space · ${esc(state.data.symbol)}</div>
+    <div class="space-y-1">${keys.map(select).join('')}</div>
+    ${near.length ? `<div class="mt-2 border-t border-border/60 pt-2">
+      <div>The ${near.length} past sessions nearest today:</div>
+      <div class="mt-0.5"><span class="font-mono text-sm" style="color:${nUp / near.length >= up / past.length ? B.good : B.bad}">${nUp} of ${near.length}</span> had a higher ${TRACK_MODES[mode]} (${rate(nUp, near.length)} vs ${rate(up, past.length)} for all ${past.length})</div>
+      <div>avg next move <span class="font-mono" style="color:${d3.mean(near, (p) => p.move) >= 0 ? B.good : B.bad}">${pct(d3.mean(near, (p) => p.move))}</span>. With ${near.length} neighbours this is a hint, not a rule.</div>
+    </div>` : ''}
+    <div class="mt-2 text-[10px]">Drag to rotate, scroll to zoom. Axes are scaled to each reading's range.</div>`;
+
+  const key = (color, label) => `<div class="flex items-center gap-1"><span style="color:${color}">●</span>${label}</div>`;
+  $('#legend').innerHTML = `<div class="flex flex-wrap items-center gap-x-3 gap-y-1"><span class="font-medium text-foreground">Phase space</span>${key(B.good, `${TRACK_MODES[mode]} higher`)}${key(B.bad, `${TRACK_MODES[mode]} lower`)}<span>size = move</span>${key(B.signal, `today, linked to its ${NEAREST} nearest`)}<span>· ${past.length} sessions from ${dayFmt(past[0]?.time ?? a.last.time, { day: 'numeric', month: 'short' })}</span></div>`;
+
+  P.resize();
+  if (!P.running) { P.running = true; phaseLoop(); }
+}
+
+$('#phase-ui').addEventListener('change', (e) => {
+  const s = e.target.closest('[data-axis]');
+  if (s) { state.axes[s.dataset.axis] = s.value; drawPhase(); }
+});
+
+// from the phase space to the session on the candles
+function jumpTo(time) {
+  state.view = 'trend'; renderTabs(); showView();
+  const i = state.a.bars.findIndex((b) => b.time === time);
+  if (i < 0) return;
+  // mark the session on the candles (until the view changes) and centre it
+  S.markers.setMarkers([...S.crosses, { time, position: 'aboveBar', color: B.signal, shape: 'arrowDown', text: dayFmt(time, { day: 'numeric', month: 'short' }) }].sort((x, y) => (x.time < y.time ? -1 : 1)));
+  requestAnimationFrame(() => {
+    chart.timeScale().setVisibleLogicalRange({ from: i - 30, to: i + 30 });
+    ohlc(state.a.bars[i]);
+  });
+  toast(`${dayFmt(time)} on the chart`);
+}
 
 // ================= panel =================
 async function renderPanel() {
@@ -458,10 +786,10 @@ async function renderPanel() {
     <label for="proxy" class="mt-3 block text-[11px] text-muted-foreground">CORS proxy (optional). Yahoo blocks direct browser requests; use <span class="font-mono">{url}</span> for the encoded Yahoo URL.</label>
     <div class="mt-1 flex gap-1.5"><input id="proxy" value="${esc(state.proxy)}" spellcheck="false" placeholder="https://corsproxy.io/?key=…&url={url}" class="h-8 min-w-0 flex-1 rounded-md border border-input bg-background/60 px-2 font-mono text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" /><button id="proxy-save" type="button" class="h-8 rounded-md border px-2.5 text-xs hover:bg-accent">Save</button></div>
     <button id="clear" type="button" class="mt-3 inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"><i class="fi fi-rr-trash"></i>Clear stored data</button>`, 'fi-rr-database');
-  const about = section('About', `<p class="text-[11px] leading-relaxed text-muted-foreground">Daily bars from <a class="underline hover:text-primary" href="https://finance.yahoo.com/quote/${esc(data?.symbol || 'NVDA')}/history" target="_blank" rel="noopener">Yahoo Finance</a>, read into signals in your browser. Each signal votes; the bias is the average vote (±0.25 or more leans one way). Exchange holidays aren't known, so the next session is the next weekday. A learning mock, not trading advice.</p>`, 'fi-rr-info');
+  const about = section('About', `<p class="text-[11px] leading-relaxed text-muted-foreground">Daily bars from <a class="underline hover:text-primary" href="https://finance.yahoo.com/quote/${esc(data?.symbol || 'NVDA')}/history" target="_blank" rel="noopener">Yahoo Finance</a>, read into signals in your browser. Each signal votes; the bias is the average vote (±0.25 or more leans one way). With ADX weighting, trend-following votes count 1.5× and RSI/%B 0.5× when ADX ≥ 25 (trending), the reverse when ADX ≤ 20 (ranging). Exchange holidays aren't known, so the next session is the next weekday. A learning mock, not trading advice.</p>`, 'fi-rr-info');
 
   if (!a) {
-    $('#panel').innerHTML = `<h1 class="text-lg font-semibold leading-tight">Next open signals</h1><p class="mt-1 text-xs text-muted-foreground">Enter a symbol and press Sync data to pull its last 60 daily sessions from Yahoo Finance.</p>${settings}${about}`;
+    $('#panel').innerHTML = `<h1 class="text-lg font-semibold leading-tight">Next open signals</h1><p class="mt-1 text-xs text-muted-foreground">Enter a symbol and press Sync data to pull its last 120 daily sessions from Yahoo Finance.</p>${settings}${about}`;
     return;
   }
   const last = a.last, prev = a.bars.at(-2), ch = (last.close - prev.close) / prev.close;
@@ -469,7 +797,26 @@ async function renderPanel() {
   const stale = (Date.now() - new Date(`${last.time}T21:00:00Z`)) / 864e5 > 4;
   const openTime = data.openAt ? new Date(data.openAt * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: data.timezone, timeZoneName: 'short' }) : '';
   const vote = (v) => (v == null ? '<span class="text-muted-foreground">n/a</span>' : v > 0 ? '<span class="text-good">▲ bull</span>' : v < 0 ? '<span class="text-bad">▼ bear</span>' : '<span class="text-muted-foreground">● flat</span>');
-  const groups = d3.groups(a.rows, (r) => r.group).map(([g, rows]) => `<div class="mt-2 first:mt-0"><div class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">${g}</div><ul>${rows.map((r) => `<li class="border-b border-border/60 py-1.5 last:border-0"><div class="flex items-baseline justify-between gap-2"><span class="text-sm">${r.name}</span><span class="font-mono text-xs">${r.value}</span></div><div class="mt-0.5 flex items-baseline justify-between gap-2 text-[11px] text-muted-foreground"><span>${esc(r.note)}</span><span class="shrink-0 font-mono">${vote(r.vote)}</span></div></li>`).join('')}</ul></div>`).join('');
+  const t = trackStats(a.track, state.trackMode, state.weighting), mode = TRACK_MODES[state.trackMode];
+  const p0 = d3.format('.0%'), tone = (r) => (r >= 0.55 ? B.good : r <= 0.45 ? B.bad : B.ink2);
+  const record = (s) => (s ? `<div class="mt-0.5 text-[10px] text-muted-foreground">Right on the ${mode} <span class="font-mono" style="color:${tone(s.hits / s.calls)}">${p0(s.hits / s.calls)}</span> of ${s.calls} past calls</div>` : '');
+  const groups = d3.groups(a.rows, (r) => r.group).map(([g, rows]) => `<div class="mt-2 first:mt-0"><div class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">${g}</div><ul>${rows.map((r) => `<li class="border-b border-border/60 py-1.5 last:border-0"><div class="flex items-baseline justify-between gap-2"><span class="text-sm">${r.name}</span><span class="font-mono text-xs">${r.value}</span></div><div class="mt-0.5 flex items-baseline justify-between gap-2 text-[11px] text-muted-foreground"><span>${esc(r.note)}</span><span class="shrink-0 font-mono">${state.weighting === 'adx' && r.w !== 1 && r.vote != null ? `<span class="mr-1 text-[10px] ${r.w > 1 ? 'text-foreground' : 'text-muted-foreground/70'}">${r.w}×</span>` : ''}${vote(r.vote)}</span></div>${record(t.sig.get(r.name))}</li>`).join('')}</ul></div>`).join('');
+  const modeBtn = (m) => `<button type="button" data-track="${m}" aria-pressed="${state.trackMode === m}" class="h-6 rounded px-2 text-[11px] capitalize ${state.trackMode === m ? 'bg-background text-foreground shadow' : 'text-muted-foreground hover:text-foreground'}">${TRACK_MODES[m]}</button>`;
+  const avgMove = (x, n) => (n ? `<span style="color:${x >= 0 ? B.good : B.bad}">${pct(x)}</span>` : '—');
+  const end = t.curve.at(-1);
+  // the same replay under the other weighting, to show what the ADX regime adds
+  const otherKey = state.weighting === 'adx' ? 'equal' : 'adx', o = trackStats(a.track, state.trackMode, otherKey);
+  const compare = t.n ? `<p class="mt-1 text-[11px] text-muted-foreground">${WEIGHTINGS[otherKey]} instead: right ${o.taken ? p0(o.hits / o.taken) : '—'} of ${o.taken} calls, <span class="font-mono">${pct(o.curve.at(-1).eq)}</span>.</p>` : '';
+  const track = t.n ? `
+    <div class="mb-2 inline-flex rounded-md bg-muted p-0.5">${Object.keys(TRACK_MODES).map(modeBtn).join('')}</div>
+    <div class="grid grid-cols-2 gap-2">
+      ${kpi('Bias was right', t.taken ? `<span style="color:${tone(t.hits / t.taken)}">${p0(t.hits / t.taken)}</span>` : '—', `${t.hits} of ${t.taken} calls · ${t.n - t.taken} neutral`)}
+      ${kpi('Base rate', p0(t.up / t.n), `${mode} higher, ${t.n} sessions`)}
+      ${kpi('After Bullish', avgMove(t.bullAvg, t.bullN), `avg move, ${t.bullN} calls`)}
+      ${kpi('After Bearish', avgMove(t.bearAvg, t.bearN), `avg move, ${t.bearN} calls`)}
+    </div>
+    <p class="mt-2 text-[11px] leading-relaxed text-muted-foreground">Following the bias (long when Bullish, short when Bearish, close to ${mode}): <span class="font-mono" style="color:${end.eq >= 0 ? B.good : B.bad}">${pct(end.eq)}</span> vs always long <span class="font-mono">${pct(end.hold)}</span>, no costs. Replayed on ${t.n} sessions from ${dayFmt(t.from, { day: 'numeric', month: 'short' })}, each with only the bars up to it. Judge a hit rate against the base rate; under ~30 calls it is mostly noise.</p>${compare}`
+    : `<p class="text-[11px] text-muted-foreground">Needs more than ${TRACK_START + 1} sessions of history.</p>`;
   const lv = (k, v, color) => `<div class="flex justify-between font-mono text-xs"><span style="color:${color}">${k}</span><span>${f2(v)}</span><span class="w-14 text-right text-muted-foreground">${pct((v - last.close) / last.close)}</span></div>`;
 
   $('#panel').innerHTML = `
@@ -481,12 +828,17 @@ async function renderPanel() {
       <div class="mt-0.5 text-2xl font-semibold" style="color:${biasColor}">${a.bias}</div>
       <div class="relative mt-2 h-1.5 rounded-full" style="background:linear-gradient(90deg,${B.bad}88,${B.muted} 40%,${B.muted} 60%,${B.good}88)"><span class="absolute -top-1 h-3.5 w-1 -translate-x-1/2 rounded-sm bg-foreground" style="left:${(a.score + 1) * 50}%"></span></div>
       <div class="mt-1.5 text-[11px] text-muted-foreground"><span class="text-good">${a.tally.bull} bullish</span> · <span class="text-bad">${a.tally.bear} bearish</span> · ${a.tally.flat} neutral</div>
+      <div class="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-2">
+        <span class="text-[11px] text-muted-foreground">${a.adx == null ? 'ADX n/a' : `ADX ${n1(a.adx)}`} · <span class="text-foreground">${a.regime}</span>${state.weighting === 'adx' && a.regime !== 'Mixed' ? ` · ${a.regime === 'Trending' ? 'trend' : 'mean-reversion'} votes 1.5×` : ''}</span>
+        <div class="inline-flex rounded-md bg-muted p-0.5">${Object.entries(WEIGHTINGS).map(([k, v]) => `<button type="button" data-weighting="${k}" aria-pressed="${state.weighting === k}" class="h-6 rounded px-2 text-[11px] ${state.weighting === k ? 'bg-background text-foreground shadow' : 'text-muted-foreground hover:text-foreground'}">${v}</button>`).join('')}</div>
+      </div>
     </div>
     <div class="mt-3 grid grid-cols-2 gap-2">
       ${kpi('Expected open', `${f2(last.close * (1 - a.medGap))}–${f2(last.close * (1 + a.medGap))}`, `gap ±${pct1(a.medGap)} · ${d3.format('.0%')(a.upGaps)} gap up`)}
       ${kpi('Day range (ATR 14)', `${f2(last.close - a.atr)}–${f2(last.close + a.atr)}`, `ATR ${f2(a.atr)} · ${pct1(a.atr / last.close)} of price`)}
     </div>
     ${section('Signals', groups, 'fi-rr-chart-line-up')}
+    ${section('Track record', track, 'fi-rr-bullseye-arrow')}
     ${section(`Levels for ${dayFmt(a.next)}`, `<div class="space-y-1 rounded-lg border bg-background/40 p-2.5">${lv('R2', a.pv.R2, B.bad)}${lv('R1', a.pv.R1, B.bad)}${lv('P', a.pv.P, B.ink2)}${lv('S1', a.pv.S1, B.good)}${lv('S2', a.pv.S2, B.good)}</div><p class="mt-1 text-[11px] text-muted-foreground">Classic pivots from ${dayFmt(last.time)}'s high, low and close. Open the Levels tab to see them on the chart.</p>`, 'fi-rr-layers')}
     ${settings}${about}`;
 }
@@ -494,6 +846,10 @@ async function renderPanel() {
 $('#panel').addEventListener('click', async (e) => {
   const chip = e.target.closest('[data-sym]');
   if (chip) { $('#sym').value = chip.dataset.sym; await show(chip.dataset.sym); return; }
+  const wt = e.target.closest('[data-weighting]');
+  if (wt) { state.weighting = wt.dataset.weighting; state.a = analyse(state.data); showView(); renderPanel(); return; }
+  const tm = e.target.closest('[data-track]');
+  if (tm) { state.trackMode = tm.dataset.track; renderPanel(); if (state.view === 'track' || state.view === 'phase') showView(); return; }
   if (e.target.closest('#proxy-save')) { state.proxy = $('#proxy').value.trim(); await store.put('proxy', state.proxy); toast(state.proxy ? 'Proxy saved in this browser' : 'Proxy cleared'); return; }
   if (e.target.closest('#clear')) { await store.clear(); state.proxy = ''; state.errors = []; toast('Cleared synced symbols and settings from this browser'); await show(state.data?.symbol || 'NVDA'); }
 });
@@ -503,19 +859,24 @@ function use(data, source, syncedAt) {
   state.data = data; state.source = source; state.syncedAt = syncedAt;
   state.a = analyse(data);
   $('#sym').value = data.symbol;
-  drawChart(); renderPanel();
+  showView(); renderPanel();
 }
 
-// shows a symbol from this browser's store, else the bundled snapshot
+// shows a symbol from this browser's store or the bundled snapshot, whichever is newer
 async function show(symbol) {
   const saved = await store.get(`sym:${symbol}`);
-  if (saved) { use(saved.data, saved.source, saved.syncedAt); await store.put('last', symbol); return true; }
   const snap = state.snapshot?.symbols?.[symbol];
-  if (snap) { use(snap, 'Bundled snapshot', state.snapshot.capturedAt); return true; }
+  const snapAt = state.snapshot?.capturedAt;
+  if (saved && !(snap && new Date(snapAt) > new Date(saved.syncedAt))) { use(saved.data, saved.source, saved.syncedAt); await store.put('last', symbol); return true; }
+  if (snap) { use(snap, 'Bundled snapshot', snapAt); await store.put('last', symbol); return true; }
   return false;
 }
 
-const PUBLIC_PROXIES = ['https://api.allorigins.win/raw?url={url}', 'https://api.codetabs.com/v1/proxy/?quest={raw}'];
+// revalidates with the server, so a redeploy's fresh snapshot is never hidden by the HTTP cache
+async function loadSnapshot() {
+  try { const r = await fetch('data/stock-signals.json', { cache: 'no-cache' }); if (r.ok) state.snapshot = await r.json(); } catch { /* keep the last one */ }
+}
+
 const fill = (tpl, target) => (tpl.includes('{raw}') ? tpl.replace('{raw}', target) : tpl.includes('{url}') ? tpl.replace('{url}', encodeURIComponent(target)) : tpl + encodeURIComponent(target));
 
 async function sync(symbol) {
@@ -525,7 +886,6 @@ async function sync(symbol) {
   const routes = [];
   if (['localhost', '127.0.0.1'].includes(location.hostname)) routes.push({ name: 'Vite dev proxy', url: `/yahoo${path}` });
   if (state.proxy) routes.push({ name: 'your proxy', url: fill(state.proxy, target) });
-  PUBLIC_PROXIES.forEach((p) => routes.push({ name: new URL(p.split('?')[0]).host, url: fill(p, target) }));
   try {
     for (const r of routes) {
       try {
@@ -543,6 +903,20 @@ async function sync(symbol) {
         toast(`Synced ${data.symbol}: ${data.bars.length} sessions via ${r.name}`);
         return;
       } catch (e) { errors.push(`${r.name}: ${e.name === 'TimeoutError' ? 'timed out' : e.message}`); }
+    }
+    // no live route worked (on github.io there is none without your proxy): re-read the snapshot,
+    // which the deploy workflow refreshes every weekday
+    if (!errors.some((e) => e.startsWith('Yahoo:'))) {
+      await loadSnapshot();
+      const snap = state.snapshot?.symbols?.[symbol];
+      if (snap) {
+        state.errors = [];
+        await show(symbol);
+        toast(`${symbol}: daily snapshot from ${new Date(state.snapshot.capturedAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}`);
+        return;
+      }
+      const have = Object.keys(state.snapshot?.symbols || {}).join(', ');
+      errors.push(`${symbol} isn't in the daily snapshot${have ? ` (${have})` : ''}. Live Yahoo sync needs a CORS proxy here.`);
     }
     state.errors = errors;
     toast(`Couldn't sync ${symbol}. ${state.data ? 'Showing the last data.' : ''}`);
@@ -563,7 +937,7 @@ $('#sym-form').addEventListener('submit', (e) => {
 (async () => {
   renderTabs();
   state.proxy = (await store.get('proxy')) || '';
-  try { const r = await fetch('data/stock-signals.json'); if (r.ok) state.snapshot = await r.json(); } catch { /* no snapshot */ }
+  await loadSnapshot();
   const first = new URLSearchParams(location.search).get('symbol')?.toUpperCase() || (await store.get('last')) || 'NVDA';
   if (!(await show(first)) && !(await show('NVDA'))) renderPanel();
 })();
