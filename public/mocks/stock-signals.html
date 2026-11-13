@@ -8,7 +8,8 @@
 <!--
   Next open signals: pulls the last 120 daily OHLCV bars for a stock symbol from Yahoo Finance and
   reads them into common technical signals for the next market opening. Each signal votes bullish,
-  bearish or neutral; the votes add up to a bias, next to an expected opening range from the
+  bearish or neutral; the votes add up to a bias (equal votes by default; optionally weighted by the ADX regime: trend-following votes
+  count more in a trend, RSI and %B more in a range), next to an expected opening range from the
   stock's usual overnight gap and a day range from ATR.
 
   Views (tabs) change the overlays on the candlestick chart; volume, RSI and MACD panes stay:
@@ -257,6 +258,27 @@ function bollinger(c, n = 20, k = 2) {
   const sd = c.map((_, i) => (mid[i] == null ? null : Math.sqrt(d3.mean(c.slice(i - n + 1, i + 1), (x) => (x - mid[i]) ** 2))));
   return { mid, upper: mid.map((m, i) => (m == null ? null : m + k * sd[i])), lower: mid.map((m, i) => (m == null ? null : m - k * sd[i])) };
 }
+// Wilder's ADX with +DI / −DI: trend strength (not direction) and which side is pushing
+function adx(b, n = 14) {
+  const out = { adx: b.map(() => null), pdi: b.map(() => null), mdi: b.map(() => null) };
+  if (b.length <= 2 * n) return out;
+  let tr = 0, pdm = 0, mdm = 0, a = 0;
+  const dx = [];
+  for (let i = 1; i < b.length; i++) {
+    const up = b[i].high - b[i - 1].high, down = b[i - 1].low - b[i].low;
+    const t = Math.max(b[i].high - b[i].low, Math.abs(b[i].high - b[i - 1].close), Math.abs(b[i].low - b[i - 1].close));
+    const p = up > down && up > 0 ? up : 0, m = down > up && down > 0 ? down : 0;
+    if (i <= n) { tr += t; pdm += p; mdm += m; if (i < n) continue; }
+    else { tr = tr - tr / n + t; pdm = pdm - pdm / n + p; mdm = mdm - mdm / n + m; }
+    const pdi = tr ? (100 * pdm) / tr : 0, mdi = tr ? (100 * mdm) / tr : 0;
+    out.pdi[i] = pdi; out.mdi[i] = mdi;
+    dx.push(pdi + mdi ? (100 * Math.abs(pdi - mdi)) / (pdi + mdi) : 0);
+    if (dx.length === n) a = d3.mean(dx);
+    else if (dx.length > n) a = (a * (n - 1) + dx.at(-1)) / n;
+    if (dx.length >= n) out.adx[i] = a;
+  }
+  return out;
+}
 function indicators(bars) {
   const c = bars.map((b) => b.close), v = bars.map((b) => b.volume);
   const e12 = ema(c, 12), e26 = ema(c, 26);
@@ -266,7 +288,7 @@ function indicators(bars) {
   const gaps = bars.slice(1).map((b, i) => (b.open - bars[i].close) / bars[i].close);
   return {
     sma10: sma(c, 10), sma20: sma(c, 20), ema9: ema(c, 9), ema21: ema(c, 21),
-    rsi: rsi(c), atr: atr(bars), bb: bollinger(c), volAvg: sma(v, 20), obv,
+    rsi: rsi(c), atr: atr(bars), bb: bollinger(c), volAvg: sma(v, 20), obv, dmi: adx(bars),
     macd, signal, hist: macd.map((m, i) => (m == null || signal[i] == null ? null : m - signal[i])), gaps,
   };
 }
@@ -302,6 +324,10 @@ function readSignals(bars, ind) {
   crossMa('Trend', 'EMA 9 / 21', ind.ema9, ind.ema21, 'EMA 9', 'EMA 21');
   const d20 = (c - ind.sma20[n]) / ind.sma20[n];
   add('Trend', 'Close vs SMA 20', pct(d20), Math.abs(d20) < 0.005 ? 0 : Math.sign(d20), Math.abs(d20) < 0.005 ? 'Sitting on its 20-day average' : `${d20 > 0 ? 'Above' : 'Below'} its 20-day average`);
+  const { adx: ax, pdi, mdi } = ind.dmi, A = ax[n], side = pdi[n] > mdi[n] ? '+DI' : '−DI';
+  if (A == null) add('Trend', 'ADX 14', '—', null, 'Not enough history');
+  else add('Trend', 'ADX 14', `${n1(A)} · ${n1(pdi[n])}/${n1(mdi[n])}`, A >= 20 ? Math.sign(pdi[n] - mdi[n]) : 0,
+    A >= 25 ? `Strong trend, ${side} leads${A > ax[n - 1] ? ' and strengthening' : ''}` : A >= 20 ? `Trend forming, ${side} leads` : 'No clear trend: ranging');
 
   const r = ind.rsi[n];
   add('Momentum', 'RSI 14', n1(r), r > 70 ? -1 : r < 30 ? 1 : Math.abs(r - 50) <= 5 ? 0 : Math.sign(r - 50),
@@ -329,11 +355,21 @@ function readSignals(bars, ind) {
 
   const pv = pivots(last), dp = (c - pv.P) / pv.P;
   add('Levels', 'Close vs pivot', pct(dp), Math.abs(dp) < 0.001 ? 0 : Math.sign(dp), dp > 0 ? "Closed in the upper part of the day's range" : "Closed in the lower part of the day's range");
-  return rows;
-}
 
-// the bias is the average vote; ±0.25 or more leans one way
-const scoreOf = (rows) => { const counted = rows.filter((r) => r.vote != null); return { counted, score: d3.sum(counted, (r) => r.vote) / (counted.length || 1) }; };
+  // ADX regime: in a trend, trend-following votes count more and mean-reversion votes less; in a range, the reverse
+  const regime = A == null ? 'Mixed' : A >= 25 ? 'Trending' : A <= 20 ? 'Ranging' : 'Mixed';
+  rows.forEach((r) => { r.kind = SIGNAL_KIND[r.name] || 'other'; r.w = REGIME_WEIGHT[regime][r.kind] ?? 1; });
+  return { rows, regime, adx: A };
+}
+const SIGNAL_KIND = { 'SMA 10 / 20': 'trend', 'EMA 9 / 21': 'trend', 'Close vs SMA 20': 'trend', 'ADX 14': 'trend', 'MACD 12·26·9': 'trend', 'RSI 14': 'revert', 'Bollinger %B': 'revert' };
+const REGIME_WEIGHT = { Trending: { trend: 1.5, revert: 0.5 }, Ranging: { trend: 0.5, revert: 1.5 }, Mixed: {} };
+const WEIGHTINGS = { adx: 'ADX-weighted', equal: 'Equal votes' };
+
+// the bias is the (weighted) average vote; ±0.25 or more leans one way
+const scoreOf = (rows, scheme) => {
+  const counted = rows.filter((r) => r.vote != null), w = (r) => (scheme === 'adx' ? r.w : 1);
+  return { counted, score: d3.sum(counted, (r) => w(r) * r.vote) / (d3.sum(counted, w) || 1) };
+};
 const lean = (score) => (score >= 0.25 ? 1 : score <= -0.25 ? -1 : 0);
 
 // ================= track record =================
@@ -344,13 +380,15 @@ const TRACK_START = 35;
 function backtest(bars) {
   const calls = [];
   for (let i = TRACK_START; i < bars.length - 1; i++) {
-    const past = bars.slice(0, i + 1), rows = readSignals(past, indicators(past));
+    const past = bars.slice(0, i + 1), { rows } = readSignals(past, indicators(past));
     const c = bars[i].close, nx = bars[i + 1];
-    calls.push({ time: bars[i].time, at: nx.time, dir: lean(scoreOf(rows).score), votes: rows.filter((r) => r.vote).map((r) => [r.name, r.vote]), move: { open: nx.open / c - 1, close: nx.close / c - 1 } });
+    const dir = Object.fromEntries(Object.keys(WEIGHTINGS).map((s) => [s, lean(scoreOf(rows, s).score)]));
+    calls.push({ time: bars[i].time, at: nx.time, dir, votes: rows.filter((r) => r.vote).map((r) => [r.name, r.vote]), move: { open: nx.open / c - 1, close: nx.close / c - 1 } });
   }
   return calls;
 }
-function trackStats(calls, mode) {
+function trackStats(all, mode, scheme) {
+  const calls = all.map((c) => ({ ...c, dir: c.dir[scheme] }));
   const mv = (c) => c.move[mode], right = (dir, c) => Math.sign(mv(c)) === dir;
   const taken = calls.filter((c) => c.dir), bull = taken.filter((c) => c.dir > 0), bear = taken.filter((c) => c.dir < 0);
   const sig = new Map();
@@ -366,11 +404,11 @@ function trackStats(calls, mode) {
 
 function analyse(data) {
   const bars = data.bars.map(([time, open, high, low, close, volume]) => ({ time, open, high, low, close, volume }));
-  const ind = indicators(bars), rows = readSignals(bars, ind), last = bars.at(-1), n = bars.length - 1;
-  const { counted, score } = scoreOf(rows);
+  const ind = indicators(bars), { rows, regime, adx: adxNow } = readSignals(bars, ind), last = bars.at(-1), n = bars.length - 1;
+  const { counted, score } = scoreOf(rows, state.weighting);
   const absGap = ind.gaps.map(Math.abs), medGap = d3.median(absGap) || 0;
   return {
-    bars, ind, rows, last, score, track: backtest(bars),
+    bars, ind, rows, last, score, regime, adx: adxNow, track: backtest(bars),
     bias: ['Bearish', 'Neutral', 'Bullish'][lean(score) + 1],
     tally: { bull: counted.filter((r) => r.vote > 0).length, bear: counted.filter((r) => r.vote < 0).length, flat: counted.filter((r) => r.vote === 0).length },
     pv: pivots(last), atr: ind.atr[n], medGap, upGaps: ind.gaps.filter((g) => g > 0).length / (ind.gaps.length || 1),
@@ -381,7 +419,7 @@ function analyse(data) {
 // ================= chart =================
 const VIEWS = { trend: { name: 'Trend', icon: 'fi-rr-chart-line-up' }, bands: { name: 'Bands', icon: 'fi-rr-chart-histogram' }, levels: { name: 'Levels', icon: 'fi-rr-layers' }, track: { name: 'Track record', icon: 'fi-rr-bullseye-arrow' } };
 const TRACK_MODES = { open: 'next open', close: 'next close' };
-const state = { view: 'trend', trackMode: 'open', data: null, a: null, source: '', syncedAt: null, proxy: '', snapshot: null, errors: [], syncing: false };
+const state = { view: 'trend', trackMode: 'open', weighting: 'equal', data: null, a: null, source: '', syncedAt: null, proxy: '', snapshot: null, errors: [], syncing: false };
 let chart = null, S = {}, priceLines = [];
 const line = (arr, times) => arr.map((v, i) => (v == null ? null : { time: times[i], value: v })).filter(Boolean);
 
@@ -431,7 +469,7 @@ function drawChart() {
   if (state.view === 'track') {
     // hit (green) / miss (red) dots on the session each past call was about, and an equity pane:
     // following the bias (long Bullish, short Bearish, flat Neutral) vs always long
-    const t = trackStats(a.track, state.trackMode), pf = { type: 'custom', formatter: d3.format('+.1%'), minMove: 0.0001 };
+    const t = trackStats(a.track, state.trackMode, state.weighting), pf = { type: 'custom', formatter: d3.format('+.1%'), minMove: 0.0001 };
     S.eq = chart.addSeries(LC.LineSeries, { color: B.signal, lineWidth: 2, priceLineVisible: false, title: 'Bias', priceFormat: pf }, 1);
     S.eq.setData(t.curve.map((p) => ({ time: p.time, value: p.eq })));
     S.eq.createPriceLine({ price: 0, color: B.fog, lineWidth: 1, lineStyle: LC.LineStyle.Dotted, axisLabelVisible: false });
@@ -516,7 +554,7 @@ async function renderPanel() {
     <label for="proxy" class="mt-3 block text-[11px] text-muted-foreground">CORS proxy (optional). Yahoo blocks direct browser requests; use <span class="font-mono">{url}</span> for the encoded Yahoo URL.</label>
     <div class="mt-1 flex gap-1.5"><input id="proxy" value="${esc(state.proxy)}" spellcheck="false" placeholder="https://corsproxy.io/?key=…&url={url}" class="h-8 min-w-0 flex-1 rounded-md border border-input bg-background/60 px-2 font-mono text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" /><button id="proxy-save" type="button" class="h-8 rounded-md border px-2.5 text-xs hover:bg-accent">Save</button></div>
     <button id="clear" type="button" class="mt-3 inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"><i class="fi fi-rr-trash"></i>Clear stored data</button>`, 'fi-rr-database');
-  const about = section('About', `<p class="text-[11px] leading-relaxed text-muted-foreground">Daily bars from <a class="underline hover:text-primary" href="https://finance.yahoo.com/quote/${esc(data?.symbol || 'NVDA')}/history" target="_blank" rel="noopener">Yahoo Finance</a>, read into signals in your browser. Each signal votes; the bias is the average vote (±0.25 or more leans one way). Exchange holidays aren't known, so the next session is the next weekday. A learning mock, not trading advice.</p>`, 'fi-rr-info');
+  const about = section('About', `<p class="text-[11px] leading-relaxed text-muted-foreground">Daily bars from <a class="underline hover:text-primary" href="https://finance.yahoo.com/quote/${esc(data?.symbol || 'NVDA')}/history" target="_blank" rel="noopener">Yahoo Finance</a>, read into signals in your browser. Each signal votes; the bias is the average vote (±0.25 or more leans one way). With ADX weighting, trend-following votes count 1.5× and RSI/%B 0.5× when ADX ≥ 25 (trending), the reverse when ADX ≤ 20 (ranging). Exchange holidays aren't known, so the next session is the next weekday. A learning mock, not trading advice.</p>`, 'fi-rr-info');
 
   if (!a) {
     $('#panel').innerHTML = `<h1 class="text-lg font-semibold leading-tight">Next open signals</h1><p class="mt-1 text-xs text-muted-foreground">Enter a symbol and press Sync data to pull its last 120 daily sessions from Yahoo Finance.</p>${settings}${about}`;
@@ -527,13 +565,16 @@ async function renderPanel() {
   const stale = (Date.now() - new Date(`${last.time}T21:00:00Z`)) / 864e5 > 4;
   const openTime = data.openAt ? new Date(data.openAt * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: data.timezone, timeZoneName: 'short' }) : '';
   const vote = (v) => (v == null ? '<span class="text-muted-foreground">n/a</span>' : v > 0 ? '<span class="text-good">▲ bull</span>' : v < 0 ? '<span class="text-bad">▼ bear</span>' : '<span class="text-muted-foreground">● flat</span>');
-  const t = trackStats(a.track, state.trackMode), mode = TRACK_MODES[state.trackMode];
+  const t = trackStats(a.track, state.trackMode, state.weighting), mode = TRACK_MODES[state.trackMode];
   const p0 = d3.format('.0%'), tone = (r) => (r >= 0.55 ? B.good : r <= 0.45 ? B.bad : B.ink2);
   const record = (s) => (s ? `<div class="mt-0.5 text-[10px] text-muted-foreground">Right on the ${mode} <span class="font-mono" style="color:${tone(s.hits / s.calls)}">${p0(s.hits / s.calls)}</span> of ${s.calls} past calls</div>` : '');
-  const groups = d3.groups(a.rows, (r) => r.group).map(([g, rows]) => `<div class="mt-2 first:mt-0"><div class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">${g}</div><ul>${rows.map((r) => `<li class="border-b border-border/60 py-1.5 last:border-0"><div class="flex items-baseline justify-between gap-2"><span class="text-sm">${r.name}</span><span class="font-mono text-xs">${r.value}</span></div><div class="mt-0.5 flex items-baseline justify-between gap-2 text-[11px] text-muted-foreground"><span>${esc(r.note)}</span><span class="shrink-0 font-mono">${vote(r.vote)}</span></div>${record(t.sig.get(r.name))}</li>`).join('')}</ul></div>`).join('');
+  const groups = d3.groups(a.rows, (r) => r.group).map(([g, rows]) => `<div class="mt-2 first:mt-0"><div class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">${g}</div><ul>${rows.map((r) => `<li class="border-b border-border/60 py-1.5 last:border-0"><div class="flex items-baseline justify-between gap-2"><span class="text-sm">${r.name}</span><span class="font-mono text-xs">${r.value}</span></div><div class="mt-0.5 flex items-baseline justify-between gap-2 text-[11px] text-muted-foreground"><span>${esc(r.note)}</span><span class="shrink-0 font-mono">${state.weighting === 'adx' && r.w !== 1 && r.vote != null ? `<span class="mr-1 text-[10px] ${r.w > 1 ? 'text-foreground' : 'text-muted-foreground/70'}">${r.w}×</span>` : ''}${vote(r.vote)}</span></div>${record(t.sig.get(r.name))}</li>`).join('')}</ul></div>`).join('');
   const modeBtn = (m) => `<button type="button" data-track="${m}" aria-pressed="${state.trackMode === m}" class="h-6 rounded px-2 text-[11px] capitalize ${state.trackMode === m ? 'bg-background text-foreground shadow' : 'text-muted-foreground hover:text-foreground'}">${TRACK_MODES[m]}</button>`;
   const avgMove = (x, n) => (n ? `<span style="color:${x >= 0 ? B.good : B.bad}">${pct(x)}</span>` : '—');
   const end = t.curve.at(-1);
+  // the same replay under the other weighting, to show what the ADX regime adds
+  const otherKey = state.weighting === 'adx' ? 'equal' : 'adx', o = trackStats(a.track, state.trackMode, otherKey);
+  const compare = t.n ? `<p class="mt-1 text-[11px] text-muted-foreground">${WEIGHTINGS[otherKey]} instead: right ${o.taken ? p0(o.hits / o.taken) : '—'} of ${o.taken} calls, <span class="font-mono">${pct(o.curve.at(-1).eq)}</span>.</p>` : '';
   const track = t.n ? `
     <div class="mb-2 inline-flex rounded-md bg-muted p-0.5">${Object.keys(TRACK_MODES).map(modeBtn).join('')}</div>
     <div class="grid grid-cols-2 gap-2">
@@ -542,7 +583,7 @@ async function renderPanel() {
       ${kpi('After Bullish', avgMove(t.bullAvg, t.bullN), `avg move, ${t.bullN} calls`)}
       ${kpi('After Bearish', avgMove(t.bearAvg, t.bearN), `avg move, ${t.bearN} calls`)}
     </div>
-    <p class="mt-2 text-[11px] leading-relaxed text-muted-foreground">Following the bias (long when Bullish, short when Bearish, close to ${mode}): <span class="font-mono" style="color:${end.eq >= 0 ? B.good : B.bad}">${pct(end.eq)}</span> vs always long <span class="font-mono">${pct(end.hold)}</span>, no costs. Replayed on ${t.n} sessions from ${dayFmt(t.from, { day: 'numeric', month: 'short' })}, each with only the bars up to it. Judge a hit rate against the base rate; under ~30 calls it is mostly noise.</p>`
+    <p class="mt-2 text-[11px] leading-relaxed text-muted-foreground">Following the bias (long when Bullish, short when Bearish, close to ${mode}): <span class="font-mono" style="color:${end.eq >= 0 ? B.good : B.bad}">${pct(end.eq)}</span> vs always long <span class="font-mono">${pct(end.hold)}</span>, no costs. Replayed on ${t.n} sessions from ${dayFmt(t.from, { day: 'numeric', month: 'short' })}, each with only the bars up to it. Judge a hit rate against the base rate; under ~30 calls it is mostly noise.</p>${compare}`
     : `<p class="text-[11px] text-muted-foreground">Needs more than ${TRACK_START + 1} sessions of history.</p>`;
   const lv = (k, v, color) => `<div class="flex justify-between font-mono text-xs"><span style="color:${color}">${k}</span><span>${f2(v)}</span><span class="w-14 text-right text-muted-foreground">${pct((v - last.close) / last.close)}</span></div>`;
 
@@ -555,6 +596,10 @@ async function renderPanel() {
       <div class="mt-0.5 text-2xl font-semibold" style="color:${biasColor}">${a.bias}</div>
       <div class="relative mt-2 h-1.5 rounded-full" style="background:linear-gradient(90deg,${B.bad}88,${B.muted} 40%,${B.muted} 60%,${B.good}88)"><span class="absolute -top-1 h-3.5 w-1 -translate-x-1/2 rounded-sm bg-foreground" style="left:${(a.score + 1) * 50}%"></span></div>
       <div class="mt-1.5 text-[11px] text-muted-foreground"><span class="text-good">${a.tally.bull} bullish</span> · <span class="text-bad">${a.tally.bear} bearish</span> · ${a.tally.flat} neutral</div>
+      <div class="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-2">
+        <span class="text-[11px] text-muted-foreground">${a.adx == null ? 'ADX n/a' : `ADX ${n1(a.adx)}`} · <span class="text-foreground">${a.regime}</span>${state.weighting === 'adx' && a.regime !== 'Mixed' ? ` · ${a.regime === 'Trending' ? 'trend' : 'mean-reversion'} votes 1.5×` : ''}</span>
+        <div class="inline-flex rounded-md bg-muted p-0.5">${Object.entries(WEIGHTINGS).map(([k, v]) => `<button type="button" data-weighting="${k}" aria-pressed="${state.weighting === k}" class="h-6 rounded px-2 text-[11px] ${state.weighting === k ? 'bg-background text-foreground shadow' : 'text-muted-foreground hover:text-foreground'}">${v}</button>`).join('')}</div>
+      </div>
     </div>
     <div class="mt-3 grid grid-cols-2 gap-2">
       ${kpi('Expected open', `${f2(last.close * (1 - a.medGap))}–${f2(last.close * (1 + a.medGap))}`, `gap ±${pct1(a.medGap)} · ${d3.format('.0%')(a.upGaps)} gap up`)}
@@ -569,6 +614,8 @@ async function renderPanel() {
 $('#panel').addEventListener('click', async (e) => {
   const chip = e.target.closest('[data-sym]');
   if (chip) { $('#sym').value = chip.dataset.sym; await show(chip.dataset.sym); return; }
+  const wt = e.target.closest('[data-weighting]');
+  if (wt) { state.weighting = wt.dataset.weighting; state.a = analyse(state.data); drawChart(); renderPanel(); return; }
   const tm = e.target.closest('[data-track]');
   if (tm) { state.trackMode = tm.dataset.track; renderPanel(); if (state.view === 'track') drawChart(); return; }
   if (e.target.closest('#proxy-save')) { state.proxy = $('#proxy').value.trim(); await store.put('proxy', state.proxy); toast(state.proxy ? 'Proxy saved in this browser' : 'Proxy cleared'); return; }
