@@ -1,6 +1,27 @@
 {
   "posts": [
     {
+      "slug": "2026-11-14-signal-bias-vs-always-long-backtest",
+      "filename": "2026-11-14-signal-bias-vs-always-long-backtest.md",
+      "category": "post",
+      "title": "My signal bias loses to always-long: an honest backtest",
+      "date": "2026-11-14",
+      "tags": [
+        "backtesting",
+        "technical-analysis",
+        "stock-signals",
+        "adx",
+        "look-ahead-bias",
+        "github-actions",
+        "cors",
+        "playground"
+      ],
+      "series": null,
+      "summary": "I added a track record view to my stock-signals playground mock, replaying ten classic indicators on every past session with no look-ahead. On all five tickers the combined bias was right less often than simply calling 'up' every day. ADX regime weighting didn't rescue it either. This note covers how the backtest works, why the base rate is the number that matters, why sixty-odd calls can't tell you much, and the small GitHub Actions workaround that keeps the page's data fresh on a static host.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-12-tracing-one-agent-run-opentelemetry",
       "filename": "2026-11-12-tracing-one-agent-run-opentelemetry.md",
       "category": "post",
