@@ -1,6 +1,27 @@
 {
   "posts": [
     {
+      "slug": "2026-11-14-otel-collector-redact-sample-count",
+      "filename": "2026-11-14-otel-collector-redact-sample-count.md",
+      "category": "post",
+      "title": "OpenTelemetry before production: redact, count, then sample",
+      "date": "2026-11-14",
+      "tags": [
+        "opentelemetry",
+        "observability",
+        "ai-agents",
+        "llm-ops",
+        "tracing",
+        "tail-sampling",
+        "otel-collector",
+        "grafana"
+      ],
+      "series": null,
+      "summary": "Part three of the OpenTelemetry series. I put a gateway Collector in front of the agent stack from the last note and replayed 1,000 agent runs through it to test the three things the explainer said to add before production: redaction, tail sampling and alerting. Redaction worked first time. Tail sampling quietly dropped every slow and expensive run until decision_wait was longer than the longest run. And metrics computed after sampling were badly wrong: Tempo reported a 33% tool error rate when the truth was 13.4%, and with a longer wait it threw almost all spans away. The fix is a fixed order inside the Collector: redact, count, then sample.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-14-signal-bias-vs-always-long-backtest",
       "filename": "2026-11-14-signal-bias-vs-always-long-backtest.md",
       "category": "post",
