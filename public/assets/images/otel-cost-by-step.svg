@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" role="img" aria-labelledby="title desc">
+  <title id="title">Where the money went, by why each model call happened</title>
+  <desc id="desc">Share of model-call spend by turn reason. Ground truth, the Prometheus token metric and Langfuse filtered by attribute all agree: continue 53 percent, plan 21 percent, recheck 14 percent, after_error 11 percent, so a quarter of spend is waste, 9.98 dollars in total. TraceQL over the 345 tail-sampled runs in Tempo says continue 40, plan 16, recheck 22, after_error 22, putting waste at 44 percent.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="480" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+<text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Where the money went, by why each model call happened</text>
+<text x="45" y="85" fill="#a9bdd0" font-size="16">Share of model-call spend by crypto_desk.turn.reason. recheck + after_error is the waste.</text>
+<text x="45" y="155" fill="#f6f9fc" font-size="14" font-weight="700">Truth (replay ground truth)</text>
+<text x="45" y="174" fill="#6f8aa3" font-size="12">$9.98 · 1,000 runs</text>
+<rect x="330.0" y="139" width="404.3" height="30" fill="#5ec4e0" fill-opacity="0.85"/>
+<text x="532.16" y="159" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">53%</text>
+<rect x="734.3" y="139" width="161.1" height="30" fill="#8aa1b6" fill-opacity="0.85"/>
+<text x="814.8799999999999" y="159" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">21%</text>
+<rect x="895.4" y="139" width="108.7" height="30" fill="#f0b86b" fill-opacity="0.85"/>
+<text x="949.78" y="159" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">14%</text>
+<rect x="1004.1" y="139" width="85.9" height="30" fill="#f2706b" fill-opacity="0.85"/>
+<text x="1047.06" y="159" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">11%</text>
+<text x="1102" y="159" fill="#a9bdd0" font-size="13" font-weight="700">waste 26%</text>
+<text x="45" y="217" fill="#f6f9fc" font-size="14" font-weight="700">Prometheus token metric</text>
+<text x="45" y="236" fill="#6f8aa3" font-size="12">$9.98 · unsampled</text>
+<rect x="330.0" y="201" width="404.3" height="30" fill="#5ec4e0" fill-opacity="0.85"/>
+<text x="532.16" y="221" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">53%</text>
+<rect x="734.3" y="201" width="161.1" height="30" fill="#8aa1b6" fill-opacity="0.85"/>
+<text x="814.8799999999999" y="221" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">21%</text>
+<rect x="895.4" y="201" width="108.7" height="30" fill="#f0b86b" fill-opacity="0.85"/>
+<text x="949.78" y="221" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">14%</text>
+<rect x="1004.1" y="201" width="85.9" height="30" fill="#f2706b" fill-opacity="0.85"/>
+<text x="1047.06" y="221" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">11%</text>
+<text x="1102" y="221" fill="#a9bdd0" font-size="13" font-weight="700">waste 26%</text>
+<text x="45" y="279" fill="#f6f9fc" font-size="14" font-weight="700">Langfuse, filtered by attribute</text>
+<text x="45" y="298" fill="#6f8aa3" font-size="12">$9.98 · unsampled</text>
+<rect x="330.0" y="263" width="404.3" height="30" fill="#5ec4e0" fill-opacity="0.85"/>
+<text x="532.16" y="283" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">53%</text>
+<rect x="734.3" y="263" width="161.1" height="30" fill="#8aa1b6" fill-opacity="0.85"/>
+<text x="814.8799999999999" y="283" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">21%</text>
+<rect x="895.4" y="263" width="108.7" height="30" fill="#f0b86b" fill-opacity="0.85"/>
+<text x="949.78" y="283" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">14%</text>
+<rect x="1004.1" y="263" width="85.9" height="30" fill="#f2706b" fill-opacity="0.85"/>
+<text x="1047.06" y="283" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">11%</text>
+<text x="1102" y="283" fill="#a9bdd0" font-size="13" font-weight="700">waste 26%</text>
+<text x="45" y="341" fill="#f2706b" font-size="14" font-weight="700">Tempo TraceQL, sampled traces</text>
+<text x="45" y="360" fill="#6f8aa3" font-size="12">$5.05 · 345 kept runs</text>
+<rect x="330.0" y="325" width="303.2" height="30" fill="#5ec4e0" fill-opacity="0.85"/>
+<text x="481.62" y="345" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">40%</text>
+<rect x="633.2" y="325" width="120.8" height="30" fill="#8aa1b6" fill-opacity="0.85"/>
+<text x="693.66" y="345" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">16%</text>
+<rect x="754.1" y="325" width="165.7" height="30" fill="#f0b86b" fill-opacity="0.85"/>
+<text x="836.9200000000001" y="345" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">22%</text>
+<rect x="919.8" y="325" width="169.5" height="30" fill="#f2706b" fill-opacity="0.85"/>
+<text x="1004.5" y="345" fill="#0b1522" font-size="13" font-weight="700" text-anchor="middle">22%</text>
+<text x="1102" y="345" fill="#f2706b" font-size="13" font-weight="700">waste 44%</text>
+<rect x="330" y="400" width="14" height="14" rx="3" fill="#5ec4e0"/><text x="352" y="412" fill="#a9bdd0" font-size="13">continue</text>
+<rect x="480" y="400" width="14" height="14" rx="3" fill="#8aa1b6"/><text x="502" y="412" fill="#a9bdd0" font-size="13">plan</text>
+<rect x="630" y="400" width="14" height="14" rx="3" fill="#f0b86b"/><text x="652" y="412" fill="#a9bdd0" font-size="13">recheck</text>
+<rect x="780" y="400" width="14" height="14" rx="3" fill="#f2706b"/><text x="802" y="412" fill="#a9bdd0" font-size="13">after_error</text>
+<text x="45" y="450" fill="#6f8aa3" font-size="13">Sampling keeps every error and a tenth of the rest, so the sampled split puts waste at 44% instead of 26%.</text>
+  </g>
+</svg>

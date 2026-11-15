@@ -1,6 +1,28 @@
 {
   "posts": [
     {
+      "slug": "2026-11-15-otel-traces-to-answers-cost-quality",
+      "filename": "2026-11-15-otel-traces-to-answers-cost-quality.md",
+      "category": "post",
+      "title": "From traces to answers: what an agent run cost, and whether it was any good",
+      "date": "2026-11-15",
+      "tags": [
+        "opentelemetry",
+        "observability",
+        "ai-agents",
+        "llm-ops",
+        "tracing",
+        "llm-evaluation",
+        "langfuse",
+        "grafana",
+        "cost-attribution"
+      ],
+      "series": null,
+      "summary": "Part four of the OpenTelemetry series. With telemetry flowing, I asked it two questions: where does the money go, and do expensive runs give better answers? I replayed 1,000 crypto-desk runs through one gateway Collector into both Tempo and a self-hosted Langfuse, tagged every model call with why it happened, and put a deterministic answer check on every run. A quarter of the spend was retries and re-checks. Expensive runs were worse, not better, but mostly because hard questions cost more. Within a question type the gap nearly vanished. Tail sampling made both answers wrong: it put waste at 44% instead of 26%, and it threw away 28 of 35 wrong answers that had no error span. One extra sampling policy on the score fixed that.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-14-otel-collector-redact-sample-count",
       "filename": "2026-11-14-otel-collector-redact-sample-count.md",
       "category": "post",
