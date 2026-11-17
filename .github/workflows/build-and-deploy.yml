@@ -44,6 +44,13 @@ jobs:
         run: npm run stocks
         continue-on-error: true
 
+      # New ToTo draws (Mon/Thu evenings SGT) from Singapore Pools, including any the committed
+      # JSON is missing. Goes into the deployed build only, like the stocks snapshot; nothing new
+      # is a no-op, and on failure the committed data ships instead.
+      - name: Refresh ToTo results
+        run: npm run toto:latest
+        continue-on-error: true
+
       - run: npm run build
 
       - name: Upload Pages artifact
