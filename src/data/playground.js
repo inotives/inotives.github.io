@@ -55,6 +55,15 @@ export const PLAYGROUND_LIBRARIES = [
     repo: 'thesysdev/openui',
   },
   {
+    id: 'a2ui',
+    name: 'A2UI',
+    kind: 'Generative UI',
+    description:
+      'Agent-to-User Interface: an open protocol for agents to stream UI as JSON messages (components, a separate data model and actions) that the app renders with its own native components, limited to a catalog it grants. From Google.',
+    site: 'https://a2ui.org',
+    repo: 'a2ui-project/a2ui',
+  },
+  {
     id: 'leaflet',
     name: 'Leaflet',
     kind: 'Maps',
@@ -397,5 +406,16 @@ export const PLAYGROUND_MOCKS = [
       'Type a ticker such as NVDA and Sync data pulls its last 60 daily sessions from Yahoo Finance, then reads them into the usual technical signals for the next market opening: SMA and EMA crosses, RSI, MACD, Bollinger Bands, volume against its 20-day average, OBV and the close against the pivot. Each signal votes bullish, bearish or neutral, and the votes add up to a bias, beside an expected opening range from the stock’s usual overnight gap, a day range from ATR and the pivot levels. Candles, volume, RSI and MACD share one chart, with tabs for trend lines, bands and levels. Synced symbols stay in your browser. A learning mock, not trading advice.',
     libraries: ['lightweight-charts', 'd3', 'shadcn', 'tailwind', 'flaticon'],
     sources: [{ name: 'Yahoo Finance chart API (daily bars)', href: 'https://finance.yahoo.com/' }],
+  },
+  {
+    id: 'a2ui-market-desk',
+    project: 'Chat analytics',
+    name: 'A2UI market desk',
+    date: '2026-11-22',
+    href: '/mocks/a2ui-market-desk.html',
+    preview: '/mocks/previews/a2ui-market-desk.jpg',
+    description:
+      'A market agent that answers in A2UI instead of text. Its replies stream in as JSON messages and the real A2UI Lit renderer builds them into a SOL price desk with a D3 chart, an alert form and a trade ticket, then a movers list from one row template. Live prices arrive as data-model updates only, and the components bound to each changed path flash, here and in a Three.js map of bindings. Every message is on the wire and the tape below the screen: click one to rewind the screen to it. Switch to the read-only catalog and the page drops the trade ticket before it renders. A mock: replies are scripted and every price is generated.',
+    libraries: ['a2ui', 'd3', 'threejs', 'shadcn', 'tailwind', 'flaticon'],
   },
 ]
