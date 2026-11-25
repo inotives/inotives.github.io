@@ -105,6 +105,23 @@ export const PLAYGROUND_LIBRARIES = [
     repo: 'tailwindlabs/tailwindcss',
   },
   {
+    id: 'ai-sdk',
+    name: 'AI SDK',
+    kind: 'AI toolkit',
+    description:
+      "Vercel's TypeScript toolkit for AI apps. Its useChat hook streams typed UI messages (text, reasoning, tool calls, approvals, sources) into React through a pluggable chat transport.",
+    site: 'https://ai-sdk.dev',
+    repo: 'vercel/ai',
+  },
+  {
+    id: 'react',
+    name: 'React',
+    kind: 'UI library',
+    description: 'Components and hooks for building UIs. Here loaded from esm.sh with htm instead of JSX, so the mock needs no build step.',
+    site: 'https://react.dev',
+    repo: 'facebook/react',
+  },
+  {
     id: 'iztro',
     name: 'iztro',
     kind: 'Astrology',
@@ -417,5 +434,20 @@ export const PLAYGROUND_MOCKS = [
     description:
       'A market agent that answers in A2UI instead of text. Its replies stream in as JSON messages and the real A2UI Lit renderer builds them into a SOL price desk with a D3 chart, an alert form and a trade ticket, then a movers list from one row template. Live prices arrive as data-model updates only, and the components bound to each changed path flash, here and in a Three.js map of bindings. Every message is on the wire and the tape below the screen: click one to rewind the screen to it. Switch to the read-only catalog and the page drops the trade ticket before it renders. A mock: replies are scripted and every price is generated.',
     libraries: ['a2ui', 'd3', 'threejs', 'shadcn', 'tailwind', 'flaticon'],
+  },
+  {
+    id: 'shadcn-ai-sdk-chat',
+    project: 'Chat analytics',
+    name: 'AI SDK chat fixtures',
+    date: '2026-11-25',
+    href: '/mocks/shadcn-ai-sdk-chat.html',
+    preview: '/mocks/previews/shadcn-ai-sdk-chat.jpg',
+    description:
+      "A trading-desk chat built on the AI SDK's useChat, with no model behind it. shadcn's @shadcn/helpers/ai-sdk scripts each conversation in code and streams it through the real hook: a price tool that takes 700 ms, an order paused behind Approve and Deny, a 429 then a retry, a stream that dies mid-answer. The Script tab shows the exact code that runs, the Stream tab logs every chunk with its time and counts network requests (none), and a checklist tracks which UI states you have seen. One scenario replays 20 real Claude Sonnet 5.5 answers captured once, next to that run's latency and cost.",
+    libraries: ['shadcn', 'ai-sdk', 'react', 'tailwind', 'flaticon'],
+    sources: [
+      { name: 'shadcn: AI SDK helper', href: 'https://ui.shadcn.com/docs/helpers/ai-sdk' },
+      { name: 'AI SDK: useChat', href: 'https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat' },
+    ],
   },
 ]

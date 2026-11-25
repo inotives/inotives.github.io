@@ -21,6 +21,27 @@
       "draft": false
     },
     {
+      "slug": "2026-11-25-shadcn-ai-sdk-helper-chat-fixtures",
+      "filename": "2026-11-25-shadcn-ai-sdk-helper-chat-fixtures.md",
+      "category": "post",
+      "title": "Designing chat UIs without a model: testing shadcn's AI SDK helper",
+      "date": "2026-11-25",
+      "tags": [
+        "shadcn-ui",
+        "ai-sdk",
+        "ui-design",
+        "generative-ui",
+        "react",
+        "testing",
+        "ai-engineering",
+        "chat-ui"
+      ],
+      "series": null,
+      "summary": "shadcn's new @shadcn/helpers/ai-sdk lets you script a conversation in code and stream it through the AI SDK's real useChat hook, with no model, API route or key. I built a trading-desk chat in the playground on it and measured it against Claude Sonnet 5.5 on the same UI. The real model took 1.3–8.6 s to the first token, cost about $0.007 a reload, and gave 20 different answers in 20 calls, whose rendered height varied by up to 1.55×. The scripted chat streamed its first chunk in 2–14 ms, made zero network requests in 60 runs, rendered byte-identical HTML every time, and put all 11 chat states (tool errors, approvals, stream failures) on screen on demand. The token saving is small. The real wins are time, determinism and reaching the states you actually need to design.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-15-otel-traces-to-answers-cost-quality",
       "filename": "2026-11-15-otel-traces-to-answers-cost-quality.md",
       "category": "post",

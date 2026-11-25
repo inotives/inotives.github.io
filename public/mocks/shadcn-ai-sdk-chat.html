@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>AI SDK chat fixtures</title>
+<!--
+  Playground mock: a chat UI built on the AI SDK's useChat hook, driven by scripted conversations from
+  shadcn's @shadcn/helpers/ai-sdk (createChat → transport()). There is no model, API route or key: every
+  reply, tool call, approval and error is scripted, and streams through the real useChat state machine.
+  The "Recorded answers" scenario replays real Claude Sonnet 5.5 answers captured on 2026-11-25 with
+  scripts/mocks/shadcn-ai-sdk-chat/capture.mjs (public/mocks/data/shadcn-ai-sdk-chat.json), and the
+  "Real model" tab shows that run's latency and cost. Prices and orders in the other scenarios are made up.
+  Stack: React 19 + htm, ai 7, @ai-sdk/react 4 and @shadcn/helpers 0.3 from esm.sh; UI is shadcn/ui
+  recreated in Tailwind with the site's palette; icons are Flaticon UIcons.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Source+Code+Pro:wght@400;500&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.3"></script>
+<script type="importmap">
+{ "imports": {
+  "react": "https://esm.sh/react@19.2.4",
+  "react/": "https://esm.sh/react@19.2.4/",
+  "react-dom": "https://esm.sh/react-dom@19.2.4?deps=react@19.2.4",
+  "react-dom/client": "https://esm.sh/react-dom@19.2.4/client?deps=react@19.2.4",
+  "htm": "https://esm.sh/htm@3.1.1",
+  "ai": "https://esm.sh/ai@7.0.181?deps=zod@3.25.76",
+  "@ai-sdk/react": "https://esm.sh/@ai-sdk/react@4.0.186?deps=react@19.2.4,ai@7.0.181,zod@3.25.76&external=react",
+  "@shadcn/helpers/ai-sdk": "https://esm.sh/@shadcn/helpers@0.3.0/ai-sdk?deps=ai@7.0.181,zod@3.25.76"
+} }
+</script>
+<style type="text/tailwindcss">
+  /* shadcn/ui token names mapped to the site's palette */
+  @theme {
+    --color-background: #15171b;
+    --color-foreground: #e4e1d8;
+    --color-card: #1d2026;
+    --color-muted: #23262d;
+    --color-muted-foreground: #8b9099;
+    --color-accent: #2a2e36;
+    --color-border: #2b2f37;
+    --color-input: #343943;
+    --color-primary: #1fefd7;
+    --color-primary-foreground: #0c1614;
+    --color-ring: #1fefd7;
+    --color-amber: #f6c453;
+    --color-pink: #e58fb0;
+    --color-ink-2: #b8b5ac;
+    --color-good: #9ccf7f;
+    --color-bad: #f2706b;
+    --font-sans: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "Source Code Pro", ui-monospace, Consolas, monospace;
+    --font-brand: "VT323", "Source Code Pro", monospace;
+  }
+  @layer base { *, ::before, ::after { border-color: var(--color-border); } }
+</style>
+<style>
+  html, body { height: 100%; }
+  body { margin: 0; background: #15171b; }
+  .fi { display: inline-flex; line-height: 1; }
+  .scroll-thin { scrollbar-width: thin; scrollbar-color: #343943 transparent; }
+
+  #drawer { --pg-drawer-w: 320px; }   /* the sidebar is a column from 900px, a drawer below */
+
+  /* <pg-layout v1> Playground layout standard (scripts/mocks/template/playground.html).
+     Side panel: a floating card on the left from 900px wide (.pg-float); below 900px it is a
+     drawer that slides in from the left over a scrim, with the stage legend folded into it.
+     Keep this block identical across mocks; check.mjs compares it with the template. */
+  .pg-drawer { display: flex; flex-direction: column; min-height: 0; }
+  .pg-drawer-head, .pg-drawer-legend, .pg-drawer-btn, .pg-scrim { display: none; }
+  @media (min-width: 900px) {
+    .pg-float { position: absolute; z-index: 10; left: 1.5rem; top: 4.5rem; width: var(--pg-panel-w, 360px); max-height: calc(100% - 6rem); }
+  }
+  @media (max-width: 899px) {
+    .pg-drawer { position: fixed; inset: 0 auto 0 0; z-index: 45; width: min(var(--pg-drawer-w, 360px), 88vw); height: auto; max-height: none; border: 0; border-right: 1px solid #2b2f37; border-radius: 0 0.75rem 0.75rem 0; background: #1d2026; box-shadow: 0 10px 40px rgb(0 0 0 / 0.5); transform: translateX(-104%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
+    body[data-drawer="open"] .pg-drawer { transform: none; visibility: visible; transition: transform 0.22s ease; }
+    body[data-drawer="open"] .pg-scrim { display: block; position: fixed; inset: 0; z-index: 44; background: rgb(0 0 0 / 0.5); }
+    .pg-drawer-head { display: flex; align-items: center; gap: 0.625rem; flex-shrink: 0; height: 3.5rem; padding: 0 0.75rem 0 1rem; border-bottom: 1px solid #2b2f37; }
+    .pg-drawer-legend:not(:empty) { display: block; flex-shrink: 0; padding: 0.75rem 1rem; border-top: 1px solid #2b2f37; font-size: 0.75rem; color: #8b9099; }
+    .pg-drawer-btn { display: inline-flex; }
+    .pg-hide-mobile, .pg-legend { display: none !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { .pg-drawer { transition: none !important; } }
+  /* </pg-layout> */
+
+  .spinner { width: 12px; height: 12px; border-radius: 999px; border: 2px solid #343943; border-top-color: #1fefd7; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .caret::after { content: "▍"; color: #1fefd7; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .fade-in { animation: fadein 0.2s ease both; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(3px); } }
+
+  .md { font-size: 14px; line-height: 1.6; color: #e4e1d8; overflow-wrap: anywhere; }
+  .md p { margin: 0 0 0.6em; } .md p:last-child { margin-bottom: 0; }
+  .md strong { font-weight: 600; color: #fff; }
+  .md code { font: 400 12.5px "Source Code Pro", monospace; background: #23262d; border-radius: 4px; padding: 1px 4px; }
+  .md pre { background: #15171b; border: 1px solid #2b2f37; border-radius: 8px; padding: 8px 10px; overflow-x: auto; margin: 0.4em 0 0.7em; }
+  .md pre code { background: none; padding: 0; }
+  .md ul, .md ol { margin: 0 0 0.6em; padding-left: 1.3em; } .md ul { list-style: disc; } .md ol { list-style: decimal; }
+  .md li { margin: 0.15em 0; }
+  .md h1, .md h2, .md h3, .md h4 { font-weight: 600; margin: 0.7em 0 0.35em; font-size: 14.5px; }
+  .md table { border-collapse: collapse; margin: 0.4em 0 0.8em; font-size: 12.5px; display: block; overflow-x: auto; max-width: 100%; }
+  .md th, .md td { border: 1px solid #2b2f37; padding: 4px 8px; text-align: left; vertical-align: top; }
+  .md th { background: #23262d; font-weight: 600; }
+  .md th, .md td { overflow-wrap: normal; word-break: normal; min-width: 8ch; }
+  .md a { color: #1fefd7; text-decoration: underline; text-underline-offset: 2px; }
+  .md hr { border: 0; border-top: 1px solid #2b2f37; margin: 0.8em 0; }
+  .code { font: 400 12px/1.6 "Source Code Pro", monospace; white-space: pre; color: #d6d3ca; }
+  .code .k { color: #c9a4f5; } .code .s { color: #9ccf7f; } .code .c { color: #8b9099; } .code .n { color: #e9a66c; } .code .f { color: #7cc4dc; }
+  @media (prefers-reduced-motion: reduce) { *, ::before, ::after { transition: none !important; animation-duration: 0.01ms !important; } }
+</style>
+</head>
+<body class="bg-background font-sans text-foreground antialiased">
+<div class="flex h-dvh overflow-hidden">
+  <aside id="drawer" class="pg-drawer flex w-[300px] shrink-0 flex-col border-r bg-card" aria-label="Scenarios and transport">
+    <div class="flex h-14 items-center gap-3 border-b px-4">
+      <a href="/playground" class="rounded-sm font-brand text-[26px] leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Back to the Playground">inoTives</a>
+      <span class="text-sm text-muted-foreground">Playground</span>
+      <button id="drawer-close" type="button" class="ml-auto inline-flex size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-[900px]:hidden" aria-label="Close the sidebar"><i class="fi fi-rr-cross-small"></i></button>
+    </div>
+    <div id="sidebar-body" class="scroll-thin flex-1 overflow-y-auto px-3 py-4"></div>
+    <p class="border-t px-4 py-3 text-xs leading-relaxed text-muted-foreground"><i class="fi fi-rr-info mr-1 align-[-1px]"></i>No model is connected. Replies stream from scripts through the real <span class="font-mono">useChat</span>. The recorded scenario replays real Claude answers.</p>
+  </aside>
+  <div id="scrim" class="pg-scrim"></div>
+
+  <main class="flex min-w-0 flex-1 flex-col">
+    <header class="flex h-14 shrink-0 items-center gap-2 border-b px-3 sm:px-5">
+      <button id="drawer-btn" type="button" class="pg-drawer-btn size-8 items-center justify-center rounded-md hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" aria-controls="drawer" aria-expanded="false" aria-label="Open the sidebar"><i class="fi fi-rr-menu-burger"></i></button>
+      <div class="flex size-8 shrink-0 items-center justify-center rounded-md border bg-background"><i class="fi fi-rr-comment-alt-dots text-primary"></i></div>
+      <div class="min-w-0">
+        <h1 class="text-[15px] font-semibold leading-tight">AI SDK chat fixtures</h1>
+        <p id="hdr-status" class="truncate text-xs text-muted-foreground"></p>
+      </div>
+      <div id="hdr-actions" class="ml-auto flex items-center gap-2"></div>
+    </header>
+    <div id="app" class="flex min-h-0 flex-1 flex-col"></div>
+  </main>
+</div>
+<div id="toast" hidden class="fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-md border bg-card px-3 py-2 text-sm shadow-lg"></div>
+
+<script>
+/* <pg-layout-js v1> Playground layout standard: the mobile drawer (scripts/mocks/template/playground.html).
+   Opens from #drawer-btn; closes from #drawer-close, the scrim, Escape, links to #anchors or
+   [data-drawer-close] inside it, and when the window grows past 900px. Mirrors #legend into
+   #drawer-legend. Mocks can call window.pgDrawer.open() / .close(). Keep identical across mocks. */
+(() => {
+  const body = document.body, btn = document.getElementById('drawer-btn');
+  const set = (open) => { body.dataset.drawer = open ? 'open' : ''; btn?.setAttribute('aria-expanded', String(open)); };
+  const close = (refocus) => { if (body.dataset.drawer !== 'open') return; set(false); if (refocus) btn?.focus(); };
+  btn?.addEventListener('click', () => set(body.dataset.drawer !== 'open'));
+  document.getElementById('drawer-close')?.addEventListener('click', () => close(true));
+  document.getElementById('scrim')?.addEventListener('click', () => close(false));
+  document.getElementById('drawer')?.addEventListener('click', (e) => { if (e.target.closest('a[href^="#"], [data-drawer-close]')) close(false); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && body.dataset.drawer === 'open') { e.stopImmediatePropagation(); close(true); } }, true);
+  matchMedia('(min-width: 900px)').addEventListener('change', (m) => { if (m.matches) set(false); });
+  const legend = document.getElementById('legend'), copy = document.getElementById('drawer-legend');
+  if (legend && copy) {
+    const sync = () => { copy.innerHTML = legend.hidden ? '' : legend.innerHTML.trim(); };
+    new MutationObserver(sync).observe(legend, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+    sync();
+  }
+  window.pgDrawer = { open: () => set(true), close: () => close(false) };
+})();
+/* </pg-layout-js> */
+</script>
+
+<script type="module">
+import React from 'react';
+import { createPortal } from 'react-dom';
+import { createRoot } from 'react-dom/client';
+import htm from 'htm';
+import { useChat } from '@ai-sdk/react';
+import { lastAssistantMessageIsCompleteWithApprovalResponses } from 'ai';
+import { createChat } from '@shadcn/helpers/ai-sdk';
+
+const html = htm.bind(React.createElement);
+const { useState, useEffect, useMemo, useRef } = React;
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+let toastTimer;
+const toast = (msg) => { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3000); };
+
+// ================= browser datastore (IndexedDB) =================
+// Keeps the UI states this browser has seen rendered, and the last scenario and delay.
+const IDB = { name: 'inotives-shadcn-ai-sdk-chat', store: 'kv' };
+function idbOpen() {
+  return new Promise((ok, no) => { const r = indexedDB.open(IDB.name, 1); r.onupgradeneeded = () => r.result.createObjectStore(IDB.store); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+}
+async function idb(mode, fn) {
+  const db = await idbOpen();
+  try { return await new Promise((ok, no) => { const tx = db.transaction(IDB.store, mode), req = fn(tx.objectStore(IDB.store)); tx.oncomplete = () => ok(req?.result); tx.onerror = () => no(tx.error); }); }
+  finally { db.close(); }
+}
+const store = {
+  get: async (key) => { try { return await idb('readonly', (s) => s.get(key)); } catch { return null; } },
+  put: async (key, value) => { try { await idb('readwrite', (s) => s.put(value, key)); } catch { /* private mode or quota */ } },
+  clear: async () => { try { await idb('readwrite', (s) => s.clear()); } catch { /* blocked */ } },
+};
+
+// ================= scenarios =================
+// Each scenario is the code shown in the Script tab; the page runs exactly that text.
+const SCENARIOS = [
+  { id: 'quote', name: 'Quote with a tool call', icon: 'fi-rr-chart-line-up', blurb: 'Reasoning, a price tool that takes 700 ms, an answer and two sources.',
+    code: `createChat()
+  .user("What's SOL doing today?")
+  .assistant(({ writer }) => {
+    writer.reasoning("The user wants a live quote and the day's driver. Fetch the price first.");
+    writer.tool("get_price", { input: { symbol: "SOL" } })
+      .sleep(700)
+      .output({ symbol: "SOL", price: 142.18, change24h: -3.4, low: 139.55, high: 148.02 });
+    writer.text("SOL is at **$142.18**, down **3.4%** on the day. It traded between $139.55 and $148.02. " +
+      "BTC fell 2.8% over the same window, so this looks like a market-wide move, not SOL news.");
+    writer.sourceUrl({ url: "https://www.coingecko.com/en/coins/solana", title: "CoinGecko: Solana" });
+    writer.sourceUrl({ url: "https://www.binance.com/en/trade/SOL_USDT", title: "Binance: SOL/USDT" });
+  })` },
+  { id: 'trade', name: 'Order that needs approval', icon: 'fi-rr-hand-holding-usd', blurb: 'A tool call paused behind Approve or Deny, then a continuation turn for each answer.',
+    code: `createChat()
+  .user("Buy 2 SOL at market.")
+  .assistant(({ writer }) => {
+    writer.text("This places a market order on your exchange account, so I need your confirmation first.");
+    writer.tool("place_order", {
+      input: { side: "buy", symbol: "SOL", qty: 2, type: "market" },
+      needsApproval: true,
+      output: { orderId: "ord_7f3a91", filled: 2, avgPrice: 142.21, fee: 0.28 },
+    });
+  })
+  .assistant(({ toolCall, writer }) => {
+    writer.text(toolCall.approved
+      ? "Done. Bought **2 SOL** at an average of **$142.21** (fee $0.28). Order \`ord_7f3a91\`."
+      : "Cancelled. Nothing was sent to the exchange.");
+  })` },
+  { id: 'retry', name: 'Tool failure, then retry', icon: 'fi-rr-refresh', blurb: 'The first tool call fails with a 429, the agent reasons and retries on a backup feed.',
+    code: `createChat()
+  .user("What's BTC at?")
+  .assistant(({ writer }) => {
+    writer.tool("get_price", { input: { symbol: "BTC" } })
+      .sleep(500)
+      .error("429 Too Many Requests: exchange API rate limit");
+    writer.reasoning("The primary feed is rate limited. Retry once on the backup feed.");
+    writer.tool("get_price", { input: { symbol: "BTC", feed: "backup" } })
+      .sleep(600)
+      .output({ symbol: "BTC", price: 91840.5, change24h: -2.8, low: 91022, high: 94710 });
+    writer.text("BTC is at **$91,840**, down **2.8%** in 24 hours. The main price feed was " +
+      "rate limited, so this quote comes from the backup feed.");
+  })` },
+  { id: 'error', name: 'Stream error mid-answer', icon: 'fi-rr-triangle-warning', blurb: 'Half an answer, then the stream fails. Retry fails the same way, every time.',
+    code: `createChat()
+  .user("Summarise my portfolio risk.")
+  .assistant(({ writer }) => {
+    writer.text("Your largest exposure is SOL at 42% of the portfolio, and its 30-day volatility is");
+    writer.error("Connection to the model dropped (504 Gateway Timeout). Try again.");
+  })` },
+  { id: 'recorded', name: 'Recorded real answers', icon: 'fi-rr-play-alt', blurb: 'Real Claude Sonnet 5.5 answers, captured once and replayed. Pick a prompt and a run.',
+    code: `// recorded = one prompt from public/mocks/data/shadcn-ai-sdk-chat.json
+createChat()
+  .user(recorded.prompt)
+  .assistant(recorded.runs[run].text)` },
+];
+
+const STATES = [
+  ['text', 'Streaming text'], ['reasoning', 'Reasoning'], ['tool-running', 'Tool running'], ['tool-done', 'Tool output'],
+  ['tool-error', 'Tool error'], ['approval', 'Approval requested'], ['approved', 'Approved'], ['denied', 'Denied'],
+  ['sources', 'Sources'], ['stream-error', 'Stream error'], ['table', 'Long answer with a table'],
+];
+
+function buildChat(sc, data, promptKey, run) {
+  if (sc.id === 'recorded') {
+    const rec = data?.prompts?.[promptKey];
+    if (!rec) return createChat().user('No recorded data').assistant('The recorded answers file did not load.');
+    return new Function('createChat', 'recorded', 'run', 'return ' + sc.code.split('\n').slice(1).join('\n'))(createChat, rec, run);
+  }
+  return new Function('createChat', 'return ' + sc.code)(createChat);
+}
+
+// ================= markdown (small, escaped) =================
+function inline(s) {
+  return esc(s)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+function md(src) {
+  const lines = String(src || '').split('\n'); const out = []; let i = 0;
+  while (i < lines.length) {
+    const l = lines[i];
+    if (/^```/.test(l)) { const buf = []; i++; while (i < lines.length && !/^```/.test(lines[i])) buf.push(lines[i++]); i++; out.push('<pre><code>' + esc(buf.join('\n')) + '</code></pre>'); continue; }
+    if (/^\s*\|.*\|\s*$/.test(l) && /^\s*\|[\s:|-]+\|\s*$/.test(lines[i + 1] || '')) {
+      const row = (r) => r.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+      const head = row(l); i += 2; const body = [];
+      while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) body.push(row(lines[i++]));
+      out.push('<table><thead><tr>' + head.map((h) => '<th>' + inline(h) + '</th>').join('') + '</tr></thead><tbody>' + body.map((r) => '<tr>' + r.map((c) => '<td>' + inline(c) + '</td>').join('') + '</tr>').join('') + '</tbody></table>');
+      continue;
+    }
+    if (/^#{1,4}\s/.test(l)) { out.push('<h3>' + inline(l.replace(/^#+\s/, '')) + '</h3>'); i++; continue; }
+    if (/^\s*---+\s*$/.test(l)) { out.push('<hr>'); i++; continue; }
+    if (/^\s*([-*]|\d+\.)\s/.test(l)) {
+      const ordered = /^\s*\d+\./.test(l); const items = [];
+      while (i < lines.length && /^\s*([-*]|\d+\.)\s/.test(lines[i])) items.push(lines[i++].replace(/^\s*([-*]|\d+\.)\s/, ''));
+      out.push((ordered ? '<ol>' : '<ul>') + items.map((t) => '<li>' + inline(t) + '</li>').join('') + (ordered ? '</ol>' : '</ul>'));
+      continue;
+    }
+    if (!l.trim()) { i++; continue; }
+    const buf = [l]; i++;
+    while (i < lines.length && lines[i].trim() && !/^(```|#{1,4}\s|\s*([-*]|\d+\.)\s|\s*\|)/.test(lines[i])) buf.push(lines[i++]);
+    out.push('<p>' + inline(buf.join(' ')) + '</p>');
+  }
+  return out.join('');
+}
+
+// light syntax colouring for the Script tab
+function highlight(code) {
+  const re = /(\/\/[^\n]*)|("(?:[^"\\\n]|\\.)*")|\b(\d+(?:\.\d+)?)\b|\b(createChat|user|assistant|reasoning|tool|sleep|output|error|text|sourceUrl|useChat|transport|get)\b(?=\()|\b(true|false|const|return|new)\b/g;
+  let out = '', last = 0, m;
+  while ((m = re.exec(code))) {
+    out += esc(code.slice(last, m.index));
+    const cls = m[1] ? 'c' : m[2] ? 's' : m[3] ? 'n' : m[4] ? 'f' : 'k';
+    out += '<span class="' + cls + '">' + esc(m[0]) + '</span>';
+    last = re.lastIndex;
+  }
+  return out + esc(code.slice(last));
+}
+
+// ================= transport with a stream log =================
+// Wraps the helper's ChatTransport and records each UI message chunk with its time, plus any
+// network requests made while the stream runs (there should be none).
+function loggedTransport(base, onEvent) {
+  return {
+    async sendMessages(opts) {
+      const t0 = performance.now(); const req0 = performance.getEntriesByType('resource').length;
+      onEvent({ kind: 'start', t0, trigger: opts.trigger });
+      const stream = await base.sendMessages(opts);
+      let first = null;
+      return stream.pipeThrough(new TransformStream({
+        transform(chunk, ctl) {
+          const t = performance.now() - t0; if (first === null) first = t;
+          onEvent({ kind: 'chunk', t, chunk }); ctl.enqueue(chunk);
+          if (chunk.type === 'error') onEvent({ kind: 'end', t, first, requests: performance.getEntriesByType('resource').length - req0 });
+        },
+        flush() { onEvent({ kind: 'end', t: performance.now() - t0, first, requests: performance.getEntriesByType('resource').length - req0 }); },
+      }));
+    },
+    reconnectToStream: (o) => base.reconnectToStream(o),
+  };
+}
+
+// ================= UI pieces (shadcn/ui look) =================
+const Badge = ({ tone = 'muted', children, testid }) => {
+  const cls = { muted: 'border-border text-muted-foreground', good: 'border-good/40 text-good', bad: 'border-bad/40 text-bad', amber: 'border-amber/40 text-amber', signal: 'border-primary/40 text-primary' }[tone];
+  return html`<span data-testid=${testid} className=${'inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-medium ' + cls}>${children}</span>`;
+};
+const btn = 'inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40';
+const btnOutline = btn + ' border border-input bg-background shadow-sm hover:bg-accent';
+const btnPrimary = btn + ' bg-primary text-primary-foreground shadow hover:opacity-90';
+const fmt = (n, d = 2) => Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+function PriceTile({ o }) {
+  const up = o.change24h >= 0;
+  return html`<div className="mt-2 grid grid-cols-3 gap-2">
+    <div className="rounded-md border bg-background/50 px-2.5 py-1.5"><div className="text-[11px] text-muted-foreground">${o.symbol}</div><div className="font-mono text-sm font-medium">$${fmt(o.price)}</div></div>
+    <div className="rounded-md border bg-background/50 px-2.5 py-1.5"><div className="text-[11px] text-muted-foreground">24h</div><div className=${'font-mono text-sm font-medium ' + (up ? 'text-good' : 'text-bad')}>${up ? '+' : ''}${o.change24h}%</div></div>
+    <div className="rounded-md border bg-background/50 px-2.5 py-1.5"><div className="text-[11px] text-muted-foreground">Range</div><div className="truncate font-mono text-[12px]">${fmt(o.low, 0)}–${fmt(o.high, 0)}</div></div>
+  </div>`;
+}
+function OrderTile({ o }) {
+  return html`<div className="mt-2 grid grid-cols-3 gap-2">
+    <div className="rounded-md border bg-background/50 px-2.5 py-1.5"><div className="text-[11px] text-muted-foreground">Filled</div><div className="font-mono text-sm">${o.filled}</div></div>
+    <div className="rounded-md border bg-background/50 px-2.5 py-1.5"><div className="text-[11px] text-muted-foreground">Avg price</div><div className="font-mono text-sm">$${fmt(o.avgPrice)}</div></div>
+    <div className="rounded-md border bg-background/50 px-2.5 py-1.5"><div className="text-[11px] text-muted-foreground">Order</div><div className="truncate font-mono text-[12px]">${o.orderId}</div></div>
+  </div>`;
+}
+
+function ToolCard({ part, onApprove }) {
+  const name = part.type.replace(/^tool-/, '');
+  const st = part.state;
+  const badge = {
+    'input-streaming': html`<${Badge} tone="signal"><span className="spinner"></span>Preparing</${Badge}>`,
+    'input-available': html`<${Badge} tone="signal"><span className="spinner"></span>Running</${Badge}>`,
+    'approval-requested': html`<${Badge} tone="amber"><i className="fi fi-rr-lock text-[10px]"></i>Needs approval</${Badge}>`,
+    'approval-responded': html`<${Badge} tone="signal"><span className="spinner"></span>${part.approval?.approved ? 'Approved, running' : 'Denied'}</${Badge}>`,
+    'output-available': html`<${Badge} tone="good"><i className="fi fi-rr-check text-[10px]"></i>Done</${Badge}>`,
+    'output-error': html`<${Badge} tone="bad"><i className="fi fi-rr-cross-small text-[10px]"></i>Failed</${Badge}>`,
+    'output-denied': html`<${Badge}><i className="fi fi-rr-ban text-[10px]"></i>Denied</${Badge}>`,
+  }[st] || html`<${Badge}>${st}</${Badge}>`;
+  const o = part.output;
+  return html`<div data-testid="tool" data-state=${st} className="fade-in rounded-lg border bg-card px-3 py-2.5">
+    <div className="flex items-center gap-2">
+      <i className="fi fi-rr-wrench-simple text-xs text-muted-foreground"></i>
+      <span className="font-mono text-[12.5px]">${name}</span>
+      <span className="truncate font-mono text-[11px] text-muted-foreground">${JSON.stringify(part.input ?? {})}</span>
+      <span className="ml-auto shrink-0">${badge}</span>
+    </div>
+    ${st === 'output-available' && o && name === 'get_price' && html`<${PriceTile} o=${o} />`}
+    ${st === 'output-available' && o && name === 'place_order' && html`<${OrderTile} o=${o} />`}
+    ${st === 'output-error' && html`<p className="mt-2 rounded-md border border-bad/30 bg-bad/10 px-2.5 py-1.5 font-mono text-[12px] text-bad">${part.errorText}</p>`}
+    ${st === 'approval-requested' && html`<div className="mt-2.5 flex items-center gap-2 border-t pt-2.5">
+      <p className="mr-auto text-xs text-muted-foreground">Place this order on your exchange account?</p>
+      <button data-testid="deny" className=${btnOutline} onClick=${() => onApprove(part, false)}>Deny</button>
+      <button data-testid="approve" className=${btnPrimary} onClick=${() => onApprove(part, true)}><i className="fi fi-rr-check text-xs"></i>Approve</button>
+    </div>`}
+  </div>`;
+}
+
+function AssistantMessage({ m, streaming, onApprove }) {
+  const parts = m.parts.filter((p) => p.type !== 'step-start');
+  const sources = parts.filter((p) => p.type === 'source-url');
+  const lastText = [...parts].reverse().find((p) => p.type === 'text');
+  return html`<li className="flex gap-3" data-testid="assistant">
+    <div className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md border bg-background"><i className="fi fi-rr-sparkles text-xs text-primary"></i></div>
+    <div className="min-w-0 flex-1 space-y-2.5">
+      ${parts.map((p, i) => {
+        if (p.type === 'reasoning') return html`<details key=${i} className="group rounded-md text-[13px] text-muted-foreground"><summary className="cursor-pointer select-none list-none"><i className="fi fi-rr-brain mr-1 align-[-1px] text-xs"></i>Reasoning <i className="fi fi-rr-angle-small-down align-[-2px] transition-transform group-open:rotate-180"></i></summary><p className="mt-1 border-l-2 pl-3 italic">${p.text}</p></details>`;
+        if (p.type === 'text') return html`<div key=${i} className=${'md' + (streaming && p === lastText ? ' caret' : '')} dangerouslySetInnerHTML=${{ __html: md(p.text) }}></div>`;
+        if (p.type.startsWith('tool-') || p.type === 'dynamic-tool') return html`<${ToolCard} key=${p.toolCallId} part=${p} onApprove=${onApprove} />`;
+        return null;
+      })}
+      ${sources.length > 0 && html`<div className="flex flex-wrap gap-1.5" data-testid="sources">${sources.map((s) => html`<a key=${s.sourceId || s.url} href=${s.url} target="_blank" rel="noopener" className="inline-flex items-center gap-1 rounded-md border bg-background/50 px-2 py-0.5 text-[11.5px] text-muted-foreground hover:text-foreground"><i className="fi fi-rr-link-alt text-[10px]"></i>${s.title || s.url}</a>`)}</div>`}
+    </div>
+  </li>`;
+}
+
+// ================= the chat (remounted per scenario run) =================
+function ChatView({ sc, data, promptKey, run, delay, tab, onEvent, onSeen, setStatus }) {
+  const chat = useMemo(() => buildChat(sc, data, promptKey, run), [sc, data, promptKey, run]);
+  const transport = useMemo(() => loggedTransport(chat.transport(delay === 0 ? { delayMs: undefined } : { delayMs: delay }), onEvent), [chat, delay]);
+  const { messages, sendMessage, status, error, addToolApprovalResponse, regenerate } = useChat({
+    messages: chat.get(0), transport, sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
+  });
+  const next = chat.next(messages);
+  const busy = status === 'submitted' || status === 'streaming';
+  const scroller = useRef(null);
+  useEffect(() => { setStatus(status); }, [status]);
+  useEffect(() => { const el = scroller.current; if (el) el.scrollTop = el.scrollHeight; }, [messages, status]);
+  // record which UI states have been on screen
+  useEffect(() => {
+    const seen = new Set();
+    for (const m of messages) for (const p of m.parts) {
+      if (m.role !== 'assistant') continue;
+      if (p.type === 'text') { seen.add('text'); if (/\n\s*\|[\s:|-]+\|/.test(p.text)) seen.add('table'); }
+      if (p.type === 'reasoning') seen.add('reasoning');
+      if (p.type === 'source-url') seen.add('sources');
+      if (p.type.startsWith('tool-')) {
+        if (p.state === 'input-available' || p.state === 'input-streaming') seen.add('tool-running');
+        if (p.state === 'output-available') seen.add('tool-done');
+        if (p.state === 'output-error') seen.add('tool-error');
+        if (p.state === 'approval-requested') seen.add('approval');
+        if (p.approval?.approved === true) seen.add('approved');
+        if (p.state === 'output-denied' || p.approval?.approved === false) seen.add('denied');
+      }
+    }
+    if (error) seen.add('stream-error');
+    if (seen.size) onSeen(seen);
+  }, [messages, error]);
+  const onApprove = (part, approved) => addToolApprovalResponse({ id: part.approval.id, approved });
+  const send = () => { if (next && !busy) sendMessage(next); };
+
+  return html`<div className=${'min-h-0 flex-1 flex-col ' + (tab === 'chat' ? 'flex' : 'hidden')}>
+    <div ref=${scroller} className="scroll-thin flex-1 overflow-y-auto">
+      ${messages.length === 0 && html`<div className="mx-auto max-w-2xl px-4 pt-14 text-center">
+        <i className=${'fi ' + sc.icon + ' text-3xl text-primary'}></i>
+        <h2 className="mt-3 text-xl font-semibold">${sc.name}</h2>
+        <p className="mx-auto mt-1.5 max-w-md text-sm text-muted-foreground">${sc.blurb} Press send to play the next scripted message.</p>
+      </div>`}
+      <ol data-testid="thread" data-status=${status} className="mx-auto max-w-2xl space-y-5 px-4 py-6" aria-live="polite">
+        ${messages.map((m, i) => m.role === 'user'
+          ? html`<li key=${m.id} className="flex justify-end" data-testid="user"><div className="max-w-[80%] rounded-lg bg-muted px-3.5 py-2 text-sm">${m.parts.filter((p) => p.type === 'text').map((p) => p.text).join('')}</div></li>`
+          : html`<${AssistantMessage} key=${m.id} m=${m} streaming=${busy && i === messages.length - 1} onApprove=${onApprove} />`)}
+        ${status === 'submitted' && html`<li className="flex items-center gap-2 pl-10 text-sm text-muted-foreground"><span className="spinner"></span>Waiting for the first chunk</li>`}
+        ${error && html`<li data-testid="stream-error" className="ml-10 flex items-start gap-2.5 rounded-lg border border-bad/40 bg-bad/10 px-3 py-2.5 text-sm">
+          <i className="fi fi-rr-triangle-warning mt-0.5 text-bad"></i>
+          <div className="min-w-0 flex-1"><div className="font-medium text-bad">The answer stopped</div><div className="text-[13px] text-ink-2">${error.message}</div></div>
+          <button className=${btnOutline} onClick=${() => regenerate()}><i className="fi fi-rr-refresh text-xs"></i>Retry</button>
+        </li>`}
+      </ol>
+    </div>
+    <form className="shrink-0 px-3 pb-3 sm:px-5 sm:pb-5" onSubmit=${(e) => { e.preventDefault(); send(); }}>
+      <div className="mx-auto flex max-w-2xl items-center gap-2 rounded-xl border bg-card px-3 py-2 shadow-sm">
+        <span className="shrink-0 rounded border px-1.5 py-0.5 font-mono text-[10.5px] text-muted-foreground">next</span>
+        <span data-testid="next-text" className=${'min-w-0 flex-1 truncate text-sm ' + (next ? '' : 'text-muted-foreground')}>${next ? next.parts.filter((p) => p.type === 'text').map((p) => p.text).join('') : messages.length ? 'End of script' : ''}</span>
+        <button data-testid="send" type="submit" disabled=${!next || busy} className="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground shadow transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-40" aria-label="Send the next scripted message"><i className="fi fi-rr-paper-plane text-sm"></i></button>
+      </div>
+      <p className="mx-auto mt-1.5 max-w-2xl text-center text-[11px] text-muted-foreground">Scripted with createChat(); streamed through useChat. 0 tokens, 0 API calls.</p>
+    </form>
+  </div>`;
+}
+
+// ================= tabs =================
+function ScriptTab({ sc, promptKey, run, data }) {
+  const rec = data?.prompts?.[promptKey];
+  return html`<div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-4 py-6"><div className="mx-auto max-w-2xl">
+    <h2 className="text-sm font-semibold">The script</h2>
+    <p className="mt-1 text-xs text-muted-foreground">This is the code the page runs for “${sc.name}”. The chat feeds <span className="font-mono">chat.transport()</span> to <span className="font-mono">useChat</span> and sends <span className="font-mono">chat.next(messages)</span> when you press send.</p>
+    <pre className="code scroll-thin mt-3 overflow-x-auto rounded-lg border bg-card p-3.5" dangerouslySetInnerHTML=${{ __html: highlight(sc.code) }}></pre>
+    ${sc.id === 'recorded' && rec && html`<p className="mt-3 text-xs text-muted-foreground">Now playing run ${run + 1} of ${rec.runs.length} for “${rec.prompt}”: ${rec.runs[run].chars.toLocaleString()} characters, ${rec.runs[run].outputTokens} output tokens.</p>`}
+    <h3 className="mt-6 text-sm font-semibold">Wiring</h3>
+    <pre className="code scroll-thin mt-2 overflow-x-auto rounded-lg border bg-card p-3.5" dangerouslySetInnerHTML=${{ __html: highlight('const { messages, sendMessage, addToolApprovalResponse } = useChat({\n  messages: chat.get(0),\n  transport: chat.transport({ delayMs: 50 }),\n  sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,\n})\n\n// swap for production: transport: new DefaultChatTransport({ api: "/api/chat" })') }}></pre>
+  </div></div>`;
+}
+
+function StreamTab({ log }) {
+  const end = [...log].reverse().find((e) => e.kind === 'end');
+  const chunks = log.filter((e) => e.kind === 'chunk');
+  const kpi = (l, v, testid) => html`<div className="rounded-lg border bg-card px-3 py-2"><div className="text-[11px] text-muted-foreground">${l}</div><div data-testid=${testid} className="font-mono text-sm font-medium">${v}</div></div>`;
+  return html`<div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-4 py-6"><div className="mx-auto max-w-2xl">
+    <h2 className="text-sm font-semibold">Stream log</h2>
+    <p className="mt-1 text-xs text-muted-foreground">Every UI message chunk the transport handed to <span className="font-mono">useChat</span> in this run, with its time since the request. The last turn's totals are on top.</p>
+    <div data-testid="stream-metrics" data-first=${end?.first ?? ''} data-done=${end?.t ?? ''} data-chunks=${chunks.length} data-requests=${end?.requests ?? ''} className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      ${kpi('First chunk', end ? fmt(end.first, 1) + ' ms' : '–', 'm-first')}${kpi('Turn done', end ? fmt(end.t, 0) + ' ms' : '–', 'm-done')}${kpi('Chunks (all turns)', chunks.length, 'm-chunks')}${kpi('Network requests', end ? end.requests : '–', 'm-req')}
+    </div>
+    <ol className="mt-4 divide-y rounded-lg border bg-card font-mono text-[11.5px]">
+      ${log.length === 0 && html`<li className="px-3 py-2 text-muted-foreground">Nothing yet. Send a message in the Chat tab.</li>`}
+      ${log.slice(-400).map((e, i) => html`<li key=${i} className="flex gap-3 px-3 py-1">
+        <span className="w-16 shrink-0 text-right text-muted-foreground">${e.kind === 'start' ? 'request' : fmt(e.t, 1)}</span>
+        <span className=${e.kind === 'chunk' ? (e.chunk.type.includes('error') ? 'text-bad' : e.chunk.type.startsWith('tool') ? 'text-amber' : 'text-primary') : 'text-ink-2'}>${e.kind === 'chunk' ? e.chunk.type : e.kind === 'start' ? 'sendMessages(' + (e.trigger || '') + ')' : 'stream closed · ' + e.requests + ' network requests'}</span>
+        <span className="min-w-0 truncate text-muted-foreground">${e.kind === 'chunk' ? (e.chunk.delta ?? e.chunk.errorText ?? (e.chunk.toolName ? e.chunk.toolName : '')) : ''}</span>
+      </li>`)}
+    </ol>
+  </div></div>`;
+}
+
+function RealTab({ data }) {
+  if (!data) return html`<div className="p-6 text-sm text-muted-foreground">The recorded data did not load.</div>`;
+  const keys = Object.keys(data.prompts);
+  const all = keys.flatMap((k) => data.prompts[k].runs);
+  const maxMs = Math.max(...all.map((r) => r.totalMs));
+  const x = (ms) => (ms / maxMs) * 100;
+  return html`<div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-4 py-6"><div className="mx-auto max-w-2xl">
+    <h2 className="text-sm font-semibold">The same chat with a real model</h2>
+    <p className="mt-1 text-xs text-muted-foreground">${data.prompts[keys[0]].runs.length} runs of each prompt against ${data.model}, captured on ${data.capturedAt} (${data.how}). Each dot is one run: <span className="text-primary">●</span> first token, <span className="text-amber">●</span> answer done.</p>
+    <div className="mt-4 space-y-4">
+      ${keys.map((k) => { const p = data.prompts[k]; const rs = p.runs; const cost = rs.reduce((a, r) => a + r.costUsd, 0) / rs.length; const ch = rs.map((r) => r.chars);
+        return html`<div key=${k} className="rounded-lg border bg-card px-3 py-2.5">
+          <div className="flex items-baseline gap-2"><span className="truncate text-sm">“${p.prompt}”</span></div>
+          <div className="relative mt-2 h-5 rounded bg-background/60">${rs.map((r, i) => html`<span key=${'t' + i} title=${'first token ' + r.ttftMs + ' ms'} className="absolute top-1.5 size-2 rounded-full bg-primary" style=${{ left: 'calc(' + x(r.ttftMs) + '% - 4px)' }}></span>`)}${rs.map((r, i) => html`<span key=${'d' + i} title=${'done ' + r.totalMs + ' ms'} className="absolute top-1.5 size-2 rounded-full bg-amber" style=${{ left: 'calc(' + x(r.totalMs) + '% - 4px)' }}></span>`)}</div>
+          <div className="mt-1.5 grid grid-cols-3 gap-2 font-mono text-[11.5px] text-muted-foreground">
+            <span>${fmt(Math.min(...rs.map((r) => r.ttftMs)) / 1000, 1)}–${fmt(Math.max(...rs.map((r) => r.ttftMs)) / 1000, 1)} s to first token</span>
+            <span>$${cost.toFixed(4)} a reload</span>
+            <span>${Math.min(...ch).toLocaleString()}–${Math.max(...ch).toLocaleString()} chars, ${new Set(rs.map((r) => r.text)).size}/${rs.length} unique</span>
+          </div>
+        </div>`; })}
+    </div>
+    <div className="mt-2 flex justify-between font-mono text-[10.5px] text-muted-foreground"><span>0 s</span><span>${fmt(maxMs / 1000, 1)} s</span></div>
+    <p className="mt-4 text-xs leading-relaxed text-muted-foreground">The scripted scenarios stream their first chunk in a few milliseconds, cost nothing and render the same way every time. See the Stream tab for this browser's numbers. Replay any of these answers from <span className="font-mono">Recorded real answers</span>.</p>
+  </div></div>`;
+}
+
+// ================= sidebar =================
+function Sidebar({ sc, setSc, data, promptKey, setPromptKey, run, setRun, delay, setDelay, seen, resetSeen }) {
+  const keys = data ? Object.keys(data.prompts) : [];
+  const seg = (active) => 'inline-flex h-7 flex-1 items-center justify-center rounded-md px-2 font-mono text-xs font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ' + (active ? 'bg-background text-foreground shadow' : '');
+  return html`<div>
+    <section>
+      <h2 className="px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">Scenarios</h2>
+      <ul className="mt-2 space-y-1">${SCENARIOS.map((s) => html`<li key=${s.id}><button data-scenario=${s.id} data-drawer-close onClick=${() => setSc(s.id)} className=${'flex w-full items-start gap-2.5 rounded-md px-2 py-2 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ' + (sc.id === s.id ? 'bg-accent' : '')}>
+        <i className=${'fi ' + s.icon + ' mt-0.5 text-sm ' + (sc.id === s.id ? 'text-primary' : 'text-muted-foreground')}></i>
+        <span className="min-w-0"><span className="block text-sm font-medium">${s.name}</span><span className="block text-xs leading-snug text-muted-foreground">${s.blurb}</span></span>
+      </button></li>`)}</ul>
+    </section>
+    ${sc.id === 'recorded' && data && html`<section className="mt-5">
+      <h2 className="px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">Recorded answer</h2>
+      <select data-testid="prompt-select" value=${promptKey} onChange=${(e) => setPromptKey(e.target.value)} className="mt-2 h-8 w-full rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+        ${keys.map((k) => html`<option key=${k} value=${k}>${data.prompts[k].prompt}</option>`)}
+      </select>
+      <div className="mt-2 inline-flex w-full items-center rounded-lg bg-muted p-1 text-muted-foreground" role="tablist" aria-label="Run">
+        ${data.prompts[promptKey].runs.map((r, i) => html`<button key=${i} data-run=${i} role="tab" aria-selected=${run === i} onClick=${() => setRun(i)} className=${seg(run === i)}>${i + 1}</button>`)}
+      </div>
+      <p className="mt-1.5 px-1 text-xs text-muted-foreground">Run ${run + 1}: ${data.prompts[promptKey].runs[run].chars.toLocaleString()} characters, first token after ${fmt(data.prompts[promptKey].runs[run].ttftMs / 1000, 1)} s live.</p>
+    </section>`}
+    <section className="mt-5">
+      <h2 className="px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">Transport delay</h2>
+      <div className="mt-2 inline-flex w-full items-center rounded-lg bg-muted p-1 text-muted-foreground" role="tablist" aria-label="Delay between text chunks">
+        ${[0, 20, 50, 120].map((d) => html`<button key=${d} data-delay=${d} role="tab" aria-selected=${delay === d} onClick=${() => setDelay(d)} className=${seg(delay === d)}>${d} ms</button>`)}
+      </div>
+      <p className="mt-1.5 px-1 text-xs text-muted-foreground">Delay between text deltas (<span className="font-mono">transport({ delayMs })</span>). 0 is for tests: no delays at all.</p>
+    </section>
+    <section className="mt-5">
+      <div className="flex items-baseline justify-between px-1">
+        <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">UI states seen</h2>
+        <span data-testid="coverage" className="font-mono text-[11px] text-muted-foreground">${seen.size}/${STATES.length}</span>
+      </div>
+      <ul className="mt-2 grid grid-cols-1 gap-0.5 px-1">${STATES.map(([k, l]) => html`<li key=${k} data-state-seen=${seen.has(k) ? k : null} className=${'flex items-center gap-2 text-[13px] ' + (seen.has(k) ? '' : 'text-muted-foreground')}>
+        <i className=${'fi text-xs ' + (seen.has(k) ? 'fi-rr-check-circle text-primary' : 'fi-rr-circle')}></i>${l}</li>`)}</ul>
+      <button onClick=${resetSeen} className="mt-2 px-1 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground">Clear (stored in this browser)</button>
+    </section>
+  </div>`;
+}
+
+// ================= app =================
+const DATA = await fetch('/mocks/data/shadcn-ai-sdk-chat.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+const saved = (await store.get('prefs')) || {};
+const savedSeen = (await store.get('seen')) || [];
+
+function App() {
+  const [scId, setScId] = useState(SCENARIOS.some((s) => s.id === saved.sc) ? saved.sc : 'quote');
+  const [promptKey, setPromptKey] = useState(DATA?.prompts?.[saved.promptKey] ? saved.promptKey : 'compare');
+  const [run, setRun] = useState(0);
+  const [delay, setDelay] = useState([0, 20, 50, 120].includes(saved.delay) ? saved.delay : 50);
+  const [tab, setTab] = useState('chat');
+  const [nonce, setNonce] = useState(0);
+  const [log, setLog] = useState([]);
+  const [status, setStatus] = useState('ready');
+  const [seen, setSeen] = useState(() => new Set(savedSeen));
+  const sc = SCENARIOS.find((s) => s.id === scId);
+  useEffect(() => { store.put('prefs', { sc: scId, promptKey, delay }); }, [scId, promptKey, delay]);
+  useEffect(() => { setLog([]); }, [scId, promptKey, run, delay, nonce]);
+  const onEvent = useMemo(() => (e) => setLog((l) => [...l, e]), []);
+  const onSeen = useMemo(() => (s) => setSeen((prev) => { const n = new Set(prev); let grew = false; for (const k of s) if (!n.has(k)) { n.add(k); grew = true; } if (grew) store.put('seen', [...n]); return grew ? n : prev; }), []);
+  const resetSeen = () => { setSeen(new Set()); store.put('seen', []); toast('Cleared the UI states seen in this browser'); };
+  const tabs = [['chat', 'Chat', 'fi-rr-comment-alt'], ['script', 'Script', 'fi-rr-code-simple'], ['stream', 'Stream', 'fi-rr-list'], ['real', 'Real model', 'fi-rr-stopwatch']];
+  const tone = { ready: 'text-muted-foreground', submitted: 'text-amber', streaming: 'text-primary', error: 'text-bad' }[status];
+  return html`<${React.Fragment}>
+    ${createPortal(html`<span>useChat status: <span data-testid="status" className=${'font-mono ' + tone}>${status}</span> · ${sc.name}</span>`, $('#hdr-status'))}
+    ${createPortal(html`<${React.Fragment}>
+      <span className="hidden items-center rounded-md border px-2 py-0.5 text-xs font-medium text-muted-foreground lg:inline-flex">No model · 0 tokens</span>
+      <button data-testid="replay" className=${btnOutline} onClick=${() => { setNonce((n) => n + 1); setTab('chat'); }}><i className="fi fi-rr-rotate-right text-xs"></i><span className="max-sm:hidden">Replay</span></button>
+    </${React.Fragment}>`, $('#hdr-actions'))}
+    ${createPortal(html`<${Sidebar} sc=${sc} setSc=${(id) => { setScId(id); setTab('chat'); }} data=${DATA} promptKey=${promptKey} setPromptKey=${(k) => { setPromptKey(k); setRun(0); }} run=${run} setRun=${setRun} delay=${delay} setDelay=${setDelay} seen=${seen} resetSeen=${resetSeen} />`, $('#sidebar-body'))}
+    <div className="flex shrink-0 items-center gap-2 border-b px-3 py-2 sm:px-5">
+      <div role="tablist" className="inline-flex h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground">
+        ${tabs.map(([k, l, ic]) => html`<button key=${k} role="tab" data-tab=${k} aria-selected=${tab === k} aria-label=${l} onClick=${() => setTab(k)} className=${'inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ' + (tab === k ? 'bg-background text-foreground shadow' : '')}><i className=${'fi ' + ic + ' text-xs'}></i><span className="max-sm:hidden">${l}</span></button>`)}
+      </div>
+    </div>
+    <${ChatView} key=${scId + '|' + promptKey + '|' + run + '|' + delay + '|' + nonce} sc=${sc} data=${DATA} promptKey=${promptKey} run=${run} delay=${delay} tab=${tab} onEvent=${onEvent} onSeen=${onSeen} setStatus=${setStatus} />
+    ${tab === 'script' && html`<${ScriptTab} sc=${sc} promptKey=${promptKey} run=${run} data=${DATA} />`}
+    ${tab === 'stream' && html`<${StreamTab} log=${log} />`}
+    ${tab === 'real' && html`<${RealTab} data=${DATA} />`}
+  </${React.Fragment}>`;
+}
+
+createRoot($('#app')).render(html`<${App} />`);
+</script>
+</body>
+</html>
