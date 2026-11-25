@@ -35,7 +35,7 @@ Personal portfolio, blog, and research reports site. Built with React 18 + Vite 
 │   └── sync-static-reports.js       # Copies docs/ → public/ reports
 ├── docs/                     # Build output (GitHub Pages root)
 │   └── reports/              # Deployed static research reports
-└── .notes/                   # Draft social media posts (gitignored)
+└── notes/                    # Working notes (ideas/, drafts)
 ```
 
 ## Local Development

@@ -58,8 +58,8 @@ Key rules:
 
 ### Notes Writing 
 
-Store the notes into .notes/ folder. Notes filename format: `YYYY-MM-DD--<short-topic-title>.md`.
-Depend on the notes type, use the appropriate folder: `researches/`, `social_posts/`, etc. 
+Store the notes into notes/ folder. Notes filename format: `YYYY-MM-DD--<short-topic-title>.md`.
+Depend on the notes type, use the appropriate folder: `ideas/`, `researches/`, `social_posts/`, etc. 
 For example a linkedin post notes would go into `social_posts/` folder.
 
 Required frontmatter for social posts:
