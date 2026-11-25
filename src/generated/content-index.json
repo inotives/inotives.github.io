@@ -1,6 +1,26 @@
 {
   "posts": [
     {
+      "slug": "2026-11-25-claude-code-mode-tokens-and-time",
+      "filename": "2026-11-25-claude-code-mode-tokens-and-time.md",
+      "category": "post",
+      "title": "Claude Code's Code Mode, measured: fewer tokens, not fewer turns",
+      "date": "2026-11-25",
+      "tags": [
+        "claude-code",
+        "code-mode",
+        "ai-agents",
+        "token-cost",
+        "agent-harness",
+        "benchmarking",
+        "ai-engineering"
+      ],
+      "series": "ai-engineer-with-claude",
+      "summary": "First entry in a new series on day-to-day engineering with Claude Code agents. Code Mode is an experimental switch that makes Claude write one JavaScript script to run its tool calls instead of calling tools one by one. I ran 36 paired sessions across six everyday tasks, with Code Mode off and on. It used 17–49% fewer input tokens and cost 14–28% less per task, with identical answers. Most of the saving came from a smaller starting prompt, not fewer round trips: turn counts were the same. It was not faster. When a script looped over 228 files it ran 3–4× slower, because every tool call inside a script costs about 80 ms. Telling it to use one shell command fixed the speed but cost accuracy.",
+      "featured_image": null,
+      "draft": false
+    },
+    {
       "slug": "2026-11-15-otel-traces-to-answers-cost-quality",
       "filename": "2026-11-15-otel-traces-to-answers-cost-quality.md",
       "category": "post",
