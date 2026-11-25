@@ -14,6 +14,11 @@ export const SERIES_META = {
     description:
       'A practical learning path from SQL and files to reliable pipelines, warehouses, and AI-ready data systems. Each entry takes one concept far enough to build with it.',
   },
+  'ai-engineer-with-claude': {
+    title: 'AI engineer with Claude',
+    description:
+      'Hands-on notes on the tools, workflows and experiments that make Claude Code agents useful in day-to-day engineering. Each entry tests one feature or habit with real runs and reports what it actually changed.',
+  },
   'building-motherduck-warehouse': {
     title: 'Building a MotherDuck data warehouse',
     description:
