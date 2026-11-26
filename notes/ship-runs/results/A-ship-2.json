@@ -1,0 +1,221 @@
+{
+  "run": "A-ship-2",
+  "measuredAt": "2026-11-26T12:57:23.682Z",
+  "transcripts": [
+    "cde517c3-a31d-4961-a627-cd7f40723001.jsonl"
+  ],
+  "startedAt": "2026-11-26T12:37:34.577Z",
+  "prOpenedAt": "2026-11-26T12:37:46.138Z",
+  "pr": 91,
+  "usage": {
+    "total": {
+      "calls": 36,
+      "input": 80,
+      "cacheRead": 2529520,
+      "cacheWrite5m": 66677,
+      "cacheWrite1h": 65678,
+      "output": 12068,
+      "cost": 1.606393
+    },
+    "byPhase": {
+      "ship": {
+        "calls": 5,
+        "input": 10,
+        "cacheRead": 295019,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 36589,
+        "output": 693,
+        "cost": 0.3656158
+      },
+      "task-notification": {
+        "calls": 2,
+        "input": 6,
+        "cacheRead": 135655,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 2544,
+        "output": 480,
+        "cost": 0.057107000000000005
+      },
+      "check-in": {
+        "calls": 19,
+        "input": 44,
+        "cacheRead": 1586471,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 26545,
+        "output": 5077,
+        "cost": 0.6313701999999999
+      },
+      "review": {
+        "calls": 10,
+        "input": 20,
+        "cacheRead": 512375,
+        "cacheWrite5m": 66677,
+        "cacheWrite1h": 0,
+        "output": 5818,
+        "cost": 0.5523
+      }
+    }
+  },
+  "subagents": [
+    {
+      "name": "code-review",
+      "description": "/code-review high origin/master...HEAD",
+      "model": "claude-opus-5-5",
+      "startedAt": "2026-11-26T12:38:12.057Z",
+      "seconds": 70,
+      "usage": {
+        "calls": 10,
+        "input": 20,
+        "cacheRead": 512375,
+        "cacheWrite5m": 66677,
+        "cacheWrite1h": 0,
+        "output": 5818,
+        "cost": 0.5523
+      },
+      "finalText": "I found six issues in this content-only diff (one draft post and one SVG chart). None of them is a code bug that would break the build. The most useful ones are that the draft still ships publicly once merged, and that the chart is hard to read on the site's dark background.\n\n- **Conventions angle:** the repo-root `CLAUDE.md` has no rule that this diff breaks.\n- **Not a CLAUDE.md rule:** the \"References\" finding comes from `AGENTS.md`, so it is only a nit.\n- **Bars check out:** the bar heights match 6/4/7/5 to scale.\n\n```json\n[\n  {\n    \"file\": \"public/assets/images/ship-test-ship-2.svg\",\n    \"line\": 2,\n    \"summary\": \"On the live site the chart's W1–W4 labels are close to invisible. The SVG has no background of its own, and it sets text to fill:#555. The site is dark-first (`--bg: #15171b` in src/index.css), and other article SVGs such as otel-cost-by-step.svg paint their own background rect for this reason. Fix: add a background rect, or use a light label colour such as `#b8b5ac` (`--ink-2`).\",\n    \"failure_scenario\": \"The post renders in .manual-prose on the #15171b page background → #555 grey text on near-black gives about 2.4:1 contrast, below WCAG AA → readers can't make out the week labels.\",\n    \"severity\": \"important\"\n  },\n  {\n    \"file\": \"public/assets/images/ship-test-ship-2.svg\",\n    \"line\": 1,\n    \"summary\": \"Merging deploys the chart to a public URL, even though the post says it is \\\"never published\\\". Everything in public/ is copied into docs/ and deployed to Pages, whatever the post's `draft` flag says. The `draft: true` filter in generate-content-index.js only hides the post's index entry, not its assets. Fix: accept that the asset is public, or keep fixture assets out of public/ (or drop them before merging).\",\n    \"failure_scenario\": \"PR merges to master → build-and-deploy.yml runs → https://<site>/assets/images/ship-test-ship-2.svg is served publicly although the post is a draft.\",\n    \"severity\": \"nit\"\n  },\n  {\n    \"file\": \"content/posts/2026-12-01-ship-test-ship-2.md\",\n    \"line\": 6,\n    \"summary\": \"`draft: true` does not keep the post body out of the deployed bundle. src/utils/content.js loads every file in /content/posts/*.md with a lazy `import.meta.glob` (?raw), so Vite still emits a JS chunk for each draft. Only the index entry is filtered out. Fix: exclude drafts from the glob (for example with a negative pattern or a build-time plugin), or don't rely on `draft` to keep text private.\",\n    \"failure_scenario\": \"npm run build → docs/assets/2026-12-01-ship-test-ship-2-<hash>.js holds the raw markdown → anyone who looks through the deployed JS chunks can fetch the draft text.\",\n    \"severity\": \"pre_existing\"\n  },\n  {\n    \"file\": \"content/posts/2026-12-01-ship-test-ship-2.md\",\n    \"line\": 14,\n    \"summary\": \"The chart's numbers do not match the site's real post counts. The post and alt text say the last four weeks had 6, 4, 7 and 5 posts, with a busiest week of seven. The files in content/posts for the four weeks before 2026-12-01 give about 8, 5, 0 and 2. Fix: regenerate the numbers from content/posts, or label the chart as sample data.\",\n    \"failure_scenario\": \"Weeks of Nov 3, 10, 17 and 24 in content/posts hold 8, 5, 0 and 2 files → the chart and the sentence \\\"The busiest week had seven posts\\\" are factually wrong.\",\n    \"severity\": \"nit\"\n  },\n  {\n    \"file\": \"public/assets/images/ship-test-ship-2.svg\",\n    \"line\": 3,\n    \"summary\": \"Readers can't check the chart's values from the image. It has no y-axis, gridlines or value labels, and the aria-label is ignored when the SVG is loaded through `<img>`. The body text quotes \\\"seven posts\\\", which nothing in the chart shows. Fix: add a value label above each bar (6, 4, 7, 5), or a y-axis.\",\n    \"failure_scenario\": \"A sighted reader looks at the chart → sees four unlabeled bar heights → can't confirm the seven-post week the text cites.\",\n    \"severity\": \"nit\"\n  },\n  {\n    \"file\": \"content/posts/2026-12-01-ship-test-ship-2.md\",\n    \"line\": 14,\n    \"summary\": \"The post has no closing `## References` section. AGENTS.md (not a CLAUDE.md) says: \\\"Add a `## References` section at the end with links to relevant resources\\\" for every file in content/posts/. Fix: add a short References section, or note that throwaway fixtures are exempt.\",\n    \"failure_scenario\": \"AGENTS.md article rule: \\\"Add a `## References` section at the end with links to relevant resources...\\\" → the post ends at line 14 with no References section.\",\n    \"severity\": \"nit\"\n  }\n]\n```"
+    }
+  ],
+  "checkIns": [
+    {
+      "n": 1,
+      "at": "2026-11-26T12:41:09.270Z",
+      "pushed": true,
+      "commented": true,
+      "tools": 17
+    },
+    {
+      "n": 2,
+      "at": "2026-11-26T12:45:06.409Z",
+      "pushed": false,
+      "commented": false,
+      "tools": 5
+    },
+    {
+      "n": 3,
+      "at": "2026-11-26T12:57:01.536Z",
+      "pushed": false,
+      "commented": false,
+      "tools": 0
+    }
+  ],
+  "wakeups": [
+    {
+      "t": "2026-11-26T12:39:26.094Z",
+      "delaySeconds": 60,
+      "reason": "Review findings are in; the first check-in will handle them along with any new pull request activity."
+    },
+    {
+      "t": "2026-11-26T12:42:19.725Z",
+      "delaySeconds": 120,
+      "reason": "Pushed a fix; checking back shortly for the new CI run on ec1c372."
+    },
+    {
+      "t": "2026-11-26T12:45:16.345Z",
+      "delaySeconds": 3000,
+      "reason": "Checks are green and nothing is open; waiting quietly for any new activity or a merge."
+    }
+  ],
+  "pushes": [
+    {
+      "t": "2026-11-26T12:42:00.117Z",
+      "cmd": "git -c core.hooksPath=/dev/null push origin ship-test/a-ship-2:ship-test/a-ship-2"
+    }
+  ],
+  "comments": [
+    {
+      "t": "2026-11-26T12:42:15.318Z"
+    }
+  ],
+  "typedDuringRun": [],
+  "risky": [],
+  "fenced": [],
+  "notices": [
+    {
+      "t": "2026-11-26T12:37:28.182Z",
+      "text": "Unknown command: /shit. Did you mean /ship?"
+    },
+    {
+      "t": "2026-11-26T12:37:34.577Z",
+      "text": "/ship is starting for a new pull request in inotives/inotives.github.io. Claude reviews your change, then watches the pull request for up to 7 days, in this session, on your usage.\nAs you, Claude may push to ship-test/a-ship-2, merge master into it, and comment, re-run checks, and more on the pull request, all unattended.\nKeep this session open, this computer awake, and this branch checked out. /s"
+    },
+    {
+      "t": "2026-11-26T12:37:34.578Z",
+      "text": "Pushing 1 commit on ship-test/a-ship-2 to inotives/inotives.github.io (public) and opening a pull request. Anyone can see what goes there, and it can't be taken back. Esc to cancel."
+    },
+    {
+      "t": "2026-11-26T12:37:37.655Z",
+      "text": "Pushing ship-test/a-ship-2 to inotives/inotives.github.io, with your git hooks…"
+    },
+    {
+      "t": "2026-11-26T12:37:41.295Z",
+      "text": "Opening the pull request as ready for review, so checks and reviews start…"
+    },
+    {
+      "t": "2026-11-26T12:37:46.138Z",
+      "text": "/ship pushed ship-test/a-ship-2 to inotives/inotives.github.io and opened pull request #91 as you, ready for review: https://github.com/inotives/inotives.github.io/pull/91\n/ship didn't set an upstream. To pull or push ship-test/a-ship-2, name the remote: git pull origin ship-test/a-ship-2 or git push origin ship-test/a-ship-2. Setting an upstream (git branch -u, git push -u) changes git's configur"
+    },
+    {
+      "t": "2026-11-26T12:57:01.835Z",
+      "text": "Stopped watching pull request #91, because it's closed."
+    }
+  ],
+  "prData": {
+    "number": 91,
+    "title": "Add weekly post count draft",
+    "state": "CLOSED",
+    "branch": "ship-test/a-ship-2",
+    "createdAt": "2026-11-26T12:37:44Z",
+    "closedAt": "2026-11-26T12:46:17Z",
+    "mergedAt": null,
+    "commits": [
+      {
+        "sha": "75b003e",
+        "at": "2026-11-26T12:30:41Z",
+        "headline": "Add weekly post count draft",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": [
+          {
+            "name": "check",
+            "conclusion": "success",
+            "status": "completed",
+            "startedAt": "2026-11-26T12:37:50Z",
+            "completedAt": "2026-11-26T12:38:11Z"
+          }
+        ]
+      },
+      {
+        "sha": "ec1c372",
+        "at": "2026-11-26T12:41:46Z",
+        "headline": "Make the fixture chart readable and label its numbers as samples",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": [
+          {
+            "name": "check",
+            "conclusion": "success",
+            "status": "completed",
+            "startedAt": "2026-11-26T12:42:14Z",
+            "completedAt": "2026-11-26T12:42:31Z"
+          }
+        ]
+      }
+    ],
+    "firstCiFailureAt": null,
+    "headCiPassedAt": "2026-11-26T12:42:31Z",
+    "forcePushes": 0,
+    "comments": [
+      {
+        "at": "2026-11-26T12:42:16Z",
+        "author": "inotives",
+        "body": "<!-- claude-code-ship-local reviewed=ec1c37250ff6f5e3e8a670da70dff7b53da13c0e -->\nClaude Code reviewed this change at 75b003e for the author: 5 findings, 3 fixed.\n\n- `public/assets/images/ship-test-ship-2.svg:2`: grey labels on a transparent chart were hard to read on the site's dark background. Fixed in ec1c372 (dark panel and lighter text).\n- `content/posts/2026-12-01-ship-test-ship-2.md:14`: the weekly counts didn't match the real posts in the content folder. Fixed in ec1c372 (now labelled as sample numbers).\n- `public/assets/images/ship-test-ship-2.svg:3`: the bars had no values, so readers couldn't check the \"seven posts\" in the text. Fixed in ec1c372 (value label above each bar).\n- `public/assets/images/ship-test-ship-2.svg:1`: everything in the public folder is deployed, so the chart goes live even though the post is a draft. Left: whether that's acceptable for a fixture is up to the author.\n- `content/posts/2026-12-01-ship-test-ship-2.md:14`: there's no closing References section, which the repo's article guidance asks for. Left: this is a throwaway fixture with nothing to cite."
+      }
+    ],
+    "reviews": []
+  },
+  "timing": {
+    "toPrOpenS": 12,
+    "toHeadCiGreenS": 296,
+    "lastPushAt": "2026-11-26T12:42:00.117Z"
+  }
+}

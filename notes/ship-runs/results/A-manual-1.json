@@ -1,0 +1,116 @@
+{
+  "run": "A-manual-1",
+  "measuredAt": "2026-11-26T12:15:58.415Z",
+  "transcripts": [
+    "2ae3c2e1-0055-46e4-a907-2a45860f476c.jsonl"
+  ],
+  "startedAt": "2026-11-26T09:17:01.950Z",
+  "prOpenedAt": null,
+  "pr": 85,
+  "usage": {
+    "total": {
+      "calls": 9,
+      "input": 22,
+      "cacheRead": 481220,
+      "cacheWrite5m": 0,
+      "cacheWrite1h": 61912,
+      "output": 1961,
+      "cost": 0.630848
+    },
+    "byPhase": {
+      "typed": {
+        "calls": 9,
+        "input": 22,
+        "cacheRead": 481220,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 61912,
+        "output": 1961,
+        "cost": 0.630848
+      }
+    }
+  },
+  "subagents": [],
+  "checkIns": [],
+  "wakeups": [],
+  "pushes": [
+    {
+      "t": "2026-11-26T09:17:15.007Z",
+      "cmd": "git push -u origin ship-test/a-manual-1 2>&1 | tail -5"
+    },
+    {
+      "t": "2026-11-26T12:13:34.262Z",
+      "cmd": "sed -i '' 's/The busiest week had seven posts\\./The busiest week had seven posts; the quietest had four./' content/posts/2026-12-01-ship-test-manual-1.md && git"
+    }
+  ],
+  "comments": [],
+  "typedDuringRun": [
+    {
+      "t": "2026-11-26T09:17:01.950Z",
+      "text": "\"push and open a pr"
+    },
+    {
+      "t": "2026-11-26T12:13:31.033Z",
+      "text": "make some small change. we are doing some small testing"
+    },
+    {
+      "t": "2026-11-26T12:14:40.633Z",
+      "text": "commit push and pr."
+    }
+  ],
+  "risky": [],
+  "fenced": [],
+  "notices": [],
+  "prData": {
+    "number": 85,
+    "title": "Add weekly post count draft",
+    "state": "CLOSED",
+    "branch": "ship-test/a-manual-1",
+    "createdAt": "2026-11-26T09:17:24Z",
+    "closedAt": "2026-11-26T12:15:50Z",
+    "mergedAt": null,
+    "commits": [
+      {
+        "sha": "821a3cf",
+        "at": "2026-11-26T09:15:55Z",
+        "headline": "Add weekly post count draft",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": [
+          {
+            "name": "check",
+            "conclusion": "success",
+            "status": "completed",
+            "startedAt": "2026-11-26T09:17:30Z",
+            "completedAt": "2026-11-26T09:17:50Z"
+          }
+        ]
+      },
+      {
+        "sha": "b575ba3",
+        "at": "2026-11-26T12:13:34Z",
+        "headline": "Note quietest week in ship test draft",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": [
+          {
+            "name": "check",
+            "conclusion": "success",
+            "status": "completed",
+            "startedAt": "2026-11-26T12:13:45Z",
+            "completedAt": "2026-11-26T12:14:08Z"
+          }
+        ]
+      }
+    ],
+    "firstCiFailureAt": null,
+    "headCiPassedAt": "2026-11-26T12:14:08Z",
+    "forcePushes": 0,
+    "comments": [],
+    "reviews": []
+  },
+  "timing": {
+    "toPrOpenS": 22,
+    "toHeadCiGreenS": 10626,
+    "lastPushAt": "2026-11-26T12:13:34.262Z"
+  }
+}

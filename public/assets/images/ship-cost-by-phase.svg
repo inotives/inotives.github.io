@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 606" role="img" aria-labelledby="title desc">
+  <title id="title">Cost per run, by phase</title>
+  <desc id="desc">Cost per run at Opus 5.5 list prices. Case A: manual runs $0.26 and $0.27; /ship run 1 $2.15 (opening turn $0.37, review $0.51, check-ins $0.71, late idle wakeup $0.56); /ship run 2 $1.61 (opening $0.37, review $0.55, check-ins $0.69). Case B: manual run $0.46; /ship run 1 $1.84 (opening $0.36, review $0.29, check-ins $0.64, late idle wakeup $0.55); /ship run 2 $1.31 (opening $0.37, review $0.24, check-ins $0.70). Case C: /ship run 1 $1.60 (opening $0.36, review $0.20, check-ins $0.54, late idle wakeup $0.50).</desc>
+  <defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient></defs>
+  <rect width="1200" height="606" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">What each run cost</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">Opus 5.5 list prices, from the usage block of every API call in the session and its review agent.</text>
+    <rect x="45" y="106" width="14" height="14" rx="3" fill="#a9bdd0"/><text x="67" y="118" fill="#a9bdd0" font-size="14">manual session</text>
+    <rect x="199.39999999999998" y="106" width="14" height="14" rx="3" fill="#c4812b"/><text x="221.39999999999998" y="118" fill="#a9bdd0" font-size="14"><tspan font-family="ui-monospace,Menlo,monospace">/ship</tspan> opening turn</text>
+    <rect x="384.19999999999993" y="106" width="14" height="14" rx="3" fill="#8a7fe0"/><text x="406.19999999999993" y="118" fill="#a9bdd0" font-size="14">review</text>
+    <rect x="477.79999999999995" y="106" width="14" height="14" rx="3" fill="#2fa9a0"/><text x="499.79999999999995" y="118" fill="#a9bdd0" font-size="14">check-ins</text>
+    <rect x="594.1999999999999" y="106" width="14" height="14" rx="3" fill="#6f8aa3" fill-opacity="0.45"/><text x="616.1999999999999" y="118" fill="#a9bdd0" font-size="14">late idle wakeup</text>
+    <line x1="330" y1="140" x2="330" y2="506" stroke="#a9bdd0" stroke-opacity="0.12"/><text x="330" y="526" fill="#6f8aa3" font-size="13" text-anchor="middle">$0.00</text>
+    <line x1="500" y1="140" x2="500" y2="506" stroke="#a9bdd0" stroke-opacity="0.12"/><text x="500" y="526" fill="#6f8aa3" font-size="13" text-anchor="middle">$0.50</text>
+    <line x1="670" y1="140" x2="670" y2="506" stroke="#a9bdd0" stroke-opacity="0.12"/><text x="670" y="526" fill="#6f8aa3" font-size="13" text-anchor="middle">$1.00</text>
+    <line x1="840" y1="140" x2="840" y2="506" stroke="#a9bdd0" stroke-opacity="0.12"/><text x="840" y="526" fill="#6f8aa3" font-size="13" text-anchor="middle">$1.50</text>
+    <line x1="1010" y1="140" x2="1010" y2="506" stroke="#a9bdd0" stroke-opacity="0.12"/><text x="1010" y="526" fill="#6f8aa3" font-size="13" text-anchor="middle">$2.00</text>
+    <text x="45" y="158" fill="#f6f9fc" font-size="15" font-weight="700">A: content</text>
+    <text x="316" y="191" fill="#a9bdd0" font-size="14" text-anchor="end">manual, run 2</text>
+    <rect x="330.0" y="176" width="88.4" height="22" rx="3" fill="#a9bdd0"/>
+    <text x="428.4" y="192" fill="#f6f9fc" font-size="14">$0.26</text>
+    <text x="316" y="225" fill="#a9bdd0" font-size="14" text-anchor="end">manual, run 3</text>
+    <rect x="330.0" y="210" width="91.8" height="22" rx="3" fill="#a9bdd0"/>
+    <text x="431.8" y="226" fill="#f6f9fc" font-size="14">$0.27</text>
+    <text x="316" y="259" fill="#a9bdd0" font-size="14" text-anchor="end"><tspan font-family="ui-monospace,Menlo,monospace">/ship</tspan>, run 1</text>
+    <rect x="330.0" y="244" width="123.8" height="22" rx="3" fill="#c4812b"/>
+    <rect x="455.8" y="244" width="171.4" height="22" rx="3" fill="#8a7fe0"/>
+    <rect x="629.2" y="244" width="239.4" height="22" rx="3" fill="#2fa9a0"/>
+    <rect x="870.6" y="244" width="190.4" height="22" rx="3" fill="#6f8aa3" fill-opacity="0.45" stroke="#6f8aa3" stroke-dasharray="4 3"/>
+    <text x="1071.0" y="260" fill="#f6f9fc" font-size="14">$2.15</text>
+    <text x="316" y="293" fill="#a9bdd0" font-size="14" text-anchor="end"><tspan font-family="ui-monospace,Menlo,monospace">/ship</tspan>, run 2</text>
+    <rect x="330.0" y="278" width="123.8" height="22" rx="3" fill="#c4812b"/>
+    <rect x="455.8" y="278" width="185.0" height="22" rx="3" fill="#8a7fe0"/>
+    <rect x="642.8" y="278" width="234.6" height="22" rx="3" fill="#2fa9a0"/>
+    <text x="887.4" y="294" fill="#f6f9fc" font-size="14">$1.61</text>
+    <text x="45" y="320" fill="#f6f9fc" font-size="15" font-weight="700">B: planted bugs</text>
+    <text x="316" y="353" fill="#a9bdd0" font-size="14" text-anchor="end">manual, run 3</text>
+    <rect x="330.0" y="338" width="156.4" height="22" rx="3" fill="#a9bdd0"/>
+    <text x="496.4" y="354" fill="#f6f9fc" font-size="14">$0.46</text>
+    <text x="316" y="387" fill="#a9bdd0" font-size="14" text-anchor="end"><tspan font-family="ui-monospace,Menlo,monospace">/ship</tspan>, run 1</text>
+    <rect x="330.0" y="372" width="120.4" height="22" rx="3" fill="#c4812b"/>
+    <rect x="452.4" y="372" width="96.6" height="22" rx="3" fill="#8a7fe0"/>
+    <rect x="551.0" y="372" width="215.6" height="22" rx="3" fill="#2fa9a0"/>
+    <rect x="768.6" y="372" width="187.0" height="22" rx="3" fill="#6f8aa3" fill-opacity="0.45" stroke="#6f8aa3" stroke-dasharray="4 3"/>
+    <text x="965.6" y="388" fill="#f6f9fc" font-size="14">$1.84</text>
+    <text x="316" y="421" fill="#a9bdd0" font-size="14" text-anchor="end"><tspan font-family="ui-monospace,Menlo,monospace">/ship</tspan>, run 2</text>
+    <rect x="330.0" y="406" width="123.8" height="22" rx="3" fill="#c4812b"/>
+    <rect x="455.8" y="406" width="79.6" height="22" rx="3" fill="#8a7fe0"/>
+    <rect x="537.4" y="406" width="238.0" height="22" rx="3" fill="#2fa9a0"/>
+    <text x="785.4" y="422" fill="#f6f9fc" font-size="14">$1.31</text>
+    <text x="45" y="448" fill="#f6f9fc" font-size="15" font-weight="700">C: conflict</text>
+    <text x="316" y="481" fill="#a9bdd0" font-size="14" text-anchor="end"><tspan font-family="ui-monospace,Menlo,monospace">/ship</tspan>, run 1</text>
+    <rect x="330.0" y="466" width="120.4" height="22" rx="3" fill="#c4812b"/>
+    <rect x="452.4" y="466" width="66.0" height="22" rx="3" fill="#8a7fe0"/>
+    <rect x="520.4" y="466" width="181.6" height="22" rx="3" fill="#2fa9a0"/>
+    <rect x="704.0" y="466" width="170.0" height="22" rx="3" fill="#6f8aa3" fill-opacity="0.45" stroke="#6f8aa3" stroke-dasharray="4 3"/>
+    <text x="884.0" y="482" fill="#f6f9fc" font-size="14">$1.60</text>
+    <text x="45" y="562" fill="#6f8aa3" font-size="13">Late idle wakeup: in my first batch the watch's last check-in fired 80 min after the previous call, past the 1-hour prompt cache, and re-cached about 65k tokens.</text>
+    <text x="45" y="582" fill="#6f8aa3" font-size="13">Check-ins include task notifications. Left out: about $0.04 per first-batch run for a stray message typed into the session.</text>
+  </g>
+</svg>

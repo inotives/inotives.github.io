@@ -1,0 +1,116 @@
+{
+  "run": "B-manual-1",
+  "measuredAt": "2026-11-26T12:16:01.066Z",
+  "transcripts": [
+    "890140eb-7669-44c5-a90c-08178c5284e2.jsonl"
+  ],
+  "startedAt": "2026-11-26T09:17:06.158Z",
+  "prOpenedAt": null,
+  "pr": 86,
+  "usage": {
+    "total": {
+      "calls": 11,
+      "input": 26,
+      "cacheRead": 607845,
+      "cacheWrite5m": 0,
+      "cacheWrite1h": 63196,
+      "output": 2078,
+      "cost": 0.668801
+    },
+    "byPhase": {
+      "typed": {
+        "calls": 11,
+        "input": 26,
+        "cacheRead": 607845,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 63196,
+        "output": 2078,
+        "cost": 0.668801
+      }
+    }
+  },
+  "subagents": [],
+  "checkIns": [],
+  "wakeups": [],
+  "pushes": [
+    {
+      "t": "2026-11-26T09:17:20.961Z",
+      "cmd": "git push -u origin ship-test/b-manual-1 && gh pr create --base master --title \"Add relatedPosts helper\" --body \"$(cat <<'EOF'\nAdds `relatedPosts(post, limit = 3"
+    },
+    {
+      "t": "2026-11-26T12:14:02.893Z",
+      "cmd": "git status --short; git commit -qam \"Fix relatedPosts ordering and exclude the post itself\" && git push -q && git log --oneline -1"
+    }
+  ],
+  "comments": [],
+  "typedDuringRun": [
+    {
+      "t": "2026-11-26T09:17:06.158Z",
+      "text": "push and open a pr"
+    },
+    {
+      "t": "2026-11-26T12:13:52.642Z",
+      "text": "do some small changes. we are doing some testing"
+    },
+    {
+      "t": "2026-11-26T12:14:44.921Z",
+      "text": "commit push pr"
+    }
+  ],
+  "risky": [],
+  "fenced": [],
+  "notices": [],
+  "prData": {
+    "number": 86,
+    "title": "Add relatedPosts helper",
+    "state": "CLOSED",
+    "branch": "ship-test/b-manual-1",
+    "createdAt": "2026-11-26T09:17:27Z",
+    "closedAt": "2026-11-26T12:15:53Z",
+    "mergedAt": null,
+    "commits": [
+      {
+        "sha": "6fa1540",
+        "at": "2026-11-26T09:16:13Z",
+        "headline": "Add relatedPosts helper",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": [
+          {
+            "name": "check",
+            "conclusion": "failure",
+            "status": "completed",
+            "startedAt": "2026-11-26T09:17:32Z",
+            "completedAt": "2026-11-26T09:17:51Z"
+          }
+        ]
+      },
+      {
+        "sha": "14f6b01",
+        "at": "2026-11-26T12:14:04Z",
+        "headline": "Fix relatedPosts ordering and exclude the post itself",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": [
+          {
+            "name": "check",
+            "conclusion": "success",
+            "status": "completed",
+            "startedAt": "2026-11-26T12:14:14Z",
+            "completedAt": "2026-11-26T12:14:29Z"
+          }
+        ]
+      }
+    ],
+    "firstCiFailureAt": "2026-11-26T09:17:51Z",
+    "headCiPassedAt": "2026-11-26T12:14:29Z",
+    "forcePushes": 0,
+    "comments": [],
+    "reviews": []
+  },
+  "timing": {
+    "toPrOpenS": 21,
+    "toHeadCiGreenS": 10643,
+    "lastPushAt": "2026-11-26T12:14:02.893Z"
+  }
+}

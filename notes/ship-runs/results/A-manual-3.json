@@ -1,0 +1,88 @@
+{
+  "run": "A-manual-3",
+  "measuredAt": "2026-11-26T12:56:54.243Z",
+  "transcripts": [
+    "2e06121b-f8c6-4e53-a9f9-7d70e70fa165.jsonl"
+  ],
+  "startedAt": "2026-11-26T12:32:16.123Z",
+  "prOpenedAt": null,
+  "pr": 89,
+  "usage": {
+    "total": {
+      "calls": 4,
+      "input": 8,
+      "cacheRead": 120863,
+      "cacheWrite5m": 0,
+      "cacheWrite1h": 27994,
+      "output": 960,
+      "cost": 0.2673566
+    },
+    "byPhase": {
+      "typed": {
+        "calls": 4,
+        "input": 8,
+        "cacheRead": 120863,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 27994,
+        "output": 960,
+        "cost": 0.2673566
+      }
+    }
+  },
+  "subagents": [],
+  "checkIns": [],
+  "wakeups": [],
+  "pushes": [
+    {
+      "t": "2026-11-26T12:32:54.963Z",
+      "cmd": "git push -u origin ship-test/a-manual-3 2>&1 | tail -3 && gh pr create --base master --title \"Add weekly post count draft\" --body \"$(cat <<'EOF'\n## Summary\n- Ad"
+    }
+  ],
+  "comments": [],
+  "typedDuringRun": [
+    {
+      "t": "2026-11-26T12:32:16.123Z",
+      "text": "push and open a pr"
+    }
+  ],
+  "risky": [],
+  "fenced": [],
+  "notices": [],
+  "prData": {
+    "number": 89,
+    "title": "Add weekly post count draft",
+    "state": "CLOSED",
+    "branch": "ship-test/a-manual-3",
+    "createdAt": "2026-11-26T12:33:02Z",
+    "closedAt": "2026-11-26T12:34:18Z",
+    "mergedAt": null,
+    "commits": [
+      {
+        "sha": "15776fe",
+        "at": "2026-11-26T12:26:18Z",
+        "headline": "Add weekly post count draft",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": [
+          {
+            "name": "check",
+            "conclusion": "success",
+            "status": "completed",
+            "startedAt": "2026-11-26T12:33:08Z",
+            "completedAt": "2026-11-26T12:33:24Z"
+          }
+        ]
+      }
+    ],
+    "firstCiFailureAt": null,
+    "headCiPassedAt": "2026-11-26T12:33:24Z",
+    "forcePushes": 0,
+    "comments": [],
+    "reviews": []
+  },
+  "timing": {
+    "toPrOpenS": 46,
+    "toHeadCiGreenS": 68,
+    "lastPushAt": "2026-11-26T12:32:54.963Z"
+  }
+}
