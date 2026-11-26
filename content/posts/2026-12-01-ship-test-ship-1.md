@@ -9,6 +9,6 @@ draft: true
 This draft exists only to give `/ship` a content-only pull request to work on. It has a
 short body, one chart and no code.
 
-![Bar chart of posts per week for the last four weeks: 6, 4, 7 and 5.](/assets/images/ship-test-ship-1.svg)
+![Bar chart of sample posts-per-week data for four weeks: 6, 4, 7 and 5.](/assets/images/weekly-posts.svg)
 
-The chart shows posts per week over the last four weeks. The busiest week had seven posts.
+The chart shows made-up sample numbers of posts per week over four weeks, not the site's real counts. The busiest sample week has seven posts.
