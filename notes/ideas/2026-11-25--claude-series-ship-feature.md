@@ -17,13 +17,35 @@ From the command's own description in Claude Code:
 1. Commits and pushes your work, and opens a pull request if the branch has none.
 2. Reviews the PR in the same session and fixes the real problems it finds.
 3. Watches the PR (CI failures, merge conflicts, review comments) until it is merged or closed.
-4. Never merges. Claude is told not to, so merging stays a human step.
+4. Never merges. Claude is told not to, so merging stays a human step. (Not quite: see below.)
 
 Related commands, which the article could place `/ship` next to:
 
 - `/steward`: only step 3. Watches an existing PR and handles CI, conflicts and comments, with no review first.
 - `/code-review`: only the review step, at an effort level (low → max, or `ultra` in the cloud). `--fix` applies findings.
 - Only a line the user types starts `/ship` or `/steward`. Claude can't start them itself.
+
+## Checked against the docs (2026-11-26)
+
+Sources: [Get a pull request ready with /ship and /steward](https://code.claude.com/docs/en/ship-command)
+and [Troubleshoot /ship and /steward](https://code.claude.com/docs/en/ship-command-troubleshooting).
+
+- **"Never merges" is too strong.** During a watch, Claude Code blocks merge, approve, auto-merge
+  and force-push `gh`/`git` commands when Claude acts on its own. But if auto-merge is on, the host
+  merges when the rules allow. And once you type a message, the block is lifted for that turn.
+- **Public repos:** "/ship doesn't commit your uncommitted changes." This blog is public, so commit
+  on a branch first. It also won't commit changes to `.gitignore`, `CLAUDE.md` or `.github/`.
+- The secret check looks at file names only (`.env`, `password.txt`), not contents.
+- The review is `/code-review`, at effort `high` by default (`/ship low`, `/ship max`, ...).
+- Conflicts: it **merges** the base branch into yours (no rebase). It answers review comments,
+  resolves threads, re-runs failed checks and can post one summary comment.
+- The watch runs as a `/loop` in your session (`/steward --tend` in `/tasks`) for up to 7 days.
+  It ends on terminal close, `/clear`, `/resume` or a usage limit. `claude --continue` doesn't bring it back; `/steward` does.
+- Needs auto mode to run unattended. bypassPermissions starts no watch. Not in cloud sessions,
+  `claude -p` or background sessions. Needs Claude Code ≥ 2.1.330, gh ≥ 2.63, git ≥ 2.38.
+- Work counts against your usage. Stop with `/ship stop`, Esc or Ctrl+C.
+
+Run plan and scripts: `notes/ship-runs/`.
 
 ## Why it's a good next entry
 
@@ -57,7 +79,6 @@ Run each case with `/ship` and with the manual loop, a few times each.
 
 ## Open items before writing
 
-- Find the official docs page for `/ship` and quote it, as the Code Mode post did.
-- This repo has no PR CI: `.github/workflows/build-and-deploy.yml` runs only on pushes to `master`.
-  Add a PR build check (`npm run build` on `pull_request`) so `/ship` has CI to watch, or use a repo that has one.
+- ~~Find the official docs page~~ (done, above).
+- ~~Add a PR build check~~: `.github/workflows/pr-check.yml` (lint + build on `pull_request`).
 - Decide on the working title. Draft: "Claude Code's /ship, measured: from branch to merge-ready PR".
