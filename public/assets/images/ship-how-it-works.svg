@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">What /ship does, step by step</title>
+  <desc id="desc">Five steps left to right. One: you type /ship. Two: Claude Code itself, not the model, commits if allowed, pushes the branch and opens the pull request. Three: a background agent runs /code-review high on the diff. Four: the watch, a loop of check-ins (/steward --tend) that each look at checks, conflicts and comments, fix what is wrong, push, reply, then schedule the next wakeup. Five: you merge. A band under steps three and four shows the fence: while Claude acts on its own, Claude Code blocks merge, approve, auto-merge and force-push commands. The watch ends when the pull request is merged or closed, after seven days, or when the session ends.</desc>
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0l8 4-8 4" fill="none" stroke="#90adc2" stroke-width="1.7"/></marker>
+  </defs>
+  <rect width="1200" height="560" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">What /ship does</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">One command from a committed branch to a pull request that's ready to merge. Merging stays with you.</text>
+
+    <!-- 1 you -->
+    <rect x="40" y="120" width="170" height="250" rx="12" fill="#a9bdd0" fill-opacity="0.06" stroke="#a9bdd0" stroke-width="1.5"/>
+    <text x="125" y="150" fill="#6f8aa3" font-size="13" text-anchor="middle">1 · you</text>
+    <text x="125" y="200" fill="#f6f9fc" font-size="22" font-weight="700" text-anchor="middle" font-family="ui-monospace,Menlo,monospace">/ship</text>
+    <text x="125" y="240" fill="#a9bdd0" font-size="13" text-anchor="middle">optional effort level:</text>
+    <text x="125" y="260" fill="#a9bdd0" font-size="13" text-anchor="middle" font-family="ui-monospace,Menlo,monospace">/ship low … max</text>
+    <text x="125" y="300" fill="#a9bdd0" font-size="13" text-anchor="middle">needs auto mode to</text>
+    <text x="125" y="318" fill="#a9bdd0" font-size="13" text-anchor="middle">run unattended</text>
+
+    <line x1="212" y1="245" x2="236" y2="245" stroke="#90adc2" stroke-width="1.7" marker-end="url(#a)"/>
+
+    <!-- 2 claude code -->
+    <rect x="240" y="120" width="200" height="250" rx="12" fill="#c4812b" fill-opacity="0.08" stroke="#c4812b" stroke-width="1.5"/>
+    <text x="340" y="150" fill="#6f8aa3" font-size="13" text-anchor="middle">2 · Claude Code (no model)</text>
+    <text x="340" y="190" fill="#f6f9fc" font-size="15" font-weight="700" text-anchor="middle">commit · push · open PR</text>
+    <text x="340" y="225" fill="#a9bdd0" font-size="13" text-anchor="middle">"Esc to cancel" for a few</text>
+    <text x="340" y="243" fill="#a9bdd0" font-size="13" text-anchor="middle">seconds, then no prompt</text>
+    <text x="340" y="283" fill="#a9bdd0" font-size="13" text-anchor="middle">public repo: won't commit</text>
+    <text x="340" y="301" fill="#a9bdd0" font-size="13" text-anchor="middle">uncommitted changes</text>
+    <text x="340" y="337" fill="#a9bdd0" font-size="13" text-anchor="middle">secret check: file names only</text>
+
+    <line x1="442" y1="245" x2="466" y2="245" stroke="#90adc2" stroke-width="1.7" marker-end="url(#a)"/>
+
+    <!-- 3 review -->
+    <rect x="470" y="120" width="190" height="250" rx="12" fill="#8a7fe0" fill-opacity="0.10" stroke="#8a7fe0" stroke-width="1.5"/>
+    <text x="565" y="150" fill="#6f8aa3" font-size="13" text-anchor="middle">3 · review (background agent)</text>
+    <text x="565" y="190" fill="#f6f9fc" font-size="14" font-weight="700" text-anchor="middle" font-family="ui-monospace,Menlo,monospace">/code-review high</text>
+    <text x="565" y="214" fill="#f6f9fc" font-size="13" text-anchor="middle" font-family="ui-monospace,Menlo,monospace">origin/&lt;base&gt;...HEAD</text>
+    <text x="565" y="255" fill="#a9bdd0" font-size="13" text-anchor="middle">findings feed the watch;</text>
+    <text x="565" y="273" fill="#a9bdd0" font-size="13" text-anchor="middle">the real ones get fixed</text>
+    <text x="565" y="313" fill="#a9bdd0" font-size="13" text-anchor="middle">posts one summary</text>
+    <text x="565" y="331" fill="#a9bdd0" font-size="13" text-anchor="middle">comment on the PR</text>
+
+    <line x1="662" y1="245" x2="686" y2="245" stroke="#90adc2" stroke-width="1.7" marker-end="url(#a)"/>
+
+    <!-- 4 watch -->
+    <rect x="690" y="120" width="290" height="250" rx="12" fill="#2fa9a0" fill-opacity="0.10" stroke="#2fa9a0" stroke-width="1.5"/>
+    <text x="835" y="150" fill="#6f8aa3" font-size="13" text-anchor="middle">4 · watch (a /loop in your session)</text>
+    <text x="835" y="185" fill="#f6f9fc" font-size="14" font-weight="700" text-anchor="middle">check-in: <tspan font-family="ui-monospace,Menlo,monospace">/steward --tend</tspan></text>
+    <text x="712" y="218" fill="#a9bdd0" font-size="13">• failing checks → fix, push, re-run</text>
+    <text x="712" y="240" fill="#a9bdd0" font-size="13">• conflict → merge base into branch</text>
+    <text x="712" y="262" fill="#a9bdd0" font-size="13">• comment → reply, fix, resolve</text>
+    <text x="712" y="284" fill="#a9bdd0" font-size="13">• nothing to do → wait longer</text>
+    <path d="M940 300 C 965 300 965 340 940 340 L 730 340 C 705 340 705 300 730 300" fill="none" stroke="#2fa9a0" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#a)"/>
+    <text x="835" y="327" fill="#f6f9fc" font-size="12" text-anchor="middle">ScheduleWakeup → next check-in</text>
+
+    <line x1="982" y1="245" x2="1006" y2="245" stroke="#90adc2" stroke-width="1.7" marker-end="url(#a)"/>
+
+    <!-- 5 you merge -->
+    <rect x="1010" y="120" width="150" height="250" rx="12" fill="#a9bdd0" fill-opacity="0.06" stroke="#a9bdd0" stroke-width="1.5"/>
+    <text x="1085" y="150" fill="#6f8aa3" font-size="13" text-anchor="middle">5 · you</text>
+    <text x="1085" y="200" fill="#f6f9fc" font-size="20" font-weight="700" text-anchor="middle">merge</text>
+    <text x="1085" y="240" fill="#a9bdd0" font-size="13" text-anchor="middle">merged or closed</text>
+    <text x="1085" y="258" fill="#a9bdd0" font-size="13" text-anchor="middle">ends the watch</text>
+
+    <!-- fence -->
+    <rect x="470" y="392" width="510" height="56" rx="10" fill="#d0574e" fill-opacity="0.12" stroke="#d0574e" stroke-width="1.5"/>
+    <text x="725" y="416" fill="#f6f9fc" font-size="14" font-weight="700" text-anchor="middle">the fence: Claude Code blocks merge, approve, auto-merge, force-push</text>
+    <text x="725" y="436" fill="#a9bdd0" font-size="13" text-anchor="middle">only while Claude acts on its own; a message you type lifts it for that turn</text>
+
+    <text x="45" y="490" fill="#6f8aa3" font-size="13">The watch also ends after 7 days, on a usage limit, or when the session ends (terminal closed, /clear, /resume). claude --continue doesn't bring it back; /steward does.</text>
+    <text x="45" y="512" fill="#6f8aa3" font-size="13">Sources: code.claude.com/docs/en/ship-command and ship-command-troubleshooting, plus the transcripts of my runs.</text>
+  </g>
+</svg>

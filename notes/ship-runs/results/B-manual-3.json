@@ -1,0 +1,100 @@
+{
+  "run": "B-manual-3",
+  "measuredAt": "2026-11-26T12:57:05.328Z",
+  "transcripts": [
+    "728c6057-f2d2-4fd7-b3c6-48cc6f4b01a4.jsonl"
+  ],
+  "startedAt": "2026-11-26T12:32:16.105Z",
+  "prOpenedAt": null,
+  "pr": 90,
+  "usage": {
+    "total": {
+      "calls": 11,
+      "input": 22,
+      "cacheRead": 425508,
+      "cacheWrite5m": 0,
+      "cacheWrite1h": 37902,
+      "output": 3347,
+      "cost": 0.45534559999999996
+    },
+    "byPhase": {
+      "typed": {
+        "calls": 11,
+        "input": 22,
+        "cacheRead": 425508,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 37902,
+        "output": 3347,
+        "cost": 0.45534559999999996
+      }
+    }
+  },
+  "subagents": [],
+  "checkIns": [],
+  "wakeups": [],
+  "pushes": [
+    {
+      "t": "2026-11-26T12:33:21.963Z",
+      "cmd": "git status --short && git add src/utils/tags.js && git commit -q -m \"Fix relatedPosts: sort best match first, exclude the post itself, drop unused var\" && git p"
+    }
+  ],
+  "comments": [],
+  "typedDuringRun": [
+    {
+      "t": "2026-11-26T12:32:16.105Z",
+      "text": "push and open a pr"
+    },
+    {
+      "t": "2026-11-26T12:32:49.561Z",
+      "text": "ok, fix it, then push and open a pr"
+    }
+  ],
+  "risky": [],
+  "fenced": [],
+  "notices": [],
+  "prData": {
+    "number": 90,
+    "title": "Add relatedPosts helper",
+    "state": "CLOSED",
+    "branch": "ship-test/b-manual-3",
+    "createdAt": "2026-11-26T12:33:36Z",
+    "closedAt": "2026-11-26T12:34:21Z",
+    "mergedAt": null,
+    "commits": [
+      {
+        "sha": "76521fb",
+        "at": "2026-11-26T12:32:42Z",
+        "headline": "Add relatedPosts helper",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": []
+      },
+      {
+        "sha": "d134055",
+        "at": "2026-11-26T12:33:26Z",
+        "headline": "Fix relatedPosts: sort best match first, exclude the post itself, dro…",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": [
+          {
+            "name": "check",
+            "conclusion": "success",
+            "status": "completed",
+            "startedAt": "2026-11-26T12:33:42Z",
+            "completedAt": "2026-11-26T12:33:58Z"
+          }
+        ]
+      }
+    ],
+    "firstCiFailureAt": null,
+    "headCiPassedAt": "2026-11-26T12:33:58Z",
+    "forcePushes": 0,
+    "comments": [],
+    "reviews": []
+  },
+  "timing": {
+    "toPrOpenS": 80,
+    "toHeadCiGreenS": 102,
+    "lastPushAt": "2026-11-26T12:33:21.963Z"
+  }
+}

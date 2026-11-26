@@ -1,0 +1,231 @@
+{
+  "run": "B-ship-1",
+  "measuredAt": "2026-11-26T12:57:07.837Z",
+  "transcripts": [
+    "b9da56bc-367c-4252-a157-588f524a4b2d.jsonl"
+  ],
+  "startedAt": "2026-11-26T07:46:45.436Z",
+  "prOpenedAt": "2026-11-26T07:46:56.061Z",
+  "pr": 83,
+  "usage": {
+    "total": {
+      "calls": 32,
+      "input": 74,
+      "cacheRead": 2246448,
+      "cacheWrite5m": 34632,
+      "cacheWrite1h": 134584,
+      "output": 9156,
+      "cost": 1.8825376000000003
+    },
+    "byPhase": {
+      "ship": {
+        "calls": 4,
+        "input": 8,
+        "cacheRead": 231103,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 37408,
+        "output": 726,
+        "cost": 0.3600366
+      },
+      "task-notification": {
+        "calls": 2,
+        "input": 6,
+        "cacheRead": 137182,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 2426,
+        "output": 524,
+        "cost": 0.057348399999999994
+      },
+      "typed": {
+        "calls": 2,
+        "input": 6,
+        "cacheRead": 140227,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 655,
+        "output": 397,
+        "cost": 0.041249400000000006
+      },
+      "check-in": {
+        "calls": 18,
+        "input": 42,
+        "cacheRead": 1473567,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 94095,
+        "output": 4279,
+        "cost": 1.1332214
+      },
+      "review": {
+        "calls": 6,
+        "input": 12,
+        "cacheRead": 264369,
+        "cacheWrite5m": 34632,
+        "cacheWrite1h": 0,
+        "output": 3230,
+        "cost": 0.2906818
+      }
+    }
+  },
+  "subagents": [
+    {
+      "name": "code-review",
+      "description": "/code-review high origin/master...HEAD",
+      "model": "claude-opus-5-5",
+      "startedAt": "2026-11-26T07:47:11.473Z",
+      "seconds": 33,
+      "usage": {
+        "calls": 6,
+        "input": 12,
+        "cacheRead": 264369,
+        "cacheWrite5m": 34632,
+        "cacheWrite1h": 0,
+        "output": 3230,
+        "cost": 0.2906818
+      },
+      "finalText": "```json\n[\n  {\n    \"file\": \"src/utils/tags.js\",\n    \"line\": 117,\n    \"summary\": \"relatedPosts returns the weakest matches, not the best ones. The sort comparator `a.shared - b.shared` is ascending, so posts sharing only 1 tag come first and `.slice(0, limit)` throws away the strongest matches. Fix: use `.sort((a, b) => b.shared - a.shared)`.\",\n    \"failure_scenario\": \"Post X has tags [ai, rag, mcp]. Post A shares all 3 tags, posts B, C and D share 1 each. relatedPosts(X) returns [B, C, D], and A, the best match, is dropped. This contradicts the doc comment 'best match first'.\",\n    \"severity\": \"important\"\n  },\n  {\n    \"file\": \"src/utils/tags.js\",\n    \"line\": 111,\n    \"summary\": \"A post is listed as related to itself. getAllPosts() includes the input post, which shares every one of its own tags, and nothing filters it out. Once the sort is fixed it will always rank first. Fix: add `.filter((other) => other.slug !== post.slug)` before scoring. Compare by slug, not by reference, because callers like Note.jsx may pass the usePost object rather than the index entry.\",\n    \"failure_scenario\": \"On the Note page for slug 'foo' with tags [ai], relatedPosts(meta) includes 'foo' itself, so the 'Related posts' list links back to the page the reader is already on and shows only limit-1 real suggestions.\",\n    \"severity\": \"important\"\n  },\n  {\n    \"file\": \"src/utils/tags.js\",\n    \"line\": 118,\n    \"summary\": \"Ties between posts that share the same number of tags have no defined order, and the input post itself is not excluded from the tie-breaking. Matches with equal scores simply fall back to content-index order (newest first) without anyone choosing that. Fix: add an explicit secondary key, e.g. `b.shared - a.shared || (b.date || '').localeCompare(a.date || '')`, or weight by tag rarity using getTagCounts.\",\n    \"failure_scenario\": \"Many posts share 1 tag such as 'ai', which is very common. The 'related' slots fill with whatever posts are newest rather than ones sharing a rare, meaningful tag. The results look arbitrary.\",\n    \"severity\": \"nit\"\n  },\n  {\n    \"file\": \"src/utils/tags.js\",\n    \"line\": 110,\n    \"summary\": \"Leftover debug code: `const debug = []` is declared in relatedPosts and never used. It will fail no-unused-vars lint checks if the PR check workflow runs ESLint. Fix: delete the line.\",\n    \"failure_scenario\": \"The PR check workflow or `npm run lint` with no-unused-vars set to error fails on `debug` being assigned but never used.\",\n    \"severity\": \"nit\"\n  },\n  {\n    \"file\": \"src/utils/tags.js\",\n    \"line\": 108,\n    \"summary\": \"relatedPosts is exported, but nothing in src imports or calls it, so the feature never shows up on the site. A grep for relatedPosts finds only its definition. Fix: wire it into src/pages/Note.jsx (e.g. relatedPosts(meta)), or confirm this was meant as a helper-only commit.\",\n    \"failure_scenario\": \"The branch merges and the Note page shows no related posts. The bugs above stay hidden until someone wires the helper in.\",\n    \"severity\": \"nit\"\n  },\n  {\n    \"file\": \"src/utils/tags.js\",\n    \"line\": 78,\n    \"summary\": \"postTags crashes on any post whose frontmatter `tags` is a scalar instead of a list, and relatedPosts now calls it on every post. The generator stores `data.tags || []` without checking the type, so `tags: ai` becomes the string 'ai' and `.map` is not a function. Fix: in postTags (or in generate-content-index.js) coerce with `[].concat(post.tags || [])`.\",\n    \"failure_scenario\": \"One post has `tags: crypto` in its frontmatter. relatedPosts(anyPost) throws TypeError: post.tags.map is not a function, so every page that uses related posts breaks.\",\n    \"severity\": \"pre_existing\"\n  },\n  {\n    \"file\": \"src/utils/tags.js\",\n    \"line\": 74,\n    \"summary\": \"Tags are matched case-sensitively, so the same tag written in different cases does not count as shared. normalizeTag only applies aliases and never lowercases, and relatedPosts compares the results with Set.has. Fix: lowercase and trim in normalizeTag before the alias lookup.\",\n    \"failure_scenario\": \"Post A is tagged 'AI' and post B is tagged 'ai'. relatedPosts(A) scores B with shared=0 and leaves it out, even though the two posts share a topic.\",\n    \"severity\": \"pre_existing\"\n  }\n]\n```"
+    }
+  ],
+  "checkIns": [
+    {
+      "n": 1,
+      "at": "2026-11-26T07:49:05.181Z",
+      "pushed": true,
+      "commented": true,
+      "tools": 18
+    },
+    {
+      "n": 2,
+      "at": "2026-11-26T07:53:04.703Z",
+      "pushed": false,
+      "commented": false,
+      "tools": 5
+    },
+    {
+      "n": 3,
+      "at": "2026-11-26T09:13:01.238Z",
+      "pushed": false,
+      "commented": false,
+      "tools": 0
+    }
+  ],
+  "wakeups": [
+    {
+      "t": "2026-11-26T07:47:48.196Z",
+      "delaySeconds": 60,
+      "reason": "Review findings are in; the first check-in pass will act on them."
+    },
+    {
+      "t": "2026-11-26T07:49:55.688Z",
+      "delaySeconds": 120,
+      "reason": "Pushed a fix; checks need a moment to start on the new head."
+    },
+    {
+      "t": "2026-11-26T07:53:13.003Z",
+      "delaySeconds": 3000,
+      "reason": "PR is green and clean; nothing running, so wait long for any new activity."
+    }
+  ],
+  "pushes": [
+    {
+      "t": "2026-11-26T07:49:41.138Z",
+      "cmd": "git -c core.hooksPath=/dev/null push origin ship-test/b-ship-1:ship-test/b-ship-1"
+    }
+  ],
+  "comments": [
+    {
+      "t": "2026-11-26T07:49:52.286Z"
+    }
+  ],
+  "typedDuringRun": [
+    {
+      "t": "2026-11-26T07:48:36.143Z",
+      "text": "Note the time."
+    }
+  ],
+  "risky": [],
+  "fenced": [],
+  "notices": [
+    {
+      "t": "2026-11-26T07:46:45.436Z",
+      "text": "/ship is starting for a new pull request in inotives/inotives.github.io. Claude reviews your change, then watches the pull request for up to 7 days, in this session, on your usage.\nAs you, Claude may push to ship-test/b-ship-1, merge master into it, and comment, re-run checks, and more on the pull request, all unattended.\nKeep this session open, this computer awake, and this branch checked out. /s"
+    },
+    {
+      "t": "2026-11-26T07:46:45.437Z",
+      "text": "Pushing 1 commit on ship-test/b-ship-1 to inotives/inotives.github.io (public) and opening a pull request. Anyone can see what goes there, and it can't be taken back. Esc to cancel."
+    },
+    {
+      "t": "2026-11-26T07:46:48.500Z",
+      "text": "Pushing ship-test/b-ship-1 to inotives/inotives.github.io, with your git hooks…"
+    },
+    {
+      "t": "2026-11-26T07:46:51.726Z",
+      "text": "Opening the pull request as ready for review, so checks and reviews start…"
+    },
+    {
+      "t": "2026-11-26T07:46:56.061Z",
+      "text": "/ship pushed ship-test/b-ship-1 to inotives/inotives.github.io and opened pull request #83 as you, ready for review: https://github.com/inotives/inotives.github.io/pull/83\n/ship didn't set an upstream. To pull or push ship-test/b-ship-1, name the remote: git pull origin ship-test/b-ship-1 or git push origin ship-test/b-ship-1. Setting an upstream (git branch -u, git push -u) changes git's configur"
+    },
+    {
+      "t": "2026-11-26T09:13:01.538Z",
+      "text": "Stopped watching pull request #83, because it's closed."
+    }
+  ],
+  "prData": {
+    "number": 83,
+    "title": "Add relatedPosts helper",
+    "state": "CLOSED",
+    "branch": "ship-test/b-ship-1",
+    "createdAt": "2026-11-26T07:46:54Z",
+    "closedAt": "2026-11-26T09:10:52Z",
+    "mergedAt": null,
+    "commits": [
+      {
+        "sha": "452326d",
+        "at": "2026-11-26T05:17:33Z",
+        "headline": "Add relatedPosts helper",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": [
+          {
+            "name": "check",
+            "conclusion": "failure",
+            "status": "completed",
+            "startedAt": "2026-11-26T07:47:00Z",
+            "completedAt": "2026-11-26T07:47:16Z"
+          }
+        ]
+      },
+      {
+        "sha": "504ffdf",
+        "at": "2026-11-26T07:49:33Z",
+        "headline": "Fix relatedPosts ordering and self-match",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": [
+          {
+            "name": "check",
+            "conclusion": "success",
+            "status": "completed",
+            "startedAt": "2026-11-26T07:49:52Z",
+            "completedAt": "2026-11-26T07:50:17Z"
+          }
+        ]
+      }
+    ],
+    "firstCiFailureAt": "2026-11-26T07:47:16Z",
+    "headCiPassedAt": "2026-11-26T07:50:17Z",
+    "forcePushes": 0,
+    "comments": [
+      {
+        "at": "2026-11-26T07:49:52Z",
+        "author": "inotives",
+        "body": "<!-- claude-code-ship-local reviewed=504ffdf1386f876ab1a29bbbaa2a7c6b9145ea3f -->\nClaude Code reviewed this change at 452326d for the author: 5 findings, 3 fixed.\n\n- `src/utils/tags.js:117` sorted ascending, so the limit kept the weakest matches instead of the best ones. Fixed in 504ffdf.\n- `src/utils/tags.js:111` the input post was scored against itself and could appear in its own related list. Fixed in 504ffdf (filtered out by slug).\n- `src/utils/tags.js:110` an unused variable failed the lint step of the check. Fixed in 504ffdf.\n- `src/utils/tags.js:118` posts with equal shared counts keep content-index order (newest first, since the sort is stable). Left: acceptable default; weighting by tag rarity would be a design choice.\n- `src/utils/tags.js:108` nothing calls the helper yet, so no page shows related posts. Left: the change is titled as adding the helper only."
+      }
+    ],
+    "reviews": []
+  },
+  "timing": {
+    "toPrOpenS": 11,
+    "toHeadCiGreenS": 212,
+    "lastPushAt": "2026-11-26T07:49:41.138Z"
+  }
+}

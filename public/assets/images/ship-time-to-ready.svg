@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 606" role="img" aria-labelledby="title desc">
+  <title id="title">Minutes from the first prompt to a green PR</title>
+  <desc id="desc">Minutes from typing the first prompt to CI passing on the pull request's final commit. Case A, content: manual runs 1.5 and 1.1 minutes; /ship runs 4.7 minutes (including a review comment) and 5.0 minutes. Case B, planted bugs: manual run 1.7 minutes; /ship runs 3.5 and 3.3 minutes (the second measured before my review comment). Case C, conflict: /ship 3.7 minutes, including a conflicting push to master. The /ship runs are slower because they include a code review and the fixes it led to.</desc>
+  <defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#142337"/><stop offset="1" stop-color="#0b1522"/></linearGradient></defs>
+  <rect width="1200" height="606" rx="24" fill="url(#bg)"/>
+  <g font-family="system-ui,sans-serif">
+    <text x="45" y="56" fill="#f6f9fc" font-size="28" font-weight="700">Minutes to a green PR</text>
+    <text x="45" y="85" fill="#a9bdd0" font-size="16">From the first prompt until CI passed on the PR's final commit. Manual = "push and open a pr", then "fix it" if needed.</text>
+    <rect x="45" y="106" width="14" height="14" rx="3" fill="#2fa9a0"/><text x="67" y="118" fill="#a9bdd0" font-size="14">manual loop</text>
+    <rect x="175" y="106" width="14" height="14" rx="3" fill="#8a7fe0"/><text x="197" y="118" fill="#a9bdd0" font-size="14"><tspan font-family="ui-monospace,Menlo,monospace">/ship</tspan> (review + fixes + watch)</text>
+    <line x1="330" y1="140" x2="330" y2="506" stroke="#a9bdd0" stroke-opacity="0.12"/><text x="330" y="526" fill="#6f8aa3" font-size="13" text-anchor="middle">0</text>
+    <line x1="460" y1="140" x2="460" y2="506" stroke="#a9bdd0" stroke-opacity="0.12"/><text x="460" y="526" fill="#6f8aa3" font-size="13" text-anchor="middle">1</text>
+    <line x1="590" y1="140" x2="590" y2="506" stroke="#a9bdd0" stroke-opacity="0.12"/><text x="590" y="526" fill="#6f8aa3" font-size="13" text-anchor="middle">2</text>
+    <line x1="720" y1="140" x2="720" y2="506" stroke="#a9bdd0" stroke-opacity="0.12"/><text x="720" y="526" fill="#6f8aa3" font-size="13" text-anchor="middle">3</text>
+    <line x1="850" y1="140" x2="850" y2="506" stroke="#a9bdd0" stroke-opacity="0.12"/><text x="850" y="526" fill="#6f8aa3" font-size="13" text-anchor="middle">4</text>
+    <line x1="980" y1="140" x2="980" y2="506" stroke="#a9bdd0" stroke-opacity="0.12"/><text x="980" y="526" fill="#6f8aa3" font-size="13" text-anchor="middle">5</text>
+    <line x1="1110" y1="140" x2="1110" y2="506" stroke="#a9bdd0" stroke-opacity="0.12"/><text x="1110" y="526" fill="#6f8aa3" font-size="13" text-anchor="middle">6</text>
+    <text x="45" y="158" fill="#f6f9fc" font-size="15" font-weight="700">A: content</text>
+    <text x="316" y="191" fill="#a9bdd0" font-size="14" text-anchor="end">manual, run 2</text>
+    <rect x="330" y="176" width="197.6" height="22" rx="4" fill="#2fa9a0"/>
+    <text x="537.6" y="192" fill="#f6f9fc" font-size="14">1.5 min</text>
+    <text x="316" y="225" fill="#a9bdd0" font-size="14" text-anchor="end">manual, run 3</text>
+    <rect x="330" y="210" width="146.9" height="22" rx="4" fill="#2fa9a0"/>
+    <text x="486.9" y="226" fill="#f6f9fc" font-size="14">1.1 min</text>
+    <text x="316" y="259" fill="#a9bdd0" font-size="14" text-anchor="end"><tspan font-family="ui-monospace,Menlo,monospace">/ship</tspan>, run 1</text>
+    <rect x="330" y="244" width="607.1" height="22" rx="4" fill="#8a7fe0"/>
+    <text x="947.1" y="260" fill="#f6f9fc" font-size="14">4.7 min<tspan fill="#6f8aa3"> · incl. a review comment</tspan></text>
+    <text x="316" y="293" fill="#a9bdd0" font-size="14" text-anchor="end"><tspan font-family="ui-monospace,Menlo,monospace">/ship</tspan>, run 2</text>
+    <rect x="330" y="278" width="643.5" height="22" rx="4" fill="#8a7fe0"/>
+    <text x="983.5" y="294" fill="#f6f9fc" font-size="14">5.0 min</text>
+    <text x="45" y="320" fill="#f6f9fc" font-size="15" font-weight="700">B: planted bugs</text>
+    <text x="316" y="353" fill="#a9bdd0" font-size="14" text-anchor="end">manual, run 3</text>
+    <rect x="330" y="338" width="221.0" height="22" rx="4" fill="#2fa9a0"/>
+    <text x="561.0" y="354" fill="#f6f9fc" font-size="14">1.7 min</text>
+    <text x="316" y="387" fill="#a9bdd0" font-size="14" text-anchor="end"><tspan font-family="ui-monospace,Menlo,monospace">/ship</tspan>, run 1</text>
+    <rect x="330" y="372" width="457.6" height="22" rx="4" fill="#8a7fe0"/>
+    <text x="797.6" y="388" fill="#f6f9fc" font-size="14">3.5 min</text>
+    <text x="316" y="421" fill="#a9bdd0" font-size="14" text-anchor="end"><tspan font-family="ui-monospace,Menlo,monospace">/ship</tspan>, run 2</text>
+    <rect x="330" y="406" width="425.1" height="22" rx="4" fill="#8a7fe0"/>
+    <text x="765.1" y="422" fill="#f6f9fc" font-size="14">3.3 min<tspan fill="#6f8aa3"> · before my review comment</tspan></text>
+    <text x="45" y="448" fill="#f6f9fc" font-size="15" font-weight="700">C: conflict</text>
+    <text x="316" y="481" fill="#a9bdd0" font-size="14" text-anchor="end"><tspan font-family="ui-monospace,Menlo,monospace">/ship</tspan>, run 1</text>
+    <rect x="330" y="466" width="477.1" height="22" rx="4" fill="#8a7fe0"/>
+    <text x="817.1" y="482" fill="#f6f9fc" font-size="14">3.7 min<tspan fill="#6f8aa3"> · incl. a conflicting push</tspan></text>
+    <text x="720" y="548" fill="#6f8aa3" font-size="13" text-anchor="middle">minutes</text>
+    <text x="45" y="582" fill="#6f8aa3" font-size="13">Claude Code 2.1.332, Opus 5.5, CI about 20 s. Manual runs were scripted with claude -p. B manual run 2 is left out: my script sent it the wrong follow-up.</text>
+  </g>
+</svg>

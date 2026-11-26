@@ -1,0 +1,104 @@
+{
+  "run": "B-manual-2",
+  "measuredAt": "2026-11-26T12:57:02.603Z",
+  "transcripts": [
+    "1440c7a8-4161-4ff0-9343-75b26e5f1074.jsonl"
+  ],
+  "startedAt": "2026-11-26T12:23:02.421Z",
+  "prOpenedAt": null,
+  "pr": 88,
+  "usage": {
+    "total": {
+      "calls": 16,
+      "input": 32,
+      "cacheRead": 766330,
+      "cacheWrite5m": 0,
+      "cacheWrite1h": 51046,
+      "output": 4298,
+      "cost": 0.6477219999999999
+    },
+    "byPhase": {
+      "typed": {
+        "calls": 16,
+        "input": 32,
+        "cacheRead": 766330,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 51046,
+        "output": 4298,
+        "cost": 0.6477219999999999
+      }
+    }
+  },
+  "subagents": [],
+  "checkIns": [],
+  "wakeups": [],
+  "pushes": [
+    {
+      "t": "2026-11-26T12:26:26.272Z",
+      "cmd": "git commit -qam \"Fix relatedPosts ordering, exclude the post itself, drop unused var\" && git push -u origin ship-test/b-manual-2 2>&1 | tail -2 && gh pr create "
+    }
+  ],
+  "comments": [],
+  "typedDuringRun": [
+    {
+      "t": "2026-11-26T12:23:02.421Z",
+      "text": "push and open a pr"
+    },
+    {
+      "t": "2026-11-26T12:24:22.859Z",
+      "text": "CI failed on the PR. Check it and fix what's wrong."
+    },
+    {
+      "t": "2026-11-26T12:28:09.924Z",
+      "text": "push and open a pr"
+    }
+  ],
+  "risky": [],
+  "fenced": [],
+  "notices": [],
+  "prData": {
+    "number": 88,
+    "title": "Add relatedPosts helper",
+    "state": "CLOSED",
+    "branch": "ship-test/b-manual-2",
+    "createdAt": "2026-11-26T12:27:14Z",
+    "closedAt": "2026-11-26T12:34:15Z",
+    "mergedAt": null,
+    "commits": [
+      {
+        "sha": "c09472a",
+        "at": "2026-11-26T12:22:16Z",
+        "headline": "Add relatedPosts helper",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": []
+      },
+      {
+        "sha": "4cbf785",
+        "at": "2026-11-26T12:26:26Z",
+        "headline": "Fix relatedPosts ordering, exclude the post itself, drop unused var",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": [
+          {
+            "name": "check",
+            "conclusion": "success",
+            "status": "completed",
+            "startedAt": "2026-11-26T12:27:20Z",
+            "completedAt": "2026-11-26T12:27:40Z"
+          }
+        ]
+      }
+    ],
+    "firstCiFailureAt": null,
+    "headCiPassedAt": "2026-11-26T12:27:40Z",
+    "forcePushes": 0,
+    "comments": [],
+    "reviews": []
+  },
+  "timing": {
+    "toPrOpenS": 252,
+    "toHeadCiGreenS": 278,
+    "lastPushAt": "2026-11-26T12:26:26.272Z"
+  }
+}

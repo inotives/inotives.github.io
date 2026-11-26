@@ -1,0 +1,250 @@
+{
+  "run": "B-ship-2",
+  "measuredAt": "2026-11-26T12:57:11.065Z",
+  "transcripts": [
+    "9b0c4d60-51f7-47fd-8bad-a9fe4c7d7dfc.jsonl"
+  ],
+  "startedAt": "2026-11-26T12:37:54.497Z",
+  "prOpenedAt": "2026-11-26T12:38:06.043Z",
+  "pr": 92,
+  "usage": {
+    "total": {
+      "calls": 32,
+      "input": 72,
+      "cacheRead": 2350092,
+      "cacheWrite5m": 32922,
+      "cacheWrite1h": 66083,
+      "output": 7669,
+      "cost": 1.3169604
+    },
+    "byPhase": {
+      "ship": {
+        "calls": 5,
+        "input": 10,
+        "cacheRead": 293301,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 37499,
+        "output": 649,
+        "cost": 0.3716722
+      },
+      "task-notification": {
+        "calls": 2,
+        "input": 6,
+        "cacheRead": 136576,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 1636,
+        "output": 376,
+        "cost": 0.047947199999999995
+      },
+      "check-in": {
+        "calls": 20,
+        "input": 46,
+        "cacheRead": 1712060,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 26948,
+        "output": 4764,
+        "cost": 0.6534599999999999
+      },
+      "review": {
+        "calls": 5,
+        "input": 10,
+        "cacheRead": 208155,
+        "cacheWrite5m": 32922,
+        "cacheWrite1h": 0,
+        "output": 1880,
+        "cost": 0.24388100000000001
+      }
+    }
+  },
+  "subagents": [
+    {
+      "name": "code-review",
+      "description": "/code-review high origin/master...HEAD",
+      "model": "claude-opus-5-5",
+      "startedAt": "2026-11-26T12:38:24.636Z",
+      "seconds": 22,
+      "usage": {
+        "calls": 5,
+        "input": 10,
+        "cacheRead": 208155,
+        "cacheWrite5m": 32922,
+        "cacheWrite1h": 0,
+        "output": 1880,
+        "cost": 0.24388100000000001
+      },
+      "finalText": "I found 3 problems in the new `relatedPosts` helper in `src/utils/tags.js`. Two of them break the result: it returns the weakest matches first, and it can list the post as related to itself. The third is an unused `debug` variable left in. Nothing calls `relatedPosts` yet, so none of this shows on the site today. No CLAUDE.md rule is broken by this diff.\n\n```json\n[\n  {\n    \"file\": \"src/utils/tags.js\",\n    \"line\": 117,\n    \"summary\": \"relatedPosts returns the posts that share the fewest tags, not the most, which is the opposite of what its comment says. The sort `(a, b) => a.shared - b.shared` is ascending, so `.slice(0, limit)` keeps the weakest matches. Fix: sort descending with `(a, b) => b.shared - a.shared`, and consider breaking ties by date.\",\n    \"failure_scenario\": \"Post X has tags [a,b,c]. Post Y shares all three, Z shares one and W shares one. relatedPosts(X, 2) returns [Z, W] and leaves out Y, the best match.\",\n    \"severity\": \"important\"\n  },\n  {\n    \"file\": \"src/utils/tags.js\",\n    \"line\": 111,\n    \"summary\": \"relatedPosts can list the post you pass in as related to itself. getAllPosts() includes that post, it shares all of its own tags, and nothing filters it out. Once the sort is fixed it will always come first. Fix: add `.filter((other) => other.slug !== post.slug)`. Compare by slug, not by object identity, because getPostBySlug returns a new `{...meta, content}` object.\",\n    \"failure_scenario\": \"On a note page, relatedPosts(currentPost) lists the current note as related to itself. With the sort fixed it takes the top slot, so a limit of 3 shows only 2 other notes.\",\n    \"severity\": \"important\"\n  },\n  {\n    \"file\": \"src/utils/tags.js\",\n    \"line\": 110,\n    \"summary\": \"relatedPosts declares `const debug = []` and never uses it. It looks like leftover debugging code and will trip no-unused-vars lint rules. Fix: delete the line.\",\n    \"failure_scenario\": \"Running ESLint with no-unused-vars flags `debug` as assigned but never used. If lint runs as a CI gate, the PR check fails.\",\n    \"severity\": \"nit\"\n  }\n]\n```"
+    }
+  ],
+  "checkIns": [
+    {
+      "n": 1,
+      "at": "2026-11-26T12:40:06.926Z",
+      "pushed": true,
+      "commented": true,
+      "tools": 16
+    },
+    {
+      "n": 2,
+      "at": "2026-11-26T12:44:06.212Z",
+      "pushed": true,
+      "commented": true,
+      "tools": 11
+    },
+    {
+      "n": 3,
+      "at": "2026-11-26T12:47:01.201Z",
+      "pushed": false,
+      "commented": false,
+      "tools": 0
+    }
+  ],
+  "wakeups": [
+    {
+      "t": "2026-11-26T12:38:50.363Z",
+      "delaySeconds": 60,
+      "reason": "Review findings are in; the first check-in will act on them."
+    },
+    {
+      "t": "2026-11-26T12:40:56.512Z",
+      "delaySeconds": 120,
+      "reason": "Just pushed c8804d2; checking that CI picks it up."
+    },
+    {
+      "t": "2026-11-26T12:44:40.507Z",
+      "delaySeconds": 120,
+      "reason": "Just pushed 99b97dc; checking that CI picks it up."
+    }
+  ],
+  "pushes": [
+    {
+      "t": "2026-11-26T12:40:41.529Z",
+      "cmd": "git -c core.hooksPath=/dev/null push origin ship-test/b-ship-2:ship-test/b-ship-2"
+    },
+    {
+      "t": "2026-11-26T12:44:28.155Z",
+      "cmd": "git -c core.hooksPath=/dev/null push origin ship-test/b-ship-2:ship-test/b-ship-2"
+    }
+  ],
+  "comments": [
+    {
+      "t": "2026-11-26T12:40:53.204Z"
+    },
+    {
+      "t": "2026-11-26T12:44:36.936Z"
+    }
+  ],
+  "typedDuringRun": [],
+  "risky": [],
+  "fenced": [],
+  "notices": [
+    {
+      "t": "2026-11-26T12:37:54.497Z",
+      "text": "/ship is starting for a new pull request in inotives/inotives.github.io. Claude reviews your change, then watches the pull request for up to 7 days, in this session, on your usage.\nAs you, Claude may push to ship-test/b-ship-2, merge master into it, and comment, re-run checks, and more on the pull request, all unattended.\nKeep this session open, this computer awake, and this branch checked out. /s"
+    },
+    {
+      "t": "2026-11-26T12:37:54.497Z",
+      "text": "Pushing 1 commit on ship-test/b-ship-2 to inotives/inotives.github.io (public) and opening a pull request. Anyone can see what goes there, and it can't be taken back. Esc to cancel."
+    },
+    {
+      "t": "2026-11-26T12:37:57.584Z",
+      "text": "Pushing ship-test/b-ship-2 to inotives/inotives.github.io, with your git hooks…"
+    },
+    {
+      "t": "2026-11-26T12:38:01.255Z",
+      "text": "Opening the pull request as ready for review, so checks and reviews start…"
+    },
+    {
+      "t": "2026-11-26T12:38:06.043Z",
+      "text": "/ship pushed ship-test/b-ship-2 to inotives/inotives.github.io and opened pull request #92 as you, ready for review: https://github.com/inotives/inotives.github.io/pull/92\n/ship didn't set an upstream. To pull or push ship-test/b-ship-2, name the remote: git pull origin ship-test/b-ship-2 or git push origin ship-test/b-ship-2. Setting an upstream (git branch -u, git push -u) changes git's configur"
+    },
+    {
+      "t": "2026-11-26T12:47:01.500Z",
+      "text": "Stopped watching pull request #92, because it's closed."
+    }
+  ],
+  "prData": {
+    "number": 92,
+    "title": "Add relatedPosts helper",
+    "state": "CLOSED",
+    "branch": "ship-test/b-ship-2",
+    "createdAt": "2026-11-26T12:38:04Z",
+    "closedAt": "2026-11-26T12:46:20Z",
+    "mergedAt": null,
+    "commits": [
+      {
+        "sha": "0a34e1e",
+        "at": "2026-11-26T12:31:01Z",
+        "headline": "Add relatedPosts helper",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": [
+          {
+            "name": "check",
+            "conclusion": "failure",
+            "status": "completed",
+            "startedAt": "2026-11-26T12:38:09Z",
+            "completedAt": "2026-11-26T12:38:23Z"
+          }
+        ]
+      },
+      {
+        "sha": "c8804d2",
+        "at": "2026-11-26T12:40:39Z",
+        "headline": "Fix relatedPosts ordering, self-match and unused variable",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": [
+          {
+            "name": "check",
+            "conclusion": "success",
+            "status": "completed",
+            "startedAt": "2026-11-26T12:40:56Z",
+            "completedAt": "2026-11-26T12:41:10Z"
+          }
+        ]
+      },
+      {
+        "sha": "99b97dc",
+        "at": "2026-11-26T12:44:26Z",
+        "headline": "Document relatedPosts parameters",
+        "isMerge": false,
+        "coAuthored": false,
+        "checks": [
+          {
+            "name": "check",
+            "conclusion": "success",
+            "status": "completed",
+            "startedAt": "2026-11-26T12:44:41Z",
+            "completedAt": "2026-11-26T12:45:03Z"
+          }
+        ]
+      }
+    ],
+    "firstCiFailureAt": "2026-11-26T12:38:23Z",
+    "headCiPassedAt": "2026-11-26T12:45:03Z",
+    "forcePushes": 0,
+    "comments": [
+      {
+        "at": "2026-11-26T12:40:54Z",
+        "author": "inotives",
+        "body": "<!-- claude-code-ship-local reviewed=c8804d24e8315eab61dc05da8c38216aa4de663e -->\nClaude Code reviewed this change at 0a34e1e for the author: 3 findings, 3 fixed.\n\n- `src/utils/tags.js:117`: the sort was ascending, so relatedPosts returned the weakest matches first. Fixed in c8804d2.\n- `src/utils/tags.js:111`: the post passed in was listed as related to itself. It is now excluded by slug. Fixed in c8804d2.\n- `src/utils/tags.js:110`: an unused variable failed the lint check. Fixed in c8804d2."
+      },
+      {
+        "at": "2026-11-26T12:42:40Z",
+        "author": "inotives",
+        "body": "Please add a short JSDoc comment above relatedPosts explaining the limit parameter."
+      },
+      {
+        "at": "2026-11-26T12:44:37Z",
+        "author": "inotives",
+        "body": "<!-- claude-code-ship-local -->\nClaude Code here, for the author: I added a JSDoc comment above relatedPosts in 99b97dc. It explains that `limit` (default 3) caps how many posts come back, that fewer come back when fewer posts share a tag, and that the post passed in is never included."
+      }
+    ],
+    "reviews": []
+  },
+  "timing": {
+    "toPrOpenS": 12,
+    "toHeadCiGreenS": 429,
+    "lastPushAt": "2026-11-26T12:44:28.155Z"
+  }
+}
