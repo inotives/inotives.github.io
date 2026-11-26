@@ -11,4 +11,4 @@ short body, one chart and no code.
 
 ![Bar chart of posts per week for the last four weeks: 6, 4, 7 and 5.](/assets/images/ship-test-manual-1.svg)
 
-The chart shows posts per week over the last four weeks. The busiest week had seven posts.
+The chart shows posts per week over the last four weeks. The busiest week had seven posts; the quietest had four.
