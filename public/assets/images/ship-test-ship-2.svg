@@ -1,7 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" role="img" aria-label="Posts per week: 6, 4, 7, 5">
-  <style>text{font:12px system-ui,sans-serif;fill:#555}rect{fill:#4f7cac}</style>
-  <rect x="30" y="50" width="50" height="80"/><text x="55" y="148" text-anchor="middle">W1</text>
-  <rect x="100" y="77" width="50" height="53"/><text x="125" y="148" text-anchor="middle">W2</text>
-  <rect x="170" y="37" width="50" height="93"/><text x="195" y="148" text-anchor="middle">W3</text>
-  <rect x="240" y="63" width="50" height="67"/><text x="265" y="148" text-anchor="middle">W4</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" role="img" aria-label="Sample posts per week: 6, 4, 7, 5">
+  <style>text{font:12px system-ui,sans-serif;fill:#b8b5ac}.bar{fill:#4f7cac}</style>
+  <rect width="320" height="160" rx="6" fill="#1c1f24"/>
+  <rect class="bar" x="30" y="50" width="50" height="80"/><text x="55" y="44" text-anchor="middle">6</text><text x="55" y="148" text-anchor="middle">W1</text>
+  <rect class="bar" x="100" y="77" width="50" height="53"/><text x="125" y="71" text-anchor="middle">4</text><text x="125" y="148" text-anchor="middle">W2</text>
+  <rect class="bar" x="170" y="37" width="50" height="93"/><text x="195" y="31" text-anchor="middle">7</text><text x="195" y="148" text-anchor="middle">W3</text>
+  <rect class="bar" x="240" y="63" width="50" height="67"/><text x="265" y="57" text-anchor="middle">5</text><text x="265" y="148" text-anchor="middle">W4</text>
 </svg>
