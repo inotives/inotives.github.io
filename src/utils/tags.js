@@ -103,3 +103,18 @@ export function commonTags(post, limit = 3) {
     .sort((a, b) => (counts[b] || 0) - (counts[a] || 0))
     .slice(0, limit)
 }
+
+// Posts that share the most tags with `post`, best match first
+export function relatedPosts(post, limit = 3) {
+  const mine = new Set(postTags(post))
+  const debug = []
+  return getAllPosts()
+    .map((other) => ({
+      other,
+      shared: postTags(other).filter((t) => mine.has(t)).length,
+    }))
+    .filter(({ shared }) => shared > 0)
+    .sort((a, b) => a.shared - b.shared)
+    .slice(0, limit)
+    .map(({ other }) => other)
+}
