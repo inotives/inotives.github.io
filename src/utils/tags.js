@@ -104,7 +104,12 @@ export function commonTags(post, limit = 3) {
     .slice(0, limit)
 }
 
-// Posts that share the most tags with `post`, best match first
+/**
+ * Posts that share the most tags with `post`, best match first.
+ * @param {object} post The post to find related posts for; it is never included in the result.
+ * @param {number} [limit=3] The most posts to return. Fewer come back when fewer posts share a tag.
+ * @returns {object[]} Related posts, ordered by the number of shared tags.
+ */
 export function relatedPosts(post, limit = 3) {
   const mine = new Set(postTags(post))
   return getAllPosts()
