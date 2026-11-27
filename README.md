@@ -104,3 +104,5 @@ For a release:
 ## Agent Integration
 
 This repo has a CodeGraph index for agentic codebase work. See `CLAUDE.md` for agent instructions. It integrates with `akw` (Agent Knowledge) for persistent session memory across coding sessions.
+
+kq (`inotives-kq`) also works on this repo via GitHub pull requests.
